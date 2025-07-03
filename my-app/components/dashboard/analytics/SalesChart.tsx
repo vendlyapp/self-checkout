@@ -5,7 +5,6 @@ import {
   LineChart,
   Line,
   XAxis,
-  YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer
@@ -38,7 +37,11 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({ active, payload, label }) 
   return null;
 };
 
-const CustomDot: React.FC<any> = (props) => {
+const CustomDot: React.FC<{
+  cx?: number;
+  cy?: number;
+  index?: number;
+}> = (props) => {
   const { cx, cy, index } = props;
   // Highlight Saturday (index 5)
   if (index === 5) {

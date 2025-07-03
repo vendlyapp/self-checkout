@@ -1,7 +1,7 @@
 'use client';
 
 import { Calendar, Clock } from 'lucide-react';
-import type { GreetingSectionProps } from './types';
+import type { GreetingSectionProps } from '../types';
 
 const GreetingSection = ({ 
   isStoreOpen, 

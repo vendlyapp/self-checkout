@@ -59,6 +59,11 @@ export type TimePeriod = 'heute' | 'woche' | 'monat' | 'jahr';
 
 export interface ChartTooltipProps {
   active?: boolean;
-  payload?: any[];
+  payload?: Array<{
+    value: number;
+    dataKey: string;
+    color?: string;
+    name?: string;
+  }>;
   label?: string;
 } 

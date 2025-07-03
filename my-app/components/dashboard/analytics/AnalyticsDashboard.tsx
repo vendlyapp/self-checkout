@@ -14,13 +14,19 @@ interface AnalyticsDashboardProps {
   className?: string;
 }
 
+interface SearchResult {
+  id: number;
+  name: string;
+  type: 'metric' | 'report' | 'product' | 'sale';
+}
+
 const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ 
   className = "" 
 }) => {
   // Estados para búsqueda
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
 
   const {
     data,
@@ -45,7 +51,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   } = useQuickAccess();
 
   // Simular búsqueda de analytics
-  const searchAnalyticsData = useCallback(async (query: string): Promise<any[]> => {
+  const searchAnalyticsData = useCallback(async (query: string): Promise<SearchResult[]> => {
     await new Promise(resolve => setTimeout(resolve, 500));
     return [
       { id: 1, name: `Analytics resultado para "${query}" 1`, type: 'metric' },

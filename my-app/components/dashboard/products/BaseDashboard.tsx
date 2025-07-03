@@ -13,7 +13,7 @@ import { ProductsDashboardSkeletonLoader, ProductsErrorState } from '@/component
 export default function ProductsDashboard() {
   // Usando hooks para datos y acciones
   const { data, loading, error, refresh } = useProducts();
-  const { handleNewProduct, handleProductList, handleCategories } = useProductActions(refresh);
+  const { handleNewProduct, handleProductList, handleCategories } = useProductActions();
 
   // Manejo de estados de carga y error
   if (loading) {

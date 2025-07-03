@@ -2,7 +2,7 @@
 
 import { ChevronRight } from 'lucide-react';
 import SaleCard from './SaleCard';
-import type { RecentSalesSectionProps } from './types';
+import type { RecentSalesSectionProps } from '../types';
 
 const RecentSalesSection = ({ sales }: RecentSalesSectionProps) => (
   <section className="mb-6">

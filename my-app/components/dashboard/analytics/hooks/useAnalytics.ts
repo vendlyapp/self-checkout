@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { AnalyticsData, TimePeriod, SalesData, PaymentMethod } from '../types';
+import { AnalyticsData, TimePeriod } from '../types';
 import { 
   fetchAnalyticsData, 
   fetchSalesData, 

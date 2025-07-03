@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowRight } from 'lucide-react';
-import type { ActionCardProps } from './types';
+import type { ActionCardProps } from '../types';
 
 const ActionCard = ({ 
   icon, 

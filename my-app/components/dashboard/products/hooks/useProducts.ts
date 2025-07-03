@@ -43,7 +43,7 @@ export const useProducts = (): UseProductsReturn => {
 };
 
 // Additional hook for product actions (ready for backend integration)
-export const useProductActions = (refresh?: () => Promise<void>) => {
+export const useProductActions = () => {
   const [loading] = useState<boolean>(false);
 
   const handleNewProduct = useCallback(async () => {
@@ -52,7 +52,6 @@ export const useProductActions = (refresh?: () => Promise<void>) => {
     // try {
     //   setLoading(true);
     //   const result = await createProduct(productData);
-    //   if (refresh) await refresh();
     //   return result;
     // } catch (error) {
     //   console.error('Error creating product:', error);

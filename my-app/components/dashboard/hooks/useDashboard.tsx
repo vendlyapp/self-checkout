@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Users, Flame, FileText, Tag, Calculator, ShoppingCart } from 'lucide-react';
-import type { QuickAccessItem, Sale } from '../types';
+import type { QuickAccessItem, Sale, SearchResult } from '../types';
 
 interface DashboardData {
   currentAmount: number;
@@ -17,7 +17,7 @@ interface UseDashboardReturn {
   isStoreOpen: boolean;
   searchQuery: string;
   isSearching: boolean;
-  searchResults: any[];
+  searchResults: SearchResult[];
   currentSlideIndex: number;
   setIsStoreOpen: (open: boolean) => void;
   setSearchQuery: (query: string) => void;
@@ -76,7 +76,7 @@ const fetchDashboardData = async (): Promise<DashboardData> => {
 };
 
 // Simular búsqueda
-const searchData = async (query: string): Promise<any[]> => {
+const searchData = async (query: string): Promise<SearchResult[]> => {
   await new Promise(resolve => setTimeout(resolve, 600));
   return [
     { id: 1, name: `Resultado para "${query}" 1`, type: 'product' },
@@ -94,7 +94,7 @@ export const useDashboard = (): UseDashboardReturn => {
   const [isStoreOpen, setIsStoreOpen] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
 
   // Cargar datos iniciales

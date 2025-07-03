@@ -58,7 +58,7 @@ class HapticFeedbackManager {
    * Ejecuta vibración háptica si es seguro hacerlo
    */
   public vibrate(options: HapticOptions = {}): boolean {
-    const { pattern = 10, fallback, force = false } = options;
+    const { pattern = 10, fallback } = options;
 
     // Inicializar lazy si no se ha hecho
     if (!this.isInitialized) {

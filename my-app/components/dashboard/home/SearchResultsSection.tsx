@@ -1,6 +1,6 @@
 'use client';
 
-import type { SearchResultsSectionProps } from './types';
+import type { SearchResultsSectionProps } from '../types';
 
 const SearchResultsSection = ({ 
   isSearching, 

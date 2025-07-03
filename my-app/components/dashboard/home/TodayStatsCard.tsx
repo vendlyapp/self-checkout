@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, DollarSign, Users } from 'lucide-react';
+import { DollarSign, Users } from 'lucide-react';
 import StatCard from './StatCard';
 
 const TodayStatsCard = () => (

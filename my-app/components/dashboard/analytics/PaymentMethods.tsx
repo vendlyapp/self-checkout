@@ -41,8 +41,8 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
             </div>
             <div className="h-4 bg-muted rounded-lg mb-6"></div>
             <div className="space-y-4">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="flex items-center justify-between">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-6 h-3 bg-muted rounded"></div>
                     <div className="h-4 bg-muted rounded w-20"></div>
@@ -120,7 +120,7 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
 
           {/* Payment Methods List */}
           <div className="space-y-3">
-            {data.map((method, index) => (
+            {data.map((method) => (
               <div 
                 key={method.type} 
                 className="flex items-center justify-between group hover:bg-muted/30 -mx-3 px-3 py-3 rounded-xl transition-all duration-200"

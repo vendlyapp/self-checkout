@@ -63,7 +63,13 @@ export interface RecentSalesSectionProps {
   sales: Sale[];
 }
 
+export interface SearchResult {
+  id: number;
+  name: string;
+  type: string;
+}
+
 export interface SearchResultsSectionProps {
   isSearching: boolean;
-  results: any[];
+  results: SearchResult[];
 } 

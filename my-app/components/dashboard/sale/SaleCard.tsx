@@ -2,7 +2,7 @@
 
 import { FileText } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import type { SaleCardProps } from './types';
+import type { SaleCardProps } from '../types';
 
 const SaleCard = ({ sale }: SaleCardProps) => (
   <Card className="bg-white rounded-2xl border border-gray-200 shadow-sm">

@@ -29,7 +29,7 @@ export const safeFeedback = (options: FeedbackOptions = {}): void => {
       
       // Intentar vibración - fallará silenciosamente si no hay user activation
       navigator.vibrate(patterns[type]);
-    } catch (error) {
+    } catch {
       // Vibración falló, continuar con visual feedback
     }
   }

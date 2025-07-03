@@ -1,7 +1,7 @@
 'use client';
 
 import { TrendingUp } from 'lucide-react';
-import type { StatCardProps } from './types';
+import type { StatCardProps } from '../types';
 
 const StatCard = ({ 
   icon, 

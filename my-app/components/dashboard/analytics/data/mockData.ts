@@ -113,11 +113,15 @@ export const fetchAnalyticsData = async (): Promise<AnalyticsData> => {
 };
 
 export const fetchSalesData = async (period: string = 'week'): Promise<SalesData[]> => {
+  // TODO: Use period parameter when connecting to real API
+  console.log(`Fetching sales data for period: ${period}`);
   await new Promise(resolve => setTimeout(resolve, 300));
   return mockSalesData;
 };
 
 export const fetchPaymentMethods = async (period: string = 'today'): Promise<PaymentMethod[]> => {
+  // TODO: Use period parameter when connecting to real API
+  console.log(`Fetching payment methods for period: ${period}`);
   await new Promise(resolve => setTimeout(resolve, 300));
   return mockPaymentMethods;
 }; 
