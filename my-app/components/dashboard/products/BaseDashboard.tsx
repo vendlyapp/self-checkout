@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Package, Grid3X3, Plus } from 'lucide-react';
 import StatCard from './StatCard';
 import ActionButton from './ActionButton';
@@ -8,9 +8,17 @@ import NavigationItem from './NavigationItem';
 import { useProducts, useProductActions } from './hooks';
 import { getActiveProductsCount, getActiveCategoriesCount } from './data';
 import { ProductsDashboardSkeletonLoader, ProductsErrorState } from '@/components/dashboard/skeletons';
+import { SearchInput } from '@/components/ui/search-input';
+import { SearchResult } from '../types';
 
 // Componente Principal del Dashboard de Productos
 export default function ProductsDashboard() {
+
+   // Estados para búsqueda
+   const [searchQuery, setSearchQuery] = useState<string>('');
+   const [isSearching, setIsSearching] = useState<boolean>(false);
+   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+ 
   // Usando hooks para datos y acciones
   const { data, loading, error, refresh } = useProducts();
   const { handleNewProduct, handleProductList, handleCategories } = useProductActions();
@@ -35,6 +43,16 @@ export default function ProductsDashboard() {
         <h1 className="text-2xl font-bold text-foreground">Produkte</h1>
         <p className="text-sm text-muted-foreground">Verwalte deine Produkte und Kategorien</p>
       </div>
+      <section className="mb-8">
+          <SearchInput 
+            placeholder="Suche Produkte / Verkäufe"
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onSearch={() => {}}
+            className="w-full"
+          />
+        </section>
+ 
 
       {/* Tarjetas de Estadísticas */}
       <div className="grid grid-cols-2 gap-3">

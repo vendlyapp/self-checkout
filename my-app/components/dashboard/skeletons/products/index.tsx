@@ -1,5 +1,6 @@
 import React from 'react';
 import { SkeletonBase } from '../common/SkeletonBase';
+import { SearchSkeletonLoader } from '../analytics';
 
 // ===== HEADER SKELETON =====
 export const ProductsHeaderSkeletonLoader: React.FC = () => (
@@ -103,6 +104,7 @@ export const NavigationListSkeletonLoader: React.FC = () => (
 export const ProductsDashboardSkeletonLoader: React.FC = () => (
   <div className="p-4 space-y-4 bg-background min-h-screen">
     <ProductsHeaderSkeletonLoader />
+    <SearchSkeletonLoader />
     <StatsGridSkeletonLoader />
     <ActionButtonSkeletonLoader />
     <NavigationListSkeletonLoader />
