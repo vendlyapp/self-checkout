@@ -1,0 +1,22 @@
+{
+    "name": "SelfCheckout Swiss",
+    "short_name": "SelfCheckout",
+    "description": "Digital checkout for Swiss farm shops",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#FAFAFA",
+    "theme_color": "#22C55F",
+    "orientation": "portrait",
+    "icons": [
+      {
+        "src": "/logo.svg",
+        "sizes": "100x100",
+        "type": "image/svg+xml"
+      },
+      {
+        "src": "/logo.svg",
+        "sizes": "100x100",
+        "type": "image/svg+xml"
+      }
+    ]
+  }

@@ -1,0 +1,93 @@
+'use client';
+
+import React from 'react';
+import { Package, Grid3X3, Plus } from 'lucide-react';
+import StatCard from './StatCard';
+import ActionButton from './ActionButton';
+import NavigationItem from './NavigationItem';
+import { useProducts, useProductActions } from './hooks';
+import { getActiveProductsCount, getActiveCategoriesCount } from './data';
+import { ProductsDashboardSkeletonLoader, ProductsErrorState } from '@/components/dashboard/skeletons';
+
+// Componente Principal del Dashboard de Productos
+export default function ProductsDashboard() {
+  // Usando hooks para datos y acciones
+  const { data, loading, error, refresh } = useProducts();
+  const { handleNewProduct, handleProductList, handleCategories } = useProductActions(refresh);
+
+  // Manejo de estados de carga y error
+  if (loading) {
+    return <ProductsDashboardSkeletonLoader />;
+  }
+
+  if (error) {
+    return <ProductsErrorState error={error} onRetry={refresh} />;
+  }
+
+  // Calcular valores derivados
+  const activeProductsCount = getActiveProductsCount(data.products);
+  const activeCategoriesCount = getActiveCategoriesCount(data.categories);
+
+  return (
+    <div className="p-4 space-y-4 bg-background min-h-screen">
+      {/* Header */}
+      <div className="mb-2">
+        <h1 className="text-2xl font-bold text-foreground">Produkte</h1>
+        <p className="text-sm text-muted-foreground">Verwalte deine Produkte und Kategorien</p>
+      </div>
+
+      {/* Tarjetas de Estadísticas */}
+      <div className="grid grid-cols-2 gap-3">
+        <StatCard
+          icon={<Package className="w-5 h-5 text-muted-foreground" />}
+          title="Produkte"
+          value={data.products.total}
+          subtitle="Produkte"
+          trend={data.products.trend}
+          trendData={data.products.trendData}
+          badge={`${data.products.newProducts} Neu`}
+        />
+        
+        <StatCard
+          icon={<Grid3X3 className="w-5 h-5 text-muted-foreground" />}
+          title="Kategorien"
+          value={data.categories.total}
+          subtitle="Kategorien"
+          trend={data.categories.trend}
+          trendData={data.categories.trendData}
+          badge={`${data.categories.newCategories} Neu`}
+        />
+      </div>
+
+      {/* Botón de Acción Principal */}
+      <ActionButton
+        icon={<Plus className="w-5 h-5" />}
+        title="Neues Produkt"
+        subtitle="Artikel anlegen"
+        onClick={handleNewProduct}
+        variant="primary"
+      />
+
+      {/* Elementos de Navegación */}
+      <div className="space-y-3">
+        <NavigationItem
+          icon={<Package className="w-5 h-5 text-muted-foreground" />}
+          title="Produktliste"
+          subtitle="bearbeiten"
+          badge={`${activeProductsCount} aktiv`}
+          badgeVariant="success"
+          onClick={handleProductList}
+        />
+        
+        <NavigationItem
+          icon={<Grid3X3 className="w-5 h-5 text-muted-foreground" />}
+          title="Kategorien"
+          subtitle="verwalten"
+          badge={`${activeCategoriesCount} aktiv`}
+          badgeVariant="success"
+          onClick={handleCategories}
+        />
+      </div>
+    </div>
+  );
+}
