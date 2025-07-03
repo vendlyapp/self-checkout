@@ -9,15 +9,12 @@ import { useProducts, useProductActions } from './hooks';
 import { getActiveProductsCount, getActiveCategoriesCount } from './data';
 import { ProductsDashboardSkeletonLoader, ProductsErrorState } from '@/components/dashboard/skeletons';
 import { SearchInput } from '@/components/ui/search-input';
-import { SearchResult } from '../types';
 
 // Componente Principal del Dashboard de Productos
 export default function ProductsDashboard() {
 
    // Estados para búsqueda
    const [searchQuery, setSearchQuery] = useState<string>('');
-   const [isSearching, setIsSearching] = useState<boolean>(false);
-   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
  
   // Usando hooks para datos y acciones
   const { data, loading, error, refresh } = useProducts();
