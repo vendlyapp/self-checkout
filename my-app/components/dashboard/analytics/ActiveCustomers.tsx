@@ -1,31 +1,49 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import Squircle from '@/components/ui/squircle';
+import { useSquircle, type SquirclePreset } from '@/lib/hooks/useSquircle';
 import { ShopActivity } from './types';
 
 interface ActiveCustomersProps {
   data: ShopActivity;
   loading?: boolean;
+  smoothingPreset?: SquirclePreset; // Preset predefinido
+  customSmoothing?: number; // Smoothing personalizado (0-1)
 }
 
 const ActiveCustomers: React.FC<ActiveCustomersProps> = ({ 
   data, 
-  loading = false 
+  loading = false,
+  smoothingPreset = 'ios',
+  customSmoothing
 }) => {
+  // Usar el hook para obtener valores de smoothing
+  const { smoothing, scaledSmoothing } = useSquircle({
+    preset: smoothingPreset,
+    customSmoothing,
+    scale: 0.8
+  });
   if (loading) {
     return (
-      <Card className="bg-card rounded-2xl border border-border/50">
-        <CardContent className="p-5">
+      <Squircle 
+        variant="medium"
+        className="bg-card border border-border/50"
+      >
+        <div className="p-5">
           <div className="animate-pulse">
             <div className="h-6 bg-muted rounded-lg mb-4 w-1/3"></div>
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-2">
                   {[1, 2, 3, 4].map((_, index) => (
-                    <div
+                    <Squircle
                       key={index}
-                      className="w-10 h-10 rounded-full bg-muted border-2 border-background"
-                    />
+                      variant="sm"
+                      className="w-10 h-10 bg-muted border-2 border-background"
+                    >
+                      <div></div>
+                    </Squircle>
                   ))}
                 </div>
                 <div className="h-4 bg-muted rounded w-24"></div>
@@ -34,16 +52,19 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
               <div className="h-4 bg-muted rounded w-32"></div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </Squircle>
     );
   }
 
   const { activeCustomers, totalActive, totalInactive, openCartsValue, progressPercentage } = data;
 
   return (
-    <Card className="bg-card rounded-2xl border border-border/50 transition-fast hover:shadow-md">
-      <CardContent className="p-5">
+    <Squircle 
+      smoothing={smoothing}
+      className="bg-card border border-border/50 transition-fast hover:shadow-md"
+    >
+      <div className="p-5">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-foreground">Jetzt im Shop:</h3>
           <button 
@@ -61,22 +82,24 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
               {/* Kundenavatare */}
               <div className="flex -space-x-2" aria-label={`${totalActive} aktive Kunden`}>
                 {activeCustomers.slice(0, 3).map((customer, index) => (
-                  <div
+                  <Squircle
                     key={customer.id}
-                    className="w-10 h-10 rounded-full bg-muted flex items-center justify-center border-2 border-background text-sm font-medium transition-fast hover:scale-110 hover:z-10"
+                    variant="sm"
+                    className="w-10 h-10 bg-muted flex items-center justify-center border-2 border-background text-sm font-medium transition-fast hover:scale-110 hover:z-10"
                     style={{ zIndex: activeCustomers.length - index }}
                     title={customer.name}
                   >
                     {customer.avatar}
-                  </div>
+                  </Squircle>
                 ))}
                 {totalInactive > 0 && (
-                  <div 
-                    className="w-10 h-10 rounded-full bg-muted flex items-center justify-center border-2 border-background text-sm font-medium text-muted-foreground"
+                  <Squircle 
+                    variant="sm"
+                    className="w-10 h-10 bg-muted flex items-center justify-center border-2 border-background text-sm font-medium text-muted-foreground"
                     title={`+${totalInactive} weitere Kunden`}
                   >
                     +{totalInactive}
-                  </div>
+                  </Squircle>
                 )}
               </div>
               
@@ -111,8 +134,8 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </Squircle>
   );
 };
 

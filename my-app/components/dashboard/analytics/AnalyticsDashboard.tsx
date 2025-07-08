@@ -116,20 +116,8 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   return (
     <div className={`min-h-screen bg-background ${className}`}>
       {/* Header with Refresh Button */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/40">
-        <div className="p-4">
-          <div className="flex items-center justify-between">
-            {/* Title */}
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">
-                Analytics
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Übersicht Ihrer Verkaufsdaten
-              </p>
-            </div>
-            
-            {/* Refresh Button */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/40 flex justify-end pr-4 pt-4">
+        
             <button 
               onClick={refreshData}
               disabled={loading}
@@ -140,8 +128,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 className={`w-5 h-5 text-muted-foreground ${loading ? 'animate-spin' : ''}`}
               />
             </button>
-          </div>
-        </div>
+             
       </div>
 
       {/* Main Content */}
@@ -154,6 +141,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             onChange={setSearchQuery}
             onSearch={handleSearch}
             className="w-full"
+            esHome={false}
           />
         </section>
 

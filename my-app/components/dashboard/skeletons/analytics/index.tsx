@@ -11,9 +11,8 @@ export const SearchSkeletonLoader: React.FC = () => (
 // ===== ANALYTICS HEADER SKELETON =====
 export const AnalyticsHeaderSkeletonLoader: React.FC = () => (
   <SkeletonBase className="mb-5">
-    <div className="flex items-center justify-between">
-      <div className="h-8 bg-muted rounded w-48"></div>
-      <div className="w-9 h-9 bg-muted rounded-lg"></div>
+    <div className="flex items-center justify-end">
+      <div className="w-9 h-9 bg-muted rounded-lg mr-4"></div>
     </div>
   </SkeletonBase>
 );

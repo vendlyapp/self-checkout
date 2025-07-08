@@ -83,7 +83,7 @@ export default function Header() {
       )}
 
       <header className="dashboard-header">
-        <div className="dashboard-header-content bg-background-cream">
+        <div className="dashboard-header-content bg-background-cream ">
           {/* Logo */}
           <Link href="/dashboard" className="dashboard-logo">
             <Image 

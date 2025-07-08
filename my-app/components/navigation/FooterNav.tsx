@@ -130,7 +130,7 @@ export default function FooterNav() {
                 href={item.href}
                 className={clsx(
                   "nav-main-button ripple",
-                  "transform -translate-y-6", // Sobresale 24px más arriba
+                  "transform -translate-y-4", // Sobresale 24px más arriba
                   isPulsing && "nav-main-button-pulse",
                   item.isPressed && "scale-90"
                 )}

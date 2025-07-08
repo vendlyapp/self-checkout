@@ -86,6 +86,7 @@ const HomeDashboard: React.FC = () => {
           onChange={setSearchQuery}
           onSearch={handleSearch}
           className="w-full"
+          esHome={true}
         />
       </section>
 

@@ -10,6 +10,7 @@ interface SearchInputProps {
   onChange?: (value: string) => void;
   onSearch?: (query: string) => void;
   className?: string;
+  esHome?: boolean;
 }
 
 export function SearchInput({
@@ -18,6 +19,7 @@ export function SearchInput({
   onChange,
   onSearch,
   className,
+  esHome = false,
 }: SearchInputProps) {
   const [internalValue, setInternalValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -54,6 +56,47 @@ export function SearchInput({
     inputRef.current?.focus();
   }, [setValue]);
 
+  // Estilo para Home Dashboard
+  if (esHome) {
+    return (
+      <div className={clsx("relative w-full", className)}>
+        <div className="relative flex items-center h-14 bg-white rounded-full border border-gray-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all duration-200">
+          {/* Input */}
+          <input
+            ref={inputRef}
+            type="text"
+            value={value}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            className="w-full h-full pl-6 pr-16 text-lg text-gray-900 placeholder-gray-400 bg-transparent focus:outline-none"
+          />
+
+          {/* Botón de limpiar */}
+          {value && (
+            <button
+              onClick={handleClear}
+              className="absolute right-16 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-150"
+              aria-label="Limpiar búsqueda"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+
+          {/* Botón de búsqueda - Círculo verde a la derecha */}
+          <button
+            onClick={handleSearch}
+            className="absolute right-2 w-10 h-10 bg-brand-500 hover:bg-brand-600 rounded-full flex items-center justify-center transition-colors duration-200 shadow-md hover:shadow-lg"
+            aria-label="Buscar"
+          >
+            <Search className="w-5 h-5 text-white" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Estilo original para Analytics Dashboard
   return (
     <div className={clsx("relative w-full", className)}>
       <div className="relative flex items-center h-14 bg-white rounded-full border border-gray-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all duration-200">

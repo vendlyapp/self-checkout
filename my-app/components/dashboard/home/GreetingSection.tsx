@@ -7,9 +7,9 @@ const GreetingSection = ({
   isStoreOpen, 
   onToggleStore 
 }: GreetingSectionProps) => (
-  <section className="mb-6">
+  <section className="mb-6 mt-4">
     {/* Top Row: Greeting + Store Toggle */}
-    <div className="flex items-start justify-between mb-2">
+    <div className="flex items-start justify-between mb-4">
       <div className="flex-1">
         <h1 className="text-2xl font-bold text-gray-900 leading-tight">
           Hoi Peter

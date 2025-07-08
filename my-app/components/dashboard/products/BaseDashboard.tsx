@@ -35,11 +35,7 @@ export default function ProductsDashboard() {
 
   return (
     <div className="p-4 space-y-4 bg-background min-h-screen">
-      {/* Header */}
-      <div className="mb-2">
-        <h1 className="text-2xl font-bold text-foreground">Produkte</h1>
-        <p className="text-sm text-muted-foreground">Verwalte deine Produkte und Kategorien</p>
-      </div>
+     
       <section className="mb-8">
           <SearchInput 
             placeholder="Suche Produkte / Verkäufe"

@@ -14,16 +14,16 @@ const StatCard = ({
   <div className={`
     rounded-xl p-4 shadow-sm
     ${isDark 
-      ? 'bg-gray-700 text-white' 
+      ? 'bg-warm-800 text-white' 
       : 'bg-white border border-gray-200/50 text-gray-900'
     }
   `}>
     <div className="flex items-center gap-2.5 mb-3">
       <div className={`
         w-7 h-7 rounded-lg flex items-center justify-center
-        ${isDark ? 'bg-white' : 'bg-gray-700'}
+        ${isDark ? 'bg-white' : 'bg-warm-800'}
       `}>
-        <div className={isDark ? 'text-gray-700' : 'text-white'}>
+        <div className={isDark ? 'text-warm-800' : 'text-white'}>
           {icon}
         </div>
       </div>
