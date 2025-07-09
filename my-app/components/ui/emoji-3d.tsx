@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { clsx } from 'clsx';
+import Image from 'next/image';
 
 interface Emoji3DProps {
   emoji: string;
@@ -54,7 +55,7 @@ export const Emoji3D = ({
       )}
       
       {/* Imagen 3D */}
-      <img
+      <Image
         src={src}
         alt={alt || emoji}
         width={size}
@@ -70,6 +71,7 @@ export const Emoji3D = ({
         }}
         loading="lazy"
         draggable={false}
+        unoptimized
       />
     </div>
   );

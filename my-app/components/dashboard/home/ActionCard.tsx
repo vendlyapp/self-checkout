@@ -24,7 +24,7 @@ const ActionCard = ({
   customSmoothing
 }: ExtendedActionCardProps) => {
   // Usar el hook para obtener valores de smoothing
-  const { smoothing, scaledSmoothing } = useSquircle({
+  useSquircle({
     preset: smoothingPreset,
     customSmoothing,
     scale: 0.8

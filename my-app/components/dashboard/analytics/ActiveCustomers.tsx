@@ -1,6 +1,5 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import Squircle from '@/components/ui/squircle';
 import { useSquircle, type SquirclePreset } from '@/lib/hooks/useSquircle';
 import { ShopActivity } from './types';
@@ -19,7 +18,7 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
   customSmoothing
 }) => {
   // Usar el hook para obtener valores de smoothing
-  const { smoothing, scaledSmoothing } = useSquircle({
+  const { smoothing } = useSquircle({
     preset: smoothingPreset,
     customSmoothing,
     scale: 0.8

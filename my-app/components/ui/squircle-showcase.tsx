@@ -46,7 +46,7 @@ const SquircleShowcase: React.FC = () => {
               </div>
               <h3 className="font-semibold text-lg mb-2">Card Tradicional</h3>
               <p className="text-gray-600 text-sm">
-                Esta card usa border-radius normal de CSS. Notarás que las esquinas se ven más "mecánicas".
+                Esta card usa border-radius normal de CSS. Notarás que las esquinas se ven más &quot;mecánicas&quot;.
               </p>
             </div>
           </div>
@@ -83,7 +83,7 @@ const SquircleShowcase: React.FC = () => {
               <strong>Con smoothing personalizado:</strong> <code className="bg-gray-100 px-2 py-1 rounded">{'<Squircle smoothing={0.6}>contenido</Squircle>'}</code>
             </p>
             <p>
-              <strong>Como otro elemento:</strong> <code className="bg-gray-100 px-2 py-1 rounded">{'<Squircle as="button" onClick={handler}>botón</Squircle>'}</code>
+              <strong>Como otro elemento:</strong> <code className="bg-gray-100 px-2 py-1 rounded">{'<Squircle as=&quot;button&quot; onClick={handler}>botón</Squircle>'}</code>
             </p>
             <p>
               <strong>Valores de smoothing:</strong> 0 (normal) → 1 (squircle completo). Recomendado: 0.6 (iOS default)

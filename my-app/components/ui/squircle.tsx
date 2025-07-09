@@ -10,7 +10,7 @@ interface SquircleProps {
   variant?: SquircleVariant; // Predefined squircle variants
   smoothing?: number; // 0-1 for backward compatibility
   as?: keyof React.JSX.IntrinsicElements;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 const Squircle: React.FC<SquircleProps> = ({ 
@@ -54,7 +54,7 @@ const Squircle: React.FC<SquircleProps> = ({
     ...restProps,
   };
 
-  return React.createElement(Component as any, elementProps, children);
+  return React.createElement(Component as keyof React.JSX.IntrinsicElements, elementProps, children);
 };
 
 export default Squircle; 

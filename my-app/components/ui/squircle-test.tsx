@@ -154,13 +154,13 @@ const SquircleTest: React.FC = () => {
         <h4 className="font-semibold mb-2">🔍 ¿Cómo saber si funciona el efecto Squircle?</h4>
         <ul className="text-sm space-y-2">
           <li>
-            <strong>✅ Funciona correctamente:</strong> Las esquinas de las variantes Squircle se ven más "orgánicas" y suaves que el CSS normal
+            <strong>✅ Funciona correctamente:</strong> Las esquinas de las variantes Squircle se ven más orgánicas y suaves que el CSS normal
           </li>
           <li>
             <strong>⚠️ Solo fallback:</strong> Si todas las esquinas se ven exactamente igual, solo funciona border-radius (que está bien)
           </li>
           <li>
-            <strong>🔍 Cómo notar la diferencia:</strong> Compara las esquinas del "Normal CSS" vs "Squircle Medium" - deberían ser sutilmente diferentes
+            <strong>🔍 Cómo notar la diferencia:</strong> Compara las esquinas del &apos;Normal CSS&apos; vs &apos;Squircle Medium&apos; - deberían ser sutilmente diferentes
           </li>
           <li>
             <strong>📱 Mejor en mobile:</strong> El efecto se nota más en dispositivos táctiles y pantallas de alta resolución
