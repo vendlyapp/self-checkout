@@ -46,7 +46,7 @@ const ActionCard = ({
   return (
     <Squircle
       as="button"
-      variant="medium" // Usa la variante medium por defecto (24px border-radius con squircle)
+      variant="subtle" // Usa la variante medium por defecto (24px border-radius con squircle)
       onClick={onClick}
       className={`
         group p-5 text-left

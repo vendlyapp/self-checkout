@@ -59,10 +59,7 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
   const { activeCustomers, totalActive, totalInactive, openCartsValue, progressPercentage } = data;
 
   return (
-    <Squircle 
-      smoothing={smoothing}
-      className="bg-card border border-border/50 transition-fast hover:shadow-md"
-    >
+    <div className="bg-card border border-border/50 transition-fast hover:shadow-md w-full max-w-md rounded-xl">
       <div className="p-5">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-foreground">Jetzt im Shop:</h3>
@@ -77,14 +74,14 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
         <div className="space-y-4">
           {/* Avatare und Zähler */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {/* Kundenavatare */}
               <div className="flex -space-x-2" aria-label={`${totalActive} aktive Kunden`}>
                 {activeCustomers.slice(0, 3).map((customer, index) => (
                   <Squircle
                     key={customer.id}
                     variant="sm"
-                    className="w-10 h-10 bg-muted flex items-center justify-center border-2 border-background text-sm font-medium transition-fast hover:scale-110 hover:z-10"
+                    className="w-10 h-10 bg-muted flex items-center justify-center border-2 rounded-full border-background text-sm font-medium transition-fast hover:scale-110 hover:z-10"
                     style={{ zIndex: activeCustomers.length - index }}
                     title={customer.name}
                   >
@@ -94,7 +91,7 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
                 {totalInactive > 0 && (
                   <Squircle 
                     variant="sm"
-                    className="w-10 h-10 bg-muted flex items-center justify-center border-2 border-background text-sm font-medium text-muted-foreground"
+                    className="w-10 h-10 bg-muted flex items-center justify-center border-2 rounded-full  border-background text-sm font-medium text-muted-foreground"
                     title={`+${totalInactive} weitere Kunden`}
                   >
                     +{totalInactive}
@@ -134,7 +131,7 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
           </div>
         </div>
       </div>
-    </Squircle>
+      </div>
   );
 };
 
