@@ -4,7 +4,7 @@ import ActionCard from './ActionCard';
 
 const MainActionCards = () => (
   <section className="mb-6">
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-3 mb-4">
       <ActionCard
         emoji="🧾"
         title="Kassieren"

@@ -52,7 +52,6 @@ const ActionCard = ({
         group p-5 text-left
         active:scale-95 duration-150
         transition-all
-        w-[188px] h-[188px]
         flex-shrink-0
         aspect-square
         flex flex-col justify-between
