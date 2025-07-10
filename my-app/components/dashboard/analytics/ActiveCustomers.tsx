@@ -1,28 +1,18 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
 import Squircle from '@/components/ui/squircle';
-import { useSquircle, type SquirclePreset } from '@/lib/hooks/useSquircle';
 import { ShopActivity } from './types';
 
 interface ActiveCustomersProps {
   data: ShopActivity;
   loading?: boolean;
-  smoothingPreset?: SquirclePreset; // Preset predefinido
-  customSmoothing?: number; // Smoothing personalizado (0-1)
 }
 
 const ActiveCustomers: React.FC<ActiveCustomersProps> = ({ 
   data, 
-  loading = false,
-  smoothingPreset = 'ios',
-  customSmoothing
+  loading = false
 }) => {
-  // Usar el hook para obtener valores de smoothing
-  const { smoothing } = useSquircle({
-    preset: smoothingPreset,
-    customSmoothing,
-    scale: 0.8
-  });
+  
   if (loading) {
     return (
       <Squircle 
