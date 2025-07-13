@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Package, Grid3X3, Plus, DiscAlbumIcon, Percent } from 'lucide-react';
+import { Package, Grid3X3, Plus, Percent } from 'lucide-react';
 import StatCard from './StatCard';
 import ActionButton from './ActionButton';
 import NavigationItem from './NavigationItem';

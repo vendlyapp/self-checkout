@@ -38,7 +38,7 @@ const StoreDashboard = () => (
     <div className="mt-6">
       <h2 className="text-base font-semibold text-gray-900 mb-3">Services:</h2>
       <div className="grid grid-cols-2 gap-4">
-        {services.map((service, idx) => (
+        {services.map((service) => (
           <ServiceCard key={service.title} {...service} />
         ))}
       </div>

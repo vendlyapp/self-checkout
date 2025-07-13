@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import type { QuickAccessSliderProps, SliderIndicatorsProps, QuickAccessItem } from '../types';
 
 const SliderIndicators = ({ 
@@ -28,11 +28,12 @@ const QuickAccessSlider = ({
   currentSlide, 
   onSlideChange 
 }: QuickAccessSliderProps) => {
-  const sliderRef = useRef<HTMLDivElement>(null);
-  const isDragging = useRef(false);
-  const startX = useRef(0);
+  const sliderRef = React.useRef<HTMLDivElement>(null);
+  const isDragging = React.useRef(false);
+  const startX = React.useRef(0);
   const itemsPerSlide = 4;
   const maxSlides = Math.ceil(items.length / itemsPerSlide);
+  const [pressedIndex, setPressedIndex] = useState<number | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!sliderRef.current) return;
@@ -81,17 +82,17 @@ const QuickAccessSlider = ({
           >
             {Array.from({ length: maxSlides }, (_, slideIndex) => (
               <div key={slideIndex} className="grid grid-cols-4 gap-2 min-w-full px-1">
-                {items.slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide).map((item: QuickAccessItem) => {
-                  const [pressed, setPressed] = useState(false);
+                {items.slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide).map((item: QuickAccessItem, idx: number) => {
+                  const globalIdx = slideIndex * itemsPerSlide + idx;
                   return (
                     <button
                       key={item.id}
-                      className={`bg-white border border-border/10 rounded-2xl p-3 flex flex-col items-center justify-center hover:shadow-md shadow-sm min-h-[100px] transition-transform duration-150 ${pressed ? 'scale-95' : ''}`}
-                      onTouchStart={() => setPressed(true)}
-                      onTouchEnd={() => setPressed(false)}
-                      onMouseDown={() => setPressed(true)}
-                      onMouseUp={() => setPressed(false)}
-                      onMouseLeave={() => setPressed(false)}
+                      className={`bg-white border border-border/10 rounded-2xl p-3 flex flex-col items-center justify-center hover:shadow-md shadow-sm min-h-[100px] transition-transform duration-150 ${pressedIndex === globalIdx ? 'scale-95' : ''}`}
+                      onTouchStart={() => setPressedIndex(globalIdx)}
+                      onTouchEnd={() => setPressedIndex(null)}
+                      onMouseDown={() => setPressedIndex(globalIdx)}
+                      onMouseUp={() => setPressedIndex(null)}
+                      onMouseLeave={() => setPressedIndex(null)}
                     >
                       {/* Green icon container */}
                       <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center mb-2 shadow-sm">
