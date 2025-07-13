@@ -89,7 +89,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   // Error state
   if (error) {
     return (
-      <div className={`min-h-screen bg-background ${className}`}>
+      <div className={`p-4 space-y-4 h-full bg-background ${className}`}>
         <div className="p-4">
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="text-destructive text-lg font-semibold mb-2">
@@ -114,14 +114,14 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   }
 
   return (
-    <div className={`min-h-screen bg-background ${className}`}>
+    <div className={`p-4 space-y-4 h-full bg-background ${className}`}>
       {/* Header with Refresh Button */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/40 flex justify-end pr-4 pt-4">
         
             <button 
               onClick={refreshData}
               disabled={loading}
-              className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-muted transition-fast disabled:opacity-50 tap-highlight-transparent"
+              className="btn-tap flex items-center justify-center w-10 h-10 rounded-lg hover:bg-muted transition-fast disabled:opacity-50"
               aria-label="Daten aktualisieren"
             >
               <RefreshCw 
@@ -132,7 +132,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       </div>
 
       {/* Main Content */}
-      <div className="p-4 pb-24">
+      <div >
         {/* Search Section */}
         <section className="mb-8">
           <SearchInput 

@@ -68,7 +68,7 @@ const HomeDashboard: React.FC = () => {
   } = data;
 
   return (
-    <div className="px-4 pt-2 pb-4 min-h-screen bg-background">
+    <div className="p-4 space-y-4 h-full bg-background">
       {/* ===== GREETING & STATUS ===== */}
       <GreetingSection 
         isStoreOpen={isStoreOpen} 

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Package, Grid3X3, Plus } from 'lucide-react';
+import { Package, Grid3X3, Plus, DiscAlbumIcon, Percent } from 'lucide-react';
 import StatCard from './StatCard';
 import ActionButton from './ActionButton';
 import NavigationItem from './NavigationItem';
@@ -34,7 +34,7 @@ export default function ProductsDashboard() {
   const activeCategoriesCount = getActiveCategoriesCount(data.categories);
 
   return (
-    <div className="p-4 space-y-4 bg-background min-h-screen">
+    <div className="p-4 space-y-4 bg-background h-full">
      
       <section className="mb-8">
           <SearchInput 
@@ -50,23 +50,25 @@ export default function ProductsDashboard() {
       {/* Tarjetas de Estadísticas */}
       <div className="grid grid-cols-2 gap-3">
         <StatCard
-          icon={<Package className="w-5 h-5 text-muted-foreground" />}
+          icon={<Package className="w-5 h-5 text-white " />}
           title="Produkte"
           value={data.products.total}
           subtitle="Produkte"
           trend={data.products.trend}
           trendData={data.products.trendData}
           badge={`${data.products.newProducts} Neu`}
+          className="bg-background-cream"
         />
         
         <StatCard
-          icon={<Grid3X3 className="w-5 h-5 text-muted-foreground" />}
+          icon={<Grid3X3 className="w-5 h-5 text-white " />}
           title="Kategorien"
           value={data.categories.total}
           subtitle="Kategorien"
           trend={data.categories.trend}
           trendData={data.categories.trendData}
           badge={`${data.categories.newCategories} Neu`}
+          className="bg-background-cream"
         />
       </div>
 
@@ -97,6 +99,14 @@ export default function ProductsDashboard() {
           badge={`${activeCategoriesCount} aktiv`}
           badgeVariant="success"
           onClick={handleCategories}
+        />
+
+        <NavigationItem
+          icon={<Percent className="w-5 h-5 text-muted-foreground" />}
+          title="Aktionen"
+          subtitle="erstellen & bearbeiten"
+          badge={`${activeProductsCount} aktiv`}
+          badgeVariant="success"
         />
       </div>
     </div>

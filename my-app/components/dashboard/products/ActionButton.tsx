@@ -11,7 +11,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   onClick,
   variant = 'primary' 
 }) => {
-  const baseClasses = "w-full rounded-2xl p-5 flex items-center justify-between transition-all active:scale-[0.98] duration-150 group";
+  const baseClasses = "btn-tap w-full rounded-2xl p-5 flex items-center justify-between transition-all group";
   const variantClasses = variant === 'primary' 
     ? "bg-primary text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/20" 
     : "bg-card border border-border hover:bg-muted";

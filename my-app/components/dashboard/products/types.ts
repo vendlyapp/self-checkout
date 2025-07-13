@@ -6,6 +6,7 @@ export interface StatCardProps {
   trend?: 'up' | 'down' | 'neutral';
   trendData?: number[];
   badge?: string;
+  className?: string;
 }
 
 export interface ActionButtonProps {

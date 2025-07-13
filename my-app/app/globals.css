@@ -246,6 +246,8 @@
   .transition-fast { transition: all var(--transition-fast); }
   .transition-normal { transition: all var(--transition-normal); }
   .transition-slow { transition: all var(--transition-slow); }
+
+  /* BTN-TAP: Animación táctil coherente */
 }
 
 /* Simular iPhone notch en desktop */

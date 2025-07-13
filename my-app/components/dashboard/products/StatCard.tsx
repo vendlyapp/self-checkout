@@ -19,7 +19,8 @@ const StatCard: React.FC<StatCardProps> = ({
   subtitle, 
   trend = 'neutral',
   trendData = [40, 55, 45, 60, 50, 65, 55],
-  badge 
+  badge,
+  className
 }) => {
   // Convertir array de números a formato que Recharts espera
   const chartData = trendData.map((val, idx) => ({
@@ -39,14 +40,14 @@ const StatCard: React.FC<StatCardProps> = ({
   const percentChange = previousValue ? ((lastValue - previousValue) / previousValue * 100).toFixed(1) : 0;
 
   return (
-    <Card className="bg-card rounded-2xl border-0 shadow-sm hover:shadow-md transition-shadow">
+    <Card className={`bg-card rounded-2xl border-0 shadow-sm hover:shadow-md transition-shadow ${className}`}>
       <CardContent className="p-5">
         <div className="flex items-center justify-between mb-3">
-          <div className="w-10 h-10 bg-muted rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-[#C4BAAF] rounded-xl flex items-center justify-center ">
             {icon}
           </div>
           {badge && (
-            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md font-medium">
+            <span className="text-xs text-muted-foreground bg-white px-2 py-1 rounded-md font-medium">
               {badge}
             </span>
           )}

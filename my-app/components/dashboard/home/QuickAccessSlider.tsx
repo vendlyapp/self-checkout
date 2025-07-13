@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import type { QuickAccessSliderProps, SliderIndicatorsProps, QuickAccessItem } from '../types';
 
 const SliderIndicators = ({ 
@@ -81,24 +81,32 @@ const QuickAccessSlider = ({
           >
             {Array.from({ length: maxSlides }, (_, slideIndex) => (
               <div key={slideIndex} className="grid grid-cols-4 gap-2 min-w-full px-1">
-                {items.slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide).map((item: QuickAccessItem) => (
-                  <button
-                    key={item.id}
-                    className="bg-white border border-border/10 rounded-2xl p-3 flex flex-col items-center justify-center hover:shadow-md hover:scale-[1.02] active:scale-95 transition-all duration-200 shadow-sm min-h-[100px]"
-                  >
-                    {/* Green icon container */}
-                    <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center mb-2 shadow-sm">
-                      <div className="text-white [&>svg]:w-4 [&>svg]:h-4">
-                        {item.icon}
+                {items.slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide).map((item: QuickAccessItem) => {
+                  const [pressed, setPressed] = useState(false);
+                  return (
+                    <button
+                      key={item.id}
+                      className={`bg-white border border-border/10 rounded-2xl p-3 flex flex-col items-center justify-center hover:shadow-md shadow-sm min-h-[100px] transition-transform duration-150 ${pressed ? 'scale-95' : ''}`}
+                      onTouchStart={() => setPressed(true)}
+                      onTouchEnd={() => setPressed(false)}
+                      onMouseDown={() => setPressed(true)}
+                      onMouseUp={() => setPressed(false)}
+                      onMouseLeave={() => setPressed(false)}
+                    >
+                      {/* Green icon container */}
+                      <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center mb-2 shadow-sm">
+                        <div className="text-white [&>svg]:w-4 [&>svg]:h-4">
+                          {item.icon}
+                        </div>
                       </div>
-                    </div>
-                    
-                    {/* Black text */}
-                    <span className="text-xs font-medium text-foreground leading-tight text-center">
-                      {item.label}
-                    </span>
-                  </button>
-                ))}
+                      
+                      {/* Black text */}
+                      <span className="text-xs font-medium text-foreground leading-tight text-center">
+                        {item.label}
+                      </span>
+                    </button>
+                  );
+                })}
                 {/* Fill empty slots if needed */}
                 {Array.from({ 
                   length: itemsPerSlide - items.slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide).length 

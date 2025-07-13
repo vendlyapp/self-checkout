@@ -1,6 +1,7 @@
 'use client';
 
 import type { SearchResultsSectionProps } from '../types';
+import React, { useState } from 'react';
 
 const SearchResultsSection = ({ 
   isSearching, 
@@ -18,20 +19,23 @@ const SearchResultsSection = ({
           Suchergebnisse ({results.length})
         </h3>
         
-        {results.map((result) => (
-          <button 
-            key={result.id}
-            className="
-              w-full p-4 bg-white border border-gray-200 rounded-xl 
-              text-left hover:border-gray-300 
-              active:scale-[0.98] transition-transform duration-150
-              shadow-sm
-            "
-          >
-            <p className="text-gray-900 font-medium">{result.name}</p>
-            <p className="text-sm text-gray-600 mt-1">Tap to view details</p>
-          </button>
-        ))}
+        {results.map((result, idx) => {
+          const [pressed, setPressed] = useState(false);
+          return (
+            <button 
+              key={result.id}
+              className={`w-full p-4 bg-white border border-gray-200 rounded-xl text-left hover:border-gray-300 shadow-sm transition-transform duration-150 ${pressed ? 'scale-95' : ''}`}
+              onTouchStart={() => setPressed(true)}
+              onTouchEnd={() => setPressed(false)}
+              onMouseDown={() => setPressed(true)}
+              onMouseUp={() => setPressed(false)}
+              onMouseLeave={() => setPressed(false)}
+            >
+              <p className="text-gray-900 font-medium">{result.name}</p>
+              <p className="text-sm text-gray-600 mt-1">Tap to view details</p>
+            </button>
+          );
+        })}
       </div>
     )}
   </section>
