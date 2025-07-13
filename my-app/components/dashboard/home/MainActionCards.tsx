@@ -23,12 +23,12 @@ const MainActionCards = () => {
 
   return (
     <section className="mb-6">
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-2 gap-3 mb-4 text-xl">
         {actions.map((action, idx) => (
           <ActionCard
             key={action.title}
             {...action}
-            className={pressedIndex === idx ? 'scale-95 transition-transform duration-150' : 'transition-transform duration-150'}
+            className={` ${pressedIndex === idx ? 'scale-95 transition-transform duration-150 ' : 'transition-transform duration-150'}`}
             onTouchStart={() => setPressedIndex(idx)}
             onTouchEnd={() => setPressedIndex(null)}
             onMouseDown={() => setPressedIndex(idx)}

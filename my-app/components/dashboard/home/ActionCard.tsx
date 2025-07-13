@@ -9,6 +9,11 @@ interface ExtendedActionCardProps extends Omit<ActionCardProps, 'icon'> {
   icon?: React.ReactNode;
   emoji?: string;
   className?: string;
+  onTouchStart?: React.TouchEventHandler<HTMLButtonElement>;
+  onTouchEnd?: React.TouchEventHandler<HTMLButtonElement>;
+  onMouseDown?: React.MouseEventHandler<HTMLButtonElement>;
+  onMouseUp?: React.MouseEventHandler<HTMLButtonElement>;
+  onMouseLeave?: React.MouseEventHandler<HTMLButtonElement>;
 }
 
 const ActionCard = ({ 
@@ -18,7 +23,12 @@ const ActionCard = ({
   subtitle, 
   isPrimary = false, 
   onClick,
-  className = ""
+  className = "",
+  onTouchStart,
+  onTouchEnd,
+  onMouseDown,
+  onMouseUp,
+  onMouseLeave
 }: ExtendedActionCardProps) => {
   // Renderizar icono o emoji
   const renderIcon = () => {
@@ -26,8 +36,8 @@ const ActionCard = ({
       return (
         <Emoji3D 
           emoji={emoji}
-          size={40}
-          className="w-10 h-10"
+          size={50}
+          className="w-[60px] h-[60px]"
         />
       );
     }
@@ -37,16 +47,21 @@ const ActionCard = ({
   return (
     <button
       onClick={onClick}
-      className={`group p-5 text-left active:scale-95 duration-150 transition-all flex-shrink-0 aspect-square flex flex-col justify-between card-shadow rounded-2xl ${isPrimary ? 'bg-brand-500 text-white' : 'bg-white text-gray-900'} ${className}`}
+      className={`group p-5 text-left transition-all flex-shrink-0 aspect-square flex flex-col justify-between card-shadow rounded-2xl ${isPrimary ? 'bg-brand-500 text-white' : 'bg-white text-gray-900'} ${className}`}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      onMouseDown={onMouseDown}
+      onMouseUp={onMouseUp}
+      onMouseLeave={onMouseLeave}
     >
       <div className="flex items-center justify-between mb-4">
-        <div className="rounded-xl flex items-center justify-center w-12 h-12 bg-white/10">
+        <div className="rounded-xl flex items-center justify-center w-[60px] h-[60px]">
           {renderIcon()}
         </div>
         <ArrowRight className={`w-4 h-4 group-active:translate-x-0.5 transition-transform ${isPrimary ? 'text-white/70' : 'text-gray-400'}`} />
       </div>
       <div>
-        <h3 className="font-semibold text-lg mb-1">{title}</h3>
+        <h3 className="font-semibold text-[24px] mb-1 ">{title}</h3>
         <p className={`text-sm ${isPrimary ? 'opacity-90' : 'text-gray-600'}`}>{subtitle}</p>
       </div>
     </button>
