@@ -2,15 +2,11 @@
 
 import { ArrowRight } from 'lucide-react';
 import { Emoji3D } from '@/components/ui/emoji-3d';
-import Squircle from '@/components/ui/squircle';
-import { useSquircle, type SquirclePreset } from '@/lib/hooks/useSquircle';
 import type { ActionCardProps } from '../types';
 
 interface ExtendedActionCardProps extends Omit<ActionCardProps, 'icon'> {
   icon?: React.ReactNode;
   emoji?: string;
-  smoothingPreset?: SquirclePreset; // Preset predefinido
-  customSmoothing?: number; // Smoothing personalizado (0-1)
 }
 
 const ActionCard = ({ 
@@ -19,16 +15,8 @@ const ActionCard = ({
   title, 
   subtitle, 
   isPrimary = false, 
-  onClick,
-  smoothingPreset = 'ios',
-  customSmoothing
+  onClick
 }: ExtendedActionCardProps) => {
-  // Usar el hook para obtener valores de smoothing
-  useSquircle({
-    preset: smoothingPreset,
-    customSmoothing,
-    scale: 0.8
-  });
   // Renderizar icono o emoji
   const renderIcon = () => {
     if (emoji) {
@@ -44,9 +32,7 @@ const ActionCard = ({
   };
 
   return (
-    <Squircle
-      as="button"
-      variant="subtle" // Usa la variante medium por defecto (24px border-radius con squircle)
+    <button
       onClick={onClick}
       className={`
         group p-5 text-left
@@ -56,14 +42,15 @@ const ActionCard = ({
         aspect-square
         flex flex-col justify-between
         card-shadow
+        rounded-2xl
         ${isPrimary 
           ? 'bg-brand-500 text-white' 
           : 'bg-white text-gray-900'
         }
       `}
     >
-              <div className="flex items-center justify-between mb-4">
-        <div className="squircle-sm flex items-center justify-center w-12 h-12 bg-white/10">
+      <div className="flex items-center justify-between mb-4">
+        <div className="rounded-xl flex items-center justify-center w-12 h-12 bg-white/10">
           {renderIcon()}
         </div>
         <ArrowRight className={`
@@ -77,7 +64,7 @@ const ActionCard = ({
           {subtitle}
         </p>
       </div>
-    </Squircle>
+    </button>
   );
 };
 

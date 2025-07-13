@@ -1,6 +1,5 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
-import Squircle from '@/components/ui/squircle';
 import { ShopActivity } from './types';
 
 interface ActiveCustomersProps {
@@ -15,10 +14,7 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
   
   if (loading) {
     return (
-      <Squircle 
-        variant="medium"
-        className="bg-card border border-border/50"
-      >
+      <div className="bg-card border border-border/50 rounded-2xl">
         <div className="p-5">
           <div className="animate-pulse">
             <div className="h-6 bg-muted rounded-lg mb-4 w-1/3"></div>
@@ -26,13 +22,12 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-2">
                   {[1, 2, 3, 4].map((_, index) => (
-                    <Squircle
+                    <div
                       key={index}
-                      variant="sm"
-                      className="w-10 h-10 bg-muted border-2 border-background"
+                      className="w-10 h-10 bg-muted border-2 border-background rounded-xl"
                     >
                       <div></div>
-                    </Squircle>
+                    </div>
                   ))}
                 </div>
                 <div className="h-4 bg-muted rounded w-24"></div>
@@ -42,7 +37,7 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
             </div>
           </div>
         </div>
-      </Squircle>
+      </div>
     );
   }
 
@@ -68,24 +63,22 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
               {/* Kundenavatare */}
               <div className="flex -space-x-2" aria-label={`${totalActive} aktive Kunden`}>
                 {activeCustomers.slice(0, 3).map((customer, index) => (
-                  <Squircle
+                  <div
                     key={customer.id}
-                    variant="sm"
                     className="w-10 h-10 bg-muted flex items-center justify-center border-2 rounded-full border-background text-sm font-medium transition-fast hover:scale-110 hover:z-10"
                     style={{ zIndex: activeCustomers.length - index }}
                     title={customer.name}
                   >
                     {customer.avatar}
-                  </Squircle>
+                  </div>
                 ))}
                 {totalInactive > 0 && (
-                  <Squircle 
-                    variant="sm"
-                    className="w-10 h-10 bg-muted flex items-center justify-center border-2 rounded-full  border-background text-sm font-medium text-muted-foreground"
+                  <div 
+                    className="w-10 h-10 bg-muted flex items-center justify-center border-2 rounded-full border-background text-sm font-medium text-muted-foreground"
                     title={`+${totalInactive} weitere Kunden`}
                   >
                     +{totalInactive}
-                  </Squircle>
+                  </div>
                 )}
               </div>
               
