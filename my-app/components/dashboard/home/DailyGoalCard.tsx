@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronRight, Target, TrendingUp } from 'lucide-react';
+import { ChevronRight,  } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { PieChart, Pie, ResponsiveContainer, Cell } from 'recharts';
 
@@ -34,17 +34,6 @@ const DailyGoalCard = ({
   ];
 
 
-
-  // Determinar color y estado basado en el progreso
-  const getProgressStatus = () => {
-    if (percentage >= 100) return { color: 'text-green-600', bgColor: 'bg-green-50', status: 'Ziel erreicht!' };
-    if (percentage >= 80) return { color: 'text-brand-600', bgColor: 'bg-brand-50', status: 'Fast geschafft!' };
-    if (percentage >= 50) return { color: 'text-yellow-600', bgColor: 'bg-yellow-50', status: 'Auf gutem Weg' };
-    return { color: 'text-gray-600', bgColor: 'bg-gray-50', status: 'Weiter so!' };
-  };
-
-  const progressStatus = getProgressStatus();
-  
   return (
     <section className="mb-6">
       <Card className="bg-card border border-border rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">

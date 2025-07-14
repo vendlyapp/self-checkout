@@ -37,7 +37,7 @@ const GreetingSection = ({
         const temperatures = [18, 20, 22, 19, 21, 23];
         const randomTemp = temperatures[Math.floor(Math.random() * temperatures.length)];
         setWeather(`${randomTemp}°C`);
-      } catch (error) {
+      } catch {
         setWeather('18°C'); // Fallback
       }
     };
