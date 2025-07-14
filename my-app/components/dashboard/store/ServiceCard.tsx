@@ -31,7 +31,7 @@ const ServiceCard = ({ icon, title, subtitle }: ServiceCardProps) => {
       </div>
       <div>
         <div className="font-semibold text-gray-900 text-base leading-tight">{title}</div>
-        <div className="text-xs text-brand-500 mt-0.5">{subtitle}</div>
+        <div className="text-xs text-gray-500 text-start mt-0.5">{subtitle}</div>
       </div>
     </button>
   );

@@ -172,21 +172,7 @@ const CartGauge: React.FC<CartGaugeProps> = ({
               <span className="text-muted-foreground">vs {data.comparisonPeriod}</span>
             </div>
 
-            {/* Additional Metrics */}
-            <div className="space-y-1 text-xs text-muted-foreground">
-              <div className="flex justify-between">
-                <span>Min:</span>
-                <span>CHF {data.minValue}.</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Max:</span>
-                <span>CHF {data.maxValue}.</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Auslastung:</span>
-                <span>{gaugePercentage}%</span>
-              </div>
-            </div>
+            
           </div>
         </div>
       </CardContent>

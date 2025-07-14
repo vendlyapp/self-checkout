@@ -58,7 +58,6 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
   }
 
   const currentPeriodLabel = periodOptions.find(option => option.value === period)?.label || 'Heute';
-  const totalAmount = data.reduce((sum, method) => sum + method.total, 0);
 
   return (
     <Card className="bg-card rounded-2xl border border-border/50 transition-fast hover:shadow-md">
@@ -128,7 +127,7 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
                 <div className="flex items-center gap-4">
                   {/* Rectangular Color indicator */}
                   <div 
-                    className="w-6 h-3 rounded-sm transition-transform duration-200 group-hover:scale-110 shadow-sm" 
+                    className="w-3 h-6 rounded-sm transition-transform duration-200 group-hover:scale-110 shadow-sm" 
                     style={{ backgroundColor: method.color }}
                     aria-hidden="true"
                   />
@@ -149,34 +148,12 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
                   <div className="text-sm font-medium text-foreground">
                     Total CHF {method.total.toLocaleString()}.–
                   </div>
-                  {method.transactions && (
-                    <div className="text-xs text-muted-foreground/80 mt-0.5">
-                      {method.transactions} Transaktionen
-                    </div>
-                  )}
+                 
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Summary Section */}
-          <div className="pt-4 border-t border-border/50">
-            <div className="flex justify-between items-center">
-              <div>
-                <span className="text-sm text-muted-foreground">
-                  Gesamt ({currentPeriodLabel.toLowerCase()})
-                </span>
-              </div>
-              <div className="text-right">
-                <span className="font-bold text-foreground text-lg">
-                  CHF {totalAmount.toLocaleString()}.–
-                </span>
-                <div className="text-xs text-muted-foreground mt-0.5">
-                  {data.reduce((sum, method) => sum + (method.transactions || 0), 0)} Transaktionen
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </CardContent>
     </Card>

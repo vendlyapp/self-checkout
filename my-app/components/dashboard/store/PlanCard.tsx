@@ -3,8 +3,8 @@ import { Crown } from 'lucide-react';
 const PlanCard = () => (
   <div className="flex items-center bg-background-cream rounded-2xl shadow-sm border border-gray-100 px-5 py-4 mb-5">
     <div className="flex items-center gap-3 flex-1">
-      <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center">
-        <Crown className="w-6 h-6 text-brand-500" />
+      <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center">
+        <Crown className="w-6 h-6 " />
       </div>
       <div>
         <div className="text-xs text-gray-500">Aktueller Plan:</div>

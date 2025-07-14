@@ -115,26 +115,12 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
   return (
     <div className={`p-4 space-y-4 h-full bg-background ${className}`}>
-      {/* Header with Refresh Button */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/40 flex justify-end pr-4 pt-4">
-        
-            <button 
-              onClick={refreshData}
-              disabled={loading}
-              className="btn-tap flex items-center justify-center w-10 h-10 rounded-lg hover:bg-muted transition-fast disabled:opacity-50"
-              aria-label="Daten aktualisieren"
-            >
-              <RefreshCw 
-                className={`w-5 h-5 text-muted-foreground ${loading ? 'animate-spin' : ''}`}
-              />
-            </button>
-             
-      </div>
+     
 
       {/* Main Content */}
       <div >
         {/* Search Section */}
-        <section className="mb-8">
+        <section className="mb-4">
           <SearchInput 
             placeholder="Suche Produkte / Verkäufe"
             value={searchQuery}
@@ -147,7 +133,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
         {/* Search Results */}
         {(isSearching || searchResults.length > 0) && (
-          <section className="mb-8">
+          <section className="mb-4">
             <SearchResultsSection 
               isSearching={isSearching}
               results={searchResults}
@@ -156,7 +142,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         )}
 
         {/* Analytics Components */}
-        <div className="space-y-8">
+        <div className="space-y-4">
           {/* Shop Activity Section */}
           <section>
             <ActiveCustomers 

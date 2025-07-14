@@ -61,20 +61,21 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {/* Kundenavatare */}
-              <div className="flex -space-x-2" aria-label={`${totalActive} aktive Kunden`}>
-                {activeCustomers.slice(0, 3).map((customer, index) => (
+              <div className="flex -space-x-3" aria-label={`${totalActive} aktive Kunden`}>
+                {activeCustomers.slice(0, 2).map((customer, idx) => (
                   <div
                     key={customer.id}
-                    className="w-10 h-10 bg-muted flex items-center justify-center border-2 rounded-full border-background text-sm font-medium transition-fast hover:scale-110 hover:z-10"
-                    style={{ zIndex: activeCustomers.length - index }}
+                    className="w-10 h-10 rounded-full border-2 border-white bg-muted flex items-center justify-center text-sm font-medium relative"
+                    style={{ zIndex: idx + 1 }}
                     title={customer.name}
                   >
                     {customer.avatar}
                   </div>
                 ))}
                 {totalInactive > 0 && (
-                  <div 
-                    className="w-10 h-10 bg-muted flex items-center justify-center border-2 rounded-full border-background text-sm font-medium text-muted-foreground"
+                  <div
+                    className="w-10 h-10 rounded-full border-2 border-white bg-muted flex items-center justify-center text-sm font-medium text-muted-foreground relative"
+                    style={{ zIndex: 10 }}
                     title={`+${totalInactive} weitere Kunden`}
                   >
                     +{totalInactive}
@@ -107,10 +108,7 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
             <p className="text-sm text-muted-foreground">
               CHF {openCartsValue}.– in offenen Warenkörben
             </p>
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-              <span className="text-xs text-primary font-medium">Live</span>
-            </div>
+           
           </div>
         </div>
       </div>
