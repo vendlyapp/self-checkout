@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { RefreshCw } from 'lucide-react';
+
 import { useAnalytics, useQuickAccess } from './hooks/useAnalytics';
 import ActiveCustomers from './ActiveCustomers';
 import SalesChart from './SalesChart';
