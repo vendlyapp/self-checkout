@@ -20,15 +20,19 @@ const TodayStatsCard = () => (
           amount="1580.-"
           count="24 Verkäufe"
           trend="+12% vs gestern"
+          showCurrency={true}
+          showCount={true}
         />
         
         <StatCard
           icon={<Users className="w-4 h-4" />}
           label="Kunden"
           amount="18"
-          count="Neue Kunden"
-          trend="+5% vs gestern"
+          count=""
+          trend="+8% vs gestern"
           isDark={true}
+          showCurrency={false}
+          showCount={false}
         />
       </div>
     </div>

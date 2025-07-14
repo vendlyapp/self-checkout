@@ -52,9 +52,7 @@ const DailyGoalCard = ({
           {/* Header */}
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-brand-50 rounded-lg">
-                <Target className="w-4 h-4 text-brand-600" />
-              </div>
+             
               <h2 className="text-lg font-semibold text-foreground">Tagesziel</h2>
             </div>
             <button className="p-1 hover:bg-muted rounded-lg transition-colors duration-200 tap-highlight-transparent">
@@ -75,6 +73,8 @@ const DailyGoalCard = ({
                     outerRadius="85%"
                     startAngle={90}
                     endAngle={450}
+                    cornerRadius={10}
+                    paddingAngle={0}
                     dataKey="value"
                     stroke="none"
                   >
@@ -102,31 +102,17 @@ const DailyGoalCard = ({
                   </span>
                 </div>
                 
-                {/* Status badge */}
-                <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${progressStatus.bgColor} transition-colors duration-300`}>
-                  <TrendingUp className={`w-3 h-3 ${progressStatus.color}`} />
-                  <span className={`text-xs font-medium ${progressStatus.color}`}>
-                    {progressStatus.status}
-                  </span>
-                </div>
+            
               </div>
               
               {/* Remaining amount */}
               {remaining > 0 && (
-                <div className="text-sm text-muted-foreground">
-                  Noch CHF {remaining.toLocaleString('de-CH')} zum Ziel
+                <div className="text-sm text-muted-foreground flex items-center gap-2 w-[160px]">
+                  <p>🥳 Fast geschafft! Noch CHF {remaining.toLocaleString('de-CH')} zum Ziel</p>
                 </div>
               )}
               
-              {/* Progress bar */}
-              <div className="w-full">
-                <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-brand-500 to-brand-400 rounded-full transition-all duration-700 ease-out"
-                    style={{ width: `${Math.min(percentage, 100)}%` }}
-                  />
-                </div>
-              </div>
+
             </div>
           </div>
         </CardContent>

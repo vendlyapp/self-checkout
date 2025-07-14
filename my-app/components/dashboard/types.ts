@@ -30,6 +30,8 @@ export interface StatCardProps {
   count: string;
   trend: string;
   isDark?: boolean;
+  showCurrency?: boolean;
+  showCount?: boolean;
 }
 
 export interface SaleCardProps {

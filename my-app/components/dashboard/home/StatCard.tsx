@@ -9,7 +9,9 @@ const StatCard = ({
   amount, 
   count, 
   trend, 
-  isDark = false 
+  isDark = false,
+  showCurrency = true,
+  showCount = true
 }: StatCardProps) => (
   <div className={`
     rounded-xl p-4 shadow-sm
@@ -20,7 +22,7 @@ const StatCard = ({
   `}>
     <div className="flex items-center gap-2.5 mb-3">
       <div className={`
-        w-7 h-7 rounded-lg flex items-center justify-center
+        w-7 h-7 rounded-xl flex items-center justify-center
         ${isDark ? 'bg-white' : 'bg-warm-800'}
       `}>
         <div className={isDark ? 'text-warm-800' : 'text-white'}>
@@ -34,16 +36,20 @@ const StatCard = ({
     
     <div className="space-y-1">
       <div className="flex items-baseline gap-1">
-        <span className={`text-xs ${isDark ? 'text-white/70' : 'text-gray-500'}`}>CHF</span>
+        {showCurrency && (
+          <span className={`text-xs ${isDark ? 'text-white/70' : 'text-gray-500'}`}>CHF</span>
+        )}
         <span className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
           {amount}
         </span>
       </div>
-      <div className="flex items-center gap-1">
-        <span className={`text-sm ${isDark ? 'text-white/70' : 'text-gray-600'}`}>
-          {count}
-        </span>
-      </div>
+      {showCount && (
+        <div className="flex items-center gap-1">
+          <span className={`text-sm ${isDark ? 'text-white/70' : 'text-gray-600'}`}>
+            {count}
+          </span>
+        </div>
+      )}
       <div className={`flex items-center gap-1 text-xs ${isDark ? 'text-white/80' : 'text-brand-600'}`}>
         <TrendingUp className="w-3 h-3" />
         <span>{trend}</span>
