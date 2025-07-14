@@ -47,7 +47,8 @@ const mockDashboardData: DashboardData = {
       receipt: 'Beleg #0388',
       time: '3h',
       amount: 158.50,
-      paymentMethod: 'TWINT'
+      paymentMethod: 'TWINT',
+      status: 'completed'
     },
     {
       id: '2',
@@ -55,7 +56,8 @@ const mockDashboardData: DashboardData = {
       receipt: 'Beleg #0384',
       time: '5h',
       amount: 18,
-      paymentMethod: 'Debitkarte'
+      paymentMethod: 'Debitkarte',
+      status: 'pending'
     },
     {
       id: '3',
@@ -63,7 +65,17 @@ const mockDashboardData: DashboardData = {
       receipt: 'Beleg #0382',
       time: '7h',
       amount: 9,
-      paymentMethod: 'Bar'
+      paymentMethod: 'Bar',
+      status: 'cancelled'
+    },
+    {
+      id: '4',
+      name: 'Max Meier',
+      receipt: 'Beleg #0382',
+      time: '10h',
+      amount: 100,
+      paymentMethod: 'Bar',
+      status: 'completed'
     }
   ]
 };

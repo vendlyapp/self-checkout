@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import type { QuickAccessSliderProps, SliderIndicatorsProps, QuickAccessItem } from '../types';
 
 const SliderIndicators = ({ 
@@ -35,6 +35,21 @@ const QuickAccessSlider = ({
   const maxSlides = Math.ceil(items.length / itemsPerSlide);
   const [pressedIndex, setPressedIndex] = useState<number | null>(null);
 
+  // Create infinite items by duplicating at start and end
+  const createInfiniteItems = useCallback(() => {
+    if (items.length === 0) return [];
+    
+    // Duplicate items for infinite effect
+    const duplicatedItems = [...items, ...items, ...items];
+    return duplicatedItems;
+  }, [items]);
+
+  const infiniteItems = createInfiniteItems();
+  const infiniteMaxSlides = Math.ceil(infiniteItems.length / itemsPerSlide);
+  
+  // Calculate the real slide position (accounting for the duplicated items)
+  const realSlide = currentSlide + maxSlides;
+
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!sliderRef.current) return;
     isDragging.current = true;
@@ -46,14 +61,28 @@ const QuickAccessSlider = ({
     
     const x = e.touches[0].clientX;
     const diffX = startX.current - x;
-    const threshold = sliderRef.current.offsetWidth * 0.2;
+    const threshold = sliderRef.current.offsetWidth * 0.15; // Reduced threshold for better UX
     
     if (Math.abs(diffX) > threshold) {
-      if (diffX > 0 && currentSlide < maxSlides - 1) {
-        onSlideChange(currentSlide + 1);
+      if (diffX > 0) {
+        // Swipe left - go to next slide
+        const nextSlide = currentSlide + 1;
+        if (nextSlide >= maxSlides) {
+          // Reset to beginning for infinite effect
+          onSlideChange(0);
+        } else {
+          onSlideChange(nextSlide);
+        }
         isDragging.current = false;
-      } else if (diffX < 0 && currentSlide > 0) {
-        onSlideChange(currentSlide - 1);
+      } else if (diffX < 0) {
+        // Swipe right - go to previous slide
+        const prevSlide = currentSlide - 1;
+        if (prevSlide < 0) {
+          // Go to end for infinite effect
+          onSlideChange(maxSlides - 1);
+        } else {
+          onSlideChange(prevSlide);
+        }
         isDragging.current = false;
       }
     }
@@ -63,6 +92,17 @@ const QuickAccessSlider = ({
     isDragging.current = false;
   };
 
+  // Handle slide change with infinite logic
+  const handleSlideChange = useCallback((newSlide: number) => {
+    if (newSlide >= maxSlides) {
+      onSlideChange(0);
+    } else if (newSlide < 0) {
+      onSlideChange(maxSlides - 1);
+    } else {
+      onSlideChange(newSlide);
+    }
+  }, [maxSlides, onSlideChange]);
+
   return (
     <section className="mb-6">
       <h2 className="text-lg font-semibold text-foreground mb-4">Schnellzugriff</h2>
@@ -70,7 +110,7 @@ const QuickAccessSlider = ({
       <div className="relative">
         <div 
           ref={sliderRef}
-          className="overflow-hidden rounded-2xl touch-none"
+          className="overflow-hidden rounded-2xl touch-none w-[100%] p-2"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -78,15 +118,15 @@ const QuickAccessSlider = ({
         >
           <div 
             className="flex transition-transform duration-300 ease-out"
-            style={{ transform: `translateX(-${currentSlide * 50}%)` }}
+            style={{ transform: `translateX(-${realSlide * 49.5}%)` }}
           >
-            {Array.from({ length: maxSlides }, (_, slideIndex) => (
+            {Array.from({ length: infiniteMaxSlides }, (_, slideIndex) => (
               <div key={slideIndex} className="grid grid-cols-4 gap-2 min-w-full px-1">
-                {items.slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide).map((item: QuickAccessItem, idx: number) => {
+                {infiniteItems.slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide).map((item: QuickAccessItem, idx: number) => {
                   const globalIdx = slideIndex * itemsPerSlide + idx;
                   return (
                     <button
-                      key={item.id}
+                      key={`${item.id}-${slideIndex}-${idx}`}
                       className={`bg-white border border-border/10 rounded-2xl p-3 flex flex-col items-center justify-center hover:shadow-md shadow-sm min-h-[100px] transition-transform duration-150 ${pressedIndex === globalIdx ? 'scale-95' : ''}`}
                       onTouchStart={() => setPressedIndex(globalIdx)}
                       onTouchEnd={() => setPressedIndex(null)}
@@ -110,21 +150,21 @@ const QuickAccessSlider = ({
                 })}
                 {/* Fill empty slots if needed */}
                 {Array.from({ 
-                  length: itemsPerSlide - items.slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide).length 
+                  length: itemsPerSlide - infiniteItems.slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide).length 
                 }, (_, i) => (
-                  <div key={`empty-${i}`} className="min-h-[100px]" />
+                  <div key={`empty-${slideIndex}-${i}`} className="min-h-[100px]" />
                 ))}
               </div>
             ))}
           </div>
         </div>
         
-        {/* Slide indicators */}
+        {/* Slide indicators - only show for original slides */}
         {maxSlides > 1 && (
           <SliderIndicators 
             maxSlides={maxSlides}
             currentSlide={currentSlide}
-            onSlideChange={onSlideChange}
+            onSlideChange={handleSlideChange}
           />
         )}
       </div>

@@ -1,5 +1,7 @@
 // ===== DASHBOARD TYPES =====
 
+export type SaleStatus = 'pending' | 'completed' | 'cancelled';
+
 export interface Sale {
   id: string;
   name: string;
@@ -7,6 +9,7 @@ export interface Sale {
   time: string;
   amount: number;
   paymentMethod: string;
+  status: SaleStatus;
 }
 
 export interface QuickAccessItem {
