@@ -2,15 +2,36 @@
 
 import { useState } from 'react'
 import { Plus, Minus, ChevronDown } from 'lucide-react'
+import Image from 'next/image'
 
 interface Product {
-  id: string
-  name: string
-  price: number
-  stock: number
-  image?: string
-  unit?: string
-  availableWeights?: string[]
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  originalPrice?: number;
+  category: string;
+  categoryId: string;
+  image?: string;
+  stock: number;
+  barcode?: string;
+  sku: string;
+  tags: string[];
+  isNew?: boolean;
+  isPopular?: boolean;
+  isOnSale?: boolean;
+  rating?: number;
+  reviews?: number;
+  weight?: number;
+  dimensions?: {
+    length: number;
+    width: number;
+    height: number;
+  };
+  createdAt: string;
+  updatedAt: string;
+  unit?: string;
+  availableWeights?: string[];
 }
 
 interface ProductCardProps {
@@ -51,20 +72,22 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 1 
       </div>
 
       <div className="flex items-center gap-4">
-        {/* Imagen del producto */}
-        <div className="w-[100px] h-[92px] rounded-[16px] overflow-hidden flex-shrink-0 bg-white">
-          {product.image ? (
-            <img 
-              src={product.image} 
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-[#f0f0f0] flex items-center justify-center">
-              <span className="text-gray-400 text-xs">No image</span>
-            </div>
-          )}
-        </div>
+                 {/* Imagen del producto */}
+         <div className="w-[100px] h-[92px] rounded-[16px] overflow-hidden flex-shrink-0 bg-white">
+           {product.image ? (
+             <Image 
+               src={product.image} 
+               alt={product.name}
+               width={100}
+               height={92}
+               className="w-full h-full object-cover"
+             />
+           ) : (
+             <div className="w-full h-full bg-[#f0f0f0] flex items-center justify-center">
+               <span className="text-gray-400 text-xs">No image</span>
+             </div>
+           )}
+         </div>
 
         {/* Contenido principal */}
         <div className="flex-1 flex flex-col justify-between h-[92px]">

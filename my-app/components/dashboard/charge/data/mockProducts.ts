@@ -1,4 +1,4 @@
-import { Package, Tag, ShoppingCart, Users, Clock, Star, Heart } from 'lucide-react'
+
 
 // Tipos para productos de checkout
 export interface Product {

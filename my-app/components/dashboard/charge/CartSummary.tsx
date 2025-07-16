@@ -1,7 +1,36 @@
 'use client'
 
 import { ShoppingBag, ChevronRight } from 'lucide-react'
-import { Product } from './data/mockProducts'
+
+interface Product {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  originalPrice?: number;
+  category: string;
+  categoryId: string;
+  image?: string;
+  stock: number;
+  barcode?: string;
+  sku: string;
+  tags: string[];
+  isNew?: boolean;
+  isPopular?: boolean;
+  isOnSale?: boolean;
+  rating?: number;
+  reviews?: number;
+  weight?: number;
+  dimensions?: {
+    length: number;
+    width: number;
+    height: number;
+  };
+  createdAt: string;
+  updatedAt: string;
+  unit?: string;
+  availableWeights?: string[];
+}
 
 interface CartItem {
   product: Product
