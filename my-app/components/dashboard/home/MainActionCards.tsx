@@ -2,8 +2,10 @@
 
 import ActionCard from './ActionCard';
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const MainActionCards = () => {
+  const router = useRouter();
   const [pressedIndex, setPressedIndex] = useState<number | null>(null);
   const actions = [
     {
@@ -11,13 +13,15 @@ const MainActionCards = () => {
       title: 'Kassieren',
       subtitle: 'Verkauf starten',
       isPrimary: true,
-      onClick: () => console.log('Kassieren clicked'),
+      onClick: () => router.push('/charge'),
+      link: '/charge',
     },
     {
       emoji: '📦',
       title: 'Produkte',
       subtitle: '245 Artikel',
-      onClick: () => console.log('Produkte clicked'),
+      onClick: () => router.push('/products'),
+      link: '/products',
     },
   ];
 
