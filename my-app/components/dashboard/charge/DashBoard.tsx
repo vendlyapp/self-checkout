@@ -8,6 +8,8 @@ import { productCategories, fetchProducts, mockProducts } from "./data/mockProdu
 import { getIcon } from "./data/iconMap";
 import ProductCard from "./ProductCard";
 import CartSummary from "./CartSummary";
+import { useRouter } from 'next/navigation';
+import { useCartStore } from '@/lib/stores/cartStore';
 
 // Interfaz completa para Product - actualizada para ser compatible
 interface Product {
@@ -77,7 +79,10 @@ export default function DashBoardCharge() {
   const [searchQuery, setSearchQuery] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const router = useRouter();
+
+  // Usar el store global
+  const { cartItems, addToCart, updateQuantity } = useCartStore();
 
   const handleFilterChange = async (filters: string[]) => {
     setSelectedFilters(filters);
@@ -122,30 +127,13 @@ export default function DashBoardCharge() {
     // Aquí puedes implementar la funcionalidad de escaneo QR
   };
 
+  // handleAddToCart ahora usa addToCart del store global
   const handleAddToCart = (product: Product, quantity: number) => {
-    setCartItems(prevItems => {
-      const existingItem = prevItems.find(item => item.product.id === product.id);
-      
-      if (existingItem) {
-        if (quantity === 0) {
-          return prevItems.filter(item => item.product.id !== product.id);
-        } else {
-          return prevItems.map(item => 
-            item.product.id === product.id 
-              ? { ...item, quantity }
-              : item
-          );
-        }
-      } else if (quantity > 0) {
-        return [...prevItems, { product, quantity }];
-      }
-      return prevItems;
-    });
+    addToCart(product, quantity);
   };
 
   const handleContinueToCheckout = () => {
-    console.log('Continuando al checkout con:', cartItems);
-    // Aquí puedes implementar la navegación al checkout
+    router.push('/charge/cart');
   };
 
   // Cargar productos iniciales
