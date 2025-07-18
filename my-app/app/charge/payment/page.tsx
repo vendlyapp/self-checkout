@@ -1,6 +1,5 @@
 'use client'
 
-import HeaderNav from '@/components/navigation/HeaderNav'
 import { useCartStore } from '@/lib/stores/cartStore'
 import { CreditCard, Smartphone, FileText, DollarSign, ShieldCheck } from 'lucide-react'
 
