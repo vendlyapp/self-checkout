@@ -168,7 +168,7 @@ export default function DashBoardCharge() {
 
   return (
     <div>
-      <HeaderNav />
+     
       <div className="p-4 flex flex-col-2 gap-4 items-center justify-center">
         <SearchInput 
           placeholder="Produkte suchen..." 
