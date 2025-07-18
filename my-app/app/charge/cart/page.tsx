@@ -3,7 +3,7 @@
 import { useCartStore } from '@/lib/stores/cartStore'
 import ProductCard from '@/components/dashboard/charge/ProductCard'
 import { useState } from 'react'
-import { Link, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import FooterContinue from '@/components/dashboard/charge/FooterContinue'
 

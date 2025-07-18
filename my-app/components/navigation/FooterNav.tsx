@@ -67,11 +67,6 @@ export default function FooterNav() {
   const [isPulsing, setIsPulsing] = useState(true);
   const [pressedItem, setPressedItem] = useState<string | null>(null);
 
-  // Ocultar FooterNav en la pantalla de carrito
-  if (pathname === '/charge/cart') {
-    return null;
-  }
-
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -115,6 +110,11 @@ export default function FooterNav() {
     })),
     [isItemActive, pressedItem]
   );
+
+  // Ocultar FooterNav en la pantalla de carrito
+  if (pathname === '/charge/cart') {
+    return null;
+  }
 
   // Prevenir problemas de hidratación
   if (!mounted) {

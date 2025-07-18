@@ -69,11 +69,6 @@ const chargeFilters: FilterOption[] = productCategories.map(category => {
   };
 });
 
-interface CartItem {
-  product: Product;
-  quantity: number;
-}
-
 export default function DashBoardCharge() {
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -82,7 +77,7 @@ export default function DashBoardCharge() {
   const router = useRouter();
 
   // Usar el store global
-  const { cartItems, addToCart, updateQuantity } = useCartStore();
+  const { cartItems, addToCart } = useCartStore();
 
   const handleFilterChange = async (filters: string[]) => {
     setSelectedFilters(filters);
