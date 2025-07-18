@@ -55,11 +55,11 @@ export function FilterSlider({
   }, [onFilterChange])
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative bg-white border-b border-gray-100", className)}>
       {/* Contenedor de filtros con scroll */}
       <div
         ref={scrollContainerRef}
-        className="flex gap-2 overflow-x-auto scrollbar-hide px-4"
+        className="flex gap-2 overflow-x-auto scrollbar-hide px-4 py-3"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         role="listbox"
         aria-label="Filter options"
@@ -68,12 +68,12 @@ export function FilterSlider({
         {selectedFilters.length > 0 && (
           <button
             onClick={clearAllFilters}
-            className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary transition-all hover:bg-primary/20 hover:scale-105 active:scale-95"
+            className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition-all hover:bg-red-100 hover:scale-105 active:scale-95 border border-red-200"
             aria-label="Clear all filters"
             tabIndex={0}
           >
             <X className="h-3 w-3" />
-            Limpiar filtros
+            Limpiar
           </button>
         )}
 
@@ -86,11 +86,11 @@ export function FilterSlider({
               onClick={() => handleFilterClick(filter.id)}
               onKeyDown={(e) => handleFilterKeyDown(e, filter.id)}
               className={cn(
-                "flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-all",
-                "hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                "flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all duration-200",
+                "hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2",
                 isSelected
-                  ? "bg-primary text-primary-foreground shadow-md"
-                  : "bg-muted hover:bg-muted/80"
+                  ? "bg-green-600 text-white shadow-md shadow-green-200"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200"
               )}
               role="option"
               aria-selected={isSelected}
@@ -101,16 +101,18 @@ export function FilterSlider({
                   {filter.icon}
                 </span>
               )}
-              <span>{filter.label}</span>
+              <span className="font-medium">{filter.label}</span>
               {showCount && filter.count !== undefined && (
                 <span
                   className={cn(
-                    "ml-1 text-xs",
-                    isSelected ? "opacity-80" : "opacity-60"
+                    "ml-1 text-xs px-1.5 py-0.5 rounded-full",
+                    isSelected 
+                      ? "bg-white/20 text-white" 
+                      : "bg-gray-200 text-gray-600"
                   )}
                   aria-label={`${filter.count} items`}
                 >
-                  ({filter.count})
+                  {filter.count}
                 </span>
               )}
             </button>

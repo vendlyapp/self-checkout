@@ -10,7 +10,7 @@ import { getIcon } from "./data/iconMap";
 import ProductCard from "./ProductCard";
 import CartSummary from "./CartSummary";
 
-// Interfaz completa para Product
+// Interfaz completa para Product - actualizada para ser compatible
 interface Product {
   id: string;
   name: string;
@@ -39,6 +39,7 @@ interface Product {
   updatedAt: string;
   unit?: string;
   availableWeights?: string[];
+  hasWeight?: boolean;
 }
 
 // Convertir categorías a formato FilterOption con contadores reales
@@ -199,7 +200,7 @@ export default function DashBoardCharge() {
             <p className="mt-2 text-sm text-muted-foreground">Cargando productos...</p>
           </div>
         ) : products.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {products.map((product) => {
               const cartItem = cartItems.find(item => item.product.id === product.id);
               return (
