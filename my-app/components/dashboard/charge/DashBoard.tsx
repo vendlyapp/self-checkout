@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from "react";
-import HeaderNav from "@/components/navigation/HeaderNav";
 import { SearchInput } from "@/components/ui/search-input";
 import { QrCodeIcon } from "lucide-react";
 import { FilterSlider, FilterOption } from "@/components/Sliders/SliderFIlter";
