@@ -55,7 +55,7 @@ export function FilterSlider({
   }, [onFilterChange])
 
   return (
-    <div className={cn("relative bg-white border-b border-gray-100", className)}>
+    <div className={cn("relative border-b border-gray-100", className)}>
       {/* Contenedor de filtros con scroll */}
       <div
         ref={scrollContainerRef}
@@ -68,7 +68,7 @@ export function FilterSlider({
         {selectedFilters.length > 0 && (
           <button
             onClick={clearAllFilters}
-            className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition-all hover:bg-red-100 hover:scale-105 active:scale-95 border border-red-200"
+            className="flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition-all hover:bg-red-100 hover:scale-105 active:scale-95 border border-red-200"
             aria-label="Clear all filters"
             tabIndex={0}
           >
@@ -86,10 +86,10 @@ export function FilterSlider({
               onClick={() => handleFilterClick(filter.id)}
               onKeyDown={(e) => handleFilterKeyDown(e, filter.id)}
               className={cn(
-                "flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all duration-200",
+                "flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200",
                 "hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2",
                 isSelected
-                  ? "bg-green-600 text-white shadow-md shadow-green-200"
+                  ? "bg-warm-800 text-white shadow-md shadow-warm-700"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200"
               )}
               role="option"
