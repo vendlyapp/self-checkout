@@ -20,8 +20,8 @@ const MainActionCards = () => {
       emoji: '📦',
       title: 'Produkte',
       subtitle: '245 Artikel',
-      onClick: () => router.push('/products'),
-      link: '/products',
+      onClick: () => router.push('/products_list'),
+      link: '/products_list',
     },
   ];
 

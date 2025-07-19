@@ -1,15 +1,14 @@
 'use client'
 
 import { useState, useEffect } from "react";
-import { SearchInput } from "@/components/ui/search-input";
-import { QrCodeIcon } from "lucide-react";
-import { FilterSlider, FilterOption } from "@/components/Sliders/SliderFIlter";
 import { productCategories, fetchProducts, mockProducts } from "./data/mockProducts";
 import { getIcon } from "./data/iconMap";
-import ProductCard from "./ProductCard";
 import CartSummary from "./CartSummary";
+import ProductsList from "./ProductsList";
+import FixedHeaderContainerCharge from "./FixedHeaderContainer";
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/lib/stores/cartStore';
+import { FilterOption } from "@/components/Sliders/SliderFIlter";
 
 // Interfaz completa para Product - actualizada para ser compatible
 interface Product {
@@ -41,6 +40,7 @@ interface Product {
   unit?: string;
   availableWeights?: string[];
   hasWeight?: boolean;
+  discountPercentage?: number;
 }
 
 // Convertir categorías a formato FilterOption con contadores reales
@@ -149,69 +149,28 @@ export default function DashBoardCharge() {
   }, []);
 
   return (
-    <div>
-     
-      <div className="p-4 flex flex-col-2 gap-4 items-center justify-center">
-        <SearchInput 
-          placeholder="Produkte suchen..." 
-          className="w-[260.5px] h-[54px]"
-          value={searchQuery}
-          onChange={handleSearch}
-        />
-        <button 
-          onClick={handleScanQR}
-          className="bg-brand-500 cursor-pointer text-white px-4 py-3 flex items-center text-[18px] font-semibold gap-2 rounded-[30px] w-[124px] h-[54px]"
-        >
-          <QrCodeIcon className="w-6 h-6" />
-          <span className="text-[16px]">Scan</span>
-        </button>
-      </div>
-      <FilterSlider
-        filters={chargeFilters}
-        selectedFilters={selectedFilters}
-        onFilterChange={handleFilterChange}
-        showCount={true}
-        multiSelect={true}
+    <FixedHeaderContainerCharge
+      title="Verkauf starten"
+      searchQuery={searchQuery}
+      onSearch={handleSearch}
+      selectedFilters={selectedFilters}
+      onFilterChange={handleFilterChange}
+      chargeFilters={chargeFilters}
+      onScanQR={handleScanQR}
+    >
+      {/* Lista de productos con scroll propio */}
+      <ProductsList
+        products={products}
+        onAddToCart={handleAddToCart}
+        loading={loading}
+        searchQuery={searchQuery}
       />
-      
-      {/* Lista de productos */}
-      <div className="p-4 pb-24">
-        {loading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500 mx-auto"></div>
-            <p className="mt-2 text-sm text-muted-foreground">Cargando productos...</p>
-          </div>
-        ) : products.length > 0 ? (
-          <div className="space-y-2">
-            {products.map((product) => {
-              const cartItem = cartItems.find(item => item.product.id === product.id);
-              return (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onAddToCart={handleAddToCart}
-                  initialQuantity={cartItem?.quantity || 0}
-                />
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">
-              {searchQuery 
-                ? `No se encontraron productos para "${searchQuery}"`
-                : 'No hay productos disponibles'
-              }
-            </p>
-          </div>
-        )}
-      </div>
 
-      {/* Cart Summary */}
+      {/* Cart Summary - fijo en la parte inferior */}
       <CartSummary 
         items={cartItems}
         onContinue={handleContinueToCheckout}
       />
-    </div>
+    </FixedHeaderContainerCharge>
   );
 }
