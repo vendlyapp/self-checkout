@@ -29,7 +29,7 @@ export default function PaymentPage() {
   return (
     <FixedHeaderContainerSimple title="Bezahlung">
       <div className="flex flex-col bg-background-cream">
-        <main className="flex-1 flex flex-col items-center px-4 pt-4 pb-32">
+        <main className="flex-1 flex flex-col items-center px-4 pt-4 pb-32 ">
           <div className="w-full max-w-md mx-auto">
             <div className="text-center mb-6 mt-2">
               <div className="text-[18px] font-medium text-gray-700 mb-1">Heiniger&apos;s Hofladen</div>
@@ -38,14 +38,14 @@ export default function PaymentPage() {
               )}
               <div className="text-[38px] font-bold text-gray-900 leading-tight">CHF {total.toFixed(2)}</div>
               {promoApplied && (
-                <div className="text-green-700 text-[20px] font-semibold mb-1">10% Rabatt auf Bio-Produkte angewendet!</div>
+                <div className="text-brand-700 text-[20px] font-semibold mb-1">10% Rabatt auf Bio-Produkte angewendet!</div>
               )}
               <div className="text-gray-500 text-[16px]">inkl. MwSt • {totalItems} Artikel</div>
             </div>
             <div className="border-t border-b border-gray-200 py-6 mb-6">
               <div className="text-center text-[18px] font-semibold text-gray-800 mb-4">Zahlungsart wählen:</div>
               <div className="flex flex-col gap-4">
-                <button className="w-full flex items-center justify-center gap-3 rounded-full bg-green-500 hover:bg-green-600 text-white font-bold text-[20px] py-4 shadow transition-colors" aria-label="TWINT">
+                <button className="w-full flex items-center justify-center gap-3 rounded-full bg-brand-500 hover:bg-brand-600 text-white font-bold text-[20px] py-4 shadow transition-colors" aria-label="TWINT">
                   <Smartphone className="w-6 h-6" /> TWINT
                 </button>
                 <button className="w-full flex items-center justify-center gap-3 rounded-full bg-[#7e8bb6] hover:bg-[#6b7aa3] text-white font-bold text-[20px] py-4 shadow transition-colors" aria-label="Zahlungslink">
@@ -60,11 +60,11 @@ export default function PaymentPage() {
               </div>
             </div>
           </div>
-          <div className="w-full max-w-md mx-auto mt-auto mb-2">
-            <div className="flex items-center gap-2 justify-center text-[15px] text-gray-700 bg-white rounded-xl py-3 px-4 shadow border border-gray-100">
-              <span className="w-3 h-3 rounded-full bg-green-500 inline-block mr-2" />
+          <div className="w-full max-w-md mx-auto mt-auto mb-2 bg-white rounded-xl py-3 px-4 shadow border border-gray-100">
+            <div className="flex items-center gap-2 justify-center text-[15px] text-gray-700 ">
+              <span className="w-3 h-3 rounded-full bg-brand-500 inline-block mr-2" />
               <span className="font-semibold">256-BIT SSL VERSCHLÜSSELUNG</span>
-              <ShieldCheck className="w-5 h-5 ml-1 text-green-600" />
+              <ShieldCheck className="w-5 h-5 ml-1 text-brand-600" />
             </div>
             <div className="text-center text-[13px] text-gray-500 mt-1">
               Ihre Daten werden sicher in ISO-zertifizierten Rechenzentren verarbeitet

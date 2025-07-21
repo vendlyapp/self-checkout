@@ -36,12 +36,12 @@ export default function FixedHeaderContainerCharge({
       </div>
 
       {/* Header secundario fijo - HeaderNav */}
-      <div className="fixed top-[57px] left-0 right-0 z-50 bg-background-cream border-b border-gray-200">
+      <div className="fixed top-[85px] left-0 right-0 z-50 bg-background-cream border-b border-gray-200">
         <HeaderNav title={title} />
       </div>
 
       {/* Contenedor de búsqueda y filtros fijo */}
-      <div className="fixed top-[115px] left-0 right-0 z-40 bg-background-cream border-b border-gray-100">
+      <div className="fixed top-[145px] left-0 right-0 z-40 bg-background-cream border-b border-gray-100">
         {/* Barra de búsqueda y botón QR */}
         <div className="p-4 flex flex-col-2 gap-4 items-center justify-center">
           <SearchInput 

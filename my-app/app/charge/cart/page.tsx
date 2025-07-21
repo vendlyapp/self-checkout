@@ -62,7 +62,7 @@ export default function CartPage() {
                   <div className="text-center text-gray-500">Dein Warenkorb ist leer.</div>
                   <button
                     onClick={() => router.push('/charge')}
-                    className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-full px-6 py-3 text-[17px] mt-2 transition-colors shadow"
+                    className="bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-full px-6 py-3 text-[17px] mt-2 transition-colors shadow"
                     aria-label="Zurück zu den Produkten"
                   >
                     Zurück zu den Produkten
@@ -83,7 +83,7 @@ export default function CartPage() {
             </div>
             {/* Promo Code */}
             <div className="mt-6 px-2 pl-4 pr-4 pb-24">
-              <label htmlFor="promo" className="text-green-600 text-[15px] font-semibold">Promo Code?</label>
+              <label htmlFor="promo" className="text-brand-500 text-[15px] font-semibold">Promo Code?</label>
               {!promoApplied ? (
                 <div className="flex flex-col gap-1 mt-1">
                   <div className="flex gap-2">
@@ -98,13 +98,13 @@ export default function CartPage() {
                         setPromoError('')
                       }}
                       placeholder="Gib deinen Code ein"
-                      className="block w-full rounded-lg border uppercase border-gray-300 px-3 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="block w-full rounded-lg border uppercase border-gray-300 px-3 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-brand-500"
                       aria-label="Promo Code"
                       onKeyDown={e => { if (e.key === 'Enter') handleApplyPromo() }}
                     />
                     <button
                       onClick={handleApplyPromo}
-                      className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg px-4 py-2 text-[15px] transition-colors"
+                      className="bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg px-4 py-2 text-[15px] transition-colors"
                       aria-label="Promo anwenden"
                     >
                       Anwenden
@@ -115,18 +115,18 @@ export default function CartPage() {
                   )}
                 </div>
               ) : (
-                <div className="flex items-center bg-green-100 rounded-xl px-4 py-3 mt-2 mb-2 shadow-sm border border-green-200">
+                <div className="flex items-center bg-brand-100 rounded-xl px-4 py-3 mt-2 mb-2 shadow-sm border border-brand-200">
                   <div className="flex-1">
-                    <div className="text-green-700 font-semibold text-[15px] leading-tight">10% Rabatt auf Bio-Produkte</div>
-                    <div className="text-green-700 text-[15px]">- CHF {discountAmount.toFixed(2)}</div>
+                    <div className="text-brand-700 font-semibold text-[15px] leading-tight">10% Rabatt auf Bio-Produkte</div>
+                    <div className="text-brand-700 text-[15px]">- CHF {discountAmount.toFixed(2)}</div>
                   </div>
                   <button
                     onClick={handleRemovePromo}
-                    className="ml-2 p-1 rounded-full hover:bg-green-200 focus:outline-none"
+                    className="ml-2 p-1 rounded-full hover:bg-brand-200 focus:outline-none"
                     aria-label="Promo entfernen"
                     tabIndex={0}
                   >
-                    <X className="w-5 h-5 text-green-700" />
+                    <X className="w-5 h-5 text-brand-700" />
                   </button>
                 </div>
               )}

@@ -11,8 +11,8 @@ const SaleCard = ({ sale }: SaleCardProps) => {
       case 'completed':
         return {
           bgColor: 'bg-[#D3F6E4]',
-          textColor: 'text-green-600',
-          amountColor: 'text-green-600',
+          textColor: 'text-brand-600',
+          amountColor: 'text-brand-600',
           icon: <CheckCircle className="w-4 h-4" />,
           label: 'Abgeschlossen'
         };

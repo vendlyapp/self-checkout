@@ -135,7 +135,7 @@ const QuickAccessSlider = ({
                       onMouseLeave={() => setPressedIndex(null)}
                     >
                       {/* Green icon container */}
-                      <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center mb-2 shadow-sm">
+                      <div className="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center mb-2 shadow-sm">
                         <div className="text-white [&>svg]:w-4 [&>svg]:h-4">
                           {item.icon}
                         </div>

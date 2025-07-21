@@ -558,7 +558,7 @@
 
   .dashboard-header-content {
     @apply flex items-center justify-between;
-    @apply h-14 px-4;
+    @apply px-4;
     @apply max-w-[430px] mx-auto;
   }
 

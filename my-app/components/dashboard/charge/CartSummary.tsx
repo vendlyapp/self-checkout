@@ -56,7 +56,7 @@ export default function CartSummary({ items, onContinue }: CartSummaryProps) {
 
   return (
     <div className="fixed bottom-0 left-0 right-0  bg-white text-white p-2 shadow-lg">
-      <div className="flex items-center justify-between bg-green-500 rounded-lg p-4">
+      <div className="flex items-center justify-between bg-brand-500 rounded-lg p-4">
         {/* Cart Info */}
         <div className="flex items-center gap-3">
           <ShoppingBag className="w-5 h-5" />
@@ -74,7 +74,7 @@ export default function CartSummary({ items, onContinue }: CartSummaryProps) {
           {/* Continue Button */}
           <button
             onClick={onContinue}
-            className="bg-white text-green-500 px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-gray-50 transition-colors"
+            className="bg-white text-brand-500 px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-gray-50 transition-colors"
           >
             <span>Weiter</span>
             <ChevronRight className="w-4 h-4" />

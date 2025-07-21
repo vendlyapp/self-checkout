@@ -61,7 +61,7 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
   }
 
   return (
-    <div className="bg-[#f5f5f5] rounded-[20px] p-2 relative">
+    <div className="bg-white rounded-[20px] h-[120px] p-2  relative">
       {/* Badge de precio */}
       <div className="absolute top-3 right-3">
         {product.originalPrice ? (
@@ -144,7 +144,7 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
             )}
 
             {/* Controles de cantidad */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 h-full pt-4">
               {quantity > 0 && (
                 <button
                   onClick={() => handleQuantityChange(quantity - 1)}
@@ -161,9 +161,9 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
               <button
                 onClick={() => handleQuantityChange(quantity + 1)}
                 disabled={quantity >= product.stock}
-                className="w-8 h-8 rounded-full bg-[#22c55e] hover:bg-[#16a34a] disabled:bg-[#86efac] disabled:cursor-not-allowed text-white flex items-center justify-center transition-all duration-200 shadow-sm"
+                className="w-10 h-10 rounded-full bg-[#22c55e] hover:bg-[#16a34a] disabled:bg-[#86efac] disabled:cursor-not-allowed text-white flex items-center justify-center transition-all duration-200 shadow-sm"
               >
-                <Plus className="w-4 h-4" strokeWidth={2.5} />
+                <Plus className="w-6 h-6" strokeWidth={2.5} />
               </button>
             </div>
           </div>

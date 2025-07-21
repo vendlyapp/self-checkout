@@ -82,8 +82,8 @@ export default function Header() {
         />
       )}
 
-      <header className="dashboard-header">
-        <div className="dashboard-header-content bg-background-cream ">
+      <header className="dashboard-header h-[85px] w-full ">
+        <div className="dashboard-header-content bg-background-cream h-[85px] w-full">
           {/* Logo */}
           <Link href="/dashboard" className="dashboard-logo">
             <Image 
@@ -140,6 +140,7 @@ export default function Header() {
            
           </div>
         </div>
+        <div className="w-full h-px bg-white" />
 
         {/* Notifications Dropdown */}
         {showNotifications && (

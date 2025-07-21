@@ -34,7 +34,7 @@ export default function HeaderNav({ title = 'Warenkorb', showAddButton = false }
           )}
           {showAddButton && (
             <button 
-              className="flex items-center gap-2 cursor-pointer bg-green-600 rounded-full p-2" 
+              className="flex items-center gap-2 cursor-pointer bg-brand-600 rounded-full p-2" 
               onClick={() => router.push('/products_list/add_product')} 
               aria-label="Hinzufügen" 
               tabIndex={0}

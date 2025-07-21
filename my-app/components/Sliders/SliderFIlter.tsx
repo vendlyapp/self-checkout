@@ -87,10 +87,10 @@ export function FilterSlider({
               onKeyDown={(e) => handleFilterKeyDown(e, filter.id)}
               className={cn(
                 "flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200",
-                "hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2",
+                "hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2",
                 isSelected
                   ? "bg-warm-800 text-white shadow-md shadow-warm-700"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200"
+                  : "bg-white text-gray-700 hover:bg-gray-200 border border-gray-200"
               )}
               role="option"
               aria-selected={isSelected}
@@ -107,8 +107,8 @@ export function FilterSlider({
                   className={cn(
                     "ml-1 text-xs px-1.5 py-0.5 rounded-full",
                     isSelected 
-                      ? "bg-white/20 text-white" 
-                      : "bg-gray-200 text-gray-600"
+                      ? "bg-white text-gray-600" 
+                      : "bg-[#F2EDE8] text-gray-600"
                   )}
                   aria-label={`${filter.count} items`}
                 >
