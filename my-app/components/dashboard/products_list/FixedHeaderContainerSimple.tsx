@@ -23,12 +23,12 @@ export default function FixedHeaderContainerSimple({
       </div>
 
       {/* Header secundario fijo - HeaderNav */}
-      <div className="fixed top-[57px] left-0 right-0 z-50 bg-background-cream border-b border-gray-200">
+      <div className="fixed top-[77px] left-0 right-0 z-50 bg-background-cream border-b border-gray-200">
         <HeaderNav title={title} showAddButton={showAddButton} />
       </div>
 
       {/* Contenido scrolleable con padding para los elementos fijos */}
-      <div className="flex-1 overflow-hidden" style={{ paddingTop: '130px' }}>
+      <div className="flex-1 overflow-hidden" style={{ paddingTop: '147px' }}>
         {children}
       </div>
     </div>

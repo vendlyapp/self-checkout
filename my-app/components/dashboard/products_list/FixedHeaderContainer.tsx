@@ -39,12 +39,12 @@ export default function FixedHeaderContainer({
       </div>
 
       {/* Header secundario fijo - HeaderNav */}
-      <div className="fixed top-[57px] left-0 right-0 z-50 bg-background-cream border-b border-gray-200">
+      <div className="fixed top-[77px] left-0 right-0 z-50 bg-background-cream border-b border-gray-200">
         <HeaderNav title={title} showAddButton={showAddButton} />
       </div>
 
       {/* Contenedor de filtros fijo */}
-      <div className="fixed top-[115px] left-0 right-0 z-40 bg-background-cream border-b border-gray-100">
+      <div className="fixed top-[137px] left-0 right-0 z-40 bg-background-cream border-b border-gray-100">
         <Filter_Busqueda
           searchQuery={searchQuery}
           onSearch={onSearch}

@@ -1,13 +1,18 @@
-import { ArrowLeftIcon, Plus } from "lucide-react";
+import { ArrowLeftIcon, Plus, X } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useCartStore } from '@/lib/stores/cartStore';
 
 interface HeaderNavProps {
   title?: string;
   showAddButton?: boolean;
+  closeDestination?: string;
 }
 
-export default function HeaderNav({ title = 'Warenkorb', showAddButton = false }: HeaderNavProps) {
+export default function HeaderNav({ 
+  title = 'Warenkorb', 
+  showAddButton = false, 
+  closeDestination = '/dashboard' 
+}: HeaderNavProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { cartItems, clearCart } = useCartStore();
@@ -30,6 +35,16 @@ export default function HeaderNav({ title = 'Warenkorb', showAddButton = false }
               tabIndex={0}
             >
               Leeren
+            </button>
+          )}
+          {!isCartPage && !showAddButton && (
+            <button
+              className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
+              onClick={() => router.push(closeDestination)}
+              aria-label="Schließen"
+              tabIndex={0}
+            >
+              <X className="w-5 h-5 text-gray-600" />
             </button>
           )}
           {showAddButton && (
