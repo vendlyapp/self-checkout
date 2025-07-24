@@ -394,6 +394,20 @@
       0 4px 12px rgba(34, 197, 95, 0.25),
       0 2px 4px rgba(0, 0, 0, 0.1);
   }
+    /* Botón principal flotante */
+    .nav-main-button-user {
+      @apply relative w-16 h-16 rounded-full;
+      @apply bg-warm-800 shadow-lg;
+      @apply flex items-center justify-center;
+      transition: all var(--transition-normal);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      will-change: transform;
+      /* Elevación sutil por defecto */
+      box-shadow: 
+        0 4px 12px rgba(197, 170, 34, 0.25),
+        0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 
   .nav-main-button::before {
     content: '';
