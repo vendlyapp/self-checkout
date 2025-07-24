@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Camera, X, Plus, Check, AlertCircle, Loader2, Package, Percent } from 'lucide-react';
+import Image from 'next/image';
 
 const NewProductPage = () => {
   const [productName, setProductName] = useState('');
@@ -226,9 +227,11 @@ const NewProductPage = () => {
             <div className="grid grid-cols-3 gap-2 mb-3">
               {productImages.map((image, index) => (
                 <div key={index} className="relative">
-                  <img 
+                  <Image
                     src={`/api/placeholder/120/120`} 
                     alt={`Produktbild ${index + 1}`} 
+                    width={120}
+                    height={120}
                     className="w-full h-20 object-cover rounded-lg border border-gray-200" 
                     style={{ aspectRatio: '1/1' }}
                   />

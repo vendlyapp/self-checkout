@@ -1,13 +1,10 @@
 // components/navigation/Header.tsx
 'use client';
 
-import { Bell, ChartNoAxesColumn } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useCallback, useMemo } from 'react';
 import { clsx } from 'clsx';
 import Image from 'next/image';
-import { lightFeedback } from '@/lib/utils/safeFeedback';
-
 interface Notification {
   id: string;
   title: string;
@@ -36,7 +33,6 @@ const mockNotifications: Notification[] = [
 
 export default function HeaderUser() {
   const [showNotifications, setShowNotifications] = useState(false);
-  const [pressedButton, setPressedButton] = useState<string | null>(null);
 
   // Calcular notificaciones no leídas
   const unreadCount = useMemo(
@@ -45,24 +41,17 @@ export default function HeaderUser() {
   );
 
   // Manejar presión de botón con vibración háptica
-  const handleButtonPress = useCallback((buttonId: string) => {
-    setPressedButton(buttonId);
-
-    // Reset después de la animación
-    setTimeout(() => setPressedButton(null), 150);
-  }, []);
+  // const handleButtonPress = useCallback(() => { // Eliminado
+  //   setTimeout(() => {
+  //     // No-op, animación visual si se requiere
+  //   }, 150);
+  // }, []); // Eliminado
 
   // Manejar feedback en eventos válidos
-  const handleValidInteraction = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    // Feedback seguro con haptic + visual
-    lightFeedback(e.currentTarget);
-  }, []);
-
-  // Toggle notificaciones
-  const handleNotificationToggle = useCallback(() => {
-    setShowNotifications(prev => !prev);
-    handleButtonPress('notifications');
-  }, [handleButtonPress]);
+  // const handleValidInteraction = useCallback((e: React.MouseEvent<HTMLButtonElement>) => { // Eliminado
+  //   // Feedback seguro con haptic + visual // Eliminado
+  //   lightFeedback(e.currentTarget); // Eliminado
+  // }, []); // Eliminado
 
   // Cerrar notificaciones al hacer click fuera
   const handleClickOutside = useCallback(() => {

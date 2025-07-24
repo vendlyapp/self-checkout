@@ -1,7 +1,7 @@
 // components/navigation/FooterNav.tsx
 'use client';
 
-import { Home, Package, Percent, ScanLine, Search, ShoppingBag, Store } from 'lucide-react';
+import { Home, Percent, ScanLine, Search, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
