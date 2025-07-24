@@ -248,7 +248,7 @@ export default function ProductsListComponent({
   // Cargar productos iniciales solo una vez al montar el componente
   useEffect(() => {
     loadInitialProducts();
-  }, []); // Array vacío para que solo se ejecute una vez
+  }, [loadInitialProducts]); // Include loadInitialProducts in dependencies
 
   // Si es standalone, usar el contenedor fijo
   if (isStandalone) {

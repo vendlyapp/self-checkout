@@ -1,27 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Camera, X, Plus, Check, AlertCircle, Loader2, Info, Eye, Star, Package, Percent, Calendar } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Camera, X, Plus, Check, AlertCircle, Loader2, Package, Percent } from 'lucide-react';
 
 const NewProductPage = () => {
   const [productName, setProductName] = useState('');
   const [productDescription, setProductDescription] = useState('');
   const [productPrice, setProductPrice] = useState('');
   const [productCategory, setProductCategory] = useState('');
-  const [productImages, setProductImages] = useState([]);
+  const [productImages, setProductImages] = useState<string[]>([]);
   const [isActive, setIsActive] = useState(true);
   const [hasPromotion, setHasPromotion] = useState(false);
   const [promotionPrice, setPromotionPrice] = useState('');
   const [promotionDuration, setPromotionDuration] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [hasVariants, setHasVariants] = useState(false);
-  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
+  const [selectedVariantIndex] = useState(0);
   const [variants, setVariants] = useState([
     { name: 'Klein (500g)', price: '7.00', promotionPrice: '' },
     { name: 'Gross (1kg)', price: '13.00', promotionPrice: '' }
   ]);
   const [vatRate, setVatRate] = useState('2.6');
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<{
+    productName?: string;
+    productPrice?: string;
+    productCategory?: string;
+    promotionPrice?: string;
+  }>({});
   const [isSaving, setIsSaving] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
   const [saveProgress, setSaveProgress] = useState(0);
 
   const categories = [
@@ -43,7 +47,7 @@ const NewProductPage = () => {
     { value: '0', label: '0% (befreit)', color: 'text-gray-600' }
   ];
 
-  const smartSuggestions = {
+  const smartSuggestions: { [key: string]: string[] } = {
     'Früchte': ['1kg', '500g', '1 Schale', 'Bio', 'Regional'],
     'Gemüse': ['1kg', '500g', '1 Bund', 'Bio', 'Regional'],
     'Milchprodukte': ['1 Liter', '500ml', '200g', 'Bio', 'Vollmilch'],
@@ -51,7 +55,7 @@ const NewProductPage = () => {
     'Getränke': ['1 Liter', '500ml', '330ml', 'Süss', 'Zuckerfrei']
   };
 
-  const validateField = (field, value) => {
+  const validateField = (field: string, value: string) => {
     const newErrors = { ...errors };
     switch (field) {
       case 'productName':
@@ -133,18 +137,18 @@ const NewProductPage = () => {
     setVariants([...variants, { name: '', price: '', promotionPrice: '' }]);
   };
 
-  const removeVariant = (index) => {
+  const removeVariant = (index: number) => {
     setVariants(variants.filter((_, i) => i !== index));
   };
 
-  const updateVariant = (index, field, value) => {
+  const updateVariant = (index: number, field: string, value: string) => {
     const updatedVariants = variants.map((variant, i) =>
       i === index ? { ...variant, [field]: value } : variant
     );
     setVariants(updatedVariants);
   };
 
-  const applySuggestion = (suggestion) => {
+  const applySuggestion = (suggestion: string) => {
     const newVariant = { name: suggestion, price: '', promotionPrice: '' };
     setVariants([...variants, newVariant]);
   };
@@ -177,13 +181,13 @@ const NewProductPage = () => {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <button 
-              onClick={() => setShowPreview(!showPreview)}
-              className="text-blue-500 text-xs font-medium hover:text-blue-600 transition-colors flex items-center space-x-1"
-            >
-              <Eye className="w-3 h-3" />
-              <span>Vorschau</span>
-            </button>
+                          <button
+                onClick={() => {}}
+                className="text-blue-500 text-xs font-medium hover:text-blue-600 transition-colors flex items-center space-x-1"
+              >
+                {/* <Eye className="w-3 h-3" /> */}
+                <span>Vorschau</span>
+              </button>
             <button className="text-red-500 text-xs font-medium hover:text-red-600 transition-colors">
               Abbrechen
             </button>
@@ -250,14 +254,20 @@ const NewProductPage = () => {
               <Camera className="w-6 h-6 text-gray-400 mx-auto mb-2" />
               <div className="space-y-2">
                 <button 
-                  onClick={() => setProductImages([...productImages, `photo_${Date.now()}`])}
+                  onClick={() => {
+                    const newImage = `photo_${Date.now()}`;
+                    setProductImages([...productImages, newImage]);
+                  }}
                   className="w-full bg-green-500 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-green-600 transition-colors flex items-center justify-center space-x-1"
                 >
                   <Camera className="w-4 h-4" />
                   <span>Foto aufnehmen</span>
                 </button>
                 <button 
-                  onClick={() => setProductImages([...productImages, `gallery_${Date.now()}`])}
+                  onClick={() => {
+                    const newImage = `gallery_${Date.now()}`;
+                    setProductImages([...productImages, newImage]);
+                  }}
                   className="w-full bg-gray-100 text-gray-700 py-2 px-3 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors flex items-center justify-center space-x-1"
                 >
                   <Package className="w-4 h-4" />
@@ -306,7 +316,7 @@ const NewProductPage = () => {
               value={productDescription}
               onChange={(e) => setProductDescription(e.target.value)}
               placeholder="Kurze Beschreibung oder Herkunft (optional)"
-              rows="2"
+              rows={2}
               maxLength={100}
               className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-sm"
             />
@@ -413,11 +423,11 @@ const NewProductPage = () => {
                 hasPromotion ? 'bg-orange-500' : 'bg-gray-300'
               }`}
             >
-              <div
+              {/* <div
                 className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
                   hasPromotion ? 'translate-x-5' : 'translate-x-0.5'
                 }`}
-              />
+              /> */}
             </button>
           </div>
 
@@ -446,7 +456,7 @@ const NewProductPage = () => {
                     {productPrice && promotionPrice && !errors.promotionPrice && (
                       <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
                         <span className="bg-red-500 text-white px-1.5 py-0.5 rounded text-xs font-medium">
-                          -{Math.round(((productPrice - promotionPrice) / productPrice) * 100)}%
+                          -{Math.round(((parseFloat(productPrice) - parseFloat(promotionPrice)) / parseFloat(productPrice)) * 100)}%
                         </span>
                       </div>
                     )}
@@ -525,11 +535,11 @@ const NewProductPage = () => {
                 hasVariants ? 'bg-blue-500' : 'bg-gray-300'
               }`}
             >
-              <div
+              {/* <div
                 className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
                   hasVariants ? 'translate-x-5' : 'translate-x-0.5'
                 }`}
-              />
+              /> */}
             </button>
           </div>
 
@@ -670,31 +680,27 @@ const NewProductPage = () => {
                 isActive ? 'bg-green-500' : 'bg-gray-300'
               }`}
             >
-              <div
+              {/* <div
                 className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
                   isActive ? 'translate-x-5' : 'translate-x-0.5'
                 }`}
-              />
+              /> */}
             </button>
           </div>
         </div>
 
         {/* Kundenvorschau */}
-        {(showPreview || isFormValid()) && (
+        {(isFormValid()) && (
           <div className="border-t border-gray-200 pt-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-gray-700">Kundenansicht</h3>
-              <Eye className="w-4 h-4 text-gray-400" />
+              {/* <Eye className="w-4 h-4 text-gray-400" /> */}
             </div>
             
             <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                  {productImages.length > 0 ? (
-                    <img src="/api/placeholder/48/48" alt="Preview" className="w-full h-full object-cover rounded-lg" />
-                  ) : (
-                    <Camera className="w-4 h-4 text-gray-400" />
-                  )}
+                  <Camera className="w-4 h-4 text-gray-400" />
                 </div>
                 <div className="flex-1">
                   <div className="font-medium text-gray-800 text-sm">{productName || 'Produktname'}</div>
@@ -716,7 +722,7 @@ const NewProductPage = () => {
                           <span className="text-sm font-bold text-red-600">CHF {promotionPrice}</span>
                           <span className="text-xs text-gray-500 line-through">CHF {productPrice}</span>
                           <span className="bg-red-500 text-white px-1.5 py-0.5 rounded text-xs font-medium">
-                            -{Math.round(((productPrice - promotionPrice) / productPrice) * 100)}%
+                            -{Math.round(((parseFloat(productPrice) - parseFloat(promotionPrice)) / parseFloat(productPrice)) * 100)}%
                           </span>
                         </>
                       ) : (

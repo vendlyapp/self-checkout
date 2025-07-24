@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { ArrowLeft, Camera, X, Plus, Check, AlertCircle, Loader2, Eye, Package, Percent, Image, FolderOpen } from 'lucide-react';
+import { Camera, X, Plus, Check, AlertCircle, Loader2, Package, Percent, FolderOpen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { lightFeedback } from '@/lib/utils/safeFeedback';
+
 
 // Types
 interface ProductVariant {
@@ -31,10 +31,6 @@ interface VatRate {
   color: string;
 }
 
-interface SmartSuggestions {
-  [key: string]: string[];
-}
-
 export default function Form() {
   const router = useRouter();
   
@@ -47,11 +43,10 @@ export default function Form() {
   const [stock, setStock] = useState(50);
   const [isActive, setIsActive] = useState(true);
   const [hasPromotion, setHasPromotion] = useState(false);
-  const [promotionPrice, setPromotionPrice] = useState('');
+  const [promotionPrice] = useState('');
   const [promotionDuration, setPromotionDuration] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [hasVariants, setHasVariants] = useState(true);
-  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
   const [variants, setVariants] = useState<ProductVariant[]>([
     { name: 'Bsp: Mini (250g)', price: '6.50', promotionPrice: '' },
     { name: 'Bsp: Klein (500g)', price: '0.00', promotionPrice: '' }
@@ -59,21 +54,20 @@ export default function Form() {
   const [vatRate, setVatRate] = useState('0');
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSaving, setIsSaving] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
   const [saveProgress, setSaveProgress] = useState(0);
 
-  // Data - Using your existing mock data structure
-  const categories: Category[] = [
+  // Data - Using useMemo to fix the warning
+  const categories: Category[] = useMemo(() => [
     { value: 'Früchte', icon: '🍎', color: 'bg-red-50 text-red-700' },
     { value: 'Gemüse', icon: '🥕', color: 'bg-orange-50 text-orange-700' },
     { value: 'Alle', icon: '🛒', color: 'bg-gray-50 text-gray-700' }
-  ];
+  ], []);
 
-  const vatRates: VatRate[] = [
+  const vatRates: VatRate[] = useMemo(() => [
     { value: '2.6', label: '2.6% (Lebensmittel)', color: 'text-green-600' },
     { value: '8.1', label: '8.1% (Standard)', color: 'text-blue-600' },
     { value: '0', label: '0% (befreit)', color: 'text-gray-600' }
-  ];
+  ], []);
 
   // Validation
   const validateField = useCallback((field: keyof FormErrors, value: string) => {
@@ -184,10 +178,6 @@ export default function Form() {
     router.push('/products_list');
   }, [productName, productDescription, productCategory, productPrice, promotionPrice, stock, hasVariants, hasPromotion, errors, validateField, router]);
 
-  const handleButtonPress = useCallback((buttonId: string) => {
-    lightFeedback();
-  }, []);
-
   const addVariant = useCallback(() => {
     setVariants([...variants, { name: '', price: '', promotionPrice: '' }]);
   }, [variants]);
@@ -203,11 +193,6 @@ export default function Form() {
     setVariants(updatedVariants);
   }, [variants]);
 
-  const applySuggestion = useCallback((suggestion: string) => {
-    const newVariant = { name: suggestion, price: '', promotionPrice: '' };
-    setVariants([...variants, newVariant]);
-  }, [variants]);
-
   const getSelectedCategory = useCallback(() => {
     return categories.find(cat => cat.value === productCategory);
   }, [productCategory, categories]);
@@ -219,9 +204,7 @@ export default function Form() {
            Object.keys(errors).length === 0;
   }, [productName, productCategory, hasVariants, productPrice, variants, errors]);
 
-  const handleGoBack = useCallback(() => {
-    router.back();
-  }, [router]);
+
 
     return (
     <div className="max-w-sm mx-auto bg-background-cream min-h-screen">
@@ -258,12 +241,12 @@ export default function Form() {
             <div className="grid grid-cols-3 gap-2 mb-3">
               {productImages.map((image, index) => (
                 <div key={index} className="relative">
-                  <img 
-                    src={`/api/placeholder/120/120`} 
-                    alt={`Produktbild ${index + 1}`} 
-                    className="w-full h-20 object-cover rounded-lg border border-gray-200 bg-white" 
+                  <div 
+                    className="w-full h-20 object-cover rounded-lg border border-gray-200 bg-white bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center" 
                     style={{ aspectRatio: '1/1' }}
-                  />
+                  >
+                    <Camera className="w-6 h-6 text-gray-400" />
+                  </div>
                   <button
                     onClick={() => setProductImages(productImages.filter((_, i) => i !== index))}
                     className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
