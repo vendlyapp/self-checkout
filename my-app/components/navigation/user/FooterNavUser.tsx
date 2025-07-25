@@ -48,7 +48,7 @@ const navItems: NavItemUser[] = [
     id: 'cart',
     icon: ShoppingBag,
     label: 'Warenkorb',
-    href: '/cart',
+    href: '/user/cart',
   },
 ];
 
