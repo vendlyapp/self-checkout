@@ -1,7 +1,7 @@
 // app/(dashboard)/layout.tsx
 import { ReactNode } from 'react';
 import FooterNavUser from '@/components/navigation/user/FooterNavUser';
-import UserCartSummary from '@/components/user/UserCartSummary';
+
 
 export default function UserLayout({ children }: { children: ReactNode }) {
   return (

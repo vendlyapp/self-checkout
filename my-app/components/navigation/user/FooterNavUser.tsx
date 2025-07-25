@@ -8,7 +8,7 @@ import { clsx } from 'clsx';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
 import UserCartSummary from '@/components/user/UserCartSummary';
-import { useCartStore } from '@/lib/stores/cartStore';
+
 
 interface NavItemUser {
   id: string;
@@ -68,7 +68,6 @@ export default function FooterNav() {
   const [mounted, setMounted] = useState(false);
   const [isPulsing, setIsPulsing] = useState(true);
   const [pressedItem, setPressedItem] = useState<string | null>(null);
-  const { cartItems } = useCartStore();
 
   useEffect(() => {
     setMounted(true);
