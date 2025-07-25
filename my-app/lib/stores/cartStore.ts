@@ -1,38 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-
-// Definir el tipo Product localmente (idéntico al de ProductCard)
-export interface Product {
-  id: string;
-  name: string;
-  description?: string;
-  price: number;
-  originalPrice?: number;
-  category: string;
-  categoryId: string;
-  image?: string;
-  stock: number;
-  barcode?: string;
-  sku: string;
-  tags: string[];
-  isNew?: boolean;
-  isPopular?: boolean;
-  isOnSale?: boolean;
-  rating?: number;
-  reviews?: number;
-  weight?: number;
-  dimensions?: {
-    length: number;
-    width: number;
-    height: number;
-  };
-  createdAt: string;
-  updatedAt: string;
-  unit?: string;
-  availableWeights?: string[];
-  hasWeight?: boolean;
-  discountPercentage?: number;
-}
+import { Product } from '@/components/dashboard/products_list/data/mockProducts'
 
 export type CartItem = {
   product: Product
@@ -58,7 +26,7 @@ export const useCartStore = create<CartState>()(
             return {
               cartItems: state.cartItems.map(item =>
                 item.product.id === product.id
-                  ? { ...item, quantity: item.quantity + quantity }
+                  ? { ...item, quantity }
                   : item
               )
             }

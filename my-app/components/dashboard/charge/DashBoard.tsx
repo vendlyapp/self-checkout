@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react";
-import { productCategories, fetchProducts, mockProducts } from "./data/mockProducts";
+import { productCategories, fetchProducts, mockProducts, Product } from "../products_list/data/mockProducts";
 import { getIcon } from "./data/iconMap";
 import CartSummary from "./CartSummary";
 import ProductsList from "./ProductsList";
@@ -9,39 +9,6 @@ import FixedHeaderContainerCharge from "./FixedHeaderContainer";
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/lib/stores/cartStore';
 import { FilterOption } from "@/components/Sliders/SliderFIlter";
-
-// Interfaz completa para Product - actualizada para ser compatible
-interface Product {
-  id: string;
-  name: string;
-  description?: string;
-  price: number;
-  originalPrice?: number;
-  category: string;
-  categoryId: string;
-  image?: string;
-  stock: number;
-  barcode?: string;
-  sku: string;
-  tags: string[];
-  isNew?: boolean;
-  isPopular?: boolean;
-  isOnSale?: boolean;
-  rating?: number;
-  reviews?: number;
-  weight?: number;
-  dimensions?: {
-    length: number;
-    width: number;
-    height: number;
-  };
-  createdAt: string;
-  updatedAt: string;
-  unit?: string;
-  availableWeights?: string[];
-  hasWeight?: boolean;
-  discountPercentage?: number;
-}
 
 // Convertir categorías a formato FilterOption con contadores reales
 const chargeFilters: FilterOption[] = productCategories.map(category => {
@@ -87,8 +54,7 @@ export default function DashBoardCharge() {
       const categoryId = filters.length > 0 ? filters[0] : 'all';
       const filteredProducts = await fetchProducts({
         categoryId,
-        searchTerm: searchQuery,
-        tags: filters.filter(f => f !== categoryId)
+        searchTerm: searchQuery
       });
       setProducts(filteredProducts);
     } catch (error) {
@@ -106,8 +72,7 @@ export default function DashBoardCharge() {
       const categoryId = selectedFilters.length > 0 ? selectedFilters[0] : 'all';
       const filteredProducts = await fetchProducts({
         categoryId,
-        searchTerm: query,
-        tags: selectedFilters.filter(f => f !== categoryId)
+        searchTerm: query
       });
       setProducts(filteredProducts);
     } catch (error) {

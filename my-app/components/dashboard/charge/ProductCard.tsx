@@ -2,38 +2,7 @@
 
 import { useState } from 'react'
 import { Plus, Minus, ChevronDown, Package, Percent } from 'lucide-react'
-
-interface Product {
-  id: string;
-  name: string;
-  description?: string;
-  price: number;
-  originalPrice?: number;
-  category: string;
-  categoryId: string;
-  image?: string;
-  stock: number;
-  barcode?: string;
-  sku: string;
-  tags: string[];
-  isNew?: boolean;
-  isPopular?: boolean;
-  isOnSale?: boolean;
-  rating?: number;
-  reviews?: number;
-  weight?: number;
-  dimensions?: {
-    length: number;
-    width: number;
-    height: number;
-  };
-  createdAt: string;
-  updatedAt: string;
-  unit?: string;
-  availableWeights?: string[];
-  hasWeight?: boolean;
-  discountPercentage?: number;
-}
+import { Product } from '../products_list/data/mockProducts';
 
 interface ProductCardProps {
   product: Product
@@ -42,13 +11,11 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onAddToCart, initialQuantity = 0 }: ProductCardProps) {
-  const [quantity, setQuantity] = useState(initialQuantity)
   const [showWeightOptions, setShowWeightOptions] = useState(false)
   const [selectedWeight, setSelectedWeight] = useState('500g')
 
   const handleQuantityChange = (newQuantity: number) => {
     if (newQuantity >= 0 && newQuantity <= product.stock) {
-      setQuantity(newQuantity)
       onAddToCart(product, newQuantity)
     }
   }
@@ -87,7 +54,6 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
         <div className="absolute top-3 left-3 bg-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-md">
           <div className="flex items-center justify-center">
             <Percent className="w-4 h-4 text-white" strokeWidth={3} />
-            
           </div>
         </div>
       )}
@@ -119,7 +85,6 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
                   <span className="font-medium">{selectedWeight}</span>
                   <ChevronDown className="w-4 h-4 text-gray-500" />
                 </button>
-                
                 {showWeightOptions && (
                   <div className="absolute bottom-full left-0 mb-2 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-20 min-w-[120px]">
                     {['250g', '500g', '1kg'].map((weight) => (
@@ -145,22 +110,19 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
 
             {/* Controles de cantidad */}
             <div className="flex items-center gap-2 h-full pt-4">
-              {quantity > 0 && (
-                <button
-                  onClick={() => handleQuantityChange(quantity - 1)}
-                  className="w-8 h-8 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-gray-700 flex items-center justify-center transition-all duration-200"
-                >
-                  <Minus className="w-4 h-4" strokeWidth={2.5} />
-                </button>
-              )}
-              
-              <span className="text-[16px] font-semibold text-gray-900 min-w-[24px] text-center select-none">
-                {quantity}
-              </span>
-              
               <button
-                onClick={() => handleQuantityChange(quantity + 1)}
-                disabled={quantity >= product.stock}
+                onClick={() => handleQuantityChange(initialQuantity - 1)}
+                className="w-8 h-8 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-gray-700 flex items-center justify-center transition-all duration-200"
+                disabled={initialQuantity <= 0}
+              >
+                <Minus className="w-4 h-4" strokeWidth={2.5} />
+              </button>
+              <span className="text-[16px] font-semibold text-gray-900 min-w-[24px] text-center select-none">
+                {initialQuantity}
+              </span>
+              <button
+                onClick={() => handleQuantityChange(initialQuantity + 1)}
+                disabled={initialQuantity >= product.stock}
                 className="w-10 h-10 rounded-full bg-[#22c55e] hover:bg-[#16a34a] disabled:bg-[#86efac] disabled:cursor-not-allowed text-white flex items-center justify-center transition-all duration-200 shadow-sm"
               >
                 <Plus className="w-6 h-6" strokeWidth={2.5} />

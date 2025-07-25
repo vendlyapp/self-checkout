@@ -55,7 +55,7 @@ export default function CartSummary({ items, onContinue }: CartSummaryProps) {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0  bg-white text-white p-2 shadow-lg">
+    <div className="fixed bottom-0 left-0 right-0 bg-white text-white p-2 shadow-lg z-50">
       <div className="flex items-center justify-between bg-brand-500 rounded-lg p-4">
         {/* Cart Info */}
         <div className="flex items-center gap-3">

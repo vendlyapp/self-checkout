@@ -7,6 +7,8 @@ import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
+import UserCartSummary from '@/components/user/UserCartSummary';
+import { useCartStore } from '@/lib/stores/cartStore';
 
 interface NavItemUser {
   id: string;
@@ -66,6 +68,7 @@ export default function FooterNav() {
   const [mounted, setMounted] = useState(false);
   const [isPulsing, setIsPulsing] = useState(true);
   const [pressedItem, setPressedItem] = useState<string | null>(null);
+  const { cartItems } = useCartStore();
 
   useEffect(() => {
     setMounted(true);
@@ -122,8 +125,9 @@ export default function FooterNav() {
   }
 
   return (
-    <nav className="nav-container">
-      <div className="flex items-center justify-around h-full px-4 max-w-[430px] mx-auto">
+    <nav className="nav-container-user pb-3">
+      {/* Barra de navegación */}
+      <div className="flex items-center justify-around w-full px-4 max-w-[430px] mx-auto">
         {processedItems.map((item) => {
           const Icon = item.icon;
 
@@ -194,6 +198,10 @@ export default function FooterNav() {
             </Link>
           );
         })}
+      </div>
+      {/* Resumen de carrito solo si hay productos (el propio componente lo controla) */}
+      <div className="w-full flex flex-col gap-2">
+        <UserCartSummary variant="inline" />
       </div>
     </nav>
   );

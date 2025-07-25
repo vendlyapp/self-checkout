@@ -26,6 +26,7 @@ export interface Product {
   updatedAt: string
   hasWeight?: boolean
   discountPercentage?: number
+  image?: string // Nuevo campo para imagen
 }
 
 export interface ProductCategory {
@@ -63,7 +64,8 @@ export const mockProducts: Product[] = [
     dimensions: { length: 15, width: 12, height: 8 },
     createdAt: '2024-01-22T06:00:00Z',
     updatedAt: '2024-01-22T06:00:00Z',
-    hasWeight: false
+    hasWeight: false,
+    image: '/logo.svg'
   },
   {
     id: 'prod-009',
@@ -85,7 +87,8 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T07:00:00Z',
     updatedAt: '2024-01-22T07:00:00Z',
     hasWeight: true,
-    discountPercentage: 15
+    discountPercentage: 15,
+    image: '/logo.svg'
   },
   {
     id: 'prod-030',
@@ -104,7 +107,8 @@ export const mockProducts: Product[] = [
     dimensions: { length: 18, width: 15, height: 12 },
     createdAt: '2024-01-22T08:00:00Z',
     updatedAt: '2024-01-22T08:00:00Z',
-    hasWeight: true
+    hasWeight: true,
+    image: '/logo.svg'
   },
   {
     id: 'prod-000',
@@ -124,121 +128,8 @@ export const mockProducts: Product[] = [
     dimensions: { length: 22, width: 12, height: 8 },
     createdAt: '2024-01-22T09:00:00Z',
     updatedAt: '2024-01-22T09:00:00Z',
-    hasWeight: true
-  },{
-    id: 'prod-001',
-    name: 'Bananen Bio',
-    description: 'Bio Bananen aus fairem Handel',
-    price: 3.80,
-    category: 'Früchte',
-    categoryId: 'fruits',
-    stock: 89,
-    barcode: '1234567890126',
-    sku: 'BANANEN-BIO-1KG',
-    tags: ['bananen', 'bio', 'fair trade', 'tropisch'],
-    isPopular: true,
-    rating: 4.6,
-    reviews: 312,
-    weight: 1000,
-    dimensions: { length: 22, width: 12, height: 8 },
-    createdAt: '2024-01-22T09:00:00Z',
-    updatedAt: '2024-01-22T09:00:00Z',
-    hasWeight: true
-  },{
-    id: 'prod-002',
-    name: 'Bananen Bio',
-    description: 'Bio Bananen aus fairem Handel',
-    price: 3.80,
-    category: 'Früchte',
-    categoryId: 'fruits',
-    stock: 89,
-    barcode: '1234567890126',
-    sku: 'BANANEN-BIO-1KG',
-    tags: ['bananen', 'bio', 'fair trade', 'tropisch'],
-    isPopular: true,
-    rating: 4.6,
-    reviews: 312,
-    weight: 1000,
-    dimensions: { length: 22, width: 12, height: 8 },
-    createdAt: '2024-01-22T09:00:00Z',
-    updatedAt: '2024-01-22T09:00:00Z',
-    hasWeight: true
-  },{
-    id: 'prod-003',
-    name: 'Bananen Bio',
-    description: 'Bio Bananen aus fairem Handel',
-    price: 3.80,
-    category: 'Früchte',
-    categoryId: 'fruits',
-    stock: 89,
-    barcode: '1234567890126',
-    sku: 'BANANEN-BIO-1KG',
-    tags: ['bananen', 'bio', 'fair trade', 'tropisch'],
-    isPopular: true,
-    rating: 4.6,
-    reviews: 312,
-    weight: 1000,
-    dimensions: { length: 22, width: 12, height: 8 },
-    createdAt: '2024-01-22T09:00:00Z',
-    updatedAt: '2024-01-22T09:00:00Z',
-    hasWeight: true
-  },{
-    id: 'prod-004',
-    name: 'Bananen Bio',
-    description: 'Bio Bananen aus fairem Handel',
-    price: 3.80,
-    category: 'Früchte',
-    categoryId: 'fruits',
-    stock: 89,
-    barcode: '1234567890126',
-    sku: 'BANANEN-BIO-1KG',
-    tags: ['bananen', 'bio', 'fair trade', 'tropisch'],
-    isPopular: true,
-    rating: 4.6,
-    reviews: 312,
-    weight: 1000,
-    dimensions: { length: 22, width: 12, height: 8 },
-    createdAt: '2024-01-22T09:00:00Z',
-    updatedAt: '2024-01-22T09:00:00Z',
-    hasWeight: true
-  },{
-    id: 'prod-005',
-    name: 'Bananen Bio',
-    description: 'Bio Bananen aus fairem Handel',
-    price: 3.80,
-    category: 'Früchte',
-    categoryId: 'fruits',
-    stock: 89,
-    barcode: '1234567890126',
-    sku: 'BANANEN-BIO-1KG',
-    tags: ['bananen', 'bio', 'fair trade', 'tropisch'],
-    isPopular: true,
-    rating: 4.6,
-    reviews: 312,
-    weight: 1000,
-    dimensions: { length: 22, width: 12, height: 8 },
-    createdAt: '2024-01-22T09:00:00Z',
-    updatedAt: '2024-01-22T09:00:00Z',
-    hasWeight: true
-  },{
-    id: 'prod-006',
-    name: 'Bananen Bio',
-    description: 'Bio Bananen aus fairem Handel',
-    price: 3.80,
-    category: 'Früchte',
-    categoryId: 'fruits',
-    stock: 89,
-    barcode: '1234567890126',
-    sku: 'BANANEN-BIO-1KG',
-    tags: ['bananen', 'bio', 'fair trade', 'tropisch'],
-    isPopular: true,
-    rating: 4.6,
-    reviews: 312,
-    weight: 1000,
-    dimensions: { length: 22, width: 12, height: 8 },
-    createdAt: '2024-01-22T09:00:00Z',
-    updatedAt: '2024-01-22T09:00:00Z',
-    hasWeight: true
+    hasWeight: true,
+    image: '/logo.svg'
   },
   {
     id: 'prod-007',
@@ -260,7 +151,8 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T10:00:00Z',
     updatedAt: '2024-01-22T10:00:00Z',
     hasWeight: true,
-    discountPercentage: 12
+    discountPercentage: 12,
+    image: '/logo.svg'
   }
 ]
 

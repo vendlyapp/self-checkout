@@ -326,6 +326,19 @@
     -webkit-overflow-scrolling: touch;
   }
 
+  .nav-container-user {
+    @apply fixed bottom-0 left-0 right-0 z-40;
+    @apply bg-white border-t border-gray-200 flex flex-col;
+    box-shadow: var(--shadow-md);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    min-height: 80px;
+    padding-bottom: env(safe-area-inset-bottom);
+    animation: fade-up var(--transition-slow);
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
   /* Items de navegación */
   .nav-item {
     @apply relative flex flex-col items-center justify-center;
