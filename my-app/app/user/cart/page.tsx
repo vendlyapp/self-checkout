@@ -55,27 +55,8 @@ export default function UserCartPage() {
           </div>
         )}
       </div>
-      {/* Resumen de total fijo abajo */}
-      {cartItems.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 z-50">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-gray-600 text-sm">Gesamtbetrag inkl. MwSt • {totalItems} Artikel</div>
-            <div className="text-lg font-bold">{formatPrice(totalPrice)}</div>
-          </div>
-          <button
-            className="w-full bg-brand-500 text-white py-3 rounded-lg font-semibold text-lg hover:bg-brand-600 transition-colors"
-            onClick={() => router.push('/user/checkout')}
-          >
-            Zur Bezahlung
-          </button>
-          <button
-            className="w-full mt-2 text-red-600 font-semibold text-sm hover:underline"
-            onClick={clearCart}
-          >
-            Leeren
-          </button>
-        </div>
-      )}
+   
+     
     </div>
   );
 } 

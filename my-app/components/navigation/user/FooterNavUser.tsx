@@ -8,6 +8,7 @@ import { clsx } from 'clsx';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
 import UserCartSummary from '@/components/user/UserCartSummary';
+import UserCartSummaryCart from '@/components/user/UserCartSummaryCart';
 
 
 interface NavItemUser {
@@ -123,10 +124,19 @@ export default function FooterNav() {
     return <SkeletonLoader />;
   }
 
+  // Determinar qué componente de carrito mostrar basado en la ruta
+  const isCartRoute = pathname === '/user/cart';
+
   return (
-    <nav className="nav-container-user pb-3">
-      {/* Barra de navegación */}
-      <div className="flex items-center justify-around w-full px-4 max-w-[430px] mx-auto">
+    <nav className="nav-container-user ">
+      {/* Resumen de carrito arriba solo cuando estoy en /user/cart */}
+      {isCartRoute && (
+        <div className="w-full flex flex-col gap-2 px-4 py-2">
+          <UserCartSummaryCart variant="inline" />
+        </div>
+      )}
+      
+      <div className="flex items-center justify-between border-t border-gray-100 w-full px-6 max-w-[430px] mx-auto pb-4 pt-2">
         {processedItems.map((item) => {
           const Icon = item.icon;
 
@@ -138,7 +148,6 @@ export default function FooterNav() {
                 href={item.href}
                 className={clsx(
                   "nav-main-button-user ripple",
-                  isPulsing && "nav-main-button-pulse",
                   item.isPressed && "scale-90"
                 )}
                 onTouchStart={() => handlePress(item.id)}
@@ -198,10 +207,13 @@ export default function FooterNav() {
           );
         })}
       </div>
-      {/* Resumen de carrito solo si hay productos (el propio componente lo controla) */}
-      <div className="w-full flex flex-col gap-2">
-        <UserCartSummary variant="inline" />
-      </div>
+      
+      {/* Resumen de carrito abajo solo cuando NO estoy en /user/cart */}
+      {!isCartRoute && (
+        <div className="w-full flex flex-col gap-2 px-4 py-2">
+          <UserCartSummary variant="inline" />
+        </div>
+      )}
     </nav>
   );
 }

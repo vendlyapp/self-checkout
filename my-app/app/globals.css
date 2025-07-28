@@ -409,7 +409,7 @@
   }
     /* Botón principal flotante */
     .nav-main-button-user {
-      @apply relative w-16 h-16 rounded-full;
+      @apply relative w-14 h-14 rounded-full;
       @apply bg-warm-800 shadow-lg;
       @apply flex items-center justify-center;
       transition: all var(--transition-normal);
