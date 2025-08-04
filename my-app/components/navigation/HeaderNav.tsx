@@ -16,11 +16,11 @@ export default function HeaderNav({
   const router = useRouter();
   const pathname = usePathname();
   const { cartItems, clearCart } = useCartStore();
-  const isCartPage = pathname === '/charge/cart';
+  const isCartPage = pathname === '/charge/cart' || pathname === '/user/cart';
   const hasItems = cartItems.length > 0;
 
   return (
-    <div className="flex justify-between items-center p-4 bg-white border-b border-gray-200">
+    <div className="flex justify-between items-center p-4 bg-white border-b border-gray-200 fixed top-[85px] left-0 right-0 z-50">
       <div className="flex items-center gap-2 justify-between w-full px-4">
         <button className="flex items-center gap-2 cursor-pointer" onClick={() => router.back()} aria-label="Zurück" tabIndex={0}>
          <ArrowLeftIcon className="w-6 h-6" />
@@ -29,7 +29,7 @@ export default function HeaderNav({
         <div className="flex items-center gap-2">
           {isCartPage && hasItems && (
             <button
-              className="text-red-600 font-semibold text-[16px] px-2 py-1 rounded hover:bg-red-50 transition-colors"
+              className="text-red-600 font-semibold text-[14px] px-2 py-1 rounded hover:bg-red-50 transition-colors"
               onClick={clearCart}
               aria-label="Leeren"
               tabIndex={0}

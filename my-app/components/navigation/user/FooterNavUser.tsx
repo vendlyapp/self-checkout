@@ -1,7 +1,7 @@
 // components/navigation/FooterNav.tsx
 'use client';
 
-import { Home, Percent, ScanLine, Search, ShoppingBag } from 'lucide-react';
+import { Home, Percent, ScanBarcode, Search, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
@@ -30,13 +30,13 @@ const navItems: NavItemUser[] = [
     id: 'search',
     icon: Search,
     label: 'Suche',
-    href: '/search',
+    href: '/user/search',
   },
   {
     id: 'actions',
-    icon: ScanLine,
+    icon: ScanBarcode ,
     label: '',
-    href: '/actions',
+    href: '/user/scan',
     isMain: true,
   },
   {
@@ -47,7 +47,7 @@ const navItems: NavItemUser[] = [
   },
   {
     id: 'cart',
-    icon: ShoppingBag,
+    icon: ShoppingCart,
     label: 'Warenkorb',
     href: '/user/cart',
   },
@@ -136,18 +136,18 @@ export default function FooterNav() {
         </div>
       )}
       
-      <div className="flex items-center justify-between border-t border-gray-100 w-full px-6 max-w-[430px] mx-auto pb-4 pt-2">
+      <div className="flex items-center justify-between w-full px-6 max-w-[430px] mx-auto pb-4 pt-2">
         {processedItems.map((item) => {
           const Icon = item.icon;
 
           if (item.isMain) {
-            // Botón principal (Plus) con estilo modificado
+            // Botón principal (SCANEAR) con estilo modificado
             return (
               <Link
                 key={item.id}
                 href={item.href}
                 className={clsx(
-                  "nav-main-button-user ripple",
+                  "relative inline-flex items-center justify-center w-16 h-16 transition-all duration-300 hover:scale-110 active:scale-95",
                   item.isPressed && "scale-90"
                 )}
                 onTouchStart={() => handlePress(item.id)}
@@ -158,13 +158,22 @@ export default function FooterNav() {
                 onClick={handleValidInteraction}
                 aria-label="Scan"
               >
-                <Icon 
-                  className={clsx(
-                    "nav-main-icon",
-                    item.isPressed && "scale-95"
-                  )} 
-                  strokeWidth={2.5} 
-                />
+                {/* Animated Green Halo */}
+                <div className="absolute inset-0 w-full h-full rounded-full bg-[#25D076]/30 animate-pulse" />
+                <div className="absolute inset-1 w-14 h-14 rounded-full bg-[#25D076]/20 animate-pulse" style={{ animationDelay: '0.5s' }} />
+                <div className="absolute inset-2 w-12 h-12 rounded-full bg-[#25D076]/10 animate-pulse" style={{ animationDelay: '1s' }} />
+                
+                {/* White Circle with Lucide Icon */}
+                <div className="relative w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg">
+                  <Icon 
+                    className={clsx(
+                      "text-[#25D076]",
+                      item.isPressed && "scale-95",
+                      item.isActive && "text-[#25D076]"
+                    )} 
+                    strokeWidth={2.5} 
+                  />
+                </div>
               </Link>
             );
           }

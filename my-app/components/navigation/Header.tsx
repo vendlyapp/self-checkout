@@ -85,7 +85,7 @@ export default function Header() {
       <header className="dashboard-header h-[85px] w-full ">
         <div className="dashboard-header-content bg-background-cream h-[85px] w-full">
           {/* Logo */}
-          <Link href="/dashboard" className="dashboard-logo">
+          <Link href="/dashboard" className="dashboard-logo-d">
             <Image 
               src="/logo.svg" 
               alt="Self-Checkout Logo" 

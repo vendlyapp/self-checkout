@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Plus, Minus, ChevronDown, Package, Percent } from 'lucide-react'
 import { Product } from '../products_list/data/mockProducts';
+import Image from 'next/image';
 
 interface ProductCardProps {
   product: Product
@@ -28,13 +29,13 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
   }
 
   return (
-    <div className="bg-white rounded-[20px] h-[120px] p-2  relative">
+    <div className="bg-white rounded-[20px] h-[130px] p-4  relative">
       {/* Badge de precio */}
       <div className="absolute top-3 right-3">
         {product.originalPrice ? (
           <div className="flex flex-col items-end gap-1">
             {/* Precio nuevo en rojo */}
-            <span className="text-[15px] bg-[#e8e8e8] rounded-lg px-2 py-1 font-bold text-red-600">
+            <span className="text-[15px] bg-[#F2EDE8] rounded-lg px-2 py-1 font-bold text-red-600">
               {formatPrice(product.price)}
             </span>
             {/* Precio original tachado */}
@@ -43,7 +44,7 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
             </span>
           </div>
         ) : (
-          <span className="text-[15px] bg-[#e8e8e8] rounded-lg px-2 py-1 font-bold text-gray-800">
+          <span className="text-[15px] bg-[#F2EDE8] rounded-lg px-2 py-1 font-bold text-gray-800">
             {formatPrice(product.price)}
           </span>
         )}
@@ -60,21 +61,33 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
 
       <div className="flex items-start gap-4 mt-2">
         {/* Icono del producto */}
-        <div className="w-[80px] h-[80px] rounded-[16px] overflow-hidden flex-shrink-0 bg-white flex items-center justify-center">
-          <Package className="w-10 h-10 text-gray-600" />
-        </div>
+        <div className='flex items-center gap-2 w-[80px] h-[80px] rounded-[16px] overflow-hidden mr-4'>
+            {product.image ? (
+          <Image 
+            src={product.image} 
+            alt={product.name} 
+            width={100} 
+            height={100}
+            className="rounded-[16px] object-cover "
+          />
+        ) : (
+          <div className="w-[80px] h-[80px] rounded-[16px] bg-gray-100 flex items-center justify-center">
+            <Package className="w-10 h-10 text-gray-400" />
+          </div>
+        )}
+      </div>
 
         {/* Contenido principal */}
-        <div className="flex-1 flex flex-col justify-between min-h-[80px]">
+        <div className="flex-1 flex flex-col justify-between min-h-[80px] ">
           {/* Título del producto */}
           <div className="pr-20 mb-4">
-            <h3 className="text-gray-900 text-[16px] leading-[1.3] tracking-tight font-semibold">
+            <h3 className="text-gray-900 text-[16px] leading-[1.3]  w-[80%] tracking-tight font-semibold ">
               {product.name}
             </h3>
           </div>
 
           {/* Controles en la parte inferior */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between h-[25px]">
             {/* Selector de peso - solo si hasWeight es true */}
             {product.hasWeight ? (
               <div className="relative">

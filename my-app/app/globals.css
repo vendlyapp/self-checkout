@@ -365,9 +365,9 @@
     animation: tap-bounce 0.15s ease-out;
   }
 
-  .nav-item-active {
+  /*.nav-item-active {
     @apply bg-brand-50;
-  }
+  }*/
 
   /* Iconos */
   .nav-icon {
@@ -601,8 +601,12 @@
    }
    
    .dashboard-logo img {
-     @apply h-6 w-auto;
+     @apply h-10 w-auto;
    }
+  
+   .dashboard-logo-d img {
+    @apply h-8 w-auto;
+  }
 
   /* Header actions container */
   .header-actions {

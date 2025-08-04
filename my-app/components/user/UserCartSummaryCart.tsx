@@ -9,7 +9,7 @@ interface UserCartSummaryCartProps {
 }
 
 export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProps) {
-  const { cartItems, clearCart } = useCartStore();
+  const { cartItems } = useCartStore();
   const router = useRouter();
 
   // Solo productos con cantidad > 0
