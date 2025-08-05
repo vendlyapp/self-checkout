@@ -10,7 +10,7 @@ interface HeaderUserProps {
 
 export default function HeaderUser({ isDarkMode = false }: HeaderUserProps) {
   const logoSrc = isDarkMode ? "/logo-b.svg" : "/logo.svg";
-  const headerBgClass = isDarkMode ? "bg-[#0f1419]" : "bg-background-cream";
+  const headerBgClass = isDarkMode ? "bg-[#191F2D]" : "bg-background-cream";
   const borderClass = isDarkMode ? "border-slate-700" : "border-white";
  
   return (

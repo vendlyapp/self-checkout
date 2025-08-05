@@ -20,7 +20,7 @@ export default function UserCartSummary({ variant }: UserCartSummaryProps) {
     const totalItems = validCartItems.reduce((sum, item) => sum + item.quantity, 0);
     const totalPrice = validCartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
     return (
-      <div className="w-full bg-brand-500 rounded-lg flex items-center justify-between px-4 py-2 mb-1 animate-fade-up">
+      <div className="w-full bg-brand-500 rounded-lg flex items-center justify-between px-4 py-2 mb-1 animate-fade-up ">
         <span className="text-white font-semibold text-base">
           {totalItems} Artikel &bull; CHF {totalPrice.toFixed(2)}
         </span>

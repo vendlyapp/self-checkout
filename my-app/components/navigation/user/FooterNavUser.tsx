@@ -131,12 +131,12 @@ export default function FooterNav() {
     <nav className="nav-container-user ">
       {/* Resumen de carrito arriba solo cuando estoy en /user/cart */}
       {isCartRoute && (
-        <div className="w-full flex flex-col gap-2 px-4 py-2">
+        
           <UserCartSummaryCart variant="inline" />
-        </div>
+        
       )}
       
-      <div className="flex items-center justify-between w-full px-6 max-w-[430px] mx-auto pb-4 pt-2">
+      <div className="flex items-center justify-between w-full px-6 max-w-[430px] mx-auto pb-4 pt-2 border-t-2 border-gray-200  bg-white rounded-t-xl ">
         {processedItems.map((item) => {
           const Icon = item.icon;
 
@@ -219,7 +219,7 @@ export default function FooterNav() {
       
       {/* Resumen de carrito abajo solo cuando NO estoy en /user/cart */}
       {!isCartRoute && (
-        <div className="w-full flex flex-col gap-2 px-4 py-2">
+        <div className="w-full flex flex-col gap-2 px-4 py-2 ">
           <UserCartSummary variant="inline" />
         </div>
       )}

@@ -38,14 +38,14 @@ export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProp
               inkl. MwSt • {totalItems} Artikel
             </span>
           </div>
-          <span className="text-lg font-bold text-gray-900">
+          <span className="text-2xl font-bold text-gray-900">
             {formatPrice(totalPrice)}
           </span>
         </div>
         
         {/* Botón Zur Bezahlung */}
         <button
-          className="w-full bg-green-500 text-white py-4 rounded-lg font-semibold text-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+          className="w-[80%] mx-auto bg-green-500 text-white py-4 rounded-full font-semibold text-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
           onClick={() => router.push('/user/payment')}
         >
           Zur Bezahlung

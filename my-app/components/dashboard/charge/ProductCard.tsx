@@ -90,7 +90,7 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
           <div className="flex items-center justify-between h-[25px]">
             {/* Selector de peso - solo si hasWeight es true */}
             {product.hasWeight ? (
-              <div className="relative">
+              <div className="relative bg-[#F7F4F1] rounded-lg text-center w-[70px] h-[30px] flex items-center justify-center">
                 <button
                   onClick={() => setShowWeightOptions(!showWeightOptions)}
                   className="flex items-center gap-1.5 text-[14px] text-gray-700 hover:text-gray-900 transition-colors py-1"
