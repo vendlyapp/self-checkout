@@ -207,9 +207,8 @@ export default function Form() {
 
 
     return (
-    <div className="max-w-sm mx-auto bg-background-cream min-h-screen">
+    <div className="max-w-sm mx-auto bg-background-cream min-h-screen pt-10">
       
- 
         {/* Progress Bar */}
         {isSaving && (
           <div className="bg-white border-b border-gray-200 p-3">
@@ -577,7 +576,7 @@ export default function Form() {
                 className="w-full bg-brand-500 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-brand-600 transition-colors flex items-center justify-center space-x-1"
               >
                 <Plus className="w-3 h-3" />
-                <span>+ Neue Variante</span>
+                <span>Neue Variante</span>
               </button>
             </div>
           )}

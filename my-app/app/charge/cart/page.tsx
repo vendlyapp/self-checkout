@@ -6,7 +6,6 @@ import { useState } from 'react'
 import { X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import FooterContinue from '@/components/dashboard/charge/FooterContinue'
-import FixedHeaderContainerSimple from '@/components/dashboard/charge/FixedHeaderContainerSimple'
 
 export default function CartPage() {
   const { cartItems, updateQuantity } = useCartStore()
@@ -52,11 +51,11 @@ export default function CartPage() {
   }
 
   return (
-    <FixedHeaderContainerSimple title="Warenkorb">
+    <div className="h-full w-full overflow-hidden">
       <div className="flex flex-col min-h-screen bg-background-cream">
         <main className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 min-h-0 overflow-y-auto pb-40 px-2 pt-2">
-            <div className="space-y-3">
+            <div className="space-y-3 pt-10">
               {cartItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-4">
                   <div className="text-center text-gray-500">Dein Warenkorb ist leer.</div>
@@ -142,6 +141,6 @@ export default function CartPage() {
           onContinue={handleContinue}
         />
       </div>
-    </FixedHeaderContainerSimple>
+    </div>
   )
 } 

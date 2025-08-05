@@ -19,5 +19,9 @@ import { HomeDashboard } from '@/components/dashboard';
  * - Arquitectura escalable para futuras funcionalidades
  */
 export default function DashboardPage() {
-  return <HomeDashboard />;
+  return (
+    <div className="h-full w-full overflow-hidden">
+      <HomeDashboard />
+    </div>
+  );
 }

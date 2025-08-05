@@ -1,7 +1,6 @@
 'use client'
 import { useState, useCallback } from 'react';
-import HeaderNav from "../navigation/HeaderNav";
-import HeaderUser from "../navigation/user/HeaderUser";
+ import HeaderNav from "../navigation/HeaderNav";
 import { SearchInput } from '@/components/ui/search-input';
 import { mockProducts, Product } from '@/components/dashboard/products_list/data/mockProducts';
 import { useCartStore } from '@/lib/stores/cartStore';
@@ -95,7 +94,7 @@ export default function SearchUser() {
 
   return (
     <div className="flex flex-col min-h-full bg-background-cream">
-      <HeaderUser />
+      
       <HeaderNav title="Suchen" />
       
       {/* Contenedor principal con padding fijo */}

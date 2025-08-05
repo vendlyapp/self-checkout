@@ -72,7 +72,7 @@ export default function FixedHeaderContainerCharge({
       </div>
 
       {/* Contenido scrolleable con padding para los elementos fijos */}
-      <div className="flex-1 overflow-hidden" style={{ paddingTop: '280px' }}>
+      <div className="flex-1 overflow-hidden" style={{ paddingTop: '230px' }}>
         {children}
       </div>
     </div>

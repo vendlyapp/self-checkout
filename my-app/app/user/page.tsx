@@ -20,6 +20,8 @@ import React from 'react';
  */
 export default function UserPage() {
   return (
-   <DashboardUser/>
+    <div className="h-full w-full overflow-hidden">
+      <DashboardUser />
+    </div>
   );
 }

@@ -2,7 +2,6 @@
 
 import { useCartStore } from '@/lib/stores/cartStore'
 import { CreditCard, Smartphone, FileText, DollarSign, ShieldCheck } from 'lucide-react'
-import FixedHeaderContainerSimple from '@/components/dashboard/charge/FixedHeaderContainerSimple'
 
 export default function PaymentPage() {
   const { cartItems } = useCartStore()
@@ -27,7 +26,7 @@ export default function PaymentPage() {
   }
 
   return (
-    <FixedHeaderContainerSimple title="Bezahlung">
+    <div className="h-full w-full overflow-hidden">
       <div className="flex flex-col bg-background-cream">
         <main className="flex-1 flex flex-col items-center px-4 pt-4 pb-32 ">
           <div className="w-full max-w-md mx-auto">
@@ -72,6 +71,6 @@ export default function PaymentPage() {
           </div>
         </main>
       </div>
-    </FixedHeaderContainerSimple>
+    </div>
   )
 } 

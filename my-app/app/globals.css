@@ -793,3 +793,222 @@
     100% { transform: scale(1); filter: brightness(1); }
   }
 }
+
+
+
+/* Estilos base para mejor adaptabilidad móvil */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+  
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+/* Utilidades personalizadas para layouts adaptativos */
+@layer utilities {
+  /* Altura específica para móviles */
+  .h-mobile {
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height para iOS */
+  }
+  
+  /* Scrollbar personalizado */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Safe area para dispositivos con notch */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Breakpoints específicos para móviles */
+  .mobile-xs {
+    @apply text-xs;
+  }
+  
+  .mobile-sm {
+    @apply text-sm;
+  }
+  
+  .mobile-base {
+    @apply text-base;
+  }
+  
+  .mobile-lg {
+    @apply text-lg;
+  }
+  
+  .mobile-xl {
+    @apply text-xl;
+  }
+  
+  /* Espaciado adaptativo */
+  .space-mobile-xs {
+    @apply space-y-1;
+  }
+  
+  .space-mobile-sm {
+    @apply space-y-2;
+  }
+  
+  .space-mobile-md {
+    @apply space-y-3;
+  }
+  
+  .space-mobile-lg {
+    @apply space-y-4;
+  }
+  
+  /* Padding adaptativo */
+  .p-mobile-xs {
+    @apply p-2;
+  }
+  
+  .p-mobile-sm {
+    @apply p-3;
+  }
+  
+  .p-mobile-md {
+    @apply p-4;
+  }
+  
+  .p-mobile-lg {
+    @apply p-6;
+  }
+  
+  /* Margin adaptativo */
+  .m-mobile-xs {
+    @apply m-2;
+  }
+  
+  .m-mobile-sm {
+    @apply m-3;
+  }
+  
+  .m-mobile-md {
+    @apply m-4;
+  }
+  
+  .m-mobile-lg {
+    @apply m-6;
+  }
+}
+
+/* Media queries específicos para diferentes tamaños de iPhone */
+@media screen and (max-width: 375px) {
+  /* iPhone SE, iPhone 6/7/8 */
+  .mobile-xs {
+    font-size: 0.75rem;
+  }
+  
+  .mobile-sm {
+    font-size: 0.875rem;
+  }
+  
+  .mobile-base {
+    font-size: 1rem;
+  }
+  
+  .mobile-lg {
+    font-size: 1.125rem;
+  }
+  
+  .mobile-xl {
+    font-size: 1.25rem;
+  }
+}
+
+@media screen and (min-width: 376px) and (max-width: 414px) {
+  /* iPhone 6/7/8 Plus, iPhone X/XS, iPhone 11 Pro */
+  .mobile-xs {
+    font-size: 0.8125rem;
+  }
+  
+  .mobile-sm {
+    font-size: 0.9375rem;
+  }
+  
+  .mobile-base {
+    font-size: 1.0625rem;
+  }
+  
+  .mobile-lg {
+    font-size: 1.1875rem;
+  }
+  
+  .mobile-xl {
+    font-size: 1.3125rem;
+  }
+}
+
+@media screen and (min-width: 415px) and (max-width: 430px) {
+  /* iPhone 11, iPhone 12/13/14 */
+  .mobile-xs {
+    font-size: 0.875rem;
+  }
+  
+  .mobile-sm {
+    font-size: 1rem;
+  }
+  
+  .mobile-base {
+    font-size: 1.125rem;
+  }
+  
+  .mobile-lg {
+    font-size: 1.25rem;
+  }
+  
+  .mobile-xl {
+    font-size: 1.375rem;
+  }
+}
+
+/* Estilos para mejorar la experiencia táctil */
+@layer components {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .touch-target-sm {
+    min-height: 36px;
+    min-width: 36px;
+  }
+  
+  .touch-target-lg {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+/* Animaciones suaves para transiciones */
+@layer utilities {
+  .transition-smooth {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .transition-fast {
+    transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .transition-slow {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}

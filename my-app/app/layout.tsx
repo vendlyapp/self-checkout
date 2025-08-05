@@ -31,9 +31,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="de" className="h-full">
-      <body className={`${inter.className} h-full`}>
-        <div className="mx-auto h-full w-full max-w-[430px] relative bg-[#F2EDE8] shadow-xl sm:border-x sm:border-gray-200">
-          <div className="h-full overflow-y-auto">
+      <body className={`${inter.className} h-full antialiased`}>
+        {/* Container principal adaptativo */}
+        <div className="mx-auto h-full w-full max-w-[430px] min-h-screen relative bg-[#F2EDE8] shadow-xl sm:border-x sm:border-gray-200 overflow-hidden">
+          {/* Contenedor interno con scroll controlado */}
+          <div className="h-full w-full overflow-hidden">
             {children}
           </div>
         </div>
@@ -44,6 +46,7 @@ export default function RootLayout({
           toastOptions={{
             style: {
               maxWidth: '380px',
+              fontSize: '14px',
             },
           }}
         />

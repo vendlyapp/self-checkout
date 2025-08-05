@@ -1,13 +1,14 @@
 'use client';
 
 import React from 'react';
-import FixedHeaderContainerSimple from '@/components/dashboard/products_list/FixedHeaderContainerSimple';
 import Form from '@/components/dashboard/createProduct/Form';
+import HeaderNav from '@/components/navigation/HeaderNav';
 
 export default function AddProduct() {
   return (
-    <FixedHeaderContainerSimple title="Neues Produkt" showAddButton={false}>
+    <div className="h-full w-full overflow-hidden">
+      <HeaderNav title="Neues Produkt"  />
       <Form />
-    </FixedHeaderContainerSimple>
+    </div>
   );
 } 

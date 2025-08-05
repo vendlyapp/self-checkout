@@ -76,7 +76,7 @@ export default function FixedHeaderContainerUser({
       </div>
 
       {/* Contenido scrolleable con padding para los elementos fijos */}
-      <div className="flex-1 overflow-y-auto" style={{ paddingTop: '230px', paddingBottom: '100px' }}>
+      <div className="flex-1 overflow-y-auto" style={{ paddingTop: '160px', paddingBottom: '100px' }}>
         {children}
       </div>
     </div>

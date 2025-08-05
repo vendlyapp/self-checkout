@@ -3,7 +3,6 @@
 import { useCartStore } from '@/lib/stores/cartStore';
 import HeaderNav from '@/components/navigation/HeaderNav';
 import React from 'react';
-import HeaderUser from '@/components/navigation/user/HeaderUser';
 import ProductCard from '@/components/dashboard/charge/ProductCard';
 import { Product } from '@/components/dashboard/products_list/data/mockProducts';
 
@@ -16,8 +15,7 @@ export default function UserCartPage() {
 
   return (
     <div className="flex flex-col min-h-full bg-background-cream">
-      <HeaderUser />
-      {/* Header fijo */}
+      
       <HeaderNav title="Warenkorb"  />
       {/* Lista de productos */}
       <div className="flex-1 px-4 pt-4 pb-32 mt-[70px]">

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Camera, QrCode } from 'lucide-react';
+import HeaderUser from '@/components/navigation/user/HeaderUser';
 
 const SnanerDash = () => {
   const [isScanning, setIsScanning] = useState(false);
@@ -16,10 +17,29 @@ const SnanerDash = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#191F2D] text-white flex flex-col">
+    <div className="h-full w-full bg-[#191F2D] text-white flex flex-col">
+      {/* Header específico para modo oscuro */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-[#191F2D]">
+        <HeaderUser isDarkMode={true} />
+      </div>
       
-      {/* Scanner Content */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8">
+      {/* Header secundario específico para el escáner */}
+      <div className="fixed top-[85px] left-0 right-0 z-50 bg-[#191F2D] border-b border-gray-700">
+        <div className='flex items-center justify-between w-full px-4 py-3'>
+          <div className='flex flex-col items-start justify-start'>
+            <p className='text-sm text-white font-bold text-[21px]'>Heinigers Hofladen</p>
+            <p className='text-sm text-gray-400 text-[14px]'>Grundhof 3, 8305 Dietlikon • ⭐ 4.8</p>
+          </div>
+          <div className='flex items-center justify-end'>
+            <button className='bg-[#FFFFFF] text-[#6E7996] px-4 py-2 rounded-md hover:bg-gray-600 transition-colors'>
+              Kontakt
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Scanner Content con padding para los headers fijos */}
+      <div className="flex-1 flex flex-col items-center justify-center p-8" style={{ paddingTop: '140px' }}>
         <div className="relative w-80 h-80 mb-12">
           {/* Main scanner container */}
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm border border-white/10 rounded-3xl shadow-2xl overflow-hidden">

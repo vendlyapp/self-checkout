@@ -20,6 +20,8 @@ import DashBoardCharge from '@/components/dashboard/charge/DashBoard';
  */
 export default function Charge() {
   return (
-    <DashBoardCharge />
+    <div className="h-full w-full overflow-hidden">
+      <DashBoardCharge />
+    </div>
   );
 }

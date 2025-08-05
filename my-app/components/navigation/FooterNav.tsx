@@ -33,7 +33,7 @@ const navItems: NavItem[] = [
     id: 'add',
     icon: Plus,
     label: '',
-    href: '/dashboard/products/new',
+    href: '/products_list/add_product',
     isMain: true,
   },
   {

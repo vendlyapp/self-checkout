@@ -63,7 +63,7 @@ export default function ProductsListComponent({
   isStandalone = false, 
   onProductClick,
   className = "",
-  maxHeight = "60vh",
+  maxHeight = "90vh",
   title = "Produkte",
   showAddButton = false
 }: ProductsListComponentProps) {

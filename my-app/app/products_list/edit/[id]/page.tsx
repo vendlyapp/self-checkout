@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { fetchProductById } from '@/components/dashboard/products_list/data/mockProducts';
-import FixedHeaderContainerSimple from '@/components/dashboard/products_list/FixedHeaderContainerSimple';
 
 interface Product {
   id: string;
@@ -71,31 +70,31 @@ export default function EditProduct({ params }: PageProps) {
 
   if (loading) {
     return (
-      <FixedHeaderContainerSimple title="Produkt bearbeiten" showAddButton={false}>
+      <div className="h-full w-full overflow-hidden">
         <div className="p-4">
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500 mx-auto"></div>
             <p className="mt-2 text-sm text-muted-foreground">Produkt wird geladen...</p>
           </div>
         </div>
-      </FixedHeaderContainerSimple>
+      </div>
     );
   }
 
   if (!product) {
     return (
-      <FixedHeaderContainerSimple title="Produkt bearbeiten" showAddButton={false}>
+      <div className="h-full w-full overflow-hidden">
         <div className="p-4">
           <div className="text-center py-8">
             <p className="text-muted-foreground">Produkt nicht gefunden</p>
           </div>
         </div>
-      </FixedHeaderContainerSimple>
+      </div>
     );
   }
 
   return (
-    <FixedHeaderContainerSimple title="Produkt bearbeiten" showAddButton={false}>
+    <div className="h-full w-full overflow-hidden">
       <div className="p-4">
         {/* Información del producto */}
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -130,6 +129,6 @@ export default function EditProduct({ params }: PageProps) {
           </div>
         </div>
       </div>
-    </FixedHeaderContainerSimple>
+    </div>
   );
 } 
