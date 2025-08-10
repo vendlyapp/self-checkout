@@ -45,7 +45,7 @@ export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProp
         
         {/* Botón Zur Bezahlung */}
         <button
-          className="w-[80%] mx-auto bg-green-500 text-white py-4 rounded-full font-semibold text-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+          className="w-[80%] mx-auto bg-[#25D076] text-white py-4 rounded-full font-semibold text-lg hover:bg-[#25D076]/80 transition-colors flex items-center justify-center gap-2"
           onClick={() => router.push('/user/payment')}
         >
           Zur Bezahlung

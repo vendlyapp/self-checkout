@@ -9,6 +9,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
 import UserCartSummary from '@/components/user/UserCartSummary';
 import UserCartSummaryCart from '@/components/user/UserCartSummaryCart';
+import { useCartStore } from '@/lib/stores/cartStore';
 
 
 interface NavItemUser {
@@ -40,10 +41,10 @@ const navItems: NavItemUser[] = [
     isMain: true,
   },
   {
-    id: 'percent',
+    id: 'promotion',
     icon: Percent,
     label: 'Aktionen',
-    href: '/actions',
+    href: '/user/promotion',
   },
   {
     id: 'cart',
@@ -69,6 +70,7 @@ export default function FooterNav() {
   const [mounted, setMounted] = useState(false);
   const [isPulsing, setIsPulsing] = useState(true);
   const [pressedItem, setPressedItem] = useState<string | null>(null);
+  const { cartItems } = useCartStore();
 
   useEffect(() => {
     setMounted(true);
@@ -114,6 +116,14 @@ export default function FooterNav() {
     [isItemActive, pressedItem]
   );
 
+  // Contador de artículos en el carrito (suma de cantidades > 0)
+  const cartItemCount = useMemo(() => {
+    if (!cartItems || cartItems.length === 0) return 0;
+    return cartItems
+      .filter(item => item.quantity > 0)
+      .reduce((sum, item) => sum + item.quantity, 0);
+  }, [cartItems]);
+
   // Ocultar FooterNav en la pantalla de carrito
   if (pathname === '/charge/cart') {
     return null;
@@ -126,6 +136,7 @@ export default function FooterNav() {
 
   // Determinar qué componente de carrito mostrar basado en la ruta
   const isCartRoute = pathname === '/user/cart';
+  const isPaymentRoute = pathname === '/user/payment';
 
   return (
     <nav className="nav-container-user ">
@@ -158,16 +169,36 @@ export default function FooterNav() {
                 onClick={handleValidInteraction}
                 aria-label="Scan"
               >
+
+
                 {/* Animated Green Halo */}
-                <div className="absolute inset-0 w-full h-full rounded-full bg-[#25D076]/30 animate-pulse" />
-                <div className="absolute inset-1 w-14 h-14 rounded-full bg-[#25D076]/20 animate-pulse" style={{ animationDelay: '0.5s' }} />
-                <div className="absolute inset-2 w-12 h-12 rounded-full bg-[#25D076]/10 animate-pulse" style={{ animationDelay: '1s' }} />
+                <div className={clsx(
+                  "absolute inset-0 w-full h-full rounded-full animate-pulse",
+                  pathname === '/user/scan' ? "bg-[#25D076]/30" : "bg-[#766B6A]/30"
+                )}  />
+
+
+                <div className={clsx(
+                  "absolute inset-1 w-14 h-14 rounded-full animate-pulse",
+                  pathname === '/user/scan' ? "bg-[#25D076]/20" : "bg-[#766B6A]/20"
+                )} style={{ animationDelay: '0.5s' }} />
+
+                <div className={clsx(
+                  "absolute inset-2 w-12 h-12 rounded-full animate-pulse",
+                  pathname === '/user/scan' ? "bg-[#25D076]/10" : "bg-[#766B6A]/10"
+                )} style={{ animationDelay: '1s' }} />
                 
+
+
+
                 {/* White Circle with Lucide Icon */}
-                <div className="relative w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg">
+                <div className={clsx(
+                  "relative w-12 h-12 bg-[#766B6A] rounded-full flex items-center justify-center shadow-lg text-white",
+                  item.isActive && "bg-white text-[#25D076]",
+                  item.isPressed && "scale-95"
+                )}>
                   <Icon 
-                    className={clsx(
-                      "text-[#25D076]",
+                    className={clsx(   
                       item.isPressed && "scale-95",
                       item.isActive && "text-[#25D076]"
                     )} 
@@ -196,14 +227,28 @@ export default function FooterNav() {
               onClick={handleValidInteraction}
               aria-label={item.label}
             >
-              <Icon 
-                className={clsx(
-                  "nav-icon",
-                  item.isActive && "nav-icon-active",
-                  item.isPressed && "scale-90"
+              <div className="relative">
+                <Icon 
+                  className={clsx(
+                    "nav-icon",
+                    item.isActive && "nav-icon-active",
+                    item.isPressed && "scale-90"
+                  )}
+                  strokeWidth={item.isActive ? 2.2 : 1.8}
+                />
+                {item.id === 'cart' && cartItemCount > 0 && (
+                  <span
+                    className={clsx(
+                      "absolute -top-1.5 -right-2.5 min-w-5 h-5 px-1 rounded-full text-white text-[10px] leading-5 font-bold text-center",
+                      item.isActive ? "bg-red-500" : "bg-red-500/70"
+                    )}
+                    aria-label={`Artículos en carrito: ${cartItemCount}`}
+                    aria-live="polite"
+                  >
+                    {cartItemCount > 99 ? '99+' : cartItemCount}
+                  </span>
                 )}
-                strokeWidth={item.isActive ? 2.2 : 1.8}
-              />
+              </div>
               <span 
                 className={clsx(
                   "nav-label",
@@ -217,9 +262,9 @@ export default function FooterNav() {
         })}
       </div>
       
-      {/* Resumen de carrito abajo solo cuando NO estoy en /user/cart */}
-      {!isCartRoute && (
-        <div className="w-full flex flex-col gap-2 px-4 py-2 ">
+      {/* Resumen de carrito abajo solo cuando NO estoy en /user/cart Y NO estoy en /user/payment */}
+      {!isCartRoute && !isPaymentRoute && (
+        <div className="w-full flex flex-col gap-2 px-4">
           <UserCartSummary variant="inline" />
         </div>
       )}

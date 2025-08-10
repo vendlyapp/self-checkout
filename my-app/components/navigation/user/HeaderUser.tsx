@@ -33,8 +33,8 @@ export default function HeaderUser({ isDarkMode = false }: HeaderUserProps) {
               <Image 
                 src={logoSrc}  
                 alt="Self-Checkout Logo" 
-                width={150} 
-                height={150}
+                width={70} 
+                height={70}
                 priority
               />
             </Link>

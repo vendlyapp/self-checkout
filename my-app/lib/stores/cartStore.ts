@@ -13,11 +13,14 @@ interface CartState {
   removeFromCart: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => void
   clearCart: () => void
+  getTotalItems: () => number
+  getSubtotal: () => number
+  getTotalWithVAT: (vatRate?: number) => number
 }
 
 export const useCartStore = create<CartState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       cartItems: [],
       addToCart: (product, quantity = 1) => {
         set(state => {
@@ -48,7 +51,20 @@ export const useCartStore = create<CartState>()(
             .filter(item => item.quantity > 0)
         }))
       },
-      clearCart: () => set({ cartItems: [] })
+      clearCart: () => set({ cartItems: [] }),
+      getTotalItems: () => {
+        const state = get()
+        return state.cartItems.reduce((sum, item) => sum + item.quantity, 0)
+      },
+      getSubtotal: () => {
+        const state = get()
+        return state.cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0)
+      },
+      getTotalWithVAT: (vatRate = 0.077) => {
+        const state = get()
+        const subtotal = state.getSubtotal()
+        return subtotal * (1 + vatRate)
+      }
     }),
     {
       name: 'cart-storage',

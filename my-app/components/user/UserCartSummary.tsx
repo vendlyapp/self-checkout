@@ -25,8 +25,8 @@ export default function UserCartSummary({ variant }: UserCartSummaryProps) {
           {totalItems} Artikel &bull; CHF {totalPrice.toFixed(2)}
         </span>
         <button
-          className="bg-white text-brand-500 font-bold px-5 py-2 rounded-full text-base shadow-sm hover:bg-gray-50 transition-colors"
-          onClick={() => router.push('/user/cart')}
+          className="bg-white text-[#6E7996] font-bold px-5 py-2 rounded-xl text-base shadow-sm hover:bg-gray-50 transition-colors"
+          onClick={() => router.push('/user/payment')}
         >
           Bezahlen
         </button>

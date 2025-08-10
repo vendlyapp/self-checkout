@@ -4,14 +4,14 @@ import { useState, useCallback } from 'react';
 import { SearchInput } from '@/components/ui/search-input';
 import { mockProducts, Product } from '@/components/dashboard/products_list/data/mockProducts';
 import { useCartStore } from '@/lib/stores/cartStore';
-import { Search, Flame, X, Plus, Minus } from 'lucide-react';
-import Image from 'next/image';
+import { Search, Flame, X } from 'lucide-react';
+import ProductCard from '@/components/dashboard/charge/ProductCard';
 
 export default function SearchUser() {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const { cartItems, addToCart, updateQuantity } = useCartStore();
+  const { cartItems, addToCart } = useCartStore();
 
   // Búsquedas populares
   const popularSearches = [
@@ -71,26 +71,10 @@ export default function SearchUser() {
     setIsSearching(false);
   }, []);
 
-  // Función para manejar cambio de cantidad
-  const handleQuantityChange = useCallback((product: Product, newQuantity: number) => {
-    if (newQuantity >= 0 && newQuantity <= product.stock) {
-      if (newQuantity === 0) {
-        // Si la cantidad es 0, remover del carrito
-        const { removeFromCart } = useCartStore.getState();
-        removeFromCart(product.id);
-      } else {
-        // Si es la primera vez que se agrega el producto
-        if (getCurrentQuantity(product.id) === 0) {
-          addToCart(product, newQuantity);
-        } else {
-          // Actualizar cantidad en el carrito
-          updateQuantity(product.id, newQuantity);
-        }
-      }
-    }
-  }, [updateQuantity, addToCart, getCurrentQuantity]);
-
-
+  // Agregar/actualizar cantidad usando ProductCard
+  const handleAddToCart = useCallback((product: Product, quantity: number) => {
+    addToCart(product, quantity);
+  }, [addToCart]);
 
   return (
     <div className="flex flex-col min-h-full bg-background-cream">
@@ -98,7 +82,7 @@ export default function SearchUser() {
       <HeaderNav title="Suchen" />
       
       {/* Contenedor principal con padding fijo */}
-      <div className="flex-1 px-4 pt-4 pb-32 mt-[70px]">
+      <div className="flex-1 px-4 pt-4 pb-32 mt-[70px] rounded-xl">
         {/* Barra de búsqueda fija en la parte superior */}
         <div className={`mb-6 ${searchTerm ? 'sticky top-0 bg-background-cream pt-2 pb-2 z-20' : ''}`}>
           <SearchInput 
@@ -136,7 +120,7 @@ export default function SearchUser() {
           /* Estado de resultados de búsqueda */
           <div>
             {/* Header fijo para resultados */}
-            <div className="flex items-center justify-between mb-4 sticky top-[80px] bg-background-cream pt-2 pb-2 z-10">
+            <div className="flex items-center justify-between mb-4 sticky top-[70px] bg-background-cream pt-2 pb-2 z-10">
               <h2 className="text-lg font-semibold text-gray-800">
                 Schnell hinzufügen
               </h2>
@@ -160,70 +144,13 @@ export default function SearchUser() {
                 <div className="space-y-3">
                   {searchResults.map((product) => {
                     const currentQuantity = getCurrentQuantity(product.id);
-                    
                     return (
-                      <div key={product.id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                        <div className="flex items-center gap-3">
-                          {/* Imagen del producto */}
-                          <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
-                            {product.image ? (
-                              <Image 
-                                src={product.image} 
-                                alt={product.name} 
-                                width={64} 
-                                height={64}
-                                className="object-cover"
-                              />
-                            ) : (
-                              <div className="w-16 h-16 bg-gray-100 flex items-center justify-center">
-                                <Search className="w-8 h-8 text-gray-400" />
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Información del producto */}
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-gray-900 text-[15px]">
-                              {product.name}
-                            </h3>
-                            <p className="text-gray-500 text-[13px] mt-1">
-                              {product.weight ? `${product.weight}g` : '1 Stück'}
-                            </p>
-                          </div>
-
-                          {/* Precio y controles de cantidad */}
-                          <div className="flex flex-col items-end gap-2">
-                            <span className="font-bold text-gray-900 text-[15px]">
-                              CHF {product.price.toFixed(2)}
-                            </span>
-                            
-                            {/* Controles de cantidad */}
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handleQuantityChange(product, currentQuantity - 1)}
-                                className="w-8 h-8 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-gray-700 flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                disabled={currentQuantity <= 0}
-                                aria-label={`${product.name} reduzieren`}
-                              >
-                                <Minus className="w-4 h-4" strokeWidth={2.5} />
-                              </button>
-                              
-                              <span className="text-[16px] font-semibold text-gray-900 min-w-[24px] text-center select-none">
-                                {currentQuantity}
-                              </span>
-                              
-                              <button
-                                onClick={() => handleQuantityChange(product, currentQuantity + 1)}
-                                disabled={currentQuantity >= product.stock}
-                                className="w-10 h-10 rounded-full bg-[#22c55e] hover:bg-[#16a34a] disabled:bg-[#86efac] disabled:cursor-not-allowed text-white flex items-center justify-center transition-all duration-200 shadow-sm"
-                                aria-label={`${product.name} hinzufügen`}
-                              >
-                                <Plus className="w-6 h-6" strokeWidth={2.5} />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        onAddToCart={handleAddToCart}
+                        initialQuantity={currentQuantity}
+                      />
                     );
                   })}
                 </div>

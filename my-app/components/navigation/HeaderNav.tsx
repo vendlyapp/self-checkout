@@ -1,6 +1,8 @@
-import { ArrowLeftIcon, Plus, X } from "lucide-react";
+import { ArrowLeftIcon, Plus, X, Zap } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useCartStore } from '@/lib/stores/cartStore';
+import { getPromotionalProducts, Product } from "../dashboard/products_list/data/mockProducts";
+import { useEffect, useState } from "react";
 
 interface HeaderNavProps {
   title?: string;
@@ -17,6 +19,13 @@ export default function HeaderNav({
   const pathname = usePathname();
   const { cartItems, clearCart } = useCartStore();
   const isCartPage = pathname === '/charge/cart' || pathname === '/user/cart';
+  const isPromotionPage = pathname === '/user/promotion';
+  const [products, setProducts] = useState<Product[]>([]);
+  useEffect(() => {
+    // Obtener solo productos con promociones
+    const promotionalProducts = getPromotionalProducts();
+    setProducts(promotionalProducts);
+  }, []);
   const hasItems = cartItems.length > 0;
 
   return (
@@ -37,7 +46,21 @@ export default function HeaderNav({
               Leeren
             </button>
           )}
-          {!isCartPage && !showAddButton && (
+          {isPromotionPage && (
+            <div className="flex items-center gap-0.5" >
+              <Zap className="w-4 h-4 text-black" />
+              <span className="text-[14px] font-semibold">{products.length === 0 ? "0" : products.length}</span>
+              <button
+                className="text-black  text-[14px] px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                onClick={() => router.push('/user/promotion')}
+                aria-label="Aktionen"
+                tabIndex={0}
+              >
+                Aktionen
+              </button>
+            </div>
+          )}
+          {!isCartPage && !showAddButton && !isPromotionPage && (
             <button
               className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
               onClick={() => router.push(closeDestination)}

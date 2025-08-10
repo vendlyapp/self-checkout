@@ -27,6 +27,17 @@ export interface Product {
   hasWeight?: boolean
   discountPercentage?: number
   image?: string // Nuevo campo para imagen
+  // Nuevos campos para promociones y descuentos
+  currency?: string
+  initialStock?: number
+  images?: string[]
+  promotionTitle?: string
+  promotionType?: 'percentage' | 'amount' | 'flash' | 'bogo' | 'bundle'
+  promotionStartAt?: string
+  promotionEndAt?: string
+  promotionBadge?: string
+  promotionActionLabel?: string
+  promotionPriority?: number
 }
 
 export interface ProductCategory {
@@ -53,13 +64,17 @@ export const mockProducts: Product[] = [
     name: 'Bauernbrot',
     description: 'Traditionelles Bauernbrot aus Sauerteig, knusprig und aromatisch',
     price: 3.50,
+    originalPrice: 3.90,
     category: 'Brot',
     categoryId: 'bread',
     stock: 25,
+    initialStock: 60,
     barcode: '1234567890001',
     sku: 'BAUERNBROT-500G',
     tags: ['brot', 'sauerteig', 'traditionell', 'knusprig'],
     isPopular: true,
+    isOnSale: true,
+    discountPercentage: 10,
     rating: 4.8,
     reviews: 156,
     weight: 500,
@@ -67,20 +82,33 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T06:00:00Z',
     updatedAt: '2024-01-22T06:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
+    promotionTitle: 'Aktion',
+    promotionType: 'percentage',
+    promotionStartAt: '2024-01-22T05:00:00Z',
+    promotionEndAt: '2024-01-22T12:00:00Z',
+    promotionBadge: '-10%',
+    promotionActionLabel: 'Jetzt hinzufügen',
+    promotionPriority: 10,
   },
   {
     id: 'prod-002',
     name: 'Croissant Classic',
     description: 'Butteriges Croissant nach französischer Art, luftig und zart',
     price: 2.20,
+    originalPrice: 2.60,
     category: 'Gebäck',
     categoryId: 'pastries',
     stock: 40,
+    initialStock: 80,
     barcode: '1234567890002',
     sku: 'CROISSANT-CLASSIC',
     tags: ['croissant', 'butter', 'französisch', 'luftig'],
     isPopular: true,
+    isOnSale: true,
+    discountPercentage: 15,
     rating: 4.9,
     reviews: 234,
     weight: 60,
@@ -88,20 +116,33 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T07:00:00Z',
     updatedAt: '2024-01-22T07:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
+    promotionTitle: 'Tagesaktion',
+    promotionType: 'flash',
+    promotionStartAt: '2024-01-22T07:00:00Z',
+    promotionEndAt: '2024-01-22T13:00:00Z',
+    promotionBadge: 'FLASH',
+    promotionActionLabel: 'Jetzt hinzufügen',
+    promotionPriority: 9,
   },
   {
     id: 'prod-003',
     name: 'Schwarzwälder Kirschtorte',
     description: 'Klassische Schwarzwälder Kirschtorte mit Kirschen und Sahne',
-    price: 28.00,
+    price: 24.00,
+    originalPrice: 28.00,
     category: 'Kuchen',
     categoryId: 'cakes',
     stock: 8,
+    initialStock: 15,
     barcode: '1234567890003',
     sku: 'SCHWARZWAELDER-KIRSCH',
     tags: ['kuchen', 'kirschen', 'sahne', 'schokolade'],
     isPopular: true,
+    isOnSale: true,
+    discountPercentage: 14,
     rating: 4.7,
     reviews: 89,
     weight: 1200,
@@ -109,7 +150,16 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T08:00:00Z',
     updatedAt: '2024-01-22T08:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
+    promotionTitle: 'Weekend Deal',
+    promotionType: 'amount',
+    promotionStartAt: '2024-01-22T08:00:00Z',
+    promotionEndAt: '2024-01-24T20:00:00Z',
+    promotionBadge: 'SPAR',
+    promotionActionLabel: 'Jetzt hinzufügen',
+    promotionPriority: 8,
   },
   {
     id: 'prod-004',
@@ -119,6 +169,7 @@ export const mockProducts: Product[] = [
     category: 'Brot',
     categoryId: 'bread',
     stock: 20,
+    initialStock: 40,
     barcode: '1234567890004',
     sku: 'VOLLKORNBROT-600G',
     tags: ['brot', 'vollkorn', 'gesund', 'körner'],
@@ -129,16 +180,20 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T09:00:00Z',
     updatedAt: '2024-01-22T09:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
   },
   {
     id: 'prod-005',
     name: 'Apfelstrudel',
     description: 'Wiener Apfelstrudel mit frischen Äpfeln und Zimt',
-    price: 4.80,
+    price: 4.30,
+    originalPrice: 4.80,
     category: 'Gebäck',
     categoryId: 'pastries',
     stock: 15,
+    initialStock: 30,
     barcode: '1234567890005',
     sku: 'APFELSTRUDEL-200G',
     tags: ['strudel', 'äpfel', 'zimt', 'österreichisch'],
@@ -149,7 +204,18 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T10:00:00Z',
     updatedAt: '2024-01-22T10:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
+    isOnSale: true,
+    discountPercentage: 10,
+    promotionTitle: 'Aktion',
+    promotionType: 'percentage',
+    promotionStartAt: '2024-01-22T09:00:00Z',
+    promotionEndAt: '2024-01-22T23:00:00Z',
+    promotionBadge: '-10%',
+    promotionActionLabel: 'Jetzt hinzufügen',
+    promotionPriority: 7,
   },
   {
     id: 'prod-006',
@@ -159,6 +225,7 @@ export const mockProducts: Product[] = [
     category: 'Gebäck',
     categoryId: 'pastries',
     stock: 50,
+    initialStock: 90,
     barcode: '1234567890006',
     sku: 'BREZEL-SALZ',
     tags: ['brezel', 'salz', 'bayerisch', 'knusprig'],
@@ -170,16 +237,20 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T11:00:00Z',
     updatedAt: '2024-01-22T11:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
   },
   {
     id: 'prod-007',
     name: 'Sauerteigbrot',
     description: 'Rustikales Sauerteigbrot mit langer Teigführung',
-    price: 3.80,
+    price: 3.60,
+    originalPrice: 3.80,
     category: 'Brot',
     categoryId: 'bread',
     stock: 18,
+    initialStock: 36,
     barcode: '1234567890007',
     sku: 'SAUERTEIGBROT-550G',
     tags: ['brot', 'sauerteig', 'rustikal', 'traditionell'],
@@ -190,7 +261,18 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T12:00:00Z',
     updatedAt: '2024-01-22T12:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
+    isOnSale: true,
+    discountPercentage: 5,
+    promotionTitle: 'Empfehlung',
+    promotionType: 'percentage',
+    promotionStartAt: '2024-01-22T12:00:00Z',
+    promotionEndAt: '2024-01-25T12:00:00Z',
+    promotionBadge: '-5%',
+    promotionActionLabel: 'Jetzt hinzufügen',
+    promotionPriority: 6,
   },
   {
     id: 'prod-008',
@@ -200,6 +282,7 @@ export const mockProducts: Product[] = [
     category: 'Gebäck',
     categoryId: 'pastries',
     stock: 35,
+    initialStock: 70,
     barcode: '1234567890008',
     sku: 'SCHOKOBROETCHEN',
     tags: ['brötchen', 'schokolade', 'süß', 'schokoladenstückchen'],
@@ -210,16 +293,20 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T13:00:00Z',
     updatedAt: '2024-01-22T13:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
   },
   {
     id: 'prod-009',
     name: 'Käsekuchen',
     description: 'Cremiger Käsekuchen mit Vanille und Zitronenaroma',
-    price: 22.00,
+    price: 19.80,
+    originalPrice: 22.00,
     category: 'Kuchen',
     categoryId: 'cakes',
     stock: 6,
+    initialStock: 10,
     barcode: '1234567890009',
     sku: 'KAESEKUCHEN-26CM',
     tags: ['kuchen', 'käse', 'cremig', 'vanille'],
@@ -230,7 +317,18 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T14:00:00Z',
     updatedAt: '2024-01-22T14:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
+    isOnSale: true,
+    discountPercentage: 10,
+    promotionTitle: 'Aktion',
+    promotionType: 'percentage',
+    promotionStartAt: '2024-01-22T14:00:00Z',
+    promotionEndAt: '2024-01-24T14:00:00Z',
+    promotionBadge: '-10%',
+    promotionActionLabel: 'Jetzt hinzufügen',
+    promotionPriority: 9,
   },
   {
     id: 'prod-010',
@@ -240,6 +338,7 @@ export const mockProducts: Product[] = [
     category: 'Brot',
     categoryId: 'bread',
     stock: 22,
+    initialStock: 44,
     barcode: '1234567890010',
     sku: 'ROGGENBROT-500G',
     tags: ['brot', 'roggen', 'dunkel', 'kräftig'],
@@ -250,16 +349,20 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T15:00:00Z',
     updatedAt: '2024-01-22T15:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
   },
   {
     id: 'prod-011',
     name: 'Pain au Chocolat',
     description: 'Französisches Pain au Chocolat mit dunkler Schokolade',
-    price: 2.50,
+    price: 2.20,
+    originalPrice: 2.50,
     category: 'Gebäck',
     categoryId: 'pastries',
     stock: 30,
+    initialStock: 70,
     barcode: '1234567890011',
     sku: 'PAIN-AU-CHOCOLAT',
     tags: ['pain au chocolat', 'schokolade', 'französisch', 'butter'],
@@ -270,7 +373,18 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T16:00:00Z',
     updatedAt: '2024-01-22T16:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
+    isOnSale: true,
+    discountPercentage: 12,
+    promotionTitle: 'Tagesaktion',
+    promotionType: 'percentage',
+    promotionStartAt: '2024-01-22T12:00:00Z',
+    promotionEndAt: '2024-01-22T18:00:00Z',
+    promotionBadge: '-12%',
+    promotionActionLabel: 'Jetzt hinzufügen',
+    promotionPriority: 8,
   },
   {
     id: 'prod-012',
@@ -280,6 +394,7 @@ export const mockProducts: Product[] = [
     category: 'Brot',
     categoryId: 'bread',
     stock: 16,
+    initialStock: 32,
     barcode: '1234567890012',
     sku: 'DINKELBROT-550G',
     tags: ['brot', 'dinkel', 'gesund', 'nussig'],
@@ -290,7 +405,9 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T17:00:00Z',
     updatedAt: '2024-01-22T17:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
   },
   {
     id: 'prod-013',
@@ -300,6 +417,7 @@ export const mockProducts: Product[] = [
     category: 'Gebäck',
     categoryId: 'pastries',
     stock: 25,
+    initialStock: 50,
     barcode: '1234567890013',
     sku: 'SCHINKEN-KAESE-CROISSANT',
     tags: ['croissant', 'schinken', 'käse', 'herzhaft'],
@@ -310,16 +428,20 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T18:00:00Z',
     updatedAt: '2024-01-22T18:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
   },
   {
     id: 'prod-014',
     name: 'Sachertorte',
     description: 'Wiener Sachertorte mit Marillenmarmelade und Schokoladenglasur',
     price: 32.00,
+    originalPrice: 35.00,
     category: 'Kuchen',
     categoryId: 'cakes',
     stock: 4,
+    initialStock: 8,
     barcode: '1234567890014',
     sku: 'SACHERTORTE-24CM',
     tags: ['kuchen', 'sachertorte', 'schokolade', 'marillen'],
@@ -330,7 +452,18 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T19:00:00Z',
     updatedAt: '2024-01-22T19:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
+    isOnSale: true,
+    discountPercentage: 8,
+    promotionTitle: 'Aktion',
+    promotionType: 'percentage',
+    promotionStartAt: '2024-01-22T19:00:00Z',
+    promotionEndAt: '2024-01-24T19:00:00Z',
+    promotionBadge: '-8%',
+    promotionActionLabel: 'Jetzt hinzufügen',
+    promotionPriority: 9,
   },
   {
     id: 'prod-015',
@@ -340,6 +473,7 @@ export const mockProducts: Product[] = [
     category: 'Brot',
     categoryId: 'bread',
     stock: 28,
+    initialStock: 56,
     barcode: '1234567890015',
     sku: 'CIABATTA-300G',
     tags: ['brot', 'ciabatta', 'italienisch', 'knusprig'],
@@ -350,7 +484,9 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T20:00:00Z',
     updatedAt: '2024-01-22T20:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
   },
   {
     id: 'prod-016',
@@ -360,6 +496,7 @@ export const mockProducts: Product[] = [
     category: 'Sandwiches',
     categoryId: 'sandwiches',
     stock: 20,
+    initialStock: 40,
     barcode: '1234567890016',
     sku: 'SCHINKEN-KAESE-SANDWICH',
     tags: ['sandwich', 'schinken', 'käse', 'salat'],
@@ -370,7 +507,9 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T21:00:00Z',
     updatedAt: '2024-01-22T21:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
   },
   {
     id: 'prod-017',
@@ -380,6 +519,7 @@ export const mockProducts: Product[] = [
     category: 'Brot',
     categoryId: 'bread',
     stock: 32,
+    initialStock: 64,
     barcode: '1234567890017',
     sku: 'BAGUETTE-250G',
     tags: ['brot', 'baguette', 'französisch', 'knusprig'],
@@ -390,16 +530,20 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T22:00:00Z',
     updatedAt: '2024-01-22T22:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
   },
   {
     id: 'prod-018',
     name: 'Apfelkuchen',
     description: 'Hausgemachter Apfelkuchen mit Zimt und Streuseln',
     price: 18.00,
+    originalPrice: 20.00,
     category: 'Kuchen',
     categoryId: 'cakes',
     stock: 7,
+    initialStock: 14,
     barcode: '1234567890018',
     sku: 'APFELKUCHEN-24CM',
     tags: ['kuchen', 'äpfel', 'zimt', 'streusel'],
@@ -410,7 +554,18 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-22T23:00:00Z',
     updatedAt: '2024-01-22T23:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
+    isOnSale: true,
+    discountPercentage: 10,
+    promotionTitle: 'Tagesaktion',
+    promotionType: 'percentage',
+    promotionStartAt: '2024-01-22T23:00:00Z',
+    promotionEndAt: '2024-01-23T00:00:00Z',
+    promotionBadge: '-10%',
+    promotionActionLabel: 'Jetzt hinzufügen',
+    promotionPriority: 7,
   },
   {
     id: 'prod-019',
@@ -420,6 +575,7 @@ export const mockProducts: Product[] = [
     category: 'Gebäck',
     categoryId: 'pastries',
     stock: 25,
+    initialStock: 50,
     barcode: '1234567890019',
     sku: 'MOHNBRÖTCHEN',
     tags: ['brötchen', 'mohn', 'süß', 'zuckerglasur'],
@@ -430,7 +586,9 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-23T00:00:00Z',
     updatedAt: '2024-01-23T00:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
   },
   {
     id: 'prod-020',
@@ -440,6 +598,7 @@ export const mockProducts: Product[] = [
     category: 'Sandwiches',
     categoryId: 'sandwiches',
     stock: 18,
+    initialStock: 36,
     barcode: '1234567890020',
     sku: 'VEGETARISCHES-SANDWICH',
     tags: ['sandwich', 'vegetarisch', 'avocado', 'salat'],
@@ -450,7 +609,9 @@ export const mockProducts: Product[] = [
     createdAt: '2024-01-23T01:00:00Z',
     updatedAt: '2024-01-23T01:00:00Z',
     hasWeight: true,
-    image: '/logo.svg'
+    currency: 'CHF',
+    image: '/logo.svg',
+    images: ['/logo.svg'],
   }
 ]
 
@@ -531,4 +692,29 @@ export const updateCategoryCounts = (): ProductCategory[] => {
     const count = mockProducts.filter(product => product.categoryId === category.id).length
     return { ...category, count }
   })
+}
+
+// Filtrar productos con promociones activas
+export const getPromotionalProducts = (): Product[] => {
+  return mockProducts.filter(product => 
+    product.promotionTitle || 
+    product.promotionType || 
+    product.promotionBadge || 
+    product.promotionActionLabel ||
+    product.isOnSale ||
+    product.discountPercentage ||
+    (product.originalPrice && product.originalPrice > product.price)
+  )
+}
+
+// Filtrar productos con promociones por tipo específico
+export const getPromotionalProductsByType = (type: 'percentage' | 'amount' | 'flash' | 'bogo' | 'bundle'): Product[] => {
+  return mockProducts.filter(product => product.promotionType === type)
+}
+
+// Obtener productos con descuentos por porcentaje
+export const getProductsWithPercentageDiscount = (): Product[] => {
+  return mockProducts.filter(product => 
+    product.discountPercentage && product.discountPercentage > 0
+  )
 } 

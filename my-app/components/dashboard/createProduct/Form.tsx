@@ -64,7 +64,7 @@ export default function Form() {
   ], []);
 
   const vatRates: VatRate[] = useMemo(() => [
-    { value: '2.6', label: '2.6% (Lebensmittel)', color: 'text-green-600' },
+    { value: '2.6', label: '2.6% (Lebensmittel)', color: 'text-[#25D076]' },
     { value: '8.1', label: '8.1% (Standard)', color: 'text-blue-600' },
     { value: '0', label: '0% (befreit)', color: 'text-gray-600' }
   ], []);
@@ -213,12 +213,12 @@ export default function Form() {
         {isSaving && (
           <div className="bg-white border-b border-gray-200 p-3">
             <div className="flex items-center space-x-2 mb-2">
-              <Loader2 className="w-4 h-4 animate-spin text-green-500" />
+              <Loader2 className="w-4 h-4 animate-spin text-[#25D076]" />
               <span className="text-sm text-gray-700">Speichert Produkt...</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
-                className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                className="bg-[#25D076] h-2 rounded-full transition-all duration-300"
                 style={{ width: `${saveProgress}%` }}
               />
             </div>
@@ -602,7 +602,7 @@ export default function Form() {
         <div className="border-t border-gray-200 pt-4">
           <div className="flex items-center justify-between py-1">
             <div className="flex items-center space-x-2">
-              <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
+              <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-[#25D076]' : 'bg-gray-400'}`} />
               <div>
                 <div className="text-sm font-medium text-gray-800">
                   {isActive ? 'Aktiv im Shop' : 'Inaktiv im Shop'}

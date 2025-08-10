@@ -23,12 +23,12 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
 
   const formatPrice = (price: number) => {
     if (price % 1 === 0) {
-      return `CHF ${price}.-` 
+      return `${price}.-` 
     }
-    return `CHF ${price.toFixed(2)}`
+    return `${price.toFixed(2)}`
   }
 
-  return (
+  return (  
     <div className="bg-white rounded-[20px] h-[130px] p-4  relative">
       {/* Badge de precio */}
       <div className="absolute top-3 right-3">
@@ -36,7 +36,7 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
           <div className="flex flex-col items-end gap-1">
             {/* Precio nuevo en rojo */}
             <span className="text-[15px] bg-[#F2EDE8] rounded-lg px-2 py-1 font-bold text-red-600">
-              {formatPrice(product.price)}
+              <span className="text-[10px] font-semibold">CHF</span> {formatPrice(product.price)}
             </span>
             {/* Precio original tachado */}
             <span className="text-[12px] text-gray-500 line-through">
@@ -122,21 +122,25 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
             )}
 
             {/* Controles de cantidad */}
-            <div className="flex items-center gap-2 h-full pt-4">
-              <button
+            <div className="flex items-center h-full pt-4">
+              {initialQuantity > 0 && (
+                <>
+                <button
                 onClick={() => handleQuantityChange(initialQuantity - 1)}
-                className="w-8 h-8 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-gray-700 flex items-center justify-center transition-all duration-200"
+                className="w-8 h-8 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-white flex items-center justify-center transition-all duration-200"
                 disabled={initialQuantity <= 0}
               >
                 <Minus className="w-4 h-4" strokeWidth={2.5} />
               </button>
-              <span className="text-[16px] font-semibold text-gray-900 min-w-[24px] text-center select-none">
+                </>
+              )}
+              <span className="text-[16px] font-bold text-gray-900 min-w-[24px] text-center select-none">
                 {initialQuantity}
               </span>
               <button
                 onClick={() => handleQuantityChange(initialQuantity + 1)}
                 disabled={initialQuantity >= product.stock}
-                className="w-10 h-10 rounded-full bg-[#22c55e] hover:bg-[#16a34a] disabled:bg-[#86efac] disabled:cursor-not-allowed text-white flex items-center justify-center transition-all duration-200 shadow-sm"
+                className="w-10 h-10 rounded-full bg-[#25D076] hover:bg-[#25D076]/80 disabled:bg-[#25D076]/50 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all duration-200 shadow-sm"
               >
                 <Plus className="w-6 h-6" strokeWidth={2.5} />
               </button>

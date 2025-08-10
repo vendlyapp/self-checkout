@@ -3,9 +3,9 @@ import { ReactNode } from 'react';
 
 export default function ScanLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="h-full w-full overflow-hidden bg-[#191F2D]">
+    <div >
       {/* Full-screen scanner container */}
-      <main className="h-full w-full relative">
+      <main >
         {children}
       </main>
     </div>
