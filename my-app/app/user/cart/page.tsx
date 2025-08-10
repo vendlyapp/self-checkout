@@ -31,7 +31,7 @@ export default function UserCartPage() {
           </div>
           
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 pb-48">
             {cartItems.map(({ product, quantity }) => (
               <ProductCard
                 key={product.id}

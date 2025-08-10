@@ -81,7 +81,7 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
         <div className="flex-1 flex flex-col justify-between min-h-[80px] ">
           {/* Título del producto */}
           <div className="pr-20 mb-4">
-            <h3 className="text-gray-900 text-[16px] leading-[1.3]  w-[80%] tracking-tight font-semibold ">
+            <h3 className="text-gray-900 text-[16px] leading-[1.3]  w-[90%] tracking-tight font-semibold ">
               {product.name}
             </h3>
           </div>

@@ -39,8 +39,8 @@ const SnanerDash = () => {
       </div>
       
       {/* Scanner Content con padding para los headers fijos */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8" style={{ paddingTop: '140px' }}>
-        <div className="relative w-80 h-80 mb-12">
+      <div className="flex-1 flex flex-col items-center justify-center ml-16 mr-16 pb-24 pt-32" style={{ paddingTop: '140px' }}>
+        <div className="relative w-[280px] h-[280px] mb-12">
           {/* Main scanner container */}
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
             

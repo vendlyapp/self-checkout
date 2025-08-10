@@ -191,9 +191,9 @@ export default function PaymentP() {
     <>
       {/* Header con información real del carrito */}
       <div className="flex flex-col gap-2 justify-center items-center bg-[#F9F6F4] w-full p-2 border-b border-[#E5E5E5]">
-        <p className="text-2xl pt-4 font-semibold text-[#373F49]">Heinigers Hofladen</p>
-        <p className="text-5xl font-bold">CHF {totalWithVAT.toFixed(2)}</p>
-        <p className="text-xl font-semibold text-[#373F49]">
+        <p className="text-xl pt-4 font-semibold text-[#373F49]">Heinigers Hofladen</p>
+        <p className="text-2xl font-bold">CHF {totalWithVAT.toFixed(2)}</p>
+        <p className="text-lg font-semibold text-[#373F49]">
           inkl. MwSt • {totalItems} {totalItems === 1 ? 'Artikel' : 'Artikel'}
         </p>
         {subtotal !== totalWithVAT && (
@@ -205,12 +205,12 @@ export default function PaymentP() {
 
       {/* Código promocional */}
       <div className="pt-4 pl-12">
-        <p className="text-[#25D076] cursor-pointer hover:underline">Promo Code?</p>
+        <p className="text-[#25D076] text-sm cursor-pointer hover:underline">Promo Code?</p>
       </div>
 
       {/* Métodos de pago */}
       <div className="flex flex-col gap-2 justify-center items-center bg-[#F2EDE8] w-full p-4">
-        <p className="text-xl font-semibold text-[#373F49] text-center pb-4 pt-4">
+        <p className="text-lg font-semibold text-[#373F49] text-center">
           Zahlungsmethode wählen:
         </p>
         
@@ -223,7 +223,7 @@ export default function PaymentP() {
               key={method.id}
               onClick={() => handlePaymentMethodSelect(method.id)}
               className={`
-                ${method.bgColor} ${method.textColor} px-4 py-4 w-[345px] text-xl rounded-full 
+                ${method.bgColor} ${method.textColor} px-4 py-4 w-[345px] h-[50px] text-sm rounded-full 
                 flex items-center gap-2 justify-center transition-all duration-200
                 ${isSelected ? 'ring-4 ring-blue-300 ring-opacity-50' : ''}
                 hover:scale-105 active:scale-95
