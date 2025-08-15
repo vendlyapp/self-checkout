@@ -1,13 +1,12 @@
 'use client';
 
 import { ArrowRight } from 'lucide-react';
-import { Emoji3D } from '@/components/ui/emoji-3d';
 import type { ActionCardProps } from '../types';
 import React from 'react';
 
 interface ExtendedActionCardProps extends Omit<ActionCardProps, 'icon'> {
   icon?: React.ReactNode;
-  emoji?: string;
+  emoji?: React.ReactNode;
   className?: string;
   onTouchStart?: React.TouchEventHandler<HTMLButtonElement>;
   onTouchEnd?: React.TouchEventHandler<HTMLButtonElement>;
@@ -33,13 +32,8 @@ const ActionCard = ({
   // Renderizar icono o emoji
   const renderIcon = () => {
     if (emoji) {
-      return (
-        <Emoji3D 
-          emoji={emoji}
-          size={50}
-          className="w-[60px] h-[60px]"
-        />
-      );
+      // Si es un ReactNode (como img), renderizarlo directamente
+      return emoji;
     }
     return icon;
   };
@@ -58,7 +52,7 @@ const ActionCard = ({
         <div className="rounded-xl flex items-center justify-center w-[60px] h-[60px]">
           {renderIcon()}
         </div>
-        <ArrowRight className={`w-4 h-4 group-active:translate-x-0.5 transition-transform ${isPrimary ? 'text-white/70' : 'text-gray-400'}`} />
+        <ArrowRight className={`w-6 h-6 group-active:translate-x-0.5 transition-transform ${isPrimary ? 'text-white' : 'text-gray-900'}`} />
       </div>
       <div>
         <h3 className="font-semibold text-[24px] mb-1 ">{title}</h3>

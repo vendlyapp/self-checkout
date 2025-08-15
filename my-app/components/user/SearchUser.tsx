@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { SearchInput } from '@/components/ui/search-input';
 import { mockProducts, Product } from '@/components/dashboard/products_list/data/mockProducts';
 import { useCartStore } from '@/lib/stores/cartStore';
-import { Search, Flame, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import ProductCard from '@/components/dashboard/charge/ProductCard';
 
 export default function SearchUser() {
@@ -98,7 +98,7 @@ export default function SearchUser() {
           /* Estado inicial - Búsquedas populares */
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <Flame className="w-5 h-5 text-orange-500" />
+              <img src="/Fire.svg" alt="Flame" width={30} height={30} />
               <h2 className="text-lg font-semibold text-gray-800">
                 Meist gesucht bei Heiniger&apos;s:
               </h2>

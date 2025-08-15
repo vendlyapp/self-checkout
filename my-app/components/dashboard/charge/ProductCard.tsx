@@ -40,7 +40,7 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
             </span>
             {/* Precio original tachado */}
             <span className="text-[12px] text-gray-500 line-through">
-              {formatPrice(product.originalPrice)}
+            <span className="text-[10px] font-semibold">CHF</span> {formatPrice(product.originalPrice)}
             </span>
           </div>
         ) : (
@@ -99,7 +99,7 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
                   <ChevronDown className="w-4 h-4 text-gray-500" />
                 </button>
                 {showWeightOptions && (
-                  <div className="absolute bottom-full left-0 mb-2 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-20 min-w-[120px]">
+                  <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-20 min-w-[100px] max-w-[100px]">
                     {['250g', '500g', '1kg'].map((weight) => (
                       <button
                         key={weight}
@@ -125,18 +125,18 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
             <div className="flex items-center h-full pt-4">
               {initialQuantity > 0 && (
                 <>
-                <button
-                onClick={() => handleQuantityChange(initialQuantity - 1)}
-                className="w-8 h-8 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-white flex items-center justify-center transition-all duration-200"
-                disabled={initialQuantity <= 0}
-              >
-                <Minus className="w-4 h-4" strokeWidth={2.5} />
-              </button>
+                  <button
+                    onClick={() => handleQuantityChange(initialQuantity - 1)}
+                    className="w-8 h-8 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-white flex items-center justify-center transition-all duration-200"
+                    disabled={initialQuantity <= 0}
+                  >
+                    <Minus className="w-4 h-4" strokeWidth={2.5} />
+                  </button>
+                  <span className="text-[16px] font-bold text-gray-900 min-w-[24px] text-center select-none">
+                    {initialQuantity}
+                  </span>
                 </>
               )}
-              <span className="text-[16px] font-bold text-gray-900 min-w-[24px] text-center select-none">
-                {initialQuantity}
-              </span>
               <button
                 onClick={() => handleQuantityChange(initialQuantity + 1)}
                 disabled={initialQuantity >= product.stock}

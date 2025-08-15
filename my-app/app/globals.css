@@ -601,7 +601,7 @@
    }
    
    .dashboard-logo img {
-     @apply h-8 w-auto;
+     @apply h-6 w-auto;
    }
   
    .dashboard-logo-d img {

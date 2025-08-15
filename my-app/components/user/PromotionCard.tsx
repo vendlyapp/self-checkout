@@ -131,10 +131,13 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
 
       {/* Progress bar */}
       <div className="w-full mb-3">
-        <div className="w-full h-1.5 rounded-full bg-gray-200 overflow-hidden">
+        <div className="w-full h-2 rounded-full bg-gray-200 overflow-hidden">
           <div
-            className="h-full rounded-full transition-all duration-300 bg-gradient-to-r from-amber-400 to-orange-500"
-            style={{ width: progressWidth }}
+            className="h-full rounded-full transition-all duration-300"
+            style={{ 
+              width: progressWidth,
+              backgroundColor: '#C9B27B'
+            }}
             aria-hidden="true"
           />
         </div>

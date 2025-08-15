@@ -61,13 +61,13 @@ const GreetingSection = ({
           <button
             onClick={onToggleStore}
             className={`
-              relative inline-flex h-8 items-center px-2 rounded-full 
+              relative inline-flex h-8 items-center rounded-full 
               transition-all duration-200 ease-in-out 
               focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2
               ${isStoreOpen ? 'bg-brand-500' : 'bg-gray-300'}
             `}
             style={{
-              width: isStoreOpen ? '105px' : '125px'
+              width: isStoreOpen ? '100px' : '120px'
             }}
             role="switch"
             aria-checked={isStoreOpen}
@@ -75,7 +75,7 @@ const GreetingSection = ({
           >
             <span
               className={`
-                absolute left-3 text-xs font-medium text-white transition-all duration-200 ease-in-out
+                absolute left-4 text-xs font-medium text-white transition-all duration-200 ease-in-out
                 ${isStoreOpen ? 'opacity-100' : 'opacity-0'}
               `}
             >
@@ -83,7 +83,7 @@ const GreetingSection = ({
             </span>
             <span
               className={`
-                absolute right-3 text-xs font-medium text-gray-600 transition-all duration-200 ease-in-out
+                absolute right-4 text-xs font-medium text-gray-600 transition-all duration-200 ease-in-out
                 ${isStoreOpen ? 'opacity-0' : 'opacity-100'}
               `}
             >
@@ -93,7 +93,7 @@ const GreetingSection = ({
               className={`
                 inline-block h-6 w-6 transform rounded-full bg-white 
                 transition duration-200 ease-in-out shadow-sm
-                ${isStoreOpen ? 'translate-x-16' : 'translate-x-1'}
+                ${isStoreOpen ? 'translate-x-[70px]' : 'translate-x-1'}
               `}
             />
           </button>
