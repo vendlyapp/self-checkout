@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { UseProductsReturn, ProductsAnalyticsData } from '../types';
 import { fetchProductsAnalytics, mockProductsAnalyticsData } from '../data';
+import { useRouter } from 'next/navigation';
 
 export const useProducts = (): UseProductsReturn => {
   const [data, setData] = useState<ProductsAnalyticsData>(mockProductsAnalyticsData);
@@ -45,20 +46,9 @@ export const useProducts = (): UseProductsReturn => {
 // Additional hook for product actions (ready for backend integration)
 export const useProductActions = () => {
   const [loading] = useState<boolean>(false);
-
+  const router = useRouter();
   const handleNewProduct = useCallback(async () => {
-    console.log('Crear nuevo producto');
-    // Future implementation:
-    // try {
-    //   setLoading(true);
-    //   const result = await createProduct(productData);
-    //   return result;
-    // } catch (error) {
-    //   console.error('Error creating product:', error);
-    //   throw error;
-    // } finally {
-    //   setLoading(false);
-    // }
+    router.push('/products_list/add_product');
   }, []);
 
   const handleProductList = useCallback(async () => {
