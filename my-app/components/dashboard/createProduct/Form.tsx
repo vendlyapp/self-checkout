@@ -269,7 +269,7 @@ export default function Form() {
         )}
 
         {/* Content */}
-        <div className="pt-4 pb-20 space-y-5">
+        <div className="pl-1 pr-1 pt-4 pb-20 space-y-5">
         
         {/* Produktbilder */}
         <div>
