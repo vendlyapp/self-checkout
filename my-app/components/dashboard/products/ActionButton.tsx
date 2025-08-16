@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { ActionButtonProps } from './types';
 
@@ -11,7 +11,10 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   onClick,
   variant = 'primary' 
 }) => {
-  const baseClasses = "btn-tap w-full rounded-2xl p-5 flex items-center justify-between transition-all group";
+  // Estado para el efecto de presión
+  const [pressed, setPressed] = useState(false);
+
+  const baseClasses = "btn-tap w-full rounded-2xl p-5 flex items-center justify-between transition-all group transition-transform duration-150";
   const variantClasses = variant === 'primary' 
     ? "bg-primary text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/20" 
     : "bg-card border border-border hover:bg-muted";
@@ -19,7 +22,12 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   return (
     <button 
       onClick={onClick}
-      className={`${baseClasses} ${variantClasses}`}
+      className={`${baseClasses} ${variantClasses} ${pressed ? 'scale-95' : ''}`}
+      onTouchStart={() => setPressed(true)}
+      onTouchEnd={() => setPressed(false)}
+      onMouseDown={() => setPressed(true)}
+      onMouseUp={() => setPressed(false)}
+      onMouseLeave={() => setPressed(false)}
     >
       <div className="flex items-center gap-4">
         <div className={`w-10 h-10 ${variant === 'primary' ? 'bg-white/20' : 'bg-muted'} rounded-xl flex items-center justify-center`}>

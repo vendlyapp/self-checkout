@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 
 type FooterAddProductProps = {
@@ -11,20 +11,23 @@ type FooterAddProductProps = {
 
 const FooterAddProduct: React.FC<FooterAddProductProps> = ({
   onAddProduct,
-  // totalProducts = 0,
   isLoading = false,
-  // filteredProducts,
-  // hasActiveFilters = false
 }) => {
-  // const isFiltered = hasActiveFilters && filteredProducts !== totalProducts;
+  // Estado para el efecto de presión
+  const [pressed, setPressed] = useState(false);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-10">
       <button
-        className="w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg py-3 text-[18px] flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+        className={`w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg py-3 text-[18px] flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-transform duration-150 ${pressed ? 'scale-95' : ''}`}
         aria-label="Neues Produkt hinzufügen"
         onClick={onAddProduct}
         disabled={isLoading}
+        onTouchStart={() => setPressed(true)}
+        onTouchEnd={() => setPressed(false)}
+        onMouseDown={() => setPressed(true)}
+        onMouseUp={() => setPressed(false)}
+        onMouseLeave={() => setPressed(false)}
       >
         {isLoading ? (
           <>

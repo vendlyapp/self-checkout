@@ -126,26 +126,26 @@ const QuickAccessSlider = ({
                   const globalIdx = slideIndex * itemsPerSlide + idx;
                   return (
                     <button
-                      key={`${item.id}-${slideIndex}-${idx}`}
-                      className={`bg-white border border-border/10 rounded-2xl p-3 flex flex-col items-center justify-center hover:shadow-md shadow-sm min-h-[100px] transition-transform duration-150 ${pressedIndex === globalIdx ? 'scale-95' : ''}`}
-                      onTouchStart={() => setPressedIndex(globalIdx)}
-                      onTouchEnd={() => setPressedIndex(null)}
-                      onMouseDown={() => setPressedIndex(globalIdx)}
-                      onMouseUp={() => setPressedIndex(null)}
-                      onMouseLeave={() => setPressedIndex(null)}
-                    >
-                      {/* Green icon container */}
-                      <div className="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center mb-2 shadow-sm">
-                        <div className="text-white [&>svg]:w-4 [&>svg]:h-4">
-                          {item.icon}
-                        </div>
+                    key={`${item.id}-${slideIndex}-${idx}`}
+                    className={`bg-white border border-border/10 rounded-2xl p-3 flex flex-col items-center justify-center hover:shadow-md shadow-sm min-h-[100px] transition-transform duration-150 ${pressedIndex === globalIdx ? 'scale-95' : ''}`}
+                    onTouchStart={() => setPressedIndex(globalIdx)}
+                    onTouchEnd={() => setPressedIndex(null)}
+                    onMouseDown={() => setPressedIndex(globalIdx)}
+                    onMouseUp={() => setPressedIndex(null)}
+                    onMouseLeave={() => setPressedIndex(null)}
+                  >
+                    {/* Green icon container */}
+                    <div className="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center mb-2 shadow-sm">
+                      <div className="text-white [&>svg]:w-4 [&>svg]:h-4">
+                        {item.icon}
                       </div>
-                      
-                      {/* Black text */}
-                      <span className="text-xs font-medium text-foreground leading-tight text-center">
-                        {item.label}
-                      </span>
-                    </button>
+                    </div>
+                    
+                    {/* Black text */}
+                    <span className="text-xs font-medium text-foreground leading-tight text-center">
+                      {item.label}
+                    </span>
+                  </button>
                   );
                 })}
                 {/* Fill empty slots if needed */}

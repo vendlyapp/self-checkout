@@ -73,7 +73,7 @@ const QuickAccessGrid: React.FC<QuickAccessGridProps> = ({
           {Array.from({ length: 4 }).map((_, idx) => (
             <div 
               key={idx}
-              className="bg-card border border-border/50 rounded-2xl p-5 animate-pulse"
+              className="bg-card  rounded-2xl p-5 animate-pulse"
             >
               <div className="flex justify-between items-start mb-3">
                 <div className="w-12 h-12 bg-muted rounded-xl"></div>
@@ -97,7 +97,7 @@ const QuickAccessGrid: React.FC<QuickAccessGridProps> = ({
             key={item.id}
             onClick={item.action}
             onKeyDown={(e) => handleKeyDown(e, item.action)}
-            className={`group bg-card border border-border/50 rounded-2xl p-5 text-left hover:shadow-md focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 transition-transform duration-150 ${pressedId === item.id ? 'scale-95' : ''}`}
+            className={`group bg-card border border-border/50 rounded-2xl p-5 text-left hover:shadow-md  transition-transform duration-150 ${pressedId === item.id ? 'scale-95' : ''}`}
             aria-label={`${item.title}: ${item.subtitle}`}
             tabIndex={0}
             onTouchStart={() => setPressedId(item.id)}
@@ -108,7 +108,7 @@ const QuickAccessGrid: React.FC<QuickAccessGridProps> = ({
           >
             <div className="flex justify-between items-start mb-3">
               {/* Icon Container */}
-              <div className={`w-12 h-12 ${item.color} rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110`}> {/* group-hover opcional */}
+              <div className={`w-12 h-12 ${item.color} rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110`}>
                 <div className={`${item.iconColor} transition-colors duration-200`}>
                   {item.icon}
                 </div>
