@@ -7,7 +7,7 @@ import HeaderNav from '@/components/navigation/HeaderNav';
 export default function AddProduct() {
   return (
     <div className="h-full w-full overflow-hidden">
-      <HeaderNav title="Neues Produkt"  />
+      <HeaderNav title="Produkt erstellen"  />
       <Form />
     </div>
   );

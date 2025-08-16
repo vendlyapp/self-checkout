@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { Camera, X, Plus, Check, AlertCircle, Loader2, Package, Percent, FolderOpen } from 'lucide-react';
+import { Camera, X, Plus, AlertCircle, Loader2, Package, Percent, FolderOpen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 
@@ -34,24 +34,21 @@ interface VatRate {
 export default function Form() {
   const router = useRouter();
   
-  // Form state
+  // Form state - Iniciar completamente vacío
   const [productName, setProductName] = useState('');
   const [productDescription, setProductDescription] = useState('');
   const [productPrice, setProductPrice] = useState('');
   const [productCategory, setProductCategory] = useState('');
   const [productImages, setProductImages] = useState<string[]>([]);
-  const [stock, setStock] = useState(50);
+  const [stock, setStock] = useState(0); // Cambiar a 0
   const [isActive, setIsActive] = useState(true);
   const [hasPromotion, setHasPromotion] = useState(false);
-  const [promotionPrice] = useState('');
+  const [promotionPrice] = useState(''); 
   const [promotionDuration, setPromotionDuration] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
-  const [hasVariants, setHasVariants] = useState(true);
-  const [variants, setVariants] = useState<ProductVariant[]>([
-    { name: 'Bsp: Mini (250g)', price: '6.50', promotionPrice: '' },
-    { name: 'Bsp: Klein (500g)', price: '0.00', promotionPrice: '' }
-  ]);
-  const [vatRate, setVatRate] = useState('0');
+  const [hasVariants, setHasVariants] = useState(false); // Cambiar a false
+  const [variants, setVariants] = useState<ProductVariant[]>([]); // Array vacío
+  const [vatRate, setVatRate] = useState('2.6'); // Cambiar a valor por defecto
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSaving, setIsSaving] = useState(false);
   const [saveProgress, setSaveProgress] = useState(0);
@@ -197,13 +194,59 @@ export default function Form() {
     return categories.find(cat => cat.value === productCategory);
   }, [productCategory, categories]);
 
+  // Validación mejorada para el estado inicial vacío
   const isFormValid = useMemo(() => {
-    return productName && 
-           productCategory && 
-           ((!hasVariants && productPrice) || (hasVariants && variants.some(v => v.name && v.price))) &&
-           Object.keys(errors).length === 0;
-  }, [productName, productCategory, hasVariants, productPrice, variants, errors]);
+    // Validación básica
+    const hasBasicFields = productName.trim() && productCategory;
+    
+    // Validación de precio/variantes
+    let hasValidPricing = false;
+    if (!hasVariants) {
+      // Sin variantes: debe tener precio válido
+      hasValidPricing = Boolean(productPrice && parseFloat(productPrice) > 0);
+    } else {
+      // Con variantes: debe tener al menos una variante con nombre y precio válido
+      hasValidPricing = variants.length > 0 && 
+        variants.every(v => v.name.trim() && v.price && parseFloat(v.price) > 0);
+    }
+    
+    // Validación de promoción (si está activa)
+    let hasValidPromotion = true;
+    if (hasPromotion) {
+      if (!hasVariants) {
+        // Sin variantes: precio de promoción debe ser menor que precio normal
+        hasValidPromotion = Boolean(
+          promotionPrice && 
+          parseFloat(promotionPrice) > 0 && 
+          parseFloat(productPrice) > 0 &&
+          parseFloat(promotionPrice) < parseFloat(productPrice)
+        );
+      } else {
+        // Con variantes: todas deben tener precio de promoción válido
+        hasValidPromotion = variants.length > 0 && variants.every(v => 
+          v.promotionPrice && 
+          parseFloat(v.promotionPrice) > 0 && 
+          v.price &&
+          parseFloat(v.price) > 0 &&
+          parseFloat(v.promotionPrice) < parseFloat(v.price)
+        );
+      }
+    }
+    
+    // No debe haber errores de validación
+    const hasNoErrors = Object.keys(errors).length === 0;
+    
+    return hasBasicFields && hasValidPricing && hasValidPromotion && hasNoErrors;
+  }, [productName, productCategory, hasVariants, productPrice, variants, hasPromotion, promotionPrice, errors]);
 
+  // Agregar variante inicial cuando se activan las variantes
+  const handleToggleVariants = useCallback((newValue: boolean) => {
+    setHasVariants(newValue);
+    if (newValue && variants.length === 0) {
+      // Agregar primera variante cuando se activan las variantes
+      setVariants([{ name: '', price: '', promotionPrice: '' }]);
+    }
+  }, [variants.length]);
 
 
     return (
@@ -226,7 +269,7 @@ export default function Form() {
         )}
 
         {/* Content */}
-        <div className="p-4 pb-20 space-y-5">
+        <div className="pt-4 pb-20 space-y-5">
         
         {/* Produktbilder */}
         <div>
@@ -235,32 +278,43 @@ export default function Form() {
             <span className="text-xs text-gray-500">{productImages.length}/3</span>
           </div>
           
-          {/* Images Preview - ARRIBA */}
-          {productImages.length > 0 && (
-            <div className="grid grid-cols-3 gap-2 mb-3">
-              {productImages.map((image, index) => (
-                <div key={index} className="relative">
-                  <div 
-                    className="w-full h-20 object-cover rounded-lg border border-gray-200 bg-white bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center" 
-                    style={{ aspectRatio: '1/1' }}
-                  >
-                    <Camera className="w-6 h-6 text-gray-400" />
-                  </div>
-                  <button
-                    onClick={() => setProductImages(productImages.filter((_, i) => i !== index))}
-                    className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-                  >
-                    <X className="w-3 h-3 text-white" />
-                  </button>
-                  {index === 0 && (
-                    <div className="absolute bottom-1 left-1 bg-brand-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                      Haupt
-                    </div>
-                  )}
-                </div>
-              ))}
+          {/* Contador de imágenes - Posicionado arriba a la derecha */}
+
+          <div className="relative mb-2">
+            <div className="top-2 right-2 z-10 flex justify-between pb-4">
+              <p className="text-black px-2 text-sm font-medium ">Produktbilder</p>
+              <div className="text-gray-500 px-3 py-1 text-sm font-medium ">
+                {productImages.length}/3
+              </div>
             </div>
-          )}
+            
+            {/* Área de preview de imágenes */}
+            {productImages.length > 0 && (
+              <div className="grid grid-cols-3 gap-2">
+                {productImages.map((image, index) => (
+                  <div key={index} className="relative">
+                    <div 
+                      className="w-[120px] h-[120px] object-cover rounded-lg border border-gray-200 bg-white flex items-center justify-center" 
+                      style={{ aspectRatio: '1/1' }}
+                    >
+                      <Camera className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <button
+                      onClick={() => setProductImages(productImages.filter((_, i) => i !== index))}
+                      className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                    >
+                      <X className="w-3 h-3 text-white" />
+                    </button>
+                    {index === 0 && (
+                      <div className="absolute bottom-1 left-1 bg-brand-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                        Haupt
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Upload Area - ABAJO */}
           {productImages.length < 3 && (
@@ -413,25 +467,13 @@ export default function Form() {
             </div>
           )}
 
-          {/* Varianten Info */}
-          {hasVariants && (
-                            <div className="bg-brand-50 p-3 rounded-lg border border-brand-200">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <Package className="w-4 h-4 text-brand-600" />
-                    <div className="text-sm font-medium text-brand-800">Varianten-Modus aktiv</div>
-                  </div>
-                  <div className="text-xs text-brand-600">
-                    Verschiedene Ausprägungen mit individuellen Preisen
-                  </div>
-                </div>
-          )}
         </div>
 
         {/* Aktion Toggle */}
         <div className="border-t border-gray-200 pt-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
-              <Percent className="w-4 h-4 text-gray-600" />
+              <Percent className="w-6 h-6 text-black" />
               <div>
                 <div className="text-sm font-medium text-gray-800">Aktion</div>
                 <div className="text-xs text-gray-500">Reduzierter Preis anbieten</div>
@@ -487,14 +529,14 @@ export default function Form() {
         <div className="border-t border-gray-200 pt-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
-              <Package className="w-4 h-4 text-gray-600" />
+              <Package className="w-6 h-6 text-black" />
               <div>
                 <div className="text-sm font-medium text-gray-800">Varianten</div>
                 <div className="text-xs text-gray-500">Produktausprägungen anbieten</div>
               </div>
             </div>
             <button
-              onClick={() => setHasVariants(!hasVariants)}
+              onClick={() => handleToggleVariants(!hasVariants)}
               className={`relative w-10 h-5 rounded-full transition-colors ${
                 hasVariants ? 'bg-brand-500' : 'bg-gray-300'
               }`}
@@ -511,38 +553,38 @@ export default function Form() {
             <div className="space-y-3">
               <div className="space-y-2">
                 {variants.map((variant, index) => (
-                  <div key={index} className="space-y-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="flex items-center space-x-2">
+                  <div key={index} className="space-y-2 p-3 bg-background-cream rounded-lg border-2 border-white">
+                    <div className="flex items-center space-x-2 justify-between w-full">
                       <input
                         type="text"
                         value={variant.name}
                         onChange={(e) => updateVariant(index, 'name', e.target.value)}
                         placeholder="Bsp: Mini (250g)"
-                        className="flex-1 p-2 border border-gray-200 rounded text-sm bg-white"
+                        className="flex-1 p-2 mr-4 h-10 border border-gray-200 rounded-sm text-sm bg-white"
                       />
                       {variants.length > 1 && (
                         <button
                           onClick={() => removeVariant(index)}
                           className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
                         >
-                          <X className="w-3 h-3" />
+                          <X className="w-4 h-4" />
                         </button>
                       )}
                     </div>
                     
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">Preis <span className="text-red-500">*</span></label>
-                        <div className="relative">
+                        <label className="block text-xs text-black font-medium mb-1">Preis <span className="text-red-500">*</span></label>
+                        <div className="relative flex justify-center h-10 w-40">
                           <input
                             type="number"
                             step="0.05"
                             value={variant.price}
                             onChange={(e) => updateVariant(index, 'price', e.target.value)}
                             placeholder="6.50"
-                            className="w-full p-2 pl-9 border border-gray-200 rounded text-sm text-right font-medium bg-white"
+                            className="w-full p-2 pl-9 border border-gray-200 rounded-sm text-sm text-center font-medium bg-white"
                           />
-                          <div className="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">
+                          <div className="absolute left-12 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">
                             CHF
                           </div>
                         </div>
@@ -571,32 +613,20 @@ export default function Form() {
                 ))}
               </div>
               
-              <button
+            <div className="flex justify-end">
+               <button
                 onClick={addVariant}
-                className="w-full bg-brand-500 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-brand-600 transition-colors flex items-center justify-center space-x-1"
+                className="w-[150px] bg-brand-500 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-brand-600 transition-colors flex items-center justify-center space-x-1"
               >
                 <Plus className="w-3 h-3" />
                 <span>Neue Variante</span>
               </button>
+              </div>
             </div>
           )}
         </div>
 
-        {/* MwSt Einstellung */}
-        <div className="border-t border-gray-200 pt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Mehrwertsteuer</label>
-          <select 
-            value={vatRate}
-            onChange={(e) => setVatRate(e.target.value)}
-                              className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-white"
-          >
-            {vatRates.map(rate => (
-              <option key={rate.value} value={rate.value} className={rate.color}>
-                {rate.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        
 
         {/* Status Toggle */}
         <div className="border-t border-gray-200 pt-4">
@@ -626,6 +656,21 @@ export default function Form() {
             </button>
           </div>
         </div>
+        {/* MwSt Einstellung */}
+        <div className="border-t border-gray-200 pt-4">
+          <label className="block text-sm font-medium text-black mb-2">Mehrwertsteuer</label>
+          <select 
+            value={vatRate}
+            onChange={(e) => setVatRate(e.target.value)}
+                              className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-white"
+          >
+            {vatRates.map(rate => (
+              <option key={rate.value} value={rate.value} className={rate.color}>
+                {rate.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
 
       </div>
@@ -650,8 +695,8 @@ export default function Form() {
                 </>
               ) : (
                 <>
-                  <Check className="w-4 h-4" />
-                  <span className="text-sm">Produkt speichern</span>
+                  <Plus className="w-4 h-4" />
+                  <span className="text-sm">Produkt erstellen</span>
                 </>
               )}
             </div>

@@ -45,7 +45,7 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
           </div>
         ) : (
           <span className="text-[15px] bg-[#F2EDE8] rounded-lg px-2 py-1 font-bold text-gray-800">
-            {formatPrice(product.price)}
+            <span className="text-[10px] font-semibold">CHF</span> {formatPrice(product.price)}
           </span>
         )}
       </div>
