@@ -39,7 +39,7 @@ function ProductsListLayoutContent({ children }: { children: ReactNode }) {
       <Header />
 
       <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
-        <div className="min-h-full pb-24">{children}</div>
+        <div className="min-h-full">{children}</div>
       </main>
 
       {/* Footer siempre visible */}
