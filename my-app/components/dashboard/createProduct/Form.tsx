@@ -48,7 +48,7 @@ export default function Form() {
   const [productPrice, setProductPrice] = useState("");
   const [productCategory, setProductCategory] = useState("");
   const [productImages, setProductImages] = useState<string[]>([]);
-  const [stock, setStock] = useState(0); // Cambiar a 0
+  const [stock] = useState(0); // Cambiar a 0
   const [isActive, setIsActive] = useState(true);
   const [hasPromotion, setHasPromotion] = useState(false);
   const [promotionPrice, setPromotionPrice] = useState(""); // Corregido: agregar setter
