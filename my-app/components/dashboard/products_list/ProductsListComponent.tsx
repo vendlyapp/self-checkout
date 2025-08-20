@@ -1,44 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { fetchProducts, updateCategoryCounts } from "./data/mockProducts";
+import {
+  fetchProducts,
+  updateCategoryCounts,
+  Product,
+} from "./data/mockProducts";
 import { getIcon } from "./data/iconMap";
 import ProductCardList from "./ProductCardList";
 import FilterModal, { FilterState } from "./FilterModal";
 import { useProductsList } from "./ProductsListContext";
 import FixedHeaderContainer from "./FixedHeaderContainer";
-
-// Interfaz completa para Product - actualizada para ser compatible
-interface Product {
-  id: string;
-  name: string;
-  description?: string;
-  price: number;
-  originalPrice?: number;
-  category: string;
-  categoryId: string;
-  stock: number;
-  barcode?: string;
-  sku: string;
-  tags: string[];
-  isNew?: boolean;
-  isPopular?: boolean;
-  isOnSale?: boolean;
-  rating?: number;
-  reviews?: number;
-  weight?: number;
-  dimensions?: {
-    length: number;
-    width: number;
-    height: number;
-  };
-  createdAt: string;
-  updatedAt: string;
-  unit?: string;
-  availableWeights?: string[];
-  hasWeight?: boolean;
-  discountPercentage?: number;
-}
 
 interface ProductsListComponentProps {
   isStandalone?: boolean; // Si es true, es la página dedicada. Si es false, es parte del dashboard
@@ -63,7 +35,7 @@ export default function ProductsListComponent({
   isStandalone = false,
   onProductClick,
   className = "",
-  maxHeight = "90vh",
+  maxHeight = "100vh",
   title = "Produkte",
   showAddButton = false,
 }: ProductsListComponentProps) {
@@ -75,6 +47,7 @@ export default function ProductsListComponent({
     sortBy: "name",
     categories: ["all"],
     status: "all",
+    priceRange: { min: 0, max: 50 },
   });
 
   const {
@@ -85,7 +58,81 @@ export default function ProductsListComponent({
     isLoading,
   } = useProductsList();
 
-  const getActiveFiltersCount = () => {
+  // Función para aplicar filtros reales a los productos
+  const applyFiltersToProducts = useCallback(
+    (products: Product[], filters: FilterState) => {
+      let filteredProducts = [...products];
+
+      // Filtrar por categorías
+      if (
+        filters.categories.length > 0 &&
+        !filters.categories.includes("all")
+      ) {
+        filteredProducts = filteredProducts.filter((product) =>
+          filters.categories.includes(product.categoryId)
+        );
+      }
+
+      // Filtrar por estado
+      if (filters.status !== "all") {
+        switch (filters.status) {
+          case "active":
+            filteredProducts = filteredProducts.filter(
+              (product) => product.stock > 0
+            );
+            break;
+          case "inactive":
+            filteredProducts = filteredProducts.filter(
+              (product) => product.stock === 0
+            );
+            break;
+          case "onSale":
+            filteredProducts = filteredProducts.filter(
+              (product) =>
+                product.isOnSale ||
+                product.discountPercentage ||
+                product.originalPrice
+            );
+            break;
+        }
+      }
+
+      // Filtrar por rango de precio
+      filteredProducts = filteredProducts.filter(
+        (product) =>
+          product.price >= filters.priceRange.min &&
+          product.price <= filters.priceRange.max
+      );
+
+      // Ordenar productos
+      switch (filters.sortBy) {
+        case "price-asc":
+          filteredProducts.sort((a, b) => a.price - b.price);
+          break;
+        case "price-desc":
+          filteredProducts.sort((a, b) => b.price - a.price);
+          break;
+        case "newest":
+          filteredProducts.sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          break;
+        case "rating":
+          filteredProducts.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+          break;
+        case "name":
+        default:
+          filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+      }
+
+      return filteredProducts;
+    },
+    []
+  );
+
+  const getActiveFiltersCount = useCallback(() => {
     let count = 0;
 
     // Contar filtros de categorías (excluyendo 'all')
@@ -106,8 +153,13 @@ export default function ProductsListComponent({
       count += 1;
     }
 
+    // Contar filtro de rango de precio (si no es el rango por defecto)
+    if (filterState.priceRange.min !== 0 || filterState.priceRange.max !== 50) {
+      count += 1;
+    }
+
     return count;
-  };
+  }, [filterState]);
 
   const activeFiltersCount = getActiveFiltersCount();
 
@@ -118,12 +170,16 @@ export default function ProductsListComponent({
 
     try {
       const initialProducts = await fetchProducts();
-      setProducts(initialProducts);
+      const filteredProducts = applyFiltersToProducts(
+        initialProducts,
+        filterState
+      );
+      setProducts(filteredProducts);
 
       if (isStandalone) {
         setTotalProducts(initialProducts.length);
-        setFilteredProducts(initialProducts.length);
-        setHasActiveFilters(false);
+        setFilteredProducts(filteredProducts.length);
+        setHasActiveFilters(activeFiltersCount > 0);
       }
     } catch (error) {
       console.error("Error al cargar productos:", error);
@@ -138,6 +194,9 @@ export default function ProductsListComponent({
     setTotalProducts,
     setFilteredProducts,
     setHasActiveFilters,
+    filterState,
+    applyFiltersToProducts,
+    activeFiltersCount,
   ]);
 
   const handleFilterChange = async (filters: string[]) => {
@@ -205,39 +264,41 @@ export default function ProductsListComponent({
     setIsFilterModalOpen(false);
   };
 
-  const handleApplyFilters = (filters: FilterState) => {
+  const handleApplyFilters = async (filters: FilterState) => {
     setFilterState(filters);
 
     if (isStandalone) {
       setIsLoading(true);
     }
 
-    // Aquí implementarías la lógica de filtrado avanzado
-    // Por ahora solo actualizamos el estado
-    console.log("Aplicando filtros:", filters);
-
-    // Simular filtrado
-    setTimeout(() => {
-      const hasFilters =
-        (filters.categories.length > 0 &&
-          !filters.categories.includes("all")) ||
-        filters.sortBy !== "name" ||
-        filters.status !== "all";
+    try {
+      // Cargar todos los productos y aplicar filtros
+      const allProducts = await fetchProducts();
+      const filteredProducts = applyFiltersToProducts(allProducts, filters);
+      setProducts(filteredProducts);
 
       if (isStandalone) {
-        setHasActiveFilters(hasFilters);
-        setFilteredProducts(products.length);
+        setFilteredProducts(filteredProducts.length);
+        setHasActiveFilters(getActiveFiltersCount() > 0);
         setIsLoading(false);
       }
-    }, 500);
+    } catch (error) {
+      console.error("Error al aplicar filtros:", error);
+      if (isStandalone) {
+        setIsLoading(false);
+      }
+    }
   };
 
   const handleClearFilters = () => {
-    setFilterState({
-      sortBy: "name",
+    const defaultFilters = {
+      sortBy: "name" as const,
       categories: ["all"],
-      status: "all",
-    });
+      status: "all" as const,
+      priceRange: { min: 0, max: 50 },
+    };
+
+    setFilterState(defaultFilters);
     setSelectedFilters([]);
     setSearchQuery("");
 

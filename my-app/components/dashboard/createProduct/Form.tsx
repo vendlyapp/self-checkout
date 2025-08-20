@@ -359,7 +359,7 @@ export default function Form() {
         {/* Grunddaten */}
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-[16px] font-semibold text-gray-700 mb-2">
               Produktname <span className="text-red-500">*</span>{" "}
             </label>
             <input
@@ -371,7 +371,7 @@ export default function Form() {
               }}
               placeholder="Äpfel Gala Suisse"
               maxLength={50}
-              className={`w-full h-[46px] p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm font-medium transition-colors bg-white ${
+              className={`w-full h-[46px] p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-[16px] font-medium transition-colors bg-white ${
                 errors.productName ? "border-red-500" : "border-gray-200"
               }`}
             />
@@ -384,7 +384,7 @@ export default function Form() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-[16px] font-semibold text-gray-700 mb-2">
               Beschreibung <span className="text-gray-500">(optional)</span>
             </label>
             <textarea
@@ -393,12 +393,12 @@ export default function Form() {
               placeholder="Bsp: Original Edition"
               rows={2}
               maxLength={100}
-              className="w-full h-[46px] p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none text-sm bg-white"
+              className="w-full h-[60px] p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none text-[16px] bg-white"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-[16px] font-semibold text-gray-700 mb-2">
               Kategorie <span className="text-red-500">*</span>
             </label>
             <select
@@ -407,7 +407,7 @@ export default function Form() {
                 setProductCategory(e.target.value);
                 validateField("productCategory", e.target.value);
               }}
-              className={`w-full h-[46px] p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm transition-colors bg-white ${
+              className={`w-full h-[46px] p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-[16px] transition-colors bg-white ${
                 errors.productCategory ? "border-red-500" : "border-gray-200"
               }`}
             >
@@ -441,7 +441,7 @@ export default function Form() {
           {!hasVariants && (
             <div className="grid grid-cols-1 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-[16px] font-semibold text-gray-700 mb-2">
                   Preis <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -454,7 +454,7 @@ export default function Form() {
                       validateField("productPrice", e.target.value);
                     }}
                     placeholder="8.50"
-                    className={`w-full h-[46px] p-3 pl-12 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm font-medium transition-colors bg-white ${
+                    className={`w-full h-[46px] p-3 pl-12 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-[16px] font-medium transition-colors bg-white ${
                       errors.productPrice ? "border-red-500" : "border-gray-200"
                     }`}
                   />
@@ -479,7 +479,7 @@ export default function Form() {
         <div className="border-t border-gray-200 pt-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
-              <Percent className="w-[30px] h-[30px] text-black" />
+              <Percent className="w-[30px] h-[30px]" />
               <div>
                 <div className="text-sm font-semibold text-[16px] text-gray-800">
                   Aktion
@@ -497,7 +497,7 @@ export default function Form() {
             >
               <div
                 className={`absolute top-[3px] w-[22px] h-[22px] bg-white rounded-full transition-transform ${
-                  hasPromotion ? "translate-x-[28px]" : "translate-x-[3px]"
+                  hasPromotion ? "translate-x-[31px]" : "translate-x-[3px]"
                 }`}
               />
             </button>
@@ -508,7 +508,7 @@ export default function Form() {
               <select
                 value={promotionDuration}
                 onChange={(e) => setPromotionDuration(e.target.value)}
-                className="w-full h-[46px] p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-white"
+                className="w-full h-[46px] p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-[16px] bg-white"
               >
                 <option value="">Aktionsdauer...</option>
                 <option value="1_day">1 Tag</option>
@@ -528,7 +528,7 @@ export default function Form() {
                     type="datetime-local"
                     value={customEndDate}
                     onChange={(e) => setCustomEndDate(e.target.value)}
-                    className="w-full h-[46px] p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-white"
+                    className="w-full h-[46px] p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-[16px] bg-white"
                     min={new Date().toISOString().slice(0, 16)}
                   />
                 </div>
@@ -537,7 +537,7 @@ export default function Form() {
               {/* Campo de precio de promoción */}
               {!hasVariants && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-[16px] font-semibold text-gray-700 mb-2">
                     Aktionspreis <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -550,7 +550,7 @@ export default function Form() {
                         validateField("promotionPrice", e.target.value);
                       }}
                       placeholder="6.50"
-                      className={`w-full h-[46px] p-3 pl-12 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm font-medium transition-colors bg-white ${
+                      className={`w-full h-[46px] p-3 pl-12 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-[16px] font-medium transition-colors bg-white ${
                         errors.promotionPrice
                           ? "border-red-500"
                           : "border-gray-200"
@@ -578,7 +578,7 @@ export default function Form() {
         <div className="border-t border-gray-200 pt-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
-              <Package className="w-[30px] h-[30px] text-black" />
+              <Package className="w-[30px] h-[30px]" />
               <div>
                 <div className="text-sm font-semibold text-[16px] text-gray-800">
                   Varianten
@@ -596,7 +596,7 @@ export default function Form() {
             >
               <div
                 className={`absolute top-[3px] w-[22px] h-[22px] bg-white rounded-full transition-transform ${
-                  hasVariants ? "translate-x-[28px]" : "translate-x-[3px]"
+                  hasVariants ? "translate-x-[31px]" : "translate-x-[3px]"
                 }`}
               />
             </button>
@@ -617,25 +617,25 @@ export default function Form() {
                         onChange={(e) =>
                           updateVariant(index, "name", e.target.value)
                         }
-                        placeholder="Bsp: Mini (250g)"
-                        className="flex-1 p-2 mr-4 w-full h-[46px] border border-gray-200 rounded-sm text-sm bg-white"
+                        placeholder="Bsp: Gross (1Kg)"
+                        className="flex-1 p-2 w-full h-[46px] border border-gray-200 rounded-sm text-sm bg-white"
                       />
                       {variants.length > 1 && (
                         <button
                           onClick={() => removeVariant(index)}
-                          className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                          className="w-8 h-8 bg-[#FD3F37] text-white rounded-full flex items-center justify-center hover:bg-[#FD3F37]/80 transition-colors"
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-5 h-5" />
                         </button>
                       )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-xs text-black font-medium mb-1">
+                        <label className="block text-[14px]  text-black font-semibold mb-1">
                           Preis <span className="text-red-500">*</span>
                         </label>
-                        <div className="relative flex justify-center h-[46px] w-40">
+                        <div className="relative flex justify-center h-[46px] w-full">
                           <input
                             type="number"
                             step="0.05"
@@ -643,15 +643,18 @@ export default function Form() {
                             onChange={(e) =>
                               updateVariant(index, "price", e.target.value)
                             }
-                            placeholder="6.50"
-                            className="w-full p-2 pl-9 h-[46px] border border-gray-200 rounded-sm text-sm text-center font-medium bg-white"
+                            placeholder="0.00"
+                            className="w-full p-2 pl-12 h-[46px] border border-gray-200 rounded-sm text-[16px] text-left    font-medium bg-white"
                           />
+                          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">
+                            CHF
+                          </div>
                         </div>
                       </div>
 
                       {hasPromotion && (
                         <div>
-                          <label className="block text-[14px] text-gray-600 mb-1">
+                          <label className="block text-[14px] text-black font-semibold mb-1">
                             Aktionspreis <span className="text-red-500">*</span>
                           </label>
                           <div className="relative">
@@ -666,9 +669,12 @@ export default function Form() {
                                   e.target.value
                                 )
                               }
-                              placeholder="5.50"
-                              className="w-full p-2 h-[46px] border border-gray-200 rounded-sm text-sm text-center font-medium bg-white"
+                              placeholder="0.00"
+                              className="w-full p-2 pl-12 h-[46px] border border-gray-200 rounded-sm text-[16px] text-left  font-medium bg-white text-[#FD3F37]"
                             />
+                            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">
+                              CHF
+                            </div>
                           </div>
                         </div>
                       )}
@@ -680,10 +686,10 @@ export default function Form() {
               <div className="flex justify-end">
                 <button
                   onClick={addVariant}
-                  className="w-[150px] h-[46px] bg-brand-500 text-white rounded-lg text-sm font-medium hover:bg-brand-600 transition-colors flex items-center justify-center space-x-1"
+                  className="w-[155px] h-[36px] bg-brand-500 text-white rounded-lg text-sm font-medium hover:bg-brand-600 transition-colors flex items-center justify-center space-x-1"
                 >
-                  <Plus className="w-3 h-3" />
-                  <span>Neue Variante</span>
+                  <Plus className="w-5 h-5" />
+                  <span className="font-semibold">Neue Variante</span>
                 </button>
               </div>
             </div>
@@ -716,7 +722,7 @@ export default function Form() {
             >
               <div
                 className={`absolute top-[3px] w-[22px] h-[22px] bg-white rounded-full transition-transform ${
-                  isActive ? "translate-x-[28px]" : "translate-x-[3px]"
+                  isActive ? "translate-x-[31px]" : "translate-x-[3px]"
                 }`}
               />
             </button>
