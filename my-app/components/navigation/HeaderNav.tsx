@@ -1,7 +1,10 @@
 import { ArrowLeftIcon, Plus, X, Zap } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
-import { useCartStore } from '@/lib/stores/cartStore';
-import { getPromotionalProducts, Product } from "../dashboard/products_list/data/mockProducts";
+import { useCartStore } from "@/lib/stores/cartStore";
+import {
+  getPromotionalProducts,
+  Product,
+} from "../dashboard/products_list/data/mockProducts";
 import { useEffect, useState } from "react";
 
 interface HeaderNavProps {
@@ -10,31 +13,35 @@ interface HeaderNavProps {
   closeDestination?: string;
 }
 
-export default function HeaderNav({ 
-  title = 'Warenkorb', 
-  showAddButton = false, 
-  closeDestination = '/dashboard' 
+export default function HeaderNav({
+  title = "Warenkorb",
+  showAddButton = false,
+  closeDestination = "/dashboard",
 }: HeaderNavProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { cartItems, clearCart } = useCartStore();
-  const isCartPage = pathname === '/charge/cart' || pathname === '/user/cart';
-  const isPromotionPage = pathname === '/user/promotion';
+  const isCartPage = pathname === "/charge/cart" || pathname === "/user/cart";
+  const isPromotionPage = pathname === "/user/promotion";
   const [products, setProducts] = useState<Product[]>([]);
   useEffect(() => {
-    // Obtener solo productos con promociones
     const promotionalProducts = getPromotionalProducts();
     setProducts(promotionalProducts);
   }, []);
   const hasItems = cartItems.length > 0;
 
   return (
-    <div className="flex justify-between items-center p-4 bg-white border-b border-gray-200 fixed top-[85px] left-0 right-0 z-50">
+    <div className="flex justify-between items-center p-4 bg-white border-b border-gray-200 left-0 right-0 z-50">
       <div className="flex items-center gap-2 justify-between w-full px-4">
-        <button className="flex items-center gap-2 cursor-pointer" onClick={() => router.back()} aria-label="Zurück" tabIndex={0}>
-         <ArrowLeftIcon className="w-6 h-6" />
+        <button
+          className="flex items-center gap-2 cursor-pointer"
+          onClick={() => router.back()}
+          aria-label="Zurück"
+          tabIndex={0}
+        >
+          <ArrowLeftIcon className="w-6 h-6" />
           <span className="text-[18px] font-semibold ">{title}</span>
-        </button> 
+        </button>
         <div className="flex items-center gap-2">
           {isCartPage && hasItems && (
             <button
@@ -47,12 +54,14 @@ export default function HeaderNav({
             </button>
           )}
           {isPromotionPage && (
-            <div className="flex items-center gap-0.5" >
+            <div className="flex items-center gap-0.5">
               <Zap className="w-4 h-4 text-black" />
-              <span className="text-[14px] font-semibold">{products.length === 0 ? "0" : products.length}</span>
+              <span className="text-[14px] font-semibold">
+                {products.length === 0 ? "0" : products.length}
+              </span>
               <button
                 className="text-black  text-[14px] px-2 py-1 rounded hover:bg-red-50 transition-colors"
-                onClick={() => router.push('/user/promotion')}
+                onClick={() => router.push("/user/promotion")}
                 aria-label="Aktionen"
                 tabIndex={0}
               >
@@ -71,13 +80,13 @@ export default function HeaderNav({
             </button>
           )}
           {showAddButton && (
-            <button 
-              className="flex items-center gap-2 cursor-pointer bg-brand-600 rounded-full p-2" 
-              onClick={() => router.push('/products_list/add_product')} 
-              aria-label="Hinzufügen" 
+            <button
+              className="flex items-center gap-2 cursor-pointer bg-brand-600 rounded-full p-2"
+              onClick={() => router.push("/products_list/add_product")}
+              aria-label="Hinzufügen"
               tabIndex={0}
             >
-               <Plus className="w-6 h-6 text-white" />
+              <Plus className="w-6 h-6 text-white" />
             </button>
           )}
         </div>
