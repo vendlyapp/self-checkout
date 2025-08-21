@@ -39,24 +39,52 @@ export default function ProductsListComponent({
   title = "Produkte",
   showAddButton = false,
 }: ProductsListComponentProps) {
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [filterState, setFilterState] = useState<FilterState>({
-    sortBy: "name",
+  // Estado local para cuando NO es standalone
+  const [localSelectedFilters, setLocalSelectedFilters] = useState<string[]>(
+    []
+  );
+  const [localSearchQuery, setLocalSearchQuery] = useState("");
+  const [localFilterState, setLocalFilterState] = useState<FilterState>({
+    sortBy: "name" as const,
     categories: ["all"],
-    status: "all",
+    status: "all" as const,
     priceRange: { min: 0, max: 50 },
   });
 
+  // Estado compartido para productos y modal
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+
   const {
+    filterState: contextFilterState,
+    selectedFilters: contextSelectedFilters,
+    searchQuery: contextSearchQuery,
+    setFilterState: setContextFilterState,
+    setSelectedFilters: setContextSelectedFilters,
+    setSearchQuery: setContextSearchQuery,
     setTotalProducts,
     setFilteredProducts,
     setHasActiveFilters,
     setIsLoading,
     isLoading,
   } = useProductsList();
+
+  // Usar estado del contexto cuando es standalone, estado local cuando no
+  const selectedFilters = isStandalone
+    ? contextSelectedFilters
+    : localSelectedFilters;
+  const searchQuery = isStandalone ? contextSearchQuery : localSearchQuery;
+  const filterState = isStandalone ? contextFilterState : localFilterState;
+
+  const setSelectedFilters = isStandalone
+    ? setContextSelectedFilters
+    : setLocalSelectedFilters;
+  const setSearchQuery = isStandalone
+    ? setContextSearchQuery
+    : setLocalSearchQuery;
+  const setFilterState = isStandalone
+    ? setContextFilterState
+    : setLocalFilterState;
 
   // Función para aplicar filtros reales a los productos
   const applyFiltersToProducts = useCallback(
@@ -277,6 +305,12 @@ export default function ProductsListComponent({
       const filteredProducts = applyFiltersToProducts(allProducts, filters);
       setProducts(filteredProducts);
 
+      // Sincronizar filtros de categorías con selectedFilters
+      const newSelectedFilters = filters.categories.filter(
+        (id) => id !== "all"
+      );
+      setSelectedFilters(newSelectedFilters);
+
       if (isStandalone) {
         setFilteredProducts(filteredProducts.length);
         setHasActiveFilters(getActiveFiltersCount() > 0);
@@ -291,7 +325,7 @@ export default function ProductsListComponent({
   };
 
   const handleClearFilters = () => {
-    const defaultFilters = {
+    const defaultFilters: FilterState = {
       sortBy: "name" as const,
       categories: ["all"],
       status: "all" as const,
@@ -319,7 +353,7 @@ export default function ProductsListComponent({
   // Cargar productos iniciales solo una vez al montar el componente
   useEffect(() => {
     loadInitialProducts();
-  }, [loadInitialProducts]); // Include loadInitialProducts in dependencies
+  }, [loadInitialProducts]);
 
   // Si es standalone, usar el contenedor fijo
   if (isStandalone) {
@@ -366,6 +400,7 @@ export default function ProductsListComponent({
           </div>
         </div>
 
+        {/* Modal de filtros */}
         <FilterModal
           isOpen={isFilterModalOpen}
           onClose={handleCloseFilterModal}
