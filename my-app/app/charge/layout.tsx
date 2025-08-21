@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useState, createContext, useContext } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Header from "@/components/navigation/Header";
 import FooterContinue from "@/components/dashboard/charge/FooterContinue";
@@ -8,7 +8,27 @@ import CartSummary from "@/components/dashboard/charge/CartSummary";
 
 import { useCartStore } from "@/lib/stores/cartStore";
 
+// Contexto para el modal de filtros
+interface FilterModalContextType {
+  isFilterModalOpen: boolean;
+  setIsFilterModalOpen: (open: boolean) => void;
+}
+
+const FilterModalContext = createContext<FilterModalContextType | undefined>(
+  undefined
+);
+
+export const useFilterModal = () => {
+  const context = useContext(FilterModalContext);
+  if (!context) {
+    throw new Error("useFilterModal must be used within FilterModalProvider");
+  }
+  return context;
+};
+
 export default function ChargeLayout({ children }: { children: ReactNode }) {
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+
   const {
     cartItems,
     getTotalItems,
@@ -56,34 +76,46 @@ export default function ChargeLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-background-cream">
-      <Header />
+    <FilterModalContext.Provider
+      value={{ isFilterModalOpen, setIsFilterModalOpen }}
+    >
+      <div className="flex flex-col h-full w-full bg-background-cream">
+        <Header />
 
-      <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
-        <div>{children}</div>
-      </main>
+        <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
+          <div>{children}</div>
+        </main>
 
-      {/* FooterContinue para cart y payment */}
-      {shouldShowFooterContinue() && (
-        <FooterContinue
-          subtotal={subtotal}
-          promoApplied={promoApplied}
-          discountAmount={discountAmount}
-          totalItems={totalItems}
-          total={total}
-          onContinue={handleContinue}
-        />
-      )}
+        {/* FooterContinue para cart y payment */}
+        {shouldShowFooterContinue() && (
+          <FooterContinue
+            subtotal={subtotal}
+            promoApplied={promoApplied}
+            discountAmount={discountAmount}
+            totalItems={totalItems}
+            total={total}
+            onContinue={handleContinue}
+          />
+        )}
 
-      {/* CartSummary para la página principal */}
-      {shouldShowCartSummary() && (
-        <CartSummary items={cartItems} onContinue={handleContinue} />
-      )}
+        {/* CartSummary para la página principal */}
+        {shouldShowCartSummary() && (
+          <CartSummary
+            items={cartItems}
+            onContinue={handleContinue}
+            isVisible={!isFilterModalOpen}
+          />
+        )}
 
-      {/* Mostrar CartSummary vacío cuando no hay items en la página principal */}
-      {pathname === "/charge" && cartItems.length === 0 && (
-        <CartSummary items={[]} onContinue={handleContinueToProducts} />
-      )}
-    </div>
+        {/* Mostrar CartSummary vacío cuando no hay items en la página principal */}
+        {pathname === "/charge" && cartItems.length === 0 && (
+          <CartSummary
+            items={[]}
+            onContinue={handleContinueToProducts}
+            isVisible={!isFilterModalOpen}
+          />
+        )}
+      </div>
+    </FilterModalContext.Provider>
   );
 }

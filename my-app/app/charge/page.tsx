@@ -13,6 +13,7 @@ import {
 } from "@/components/dashboard/products_list/data/mockProducts";
 import { getIcon } from "@/components/dashboard/products_list/data/iconMap";
 import { FilterOption } from "@/components/Sliders/SliderFIlter";
+import { useFilterModal } from "./layout";
 
 // Convertir categorías a formato FilterOption con contadores reales
 const chargeFilters: FilterOption[] = productCategories.map((category) => {
@@ -63,13 +64,15 @@ export default function Charge() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [activeFiltersCount, setActiveFiltersCount] = useState(0);
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [currentFilterState, setCurrentFilterState] = useState<FilterState>({
-    sortBy: "name",
+    sortBy: "name" as const,
     categories: ["all"],
-    status: "all",
+    status: "all" as const,
     priceRange: { min: 0, max: 50 },
   });
+
+  // Usar el contexto del modal
+  const { isFilterModalOpen, setIsFilterModalOpen } = useFilterModal();
 
   // Calcular filtros activos
   useEffect(() => {

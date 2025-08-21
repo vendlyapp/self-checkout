@@ -40,9 +40,14 @@ interface CartItem {
 interface CartSummaryProps {
   items: CartItem[];
   onContinue: () => void;
+  isVisible?: boolean;
 }
 
-export default function CartSummary({ items, onContinue }: CartSummaryProps) {
+export default function CartSummary({
+  items,
+  onContinue,
+  isVisible = true,
+}: CartSummaryProps) {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
@@ -53,7 +58,7 @@ export default function CartSummary({ items, onContinue }: CartSummaryProps) {
     return `CHF ${price.toFixed(2)}`;
   };
 
-  if (totalItems === 0) {
+  if (totalItems === 0 || !isVisible) {
     return null;
   }
 
