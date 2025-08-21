@@ -23,18 +23,15 @@ export interface FilterState {
 }
 
 const sortOptions = [
-  { id: "name", label: "Name A-Z" },
-  { id: "price-asc", label: "Preis ↑ (Niedrig zu Hoch)" },
-  { id: "price-desc", label: "Preis ↓ (Hoch zu Niedrig)" },
-  { id: "newest", label: "Neueste zuerst" },
-  { id: "rating", label: "Beste Bewertung" },
+  { id: "name", label: "Name" },
+  { id: "price-asc", label: "Preis ↑" },
+  { id: "price-desc", label: "Preis ↓" },
 ];
 
 const statusOptions = [
-  { id: "all", label: "Alle Produkte", count: 0 },
+  { id: "all", label: "Alle", count: 0 },
   { id: "active", label: "Aktiv", count: 0 },
   { id: "inactive", label: "Inaktiv", count: 0 },
-  { id: "onSale", label: "Im Angebot", count: 0 },
 ];
 
 export default function FilterModal({
@@ -46,7 +43,6 @@ export default function FilterModal({
 }: FilterModalProps) {
   const [filters, setFilters] = useState<FilterState>(currentFilters);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 50 });
 
   // Cargar categorías reales
   useEffect(() => {
@@ -58,10 +54,15 @@ export default function FilterModal({
       const statusCounts = statusOptions.map((status) => {
         if (status.id === "all")
           return { ...status, count: realCategories[0]?.count || 0 };
-        if (status.id === "onSale") {
-          const onSaleCount =
-            realCategories.reduce((acc, cat) => acc + cat.count, 0) * 0.3; // Estimación
-          return { ...status, count: Math.round(onSaleCount) };
+        if (status.id === "active") {
+          const activeCount =
+            realCategories.reduce((acc, cat) => acc + cat.count, 0) * 0.8; // Estimación
+          return { ...status, count: Math.round(activeCount) };
+        }
+        if (status.id === "inactive") {
+          const inactiveCount =
+            realCategories.reduce((acc, cat) => acc + cat.count, 0) * 0.2; // Estimación
+          return { ...status, count: Math.round(inactiveCount) };
         }
         return status;
       });
@@ -98,14 +99,10 @@ export default function FilterModal({
     setFilters((prev) => ({ ...prev, status }));
   };
 
-  const handlePriceRangeChange = (type: "min" | "max", value: number) => {
-    setPriceRange((prev) => ({ ...prev, [type]: value }));
-  };
-
   const handleApply = () => {
     const finalFilters = {
       ...filters,
-      priceRange,
+      priceRange: currentFilters.priceRange, // Mantener el rango de precio existente
     };
     onApplyFilters(finalFilters);
     onClose();
@@ -116,10 +113,9 @@ export default function FilterModal({
       sortBy: "name" as const,
       categories: ["all"],
       status: "all" as const,
-      priceRange: { min: 0, max: 50 },
+      priceRange: currentFilters.priceRange, // Mantener el rango de precio existente
     };
     setFilters(defaultFilters);
-    setPriceRange({ min: 0, max: 50 });
     onClearFilters();
   };
 
@@ -170,8 +166,8 @@ export default function FilterModal({
                   }
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     filters.sortBy === option.id
-                      ? "bg-brand-500 text-white shadow-sm"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      ? "bg-[#766B6A] text-white shadow-sm"
+                      : "bg-[#EEE9E5] text-gray-700 hover:bg-gray-200"
                   }`}
                 >
                   {option.label}
@@ -185,24 +181,24 @@ export default function FilterModal({
             <label className="block text-sm font-medium text-gray-500 mb-3">
               Kategorien
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {categories.map((category) => (
                 <button
                   key={category.id}
                   onClick={() => handleCategoryToggle(category.id)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left flex items-center justify-between ${
                     filters.categories.includes(category.id)
-                      ? "bg-brand-500 text-white shadow-sm"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      ? "bg-[#766B6A] text-white shadow-sm"
+                      : "bg-[#EEE9E5] text-gray-700 hover:bg-gray-200"
                   }`}
                 >
                   <span>{category.name}</span>
                   {category.count > 0 && (
                     <span
-                      className={`ml-1 text-xs ${
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
                         filters.categories.includes(category.id)
-                          ? "text-white/80"
-                          : "text-gray-500"
+                          ? "bg-[#EEE9E5] text-[#766B6A]"
+                          : "bg-[#FFFFFF] text-[#766B6A]"
                       }`}
                     >
                       {category.count}
@@ -210,42 +206,6 @@ export default function FilterModal({
                   )}
                 </button>
               ))}
-            </div>
-          </div>
-
-          {/* Price Range Section */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-500 mb-3">
-              Preisbereich (CHF)
-            </label>
-            <div className="flex gap-3 items-center">
-              <div className="flex-1">
-                <label className="block text-xs text-gray-500 mb-1">Min</label>
-                <input
-                  type="number"
-                  value={priceRange.min}
-                  onChange={(e) =>
-                    handlePriceRangeChange("min", Number(e.target.value))
-                  }
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                  placeholder="0"
-                  min="0"
-                />
-              </div>
-              <div className="text-gray-400">-</div>
-              <div className="flex-1">
-                <label className="block text-xs text-gray-500 mb-1">Max</label>
-                <input
-                  type="number"
-                  value={priceRange.max}
-                  onChange={(e) =>
-                    handlePriceRangeChange("max", Number(e.target.value))
-                  }
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                  placeholder="50"
-                  min="0"
-                />
-              </div>
             </div>
           </div>
 
@@ -261,19 +221,19 @@ export default function FilterModal({
                   onClick={() =>
                     handleStatusChange(status.id as FilterState["status"])
                   }
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
                     filters.status === status.id
-                      ? "bg-brand-500 text-white shadow-sm"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      ? "bg-[#766B6A] text-white shadow-sm"
+                      : "bg-[#EEE9E5] text-gray-700 hover:bg-gray-200"
                   }`}
                 >
                   <span>{status.label}</span>
                   {status.count > 0 && (
                     <span
-                      className={`ml-1 text-xs ${
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
                         filters.status === status.id
-                          ? "text-white/80"
-                          : "text-gray-500"
+                          ? "bg-white/20 text-white"
+                          : "bg-[#766B6A] text-white"
                       }`}
                     >
                       {status.count}
@@ -288,13 +248,13 @@ export default function FilterModal({
           <div className="flex gap-3">
             <button
               onClick={handleClear}
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 h-[50px] py-3 shadow-sm rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
             >
               Filter löschen
             </button>
             <button
               onClick={handleApply}
-              className="flex-1 px-4 py-3 bg-brand-500 text-white rounded-lg font-medium hover:bg-brand-600 transition-colors shadow-sm"
+              className="flex-1 px-4 h-[50px] py-3 bg-[#25D076] text-white rounded-lg font-medium hover:bg-green-700 transition-colors shadow-sm"
             >
               Filter anwenden
             </button>
