@@ -59,7 +59,7 @@ export default function PaymentPage() {
                 Heiniger&apos;s Hofladen
               </div>
               {promoApplied && (
-                <div className="text-[22px] text-gray-400 font-semibold line-through mb-1">
+                <div className="text-[16px] text-gray-400  line-through mb-1">
                   CHF {subtotal.toFixed(2)}
                 </div>
               )}
@@ -67,7 +67,7 @@ export default function PaymentPage() {
                 CHF {total.toFixed(2)}
               </div>
               {promoApplied && (
-                <div className="text-brand-700 text-[20px] font-semibold mb-1">
+                <div className="text-[#3C7E44] text-[15px] font-semibold mb-1">
                   10% Rabatt auf Bio-Produkte angewendet!
                 </div>
               )}
@@ -116,7 +116,7 @@ export default function PaymentPage() {
                 <span className="font-semibold">
                   256-BIT SSL VERSCHLÜSSELUNG
                 </span>
-                <Lock className="w-4 h-6 mt-3" />
+                <Lock className="w-4 h-4 -mt-1" />
               </div>
               <div className="text-center text-[13px] text-gray-500 mt-1">
                 Ihre Daten werden sicher in ISO-zertifizierten Rechenzentren

@@ -123,12 +123,12 @@ export default function CartPage() {
                   )}
                 </div>
               ) : (
-                <div className="flex items-center bg-brand-100 rounded-xl px-4 py-3 mt-2 mb-2 shadow-sm border border-brand-200">
+                <div className="flex items-center bg-[#F2FDF5] rounded-xl px-4 py-3 mt-2 mb-2 shadow-sm border border-brand-200">
                   <div className="flex-1">
-                    <div className="text-brand-700 font-semibold text-[15px] leading-tight">
+                    <div className="text-[#3C7E44] font-semibold text-[15px] leading-tight">
                       10% Rabatt auf Bio-Produkte
                     </div>
-                    <div className="text-brand-700 text-[15px]">
+                    <div className="text-[#3C7E44] text-[15px]">
                       - CHF {discountAmount.toFixed(2)}
                     </div>
                   </div>
