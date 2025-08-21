@@ -5,31 +5,25 @@ import { useRouter, usePathname } from "next/navigation";
 import Header from "@/components/navigation/Header";
 import FooterContinue from "@/components/dashboard/charge/FooterContinue";
 import CartSummary from "@/components/dashboard/charge/CartSummary";
-import PromoCodeInput from "@/components/dashboard/charge/PromoCodeInput";
+
 import { useCartStore } from "@/lib/stores/cartStore";
-import { usePromoCode } from "@/lib/hooks";
 
 export default function ChargeLayout({ children }: { children: ReactNode }) {
-  const { cartItems, getTotalItems } = useCartStore();
+  const {
+    cartItems,
+    getTotalItems,
+    getSubtotal,
+    getTotalWithDiscount,
+    promoApplied,
+    discountAmount,
+  } = useCartStore();
   const router = useRouter();
   const pathname = usePathname();
 
-  // Hook para manejar promociones
-  const {
-    promoCode,
-    setPromoCode,
-    promoApplied,
-    discountAmount,
-    promoError,
-    setPromoError,
-    subtotal,
-    total,
-    handleApplyPromo,
-    handleRemovePromo,
-  } = usePromoCode();
-
   // Cálculos del carrito
   const totalItems = getTotalItems();
+  const subtotal = getSubtotal();
+  const total = getTotalWithDiscount();
 
   // Navegación inteligente basada en la ruta actual
   const handleContinue = () => {
@@ -52,11 +46,8 @@ export default function ChargeLayout({ children }: { children: ReactNode }) {
 
   // Determinar qué componente mostrar basado en la ruta y el estado del carrito
   const shouldShowFooterContinue = () => {
-    // Mostrar FooterContinue en cart y payment cuando hay items
-    return (
-      (pathname === "/charge/cart" || pathname === "/charge/payment") &&
-      cartItems.length > 0
-    );
+    // Mostrar FooterContinue SOLO en cart cuando hay items (NO en payment)
+    return pathname === "/charge/cart" && cartItems.length > 0;
   };
 
   const shouldShowCartSummary = () => {
@@ -70,36 +61,19 @@ export default function ChargeLayout({ children }: { children: ReactNode }) {
 
       <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
         <div>{children}</div>
-
-        {/* PromoCodeInput solo en la página de cart */}
-        {pathname === "/charge/cart" && cartItems.length > 0 && (
-          <PromoCodeInput
-            promoCode={promoCode}
-            setPromoCode={setPromoCode}
-            promoApplied={promoApplied}
-            discountAmount={discountAmount}
-            promoError={promoError}
-            setPromoError={setPromoError}
-            onApplyPromo={handleApplyPromo}
-            onRemovePromo={handleRemovePromo}
-          />
-        )}
       </main>
 
       {/* FooterContinue para cart y payment */}
-      {shouldShowFooterContinue() &&
-        (pathname !== "/charge/payment" ? (
-          <FooterContinue
-            subtotal={subtotal}
-            promoApplied={promoApplied}
-            discountAmount={discountAmount}
-            totalItems={totalItems}
-            total={total}
-            onContinue={handleContinue}
-          />
-        ) : (
-          <></>
-        ))}
+      {shouldShowFooterContinue() && (
+        <FooterContinue
+          subtotal={subtotal}
+          promoApplied={promoApplied}
+          discountAmount={discountAmount}
+          totalItems={totalItems}
+          total={total}
+          onContinue={handleContinue}
+        />
+      )}
 
       {/* CartSummary para la página principal */}
       {shouldShowCartSummary() && (

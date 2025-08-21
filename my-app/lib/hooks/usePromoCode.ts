@@ -11,14 +11,33 @@ export const usePromoCode = () => {
   const subtotal = getSubtotal();
   const total = +(subtotal - discountAmount).toFixed(2);
 
+  // Debug: verificar valores del hook
+  console.log("🔍 usePromoCode Debug:", {
+    subtotal,
+    promoCode,
+    promoApplied,
+    discountAmount,
+    total,
+    getSubtotalResult: getSubtotal(),
+  });
+
   // Aplicar código promocional
   const handleApplyPromo = () => {
+    console.log("🔍 handleApplyPromo ejecutado:", {
+      promoCode: promoCode.trim().toUpperCase(),
+      isCHECK01: promoCode.trim().toUpperCase() === "CHECK01",
+      subtotal,
+      calculatedDiscount: +(subtotal * 0.1).toFixed(2),
+    });
+
     if (promoCode.trim().toUpperCase() === "CHECK01") {
       const discount = +(subtotal * 0.1).toFixed(2);
+      console.log("🔍 Aplicando descuento:", { discount });
       setDiscountAmount(discount);
       setPromoApplied(true);
       setPromoError("");
     } else {
+      console.log("🔍 Código inválido, limpiando descuento");
       setPromoApplied(false);
       setDiscountAmount(0);
       setPromoError("Der Code existiert nicht oder ist ungültig.");

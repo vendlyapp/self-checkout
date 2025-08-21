@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { X, CheckCircle, Loader2 } from "lucide-react";
+import { X, CheckCircle } from "lucide-react";
+import { ModernSpinner } from "@/components/ui";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -18,7 +19,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   totalAmount,
   onPaymentSuccess,
 }) => {
-  const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStep, setPaymentStep] = useState<
     "confirm" | "processing" | "success"
   >("confirm");
@@ -34,7 +34,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   };
 
   const handleConfirmPayment = async () => {
-    setIsProcessing(true);
     setPaymentStep("processing");
 
     try {
@@ -46,14 +45,16 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       setTimeout(() => {
         onPaymentSuccess();
         onClose();
+        // Reiniciar el modal para la próxima vez
+        setPaymentStep("confirm");
       }, 2000);
     } catch {
       alert("Zahlung fehlgeschlagen. Bitte versuchen Sie es erneut.");
       setPaymentStep("confirm");
-      setIsProcessing(false);
     }
   };
 
+  // No renderizar nada si no está abierto
   if (!isOpen) return null;
 
   const methodInfo = getMethodInfo(selectedMethod);
@@ -68,14 +69,14 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           </h2>
           <button
             onClick={onClose}
-            disabled={isProcessing}
+            disabled={paymentStep !== "confirm"}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Contenido del modal */}
+        {/* Contenido del modal - Solo un estado visible a la vez */}
         <div className="p-6">
           {paymentStep === "confirm" && (
             <>
@@ -107,21 +108,21 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     CHF {totalAmount.toFixed(2)}
                   </span>
                 </div>
-                <p className="text-sm text-gray-500">inkl. MwSt (7.7%)</p>
+                <p className="text-sm text-gray-500">inkl. MwSt</p>
               </div>
 
               {/* Botones de acción */}
               <div className="flex gap-3">
                 <button
                   onClick={onClose}
-                  disabled={isProcessing}
+                  disabled={paymentStep !== "confirm"}
                   className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
                 >
                   Abbrechen
                 </button>
                 <button
                   onClick={handleConfirmPayment}
-                  disabled={isProcessing}
+                  disabled={paymentStep !== "confirm"}
                   className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
                 >
                   Bestätigen
@@ -132,30 +133,55 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
           {paymentStep === "processing" && (
             <div className="text-center py-8">
-              <Loader2 className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                Zahlung wird verarbeitet
-              </h3>
-              <p className="text-gray-600">
-                Bitte warten Sie, während wir Ihre Zahlung bearbeiten...
-              </p>
+              {/* Spinner moderno y personalizado */}
+              <ModernSpinner size="lg" color="blue" className="mb-6" />
+
+              {/* Texto con animación sutil */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-gray-800 animate-pulse">
+                  Zahlung wird verarbeitet
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Bitte warten Sie, während wir Ihre Zahlung bearbeiten...
+                </p>
+
+                {/* Indicador de progreso visual */}
+                <div className="w-full bg-gray-200 rounded-full h-1 mt-4">
+                  <div
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 h-1 rounded-full animate-pulse"
+                    style={{ width: "60%" }}
+                  ></div>
+                </div>
+              </div>
             </div>
           )}
 
           {paymentStep === "success" && (
             <div className="text-center py-8">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-green-600" />
+              {/* Icono de éxito con animación */}
+              <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+                <CheckCircle className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                Zahlung erfolgreich!
-              </h3>
-              <p className="text-gray-600">
-                Ihre Bestellung wurde erfolgreich verarbeitet.
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                Sie werden in Kürze weitergeleitet...
-              </p>
+
+              <div className="space-y-3">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Zahlung erfolgreich!
+                </h3>
+                <p className="text-gray-600">
+                  Ihre Bestellung wurde erfolgreich verarbeitet.
+                </p>
+                <p className="text-sm text-gray-500">
+                  Sie werden in Kürze weitergeleitet...
+                </p>
+
+                {/* Indicador de progreso para redirección */}
+                <div className="w-full bg-gray-200 rounded-full h-1 mt-4">
+                  <div
+                    className="bg-gradient-to-r from-green-500 to-green-600 h-1 rounded-full animate-pulse"
+                    style={{ width: "100%" }}
+                  ></div>
+                </div>
+              </div>
             </div>
           )}
         </div>
