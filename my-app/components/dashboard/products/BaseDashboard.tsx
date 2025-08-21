@@ -1,24 +1,27 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Package, Grid3X3, Plus, Percent } from 'lucide-react';
-import StatCard from './StatCard';
-import ActionButton from './ActionButton';
-import NavigationItem from './NavigationItem';
-import { useProducts, useProductActions } from './hooks';
-import { getActiveProductsCount, getActiveCategoriesCount } from './data';
-import { ProductsDashboardSkeletonLoader, ProductsErrorState } from '@/components/dashboard/skeletons';
-import { SearchInput } from '@/components/ui/search-input';
+import React, { useState } from "react";
+import { Package, Grid3X3, Plus, Percent } from "lucide-react";
+import StatCard from "./StatCard";
+import ActionButton from "./ActionButton";
+import NavigationItem from "./NavigationItem";
+import { useProducts, useProductActions } from "./hooks";
+import { getActiveProductsCount, getActiveCategoriesCount } from "./data";
+import {
+  ProductsDashboardSkeletonLoader,
+  ProductsErrorState,
+} from "@/components/dashboard/skeletons";
+import { SearchInput } from "@/components/ui/search-input";
 
 // Componente Principal del Dashboard de Productos
 export default function ProductsDashboard() {
+  // Estados para búsqueda
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
-   // Estados para búsqueda
-   const [searchQuery, setSearchQuery] = useState<string>('');
- 
   // Usando hooks para datos y acciones
   const { data, loading, error, refresh } = useProducts();
-  const { handleNewProduct, handleProductList, handleCategories } = useProductActions();
+  const { handleNewProduct, handleProductList, handleCategories } =
+    useProductActions();
 
   // Manejo de estados de carga y error
   if (loading) {
@@ -34,18 +37,16 @@ export default function ProductsDashboard() {
   const activeCategoriesCount = getActiveCategoriesCount(data.categories);
 
   return (
-    <div className="p-4 space-y-4 bg-background h-full">
-     
+    <div className="pl-4 pr-4">
       <section className="mb-8">
-          <SearchInput 
-            placeholder="Suche Produkte / Verkäufe"
-            value={searchQuery}
-            onChange={setSearchQuery}
-            onSearch={() => {}}
-            className="w-full"
-          />
-        </section>
- 
+        <SearchInput
+          placeholder="Suche Produkte / Verkäufe"
+          value={searchQuery}
+          onChange={setSearchQuery}
+          onSearch={() => {}}
+          className="w-full"
+        />
+      </section>
 
       {/* Tarjetas de Estadísticas */}
       <div className="grid grid-cols-2 gap-3">
@@ -59,7 +60,7 @@ export default function ProductsDashboard() {
           badge={`${data.products.newProducts} Neu`}
           className="bg-background-cream"
         />
-        
+
         <StatCard
           icon={<Grid3X3 className="w-5 h-5 text-white " />}
           title="Kategorien"
@@ -91,7 +92,7 @@ export default function ProductsDashboard() {
           badgeVariant="success"
           onClick={handleProductList}
         />
-        
+
         <NavigationItem
           icon={<Grid3X3 className="w-5 h-5 text-muted-foreground" />}
           title="Kategorien"

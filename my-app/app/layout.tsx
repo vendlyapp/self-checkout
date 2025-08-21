@@ -1,27 +1,27 @@
-import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
-import './globals.css';
-import { Toaster } from 'sonner';
+import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { Toaster } from "sonner";
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'SelfCheckout',
-  description: 'Digital checkout for Swiss farm shops',
-  manifest: '/manifest.json',
+  title: "SelfCheckout",
+  description: "Digital checkout for Swiss farm shops",
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
-    title: 'SelfCheckout',
+    statusBarStyle: "default",
+    title: "SelfCheckout",
   },
 };
 
 export const viewport: Viewport = {
-  width: 'device-width',
+  width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  viewportFit: 'cover',
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -35,18 +35,18 @@ export default function RootLayout({
         {/* Container principal adaptativo */}
         <div className="mx-auto h-full w-full max-w-[430px] min-h-screen relative bg-[#F2EDE8] shadow-xl sm:border-x sm:border-gray-200 overflow-hidden">
           {/* Contenedor interno con scroll controlado */}
-          <div className="h-full w-full overflow-hidden">
+          <div className="h-full w-full overflow-y-auto overflow-x-hidden">
             {children}
           </div>
         </div>
-        
+
         {/* Toast notifications */}
-        <Toaster 
+        <Toaster
           position="top-center"
           toastOptions={{
             style: {
-              maxWidth: '380px',
-              fontSize: '14px',
+              maxWidth: "380px",
+              fontSize: "14px",
             },
           }}
         />

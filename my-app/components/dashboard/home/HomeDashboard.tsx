@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { SearchInput } from '@/components/ui/search-input';
+import React from "react";
+import { SearchInput } from "@/components/ui/search-input";
 
 // Import dashboard components and hooks
 import {
@@ -14,15 +14,15 @@ import {
   SearchResultsSection,
   useDashboard,
   DashboardSkeletonLoader,
-  DashboardErrorState
-} from '@/components/dashboard';
+  DashboardErrorState,
+} from "@/components/dashboard";
 
 /**
  * HomeDashboard - Componente principal del dashboard de inicio
- * 
+ *
  * Contiene toda la lógica de presentación del dashboard principal
  * incluyendo estado, loading states, y renderizado de componentes.
- * 
+ *
  * @returns JSX.Element - Dashboard completo con todos los componentes
  */
 const HomeDashboard: React.FC = () => {
@@ -40,17 +40,12 @@ const HomeDashboard: React.FC = () => {
     setCurrentSlideIndex,
     handleSearch,
     handleToggleStore,
-    refreshData
+    refreshData,
   } = useDashboard();
 
   // Mostrar error state si hay un error
   if (error) {
-    return (
-      <DashboardErrorState 
-        error={error} 
-        onRetry={refreshData}
-      />
-    );
+    return <DashboardErrorState error={error} onRetry={refreshData} />;
   }
 
   // Mostrar skeleton loader mientras carga
@@ -64,23 +59,23 @@ const HomeDashboard: React.FC = () => {
     goalAmount,
     percentage,
     quickAccessItems,
-    recentSales
+    recentSales,
   } = data;
 
   return (
-    <div className="p-4 space-y-4 h-full bg-background">
+    <div className="p-4">
       {/* ===== GREETING & STATUS ===== */}
-      <GreetingSection 
-        isStoreOpen={isStoreOpen} 
-        onToggleStore={handleToggleStore} 
+      <GreetingSection
+        isStoreOpen={isStoreOpen}
+        onToggleStore={handleToggleStore}
       />
 
       {/* ===== MAIN ACTIONS ===== */}
       <MainActionCards />
 
       {/* ===== SEARCH BAR ===== */}
-      <section className="mb-6">
-        <SearchInput 
+      <section className="">
+        <SearchInput
           placeholder="Suche Produkte / Verkäufe"
           value={searchQuery}
           onChange={setSearchQuery}
@@ -94,14 +89,14 @@ const HomeDashboard: React.FC = () => {
       <TodayStatsCard />
 
       {/* ===== DAILY GOAL ===== */}
-      <DailyGoalCard 
+      <DailyGoalCard
         currentAmount={currentAmount}
         goalAmount={goalAmount}
         percentage={percentage}
       />
 
       {/* ===== QUICK ACCESS SLIDER ===== */}
-      <QuickAccessSlider 
+      <QuickAccessSlider
         items={quickAccessItems}
         currentSlide={currentSlideIndex}
         onSlideChange={setCurrentSlideIndex}
@@ -112,16 +107,13 @@ const HomeDashboard: React.FC = () => {
 
       {/* ===== SEARCH RESULTS ===== */}
       {(isSearching || searchResults.length > 0) && (
-        <SearchResultsSection 
+        <SearchResultsSection
           isSearching={isSearching}
           results={searchResults}
         />
       )}
-
-      {/* Footer space for mobile navigation */}
-      <div className="h-20" aria-hidden="true" />
     </div>
   );
 };
 
-export default HomeDashboard; 
+export default HomeDashboard;

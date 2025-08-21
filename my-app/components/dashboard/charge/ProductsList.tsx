@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import React from 'react';
-import ProductCard from './ProductCard';
-import { useCartStore } from '@/lib/stores/cartStore';
-import { Product } from '../products_list/data/mockProducts';
+import React from "react";
+import ProductCard from "./ProductCard";
+import { useCartStore } from "@/lib/stores/cartStore";
+import { Product } from "../products_list/data/mockProducts";
 
 interface ProductsListProps {
   products: Product[];
@@ -13,12 +13,12 @@ interface ProductsListProps {
   className?: string;
 }
 
-export default function ProductsList({ 
-  products, 
-  onAddToCart, 
-  loading = false, 
+export default function ProductsList({
+  products,
+  onAddToCart,
+  loading = false,
   searchQuery = "",
-  className = ""
+  className = "",
 }: ProductsListProps) {
   const { cartItems } = useCartStore();
 
@@ -27,7 +27,9 @@ export default function ProductsList({
       <div className={`p-4 ${className}`}>
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500 mx-auto"></div>
-          <p className="mt-2 text-sm text-muted-foreground">Produkte werden geladen...</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Produkte werden geladen...
+          </p>
         </div>
       </div>
     );
@@ -38,10 +40,9 @@ export default function ProductsList({
       <div className={`p-4 ${className}`}>
         <div className="text-center py-8">
           <p className="text-muted-foreground">
-            {searchQuery 
+            {searchQuery
               ? `Keine Produkte für "${searchQuery}" gefunden`
-              : 'Keine Produkte verfügbar'
-            }
+              : "Keine Produkte verfügbar"}
           </p>
         </div>
       </div>
@@ -52,7 +53,9 @@ export default function ProductsList({
     <div className={`p-4 pb-24 ${className}`}>
       <div className="space-y-2">
         {products.map((product) => {
-          const cartItem = cartItems.find(item => item.product.id === product.id);
+          const cartItem = cartItems.find(
+            (item) => item.product.id === product.id
+          );
           return (
             <ProductCard
               key={product.id}
@@ -65,4 +68,4 @@ export default function ProductsList({
       </div>
     </div>
   );
-} 
+}

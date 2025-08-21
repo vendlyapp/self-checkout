@@ -31,7 +31,7 @@ export default function FixedHeaderContainer({
   children,
 }: FixedHeaderContainerProps) {
   return (
-    <div className="flex flex-col h-full bg-background-cream">
+    <>
       <HeaderNav title={title} showAddButton={showAddButton} />
       <Filter_Busqueda
         searchQuery={searchQuery}
@@ -44,6 +44,6 @@ export default function FixedHeaderContainer({
       />
 
       <div className="flex-1 overflow-hidden">{children}</div>
-    </div>
+    </>
   );
 }
