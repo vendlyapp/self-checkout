@@ -31,10 +31,10 @@ const FooterContinue: React.FC<FooterContinueProps> = ({
               </div>
             </div>
             <div className="flex items-center justify-between mt-1">
-              <div className="text-brand-700 font-semibold text-[15px]">
+              <div className="text-[#3C7E44] font-semibold text-[15px]">
                 10% Rabatt auf Bio-Produkte
               </div>
-              <div className="text-brand-700 text-[15px]">
+              <div className="text-[#3C7E44] text-[15px] font-semibold">
                 - CHF {discountAmount.toFixed(2)}
               </div>
             </div>
@@ -46,11 +46,11 @@ const FooterContinue: React.FC<FooterContinueProps> = ({
           <div className="text-gray-800 font-bold text-[18px]">
             Gesamtbetrag
           </div>
-          <div className="text-gray-400 text-[13px]">
+          <div className="text-gray-400 text-[14px]">
             inkl. MwSt • {totalItems} Artikel
           </div>
         </div>
-        <div className="text-brand-600 font-bold text-[26px]">
+        <div className="text-black font-bold text-[24px]">
           CHF {total.toFixed(2)}
         </div>
       </div>

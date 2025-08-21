@@ -84,7 +84,7 @@ export default function CartPage() {
             <div className="mt-6 px-2 pl-4 pr-4 pb-24">
               <label
                 htmlFor="promo"
-                className="text-brand-500 text-[15px] font-semibold"
+                className="text-[#25D076] text-[15px] font-semibold"
               >
                 Promo Code?
               </label>
