@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from "react";
 import DashBoardCharge from "@/components/dashboard/charge/DashBoard";
 import FixedHeaderContainer from "@/components/dashboard/products_list/FixedHeaderContainer";
+import FilterModal, {
+  FilterState,
+} from "@/components/dashboard/products_list/FilterModal";
 import {
   productCategories,
   mockProducts,
@@ -60,6 +63,13 @@ export default function Charge() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [activeFiltersCount, setActiveFiltersCount] = useState(0);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [currentFilterState, setCurrentFilterState] = useState<FilterState>({
+    sortBy: "name",
+    categories: ["all"],
+    status: "all",
+    priceRange: { min: 0, max: 50 },
+  });
 
   // Calcular filtros activos
   useEffect(() => {
@@ -78,26 +88,64 @@ export default function Charge() {
   };
 
   const handleOpenFilterModal = () => {
-    // Aquí puedes implementar la apertura del modal de filtros
-    console.log("Abrir modal de filtros");
+    setIsFilterModalOpen(true);
+  };
+
+  const handleCloseFilterModal = () => {
+    setIsFilterModalOpen(false);
+  };
+
+  const handleApplyFilters = (filters: FilterState) => {
+    setCurrentFilterState(filters);
+
+    // Convertir filtros del modal a filtros de categorías
+    const newSelectedFilters = filters.categories.filter((id) => id !== "all");
+    setSelectedFilters(newSelectedFilters);
+
+    // Aquí puedes implementar la lógica adicional de filtrado
+    console.log("Filtros aplicados:", filters);
+  };
+
+  const handleClearFilters = () => {
+    setCurrentFilterState({
+      sortBy: "name",
+      categories: ["all"],
+      status: "all",
+      priceRange: { min: 0, max: 50 },
+    });
+    setSelectedFilters([]);
+
+    // Aquí puedes implementar la lógica de limpieza
+    console.log("Filtros limpiados");
   };
 
   return (
-    <FixedHeaderContainer
-      title="Verkauf starten"
-      showAddButton={false}
-      searchQuery={searchQuery}
-      onSearch={handleSearch}
-      selectedFilters={selectedFilters}
-      onFilterChange={handleFilterChange}
-      onOpenFilterModal={handleOpenFilterModal}
-      activeFiltersCount={activeFiltersCount}
-      productsListFilters={chargeFilters}
-    >
-      <DashBoardCharge
+    <>
+      <FixedHeaderContainer
+        title="Verkauf starten"
+        showAddButton={false}
         searchQuery={searchQuery}
+        onSearch={handleSearch}
         selectedFilters={selectedFilters}
+        onFilterChange={handleFilterChange}
+        onOpenFilterModal={handleOpenFilterModal}
+        activeFiltersCount={activeFiltersCount}
+        productsListFilters={chargeFilters}
+      >
+        <DashBoardCharge
+          searchQuery={searchQuery}
+          selectedFilters={selectedFilters}
+        />
+      </FixedHeaderContainer>
+
+      {/* Modal de filtros */}
+      <FilterModal
+        isOpen={isFilterModalOpen}
+        onClose={handleCloseFilterModal}
+        onApplyFilters={handleApplyFilters}
+        onClearFilters={handleClearFilters}
+        currentFilters={currentFilterState}
       />
-    </FixedHeaderContainer>
+    </>
   );
 }
