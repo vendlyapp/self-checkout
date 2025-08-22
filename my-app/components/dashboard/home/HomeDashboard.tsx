@@ -35,9 +35,7 @@ const HomeDashboard: React.FC = () => {
     searchQuery,
     isSearching,
     searchResults,
-    currentSlideIndex,
     setSearchQuery,
-    setCurrentSlideIndex,
     handleSearch,
     handleToggleStore,
     refreshData,
@@ -54,13 +52,7 @@ const HomeDashboard: React.FC = () => {
   }
 
   // Datos con fallbacks seguros
-  const {
-    currentAmount,
-    goalAmount,
-    percentage,
-    quickAccessItems,
-    recentSales,
-  } = data;
+  const { currentAmount, goalAmount, percentage, recentSales } = data;
 
   return (
     <div className="p-4">
