@@ -8,7 +8,7 @@ import {
   GreetingSection,
   MainActionCards,
   DailyGoalCard,
-  QuickAccessSlider,
+  Slider,
   TodayStatsCard,
   RecentSalesSection,
   SearchResultsSection,
@@ -95,12 +95,8 @@ const HomeDashboard: React.FC = () => {
         percentage={percentage}
       />
 
-      {/* ===== QUICK ACCESS SLIDER ===== */}
-      <QuickAccessSlider
-        items={quickAccessItems}
-        currentSlide={currentSlideIndex}
-        onSlideChange={setCurrentSlideIndex}
-      />
+      {/* ===== SLIDER ===== */}
+      <Slider />
 
       {/* ===== RECENT SALES ===== */}
       <RecentSalesSection sales={recentSales} />
