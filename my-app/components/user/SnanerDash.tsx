@@ -147,10 +147,12 @@ const SnanerDash = () => {
         <button
           onClick={simulateScan}
           disabled={isScanning}
-          className="bg-gradient-to-r from-[#25D076] to-[#25D076] text-white py-4 px-12 rounded-2xl font-bold text-lg hover:from-[#25D076]/80 hover:to-[#25D076]/80 transition-all duration-300 disabled:opacity-50 shadow-2xl active:scale-95 flex items-center space-x-3"
+          className="bg-gradient-to-r from-[#25D076] to-[#25D076] text-white px-6 py-3 rounded-2xl mt-10 font-bold text-lg hover:from-[#25D076]/80 hover:to-[#25D076]/80 transition-all duration-300 disabled:opacity-50 shadow-2xl active:scale-95 flex items-center space-x-3"
         >
           <Camera className="w-5 h-5" />
-          <span>{isScanning ? "Scannt..." : "Scan starten"}</span>
+          <span className="text-white font-bold text-[16px]">
+            {isScanning ? "Scannt..." : "Scan starten"}
+          </span>
         </button>
       </div>
     </>
