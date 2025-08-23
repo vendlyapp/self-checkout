@@ -17,7 +17,7 @@ export default function UserCartPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-full bg-background-cream">
+    <>
       <HeaderNav title="Warenkorb" />
       {/* Lista de productos */}
       <div className="flex-1 px-4 pt-4 pb-32 mt-4">
@@ -37,7 +37,7 @@ export default function UserCartPage() {
             </button>
           </div>
         ) : (
-          <div className="space-y-4 pb-48">
+          <div className="space-y-4">
             {cartItems.map(({ product, quantity }) => (
               <ProductCard
                 key={product.id}
@@ -53,6 +53,6 @@ export default function UserCartPage() {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }
