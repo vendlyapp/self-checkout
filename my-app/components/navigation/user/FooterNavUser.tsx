@@ -1,16 +1,15 @@
 // components/navigation/FooterNav.tsx
-'use client';
+"use client";
 
-import { Home, Percent, ScanBarcode, Search, ShoppingCart } from 'lucide-react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { clsx } from 'clsx';
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { lightFeedback } from '@/lib/utils/safeFeedback';
-import UserCartSummary from '@/components/user/UserCartSummary';
-import UserCartSummaryCart from '@/components/user/UserCartSummaryCart';
-import { useCartStore } from '@/lib/stores/cartStore';
-
+import { Home, Percent, ScanBarcode, Search, ShoppingCart } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { clsx } from "clsx";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { lightFeedback } from "@/lib/utils/safeFeedback";
+import UserCartSummary from "@/components/user/UserCartSummary";
+import UserCartSummaryCart from "@/components/user/UserCartSummaryCart";
+import { useCartStore } from "@/lib/stores/cartStore";
 
 interface NavItemUser {
   id: string;
@@ -22,35 +21,35 @@ interface NavItemUser {
 
 const navItems: NavItemUser[] = [
   {
-    id: 'home',
+    id: "home",
     icon: Home,
-    label: 'Home',
-    href: '/user',
+    label: "Home",
+    href: "/user",
   },
   {
-    id: 'search',
+    id: "search",
     icon: Search,
-    label: 'Suche',
-    href: '/user/search',
+    label: "Suche",
+    href: "/user/search",
   },
   {
-    id: 'actions',
-    icon: ScanBarcode ,
-    label: '',
-    href: '/user/scan',
+    id: "actions",
+    icon: ScanBarcode,
+    label: "",
+    href: "/user/scan",
     isMain: true,
   },
   {
-    id: 'promotion',
+    id: "promotion",
     icon: Percent,
-    label: 'Aktionen',
-    href: '/user/promotion',
+    label: "Aktionen",
+    href: "/user/promotion",
   },
   {
-    id: 'cart',
+    id: "cart",
     icon: ShoppingCart,
-    label: 'Warenkorb',
-    href: '/user/cart',
+    label: "Warenkorb",
+    href: "/user/cart",
   },
 ];
 
@@ -59,7 +58,10 @@ const SkeletonLoader = () => (
   <nav className="nav-container">
     <div className="flex items-center justify-around h-full px-4 max-w-[430px] mx-auto">
       {[...Array(5)].map((_, i) => (
-        <div key={i} className="w-12 h-12 bg-gray-200 rounded-lg animate-pulse" />
+        <div
+          key={i}
+          className="w-12 h-12 bg-gray-200 rounded-lg animate-pulse"
+        />
       ))}
     </div>
   </nav>
@@ -85,11 +87,14 @@ export default function FooterNav() {
   }, [isPulsing]);
 
   // Memoizar función para verificar item activo
-  const isItemActive = useCallback((item: NavItemUser) => {
-    if (item.href === '/user' && pathname === '/user') return true;
-    if (item.href !== '/user' && pathname?.startsWith(item.href)) return true;
-    return false;
-  }, [pathname]);
+  const isItemActive = useCallback(
+    (item: NavItemUser) => {
+      if (item.href === "/user" && pathname === "/user") return true;
+      if (item.href !== "/user" && pathname?.startsWith(item.href)) return true;
+      return false;
+    },
+    [pathname]
+  );
 
   // Manejar interacción con vibración háptica
   const handlePress = useCallback((itemId: string) => {
@@ -101,18 +106,22 @@ export default function FooterNav() {
   }, []);
 
   // Manejar feedback en eventos válidos
-  const handleValidInteraction = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
-    // Feedback seguro con haptic + visual
-    lightFeedback(e.currentTarget);
-  }, []);
+  const handleValidInteraction = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      // Feedback seguro con haptic + visual
+      lightFeedback(e.currentTarget);
+    },
+    []
+  );
 
   // Memoizar items procesados
-  const processedItems = useMemo(() => 
-    navItems.map(item => ({
-      ...item,
-      isActive: isItemActive(item),
-      isPressed: pressedItem === item.id
-    })),
+  const processedItems = useMemo(
+    () =>
+      navItems.map((item) => ({
+        ...item,
+        isActive: isItemActive(item),
+        isPressed: pressedItem === item.id,
+      })),
     [isItemActive, pressedItem]
   );
 
@@ -120,12 +129,12 @@ export default function FooterNav() {
   const cartItemCount = useMemo(() => {
     if (!cartItems || cartItems.length === 0) return 0;
     return cartItems
-      .filter(item => item.quantity > 0)
+      .filter((item) => item.quantity > 0)
       .reduce((sum, item) => sum + item.quantity, 0);
   }, [cartItems]);
 
   // Ocultar FooterNav en la pantalla de carrito
-  if (pathname === '/charge/cart') {
+  if (pathname === "/charge/cart") {
     return null;
   }
 
@@ -135,18 +144,14 @@ export default function FooterNav() {
   }
 
   // Determinar qué componente de carrito mostrar basado en la ruta
-  const isCartRoute = pathname === '/user/cart';
-  const isPaymentRoute = pathname === '/user/payment';
+  const isCartRoute = pathname === "/user/cart";
+  const isPaymentRoute = pathname === "/user/payment";
 
   return (
-    <nav className="nav-container-user ">
+    <nav className="bg-white">
       {/* Resumen de carrito arriba solo cuando estoy en /user/cart */}
-      {isCartRoute && (
-        
-          <UserCartSummaryCart variant="inline" />
-        
-      )}
-      
+      {isCartRoute && <UserCartSummaryCart variant="inline" />}
+
       <div className="flex items-center justify-between w-full px-6 max-w-[430px] mx-auto pb-4 pt-2 border-t-2 border-gray-200  bg-white rounded-t-xl ">
         {processedItems.map((item) => {
           const Icon = item.icon;
@@ -169,40 +174,50 @@ export default function FooterNav() {
                 onClick={handleValidInteraction}
                 aria-label="Scan"
               >
-
-
                 {/* Animated Green Halo */}
-                <div className={clsx(
-                  "absolute inset-0 w-full h-full rounded-full animate-pulse",
-                  pathname === '/user/scan' ? "bg-[#25D076]/30" : "bg-[#766B6A]/30"
-                )}  />
+                <div
+                  className={clsx(
+                    "absolute inset-0 w-full h-full rounded-full animate-pulse",
+                    pathname === "/user/scan"
+                      ? "bg-[#25D076]/30"
+                      : "bg-[#766B6A]/30"
+                  )}
+                />
 
+                <div
+                  className={clsx(
+                    "absolute inset-1 w-14 h-14 rounded-full animate-pulse",
+                    pathname === "/user/scan"
+                      ? "bg-[#25D076]/20"
+                      : "bg-[#766B6A]/20"
+                  )}
+                  style={{ animationDelay: "0.5s" }}
+                />
 
-                <div className={clsx(
-                  "absolute inset-1 w-14 h-14 rounded-full animate-pulse",
-                  pathname === '/user/scan' ? "bg-[#25D076]/20" : "bg-[#766B6A]/20"
-                )} style={{ animationDelay: '0.5s' }} />
-
-                <div className={clsx(
-                  "absolute inset-2 w-12 h-12 rounded-full animate-pulse",
-                  pathname === '/user/scan' ? "bg-[#25D076]/10" : "bg-[#766B6A]/10"
-                )} style={{ animationDelay: '1s' }} />
-                
-
-
+                <div
+                  className={clsx(
+                    "absolute inset-2 w-12 h-12 rounded-full animate-pulse",
+                    pathname === "/user/scan"
+                      ? "bg-[#25D076]/10"
+                      : "bg-[#766B6A]/10"
+                  )}
+                  style={{ animationDelay: "1s" }}
+                />
 
                 {/* White Circle with Lucide Icon */}
-                <div className={clsx(
-                  "relative w-12 h-12 bg-[#766B6A] rounded-full flex items-center justify-center shadow-lg text-white",
-                  item.isActive && "bg-white text-[#25D076]",
-                  item.isPressed && "scale-95"
-                )}>
-                  <Icon 
-                    className={clsx(   
+                <div
+                  className={clsx(
+                    "relative w-12 h-12 bg-[#766B6A] rounded-full flex items-center justify-center shadow-lg text-white",
+                    item.isActive && "bg-white text-[#25D076]",
+                    item.isPressed && "scale-95"
+                  )}
+                >
+                  <Icon
+                    className={clsx(
                       item.isPressed && "scale-95",
                       item.isActive && "text-[#25D076]"
-                    )} 
-                    strokeWidth={2.5} 
+                    )}
+                    strokeWidth={2.5}
                   />
                 </div>
               </Link>
@@ -228,7 +243,7 @@ export default function FooterNav() {
               aria-label={item.label}
             >
               <div className="relative">
-                <Icon 
+                <Icon
                   className={clsx(
                     "nav-icon",
                     item.isActive && "nav-icon-active",
@@ -236,7 +251,7 @@ export default function FooterNav() {
                   )}
                   strokeWidth={item.isActive ? 2.2 : 1.8}
                 />
-                {item.id === 'cart' && cartItemCount > 0 && (
+                {item.id === "cart" && cartItemCount > 0 && (
                   <span
                     className={clsx(
                       "absolute -top-1.5 -right-2.5 min-w-5 h-5 px-1 rounded-full text-white text-[10px] leading-5 font-bold text-center",
@@ -245,11 +260,11 @@ export default function FooterNav() {
                     aria-label={`Artículos en carrito: ${cartItemCount}`}
                     aria-live="polite"
                   >
-                    {cartItemCount > 99 ? '99+' : cartItemCount}
+                    {cartItemCount > 99 ? "99+" : cartItemCount}
                   </span>
                 )}
               </div>
-              <span 
+              <span
                 className={clsx(
                   "nav-label",
                   item.isActive && "nav-label-active"
@@ -261,7 +276,7 @@ export default function FooterNav() {
           );
         })}
       </div>
-      
+
       {/* Resumen de carrito abajo solo cuando NO estoy en /user/cart Y NO estoy en /user/payment */}
       {!isCartRoute && !isPaymentRoute && (
         <div className="w-full flex flex-col gap-2 px-4">

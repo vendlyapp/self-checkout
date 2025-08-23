@@ -30,9 +30,8 @@ const UserLayout = ({ children }: UserLayoutProps) => {
       </main>
 
       {/* Footer de navegación fijo en la parte inferior */}
-      <div className="fixed bottom-0 left-0 right-0 z-40">
-        <FooterNavUser />
-      </div>
+
+      <FooterNavUser />
     </div>
   );
 };

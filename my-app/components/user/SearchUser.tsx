@@ -1,29 +1,41 @@
-'use client'
-import { useState, useCallback } from 'react';
- import HeaderNav from "../navigation/HeaderNav";
-import { SearchInput } from '@/components/ui/search-input';
-import { mockProducts, Product } from '@/components/dashboard/products_list/data/mockProducts';
-import { useCartStore } from '@/lib/stores/cartStore';
-import { Search, X } from 'lucide-react';
-import ProductCard from '@/components/dashboard/charge/ProductCard';
+"use client";
+import { useState, useCallback } from "react";
+import HeaderNav from "../navigation/HeaderNav";
+import { SearchInput } from "@/components/ui/search-input";
+import {
+  mockProducts,
+  Product,
+} from "@/components/dashboard/products_list/data/mockProducts";
+import { useCartStore } from "@/lib/stores/cartStore";
+import { Search, X } from "lucide-react";
+import ProductCard from "@/components/dashboard/charge/ProductCard";
 
 export default function SearchUser() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const { cartItems, addToCart } = useCartStore();
 
   // Búsquedas populares
   const popularSearches = [
-    'Bauernbrot', 'Croissant', 'Käsekuchen', 'Brezel',
-    'Apfelstrudel', 'Sauerteigbrot', 'Schokobrötchen', 'Baguette'
+    "Bauernbrot",
+    "Croissant",
+    "Käsekuchen",
+    "Brezel",
+    "Apfelstrudel",
+    "Sauerteigbrot",
+    "Schokobrötchen",
+    "Baguette",
   ];
 
   // Función para obtener la cantidad actual de un producto en el carrito
-  const getCurrentQuantity = useCallback((productId: string) => {
-    const cartItem = cartItems.find(item => item.product.id === productId);
-    return cartItem ? cartItem.quantity : 0;
-  }, [cartItems]);
+  const getCurrentQuantity = useCallback(
+    (productId: string) => {
+      const cartItem = cartItems.find((item) => item.product.id === productId);
+      return cartItem ? cartItem.quantity : 0;
+    },
+    [cartItems]
+  );
 
   // Función para buscar productos
   const handleSearch = useCallback((query: string) => {
@@ -35,12 +47,13 @@ export default function SearchUser() {
 
     setIsSearching(true);
     const term = query.toLowerCase();
-    
-    const results = mockProducts.filter(product => 
-      product.name.toLowerCase().includes(term) ||
-      product.description.toLowerCase().includes(term) ||
-      product.tags.some(tag => tag.toLowerCase().includes(term)) ||
-      product.category.toLowerCase().includes(term)
+
+    const results = mockProducts.filter(
+      (product) =>
+        product.name.toLowerCase().includes(term) ||
+        product.description.toLowerCase().includes(term) ||
+        product.tags.some((tag) => tag.toLowerCase().includes(term)) ||
+        product.category.toLowerCase().includes(term)
     );
 
     setSearchResults(results);
@@ -48,44 +61,56 @@ export default function SearchUser() {
   }, []);
 
   // Función para manejar cambio en el input
-  const handleInputChange = useCallback((value: string) => {
-    setSearchTerm(value);
-    if (value.trim()) {
-      handleSearch(value);
-    } else {
-      setSearchResults([]);
-      setIsSearching(false);
-    }
-  }, [handleSearch]);
+  const handleInputChange = useCallback(
+    (value: string) => {
+      setSearchTerm(value);
+      if (value.trim()) {
+        handleSearch(value);
+      } else {
+        setSearchResults([]);
+        setIsSearching(false);
+      }
+    },
+    [handleSearch]
+  );
 
   // Función para búsqueda rápida desde botones populares
-  const handlePopularSearch = useCallback((term: string) => {
-    setSearchTerm(term);
-    handleSearch(term);
-  }, [handleSearch]);
+  const handlePopularSearch = useCallback(
+    (term: string) => {
+      setSearchTerm(term);
+      handleSearch(term);
+    },
+    [handleSearch]
+  );
 
   // Función para limpiar búsqueda
   const handleClearSearch = useCallback(() => {
-    setSearchTerm('');
+    setSearchTerm("");
     setSearchResults([]);
     setIsSearching(false);
   }, []);
 
   // Agregar/actualizar cantidad usando ProductCard
-  const handleAddToCart = useCallback((product: Product, quantity: number) => {
-    addToCart(product, quantity);
-  }, [addToCart]);
+  const handleAddToCart = useCallback(
+    (product: Product, quantity: number) => {
+      addToCart(product, quantity);
+    },
+    [addToCart]
+  );
 
   return (
-    <div className="flex flex-col min-h-full bg-background-cream">
-      
+    <div className="flex flex-col">
       <HeaderNav title="Suchen" />
-      
+
       {/* Contenedor principal con padding fijo */}
-      <div className="flex-1 px-4 pt-4 pb-32 mt-[70px] rounded-xl">
+      <div className="flex-1 px-4  pb-32 mt-4 rounded-xl">
         {/* Barra de búsqueda fija en la parte superior */}
-        <div className={`mb-6 ${searchTerm ? 'sticky top-0 bg-background-cream pt-2 pb-2 z-20' : ''}`}>
-          <SearchInput 
+        <div
+          className={`mb-6 pt-4 ${
+            searchTerm ? "sticky top-0 bg-background-cream pt-2 pb-2 z-20" : ""
+          }`}
+        >
+          <SearchInput
             placeholder="Produktnamen eingeben..."
             value={searchTerm}
             onChange={handleInputChange}
@@ -103,7 +128,7 @@ export default function SearchUser() {
                 Meist gesucht bei Heiniger&apos;s:
               </h2>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-3">
               {popularSearches.map((search, index) => (
                 <button
@@ -157,7 +182,9 @@ export default function SearchUser() {
               ) : (
                 <div className="text-center py-8">
                   <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 text-lg">Keine Produkte gefunden</p>
+                  <p className="text-gray-500 text-lg">
+                    Keine Produkte gefunden
+                  </p>
                   <p className="text-gray-400 text-sm mt-1">
                     Versuche es mit einem anderen Suchbegriff
                   </p>
