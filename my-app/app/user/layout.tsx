@@ -26,7 +26,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
 
       {/* Contenido principal con scroll y padding para el header fijo */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
-        <div className="pt-[85px] pb-24">{children}</div>
+        <div className="pt-[85px]">{children}</div>
       </main>
 
       {/* Footer de navegación fijo en la parte inferior */}

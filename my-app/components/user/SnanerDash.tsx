@@ -17,14 +17,8 @@ const SnanerDash = () => {
   };
 
   return (
-    <div className="h-full w-full overflow-hidden bg-[#191F2D] text-white flex flex-col items-center justify-center">
-      {/* Header específico para modo oscuro */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-[#191F2D]">
-        <HeaderUser isDarkMode={true} />
-      </div>
-
-      {/* Header secundario específico para el escáner */}
-      <div className="fixed top-[85px] left-0 right-0 z-50 bg-[#191F2D] border-b border-gray-700">
+    <>
+      <div className="bg-[#191F2D] border-b border-gray-700">
         <div className="flex items-center justify-between w-full px-4 py-3">
           <div className="flex flex-col items-start justify-start">
             <p className="text-sm text-white font-bold text-[21px]">
@@ -41,13 +35,8 @@ const SnanerDash = () => {
           </div>
         </div>
       </div>
-
-      {/* Scanner Content con padding para los headers fijos */}
-      <div
-        className="flex-1 flex flex-col items-center justify-center ml-16 mr-16 pb-24 pt-32"
-        style={{ paddingTop: "140px" }}
-      >
-        <div className="relative w-[280px] h-[280px] mb-12">
+      <div className="flex-1 flex flex-col items-center justify-center ml-16 mr-16 pb-24 pt-32">
+        <div className="relative w-[280px] h-[280px]">
           {/* Main scanner container */}
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
             {/* Corner markers - improved design */}
@@ -165,12 +154,8 @@ const SnanerDash = () => {
           <Camera className="w-5 h-5" />
           <span>{isScanning ? "Scannt..." : "Scan starten"}</span>
         </button>
-
-        <p className="text-gray-400 text-sm mt-6 text-center max-w-sm font-medium leading-relaxed">
-          KI-gestützte Produkterkennung mit Schweizer Präzision
-        </p>
       </div>
-    </div>
+    </>
   );
 };
 
