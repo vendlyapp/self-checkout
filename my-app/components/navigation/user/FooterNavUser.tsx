@@ -148,11 +148,11 @@ export default function FooterNav() {
   const isPaymentRoute = pathname === "/user/payment";
 
   return (
-    <nav className="bg-white">
+    <nav className="bg-white rounded-t-xl shadow-t-xl shadow-black">
       {/* Resumen de carrito arriba solo cuando estoy en /user/cart */}
       {isCartRoute && <UserCartSummaryCart variant="inline" />}
 
-      <div className="flex items-center justify-between w-full px-6 max-w-[430px] mx-auto pb-4 pt-2 border-t-2 border-gray-200  bg-white rounded-t-xl ">
+      <div className="flex items-center justify-between w-full px-6 max-w-[430px] mx-auto pb-4 pt-2  border-t-2 border-black/10 rounded-t-xl">
         {processedItems.map((item) => {
           const Icon = item.icon;
 
