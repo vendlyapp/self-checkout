@@ -2,8 +2,6 @@
 
 import React, { useState } from "react";
 import { Camera, QrCode } from "lucide-react";
-import HeaderUser from "@/components/navigation/user/HeaderUser";
-
 const SnanerDash = () => {
   const [isScanning, setIsScanning] = useState(false);
 
