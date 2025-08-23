@@ -53,8 +53,8 @@ export default function Slider() {
     <div className="w-full mb-8">
       <Swiper
         modules={[Autoplay, FreeMode]}
-        spaceBetween={10}
-        slidesPerView={4.3}
+        spaceBetween={4}
+        slidesPerView={4}
         freeMode={{
           enabled: true,
           momentum: true,
