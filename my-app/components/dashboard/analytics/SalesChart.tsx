@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { ChevronDown, TrendingUp, TrendingDown } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState } from "react";
+import { ChevronDown, TrendingUp, TrendingDown } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   LineChart,
   Line,
   XAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
-} from 'recharts';
-import { SalesData, TimePeriod, ChartTooltipProps } from './types';
+  ResponsiveContainer,
+} from "recharts";
+import { SalesData, TimePeriod, ChartTooltipProps } from "./types";
 
 interface SalesChartProps {
   data: SalesData[];
@@ -20,7 +20,11 @@ interface SalesChartProps {
   loading?: boolean;
 }
 
-const CustomTooltip: React.FC<ChartTooltipProps> = ({ active, payload, label }) => {
+const CustomTooltip: React.FC<ChartTooltipProps> = ({
+  active,
+  payload,
+  label,
+}) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
@@ -46,12 +50,12 @@ const CustomDot: React.FC<{
   // Highlight Saturday (index 5)
   if (index === 5) {
     return (
-      <circle 
-        cx={cx} 
-        cy={cy} 
-        r={6} 
-        fill="#f59e0b" 
-        stroke="#fff" 
+      <circle
+        cx={cx}
+        cy={cy}
+        r={6}
+        fill="#f59e0b"
+        stroke="#fff"
         strokeWidth={2}
         className="drop-shadow-sm"
       />
@@ -61,19 +65,19 @@ const CustomDot: React.FC<{
 };
 
 const periodOptions: { value: TimePeriod; label: string }[] = [
-  { value: 'heute', label: 'Heute' },
-  { value: 'woche', label: 'Woche' },
-  { value: 'monat', label: 'Monat' },
-  { value: 'jahr', label: 'Jahr' }
+  { value: "heute", label: "Heute" },
+  { value: "woche", label: "Woche" },
+  { value: "monat", label: "Monat" },
+  { value: "jahr", label: "Jahr" },
 ];
 
-const SalesChart: React.FC<SalesChartProps> = ({ 
-  data, 
-  totalSales, 
-  salesGrowth, 
-  period, 
+const SalesChart: React.FC<SalesChartProps> = ({
+  data,
+  totalSales,
+  salesGrowth,
+  period,
   onPeriodChange,
-  loading = false 
+  loading = false,
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const isPositiveGrowth = salesGrowth >= 0;
@@ -106,25 +110,30 @@ const SalesChart: React.FC<SalesChartProps> = ({
     );
   }
 
-  const currentPeriodLabel = periodOptions.find(option => option.value === period)?.label || 'Woche';
+  const currentPeriodLabel =
+    periodOptions.find((option) => option.value === period)?.label || "Woche";
 
   return (
     <Card className="bg-card rounded-2xl border border-border/50 transition-fast hover:shadow-md">
       <CardContent className="p-5">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-foreground">Umsatz</h3>
-          
+
           {/* Period Selector */}
           <div className="relative">
-            <button 
+            <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-fast px-2 py-1 rounded-lg hover:bg-muted tap-highlight-transparent"
               aria-label="Zeitraum ändern"
             >
               {currentPeriodLabel}
-              <ChevronDown className={`w-4 h-4 transition-fast ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                className={`w-4 h-4 transition-fast ${
+                  isDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
             </button>
-            
+
             {isDropdownOpen && (
               <div className="absolute right-0 top-8 z-20 bg-background border border-border rounded-lg shadow-lg py-1 min-w-[120px]">
                 {periodOptions.map((option) => (
@@ -132,7 +141,9 @@ const SalesChart: React.FC<SalesChartProps> = ({
                     key={option.value}
                     onClick={() => handlePeriodSelect(option.value)}
                     className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-fast ${
-                      period === option.value ? 'text-primary font-medium' : 'text-foreground'
+                      period === option.value
+                        ? "text-primary font-medium"
+                        : "text-foreground"
                     }`}
                   >
                     {option.label}
@@ -145,63 +156,70 @@ const SalesChart: React.FC<SalesChartProps> = ({
 
         <div className="space-y-4">
           {/* Total und Vergleich */}
-          <div>
+          <div className="flex items-center justify-between w-full">
             <div className="flex items-baseline gap-2">
               <span className="text-sm text-muted-foreground">CHF</span>
               <span className="text-3xl font-bold text-foreground">
                 {totalSales.toLocaleString()}.–
               </span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center justify-end gap-2 text-sm">
               {isPositiveGrowth ? (
                 <TrendingUp className="w-4 h-4 text-emerald-500" />
               ) : (
                 <TrendingDown className="w-4 h-4 text-red-500" />
               )}
-              <span className={`font-medium ${isPositiveGrowth ? 'text-emerald-500' : 'text-red-500'}`}>
-                {isPositiveGrowth ? '+' : ''}{salesGrowth}%
+              <span
+                className={`font-medium ${
+                  isPositiveGrowth ? "text-emerald-500" : "text-red-500"
+                }`}
+              >
+                {isPositiveGrowth ? "+" : ""}
+                {salesGrowth}%
               </span>
-              <span className="text-muted-foreground">vs letzte {currentPeriodLabel.toLowerCase()}</span>
+              <span className="text-muted-foreground">
+                vs letzte {currentPeriodLabel.toLowerCase()}
+              </span>
             </div>
           </div>
 
           {/* Recharts Line Chart */}
           <div className="h-40">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart 
-                data={data} 
+              <LineChart
+                data={data}
                 margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
               >
-                <CartesianGrid 
-                  strokeDasharray="3 3" 
+                <CartesianGrid
+                  strokeDasharray="3 3"
                   stroke="hsl(var(--border))"
                   opacity={0.5}
                 />
-                <XAxis 
-                  dataKey="day" 
+                <XAxis
+                  dataKey="day"
                   stroke="hsl(var(--muted-foreground))"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                
+
                 {/* Previous period line */}
-                <Line 
-                  type="monotone" 
-                  dataKey="lastWeek" 
-                  stroke="hsl(var(--muted-foreground))" 
+                <Line
+                  type="monotone"
+                  dataKey="lastWeek"
+                  stroke="hsl(var(--muted-foreground))"
                   strokeWidth={2}
                   strokeDasharray="5 5"
                   dot={false}
                   name="Letzte Woche"
                 />
-                
+
                 {/* Current period line */}
-                <Line 
-                  type="monotone" 
-                  dataKey="currentWeek" 
-                  stroke="#10b981" 
+                <Line
+                  type="monotone"
+                  dataKey="currentWeek"
+                  stroke="#10b981"
                   strokeWidth={3}
                   dot={<CustomDot />}
                   name="Diese Woche"
@@ -227,4 +245,4 @@ const SalesChart: React.FC<SalesChartProps> = ({
   );
 };
 
-export default SalesChart; 
+export default SalesChart;

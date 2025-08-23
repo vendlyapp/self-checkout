@@ -1,17 +1,16 @@
-import React from 'react';
-import { ChevronRight } from 'lucide-react';
-import { ShopActivity } from './types';
+import React from "react";
+import { ChevronRight } from "lucide-react";
+import { ShopActivity } from "./types";
 
 interface ActiveCustomersProps {
   data: ShopActivity;
   loading?: boolean;
 }
 
-const ActiveCustomers: React.FC<ActiveCustomersProps> = ({ 
-  data, 
-  loading = false
+const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
+  data,
+  loading = false,
 }) => {
-  
   if (loading) {
     return (
       <div className="bg-card border border-border/50 rounded-2xl">
@@ -41,14 +40,22 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
     );
   }
 
-  const { activeCustomers, totalActive, totalInactive, openCartsValue, progressPercentage } = data;
+  const {
+    activeCustomers,
+    totalActive,
+    totalInactive,
+    openCartsValue,
+    progressPercentage,
+  } = data;
 
   return (
     <div className="bg-card border border-border/50 transition-fast hover:shadow-md w-full max-w-md rounded-xl">
       <div className="p-5">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-foreground">Jetzt im Shop:</h3>
-          <button 
+          <h3 className="text-lg font-semibold text-foreground">
+            Jetzt im Shop:
+          </h3>
+          <button
             className="p-1 rounded-lg hover:bg-muted transition-fast tap-highlight-transparent"
             aria-label="Mehr Details anzeigen"
           >
@@ -61,7 +68,10 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {/* Kundenavatare */}
-              <div className="flex -space-x-3" aria-label={`${totalActive} aktive Kunden`}>
+              <div
+                className="flex -space-x-3"
+                aria-label={`${totalActive} aktive Kunden`}
+              >
                 {activeCustomers.slice(0, 2).map((customer, idx) => (
                   <div
                     key={customer.id}
@@ -82,22 +92,29 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
                   </div>
                 )}
               </div>
-              
+
               {/* Kundenstatistiken */}
-              <div className="flex items-center gap-6 text-sm">
-                <span className="font-bold text-foreground text-xl" aria-label="Aktive Kunden">
+              <div className="flex items-center justify-end w-full gap-2 text-sm">
+                <span
+                  className="font-bold text-3xl text-[#373F49]"
+                  aria-label="Aktive Kunden"
+                >
                   {totalActive}
                 </span>
-                <span className="text-muted-foreground">Kunden aktiv</span>
-                <span className="text-muted-foreground">{totalInactive} inaktiv</span>
+                <span className="font-semibold text-[#373F49]">
+                  Kunden aktiv
+                </span>
+                <span className="text-muted-foreground pl-16">
+                  {totalInactive} inaktiv
+                </span>
               </div>
             </div>
           </div>
 
           {/* Fortschrittsbalken */}
           <div className="relative h-2 bg-muted rounded-full overflow-hidden">
-            <div 
-              className="absolute left-0 h-full bg-primary rounded-full transition-all duration-500 ease-out" 
+            <div
+              className="absolute left-0 h-full bg-primary rounded-full transition-all duration-500 ease-out"
               style={{ width: `${progressPercentage}%` }}
               aria-label={`${progressPercentage}% Auslastung`}
             />
@@ -106,14 +123,16 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
           {/* Warenkorb-Information */}
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              CHF {openCartsValue}.– in offenen Warenkörben
+              <span className="font-semibold text-[#373F49]">
+                CHF {openCartsValue}.–
+              </span>{" "}
+              in offenen Warenkörben
             </p>
-           
           </div>
         </div>
       </div>
-      </div>
+    </div>
   );
 };
 
-export default ActiveCustomers; 
+export default ActiveCustomers;
