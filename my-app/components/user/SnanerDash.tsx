@@ -1,9 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { Camera, QrCode } from "lucide-react";
+import { QrCode, CheckCircle, ScanBarcode } from "lucide-react";
+import { useRouter } from "next/navigation";
+
 const SnanerDash = () => {
   const [isScanning, setIsScanning] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const router = useRouter();
 
   const simulateScan = () => {
     setIsScanning(true);
@@ -11,7 +15,18 @@ const SnanerDash = () => {
       // Aquí puedes agregar la lógica para procesar el producto escaneado
       console.log("Producto escaneado");
       setIsScanning(false);
+      setShowSuccessModal(true);
+
+      // Redirigir a /user después de 2 segundos
+      setTimeout(() => {
+        router.push("/user");
+      }, 2000);
     }, 2000);
+  };
+
+  const handleCloseModal = () => {
+    setShowSuccessModal(false);
+    router.push("/user");
   };
 
   return (
@@ -147,14 +162,33 @@ const SnanerDash = () => {
         <button
           onClick={simulateScan}
           disabled={isScanning}
-          className="bg-gradient-to-r from-[#25D076] to-[#25D076] text-white px-6 py-3 rounded-2xl mt-10 font-bold text-lg hover:from-[#25D076]/80 hover:to-[#25D076]/80 transition-all duration-300 disabled:opacity-50 shadow-2xl active:scale-95 flex items-center space-x-3"
+          className="bg-gradient-to-r from-[#25D076] to-[#25D076] text-white px-6 py-3 justify-center w-[305px] rounded-full mt-10 font-bold text-lg hover:from-[#25D076]/80 hover:to-[#25D076]/80 transition-all duration-300 disabled:opacity-50 shadow-2xl active:scale-95 flex items-center space-x-3 "
         >
-          <Camera className="w-5 h-5" />
-          <span className="text-white font-bold text-[16px]">
-            {isScanning ? "Scannt..." : "Scan starten"}
+          <ScanBarcode className="w-5 h-5" />
+          <span className="text-white font-semibold text-[16px]">
+            {isScanning ? "Scannt..." : "Produkt scannen"}
           </span>
         </button>
       </div>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl animate-in fade-in-0 zoom-in-95 duration-300">
+            <div className="w-16 h-16 bg-[#25D076] rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">¡Éxito!</h3>
+            <p className="text-gray-600 mb-6">Producto escaneado con éxito</p>
+            <button
+              onClick={handleCloseModal}
+              className="bg-[#25D076] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#25D076]/90 transition-colors w-full"
+            >
+              Continuar
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };
