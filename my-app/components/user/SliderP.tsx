@@ -5,6 +5,7 @@ import { getPromotionalProducts, Product } from "@/components/dashboard/products
 import { useMemo } from "react";
 import { useCartStore } from "@/lib/stores/cartStore";
 import type React from "react";
+import { Package } from "lucide-react";
 
 const computeDiscountPercent = (product: Product): number | undefined => {
   if (typeof product.discountPercentage === "number") return product.discountPercentage;
@@ -63,7 +64,9 @@ const SliderP: React.FC = () => {
 
     const top = withDiscount.slice(0, 10).map(({ product, discount }) => {
       const handleAdd = () => addToCart(product, 1);
-      const imageUrl = product.image || "/logo.svg";
+
+      // Manejar la imagen con fallback - pasar Package component si no hay imagen
+      const imageUrl = product.image || <Package className="w-10 h-10 text-gray-400" />;
 
       return {
         title: product.promotionTitle ?? (product.isOnSale ? "Aktion" : "Empfehlung"),
@@ -86,7 +89,7 @@ const SliderP: React.FC = () => {
     return promotionalProducts.slice(0, 10).map((product) => ({
       title: product.promotionTitle ?? (product.isOnSale ? "Aktion" : "Empfehlung"),
       discountPercent: computeDiscountPercent(product),
-      imageUrl: product.image || "/logo.svg",
+      imageUrl: product.image || <Package className="w-10 h-10 text-gray-400" />,
       name: product.name,
       currency: product.currency ?? "CHF",
       price: product.price,

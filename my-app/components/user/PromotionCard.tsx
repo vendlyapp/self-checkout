@@ -1,14 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { Plus } from "lucide-react";
+import { Plus, Package } from "lucide-react";
 import { clsx } from "clsx";
 import React from "react";
 
 export type PromotionCardProps = {
   title?: string;
   discountPercent?: number;
-  imageUrl: string;
+  imageUrl: string | React.ReactNode;
   name: string;
   currency?: string;
   price: number;
@@ -84,7 +84,7 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
       </div>
 
       {/* Image container with badges */}
-      <div className="relative mb-4">
+      <div className="relative mb-4 h-[90px] flex items-center justify-center">
         {/* Image */}
         <div
           className="relative overflow-hidden rounded-lg border border-[#E2DFDC] shrink-0"
@@ -94,13 +94,23 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
             aspectRatio: "91/60",
           }}
         >
-          <Image
-            src={imageUrl}
-            alt={name}
-            fill
-            className="object-cover"
-            priority
-          />
+          {imageUrl && typeof imageUrl === 'string' && imageUrl.trim() !== '' ? (
+            <Image
+              src={imageUrl}
+              alt={name}
+              fill
+              className="object-cover"
+              priority
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+              {typeof imageUrl === 'object' && React.isValidElement(imageUrl) ? (
+                imageUrl
+              ) : (
+                <Package className="w-10 h-10 text-gray-400" />
+              )}
+            </div>
+          )}
         </div>
 
         {/* Discount badge */}

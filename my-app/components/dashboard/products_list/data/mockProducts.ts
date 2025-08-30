@@ -83,8 +83,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T06:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
     promotionTitle: 'Aktion',
     promotionType: 'percentage',
     promotionStartAt: '2024-01-22T05:00:00Z',
@@ -117,8 +117,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T07:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
     promotionTitle: 'Tagesaktion',
     promotionType: 'flash',
     promotionStartAt: '2024-01-22T07:00:00Z',
@@ -151,8 +151,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T08:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
     promotionTitle: 'Weekend Deal',
     promotionType: 'amount',
     promotionStartAt: '2024-01-22T08:00:00Z',
@@ -181,8 +181,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T09:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
   },
   {
     id: 'prod-005',
@@ -205,8 +205,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T10:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
     isOnSale: true,
     discountPercentage: 10,
     promotionTitle: 'Aktion',
@@ -238,8 +238,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T11:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
   },
   {
     id: 'prod-007',
@@ -262,8 +262,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T12:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
     isOnSale: true,
     discountPercentage: 5,
     promotionTitle: 'Empfehlung',
@@ -294,8 +294,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T13:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
   },
   {
     id: 'prod-009',
@@ -318,8 +318,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T14:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
     isOnSale: true,
     discountPercentage: 10,
     promotionTitle: 'Aktion',
@@ -350,8 +350,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T15:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
   },
   {
     id: 'prod-011',
@@ -374,8 +374,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T16:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
     isOnSale: true,
     discountPercentage: 12,
     promotionTitle: 'Tagesaktion',
@@ -406,8 +406,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T17:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
   },
   {
     id: 'prod-013',
@@ -429,8 +429,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T18:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
   },
   {
     id: 'prod-014',
@@ -453,8 +453,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T19:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
     isOnSale: true,
     discountPercentage: 8,
     promotionTitle: 'Aktion',
@@ -485,8 +485,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T20:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
   },
   {
     id: 'prod-016',
@@ -508,8 +508,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T21:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
   },
   {
     id: 'prod-017',
@@ -531,8 +531,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T22:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
   },
   {
     id: 'prod-018',
@@ -555,8 +555,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T23:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
     isOnSale: true,
     discountPercentage: 10,
     promotionTitle: 'Tagesaktion',
@@ -587,8 +587,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-23T00:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
   },
   {
     id: 'prod-020',
@@ -610,8 +610,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-23T01:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '/logo.svg',
-    images: ['/logo.svg'],
+    image: '',
+    images: ['',],
   }
 ]
 
@@ -623,7 +623,7 @@ export const filterProductsByCategory = (products: Product[], categoryId: string
 
 export const filterProductsBySearch = (products: Product[], searchTerm: string): Product[] => {
   const term = searchTerm.toLowerCase()
-  return products.filter(product => 
+  return products.filter(product =>
     product.name.toLowerCase().includes(term) ||
     product.description.toLowerCase().includes(term) ||
     product.sku.toLowerCase().includes(term) ||
@@ -655,21 +655,21 @@ export const fetchProducts = async (filters?: {
 }): Promise<Product[]> => {
   // Simular delay de API
   await new Promise(resolve => setTimeout(resolve, 300))
-  
+
   let filteredProducts = [...mockProducts]
-  
+
   if (filters?.categoryId) {
     filteredProducts = filterProductsByCategory(filteredProducts, filters.categoryId)
   }
-  
+
   if (filters?.searchTerm) {
     filteredProducts = filterProductsBySearch(filteredProducts, filters.searchTerm)
   }
-  
+
   if (filters?.sortBy) {
     filteredProducts = sortProducts(filteredProducts, filters.sortBy)
   }
-  
+
   return filteredProducts
 }
 
@@ -696,10 +696,10 @@ export const updateCategoryCounts = (): ProductCategory[] => {
 
 // Filtrar productos con promociones activas
 export const getPromotionalProducts = (): Product[] => {
-  return mockProducts.filter(product => 
-    product.promotionTitle || 
-    product.promotionType || 
-    product.promotionBadge || 
+  return mockProducts.filter(product =>
+    product.promotionTitle ||
+    product.promotionType ||
+    product.promotionBadge ||
     product.promotionActionLabel ||
     product.isOnSale ||
     product.discountPercentage ||
@@ -714,7 +714,7 @@ export const getPromotionalProductsByType = (type: 'percentage' | 'amount' | 'fl
 
 // Obtener productos con descuentos por porcentaje
 export const getProductsWithPercentageDiscount = (): Product[] => {
-  return mockProducts.filter(product => 
+  return mockProducts.filter(product =>
     product.discountPercentage && product.discountPercentage > 0
   )
-} 
+}
