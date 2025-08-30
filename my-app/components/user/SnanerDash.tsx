@@ -29,7 +29,7 @@ const SnanerDash = () => {
   return (
     <>
       <div className="bg-[#191F2D] border-b border-gray-700">
-        <div className="flex items-center justify-between w-full px-4 py-3">
+        <div className="flex items-center justify-between w-full px-7 py-3">
           <div className="flex flex-col items-start justify-start">
             <p className="text-sm text-white font-bold text-[21px]">
               Heinigers Hofladen
@@ -45,7 +45,7 @@ const SnanerDash = () => {
           </div>
         </div>
       </div>
-      <div className="flex-1 flex flex-col items-center justify-center ml-16 mr-16 pb-24 pt-32">
+      <div className="flex-1 flex flex-col items-center justify-center ml-16 mr-16 pb-24 pt-20">
         <div className="relative w-[280px] h-[280px]">
           {/* Main scanner container */}
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
