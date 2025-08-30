@@ -3,20 +3,20 @@
 import { TrendingUp } from 'lucide-react';
 import type { StatCardProps } from '../types';
 
-const StatCard = ({ 
-  icon, 
-  label, 
-  amount, 
-  count, 
-  trend, 
+const StatCard = ({
+  icon,
+  label,
+  amount,
+  count,
+  trend,
   isDark = false,
   showCurrency = true,
   showCount = true
 }: StatCardProps) => (
   <div className={`
     rounded-xl p-4 shadow-sm
-    ${isDark 
-      ? 'bg-warm-800 text-white' 
+    ${isDark
+      ? 'bg-warm-800 text-white'
       : 'bg-white border border-gray-200/50 text-gray-900'
     }
   `}>
@@ -33,7 +33,7 @@ const StatCard = ({
         {label}
       </span>
     </div>
-    
+
     <div className="space-y-1">
       <div className="flex items-baseline gap-1">
         {showCurrency && (
@@ -58,4 +58,4 @@ const StatCard = ({
   </div>
 );
 
-export default StatCard; 
+export default StatCard;

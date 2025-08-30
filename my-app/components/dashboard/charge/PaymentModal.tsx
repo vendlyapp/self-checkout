@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, CheckCircle } from "lucide-react";
 import { ModernSpinner } from "@/components/ui";
+import { formatSwissPriceWithCHF } from "@/lib/utils";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -111,7 +112,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-600">Gesamtbetrag:</span>
                   <span className="text-2xl font-bold text-blue-600">
-                    CHF {totalAmount.toFixed(2)}
+                    {formatSwissPriceWithCHF(totalAmount)}
                   </span>
                 </div>
                 <p className="text-sm text-gray-500">inkl. MwSt</p>
@@ -128,7 +129,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       </div>
                     </div>
                     <div className="text-[#3C7E44] text-[13px]">
-                      10% Rabatt auf Bio-Produkte - CHF {discountAmount?.toFixed(2) || "0.00"}
+                      10% Rabatt auf Bio-Produkte - {formatSwissPriceWithCHF(discountAmount || 0)}
                     </div>
                   </div>
                 )}

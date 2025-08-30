@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { SalesData, TimePeriod, ChartTooltipProps } from "./types";
+import { formatSwissPriceWithCHF, formatSwissPrice } from "@/lib/utils";
 
 interface SalesChartProps {
   data: SalesData[];
@@ -30,10 +31,10 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
       <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
         <p className="text-sm font-medium text-foreground">{label}</p>
         <p className="text-sm text-emerald-600">
-          Diese Woche: CHF {payload[0]?.value?.toLocaleString()}.–
+          Diese Woche: {formatSwissPriceWithCHF(payload[0]?.value || 0)}
         </p>
         <p className="text-sm text-muted-foreground">
-          Letzte Woche: CHF {payload[1]?.value?.toLocaleString()}.–
+          Letzte Woche: {formatSwissPriceWithCHF(payload[1]?.value || 0)}
         </p>
       </div>
     );
@@ -158,9 +159,9 @@ const SalesChart: React.FC<SalesChartProps> = ({
           {/* Total und Vergleich */}
           <div className="flex items-center justify-between w-full">
             <div className="flex items-baseline gap-2">
-              <span className="text-sm text-muted-foreground">CHF</span>
+              <span className="text-[14px] text-muted-foreground">CHF</span>
               <span className="text-3xl font-bold text-foreground">
-                {totalSales.toLocaleString()}.–
+                {formatSwissPrice(totalSales)}
               </span>
             </div>
             <div className="flex items-center justify-end gap-2 text-sm">

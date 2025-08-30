@@ -10,6 +10,7 @@ import { lightFeedback } from "@/lib/utils/safeFeedback";
 import UserCartSummary from "@/components/user/UserCartSummary";
 import UserCartSummaryCart from "@/components/user/UserCartSummaryCart";
 import { useCartStore } from "@/lib/stores/cartStore";
+import { formatSwissPriceWithCHF } from '@/lib/utils';
 
 interface NavItemUser {
   id: string;
@@ -294,7 +295,7 @@ export default function FooterNav() {
                 </div>
               </div>
               <div className="text-[#3C7E44] text-[12px]">
-                10% Rabatt auf Bio-Produkte - CHF {discountAmount?.toFixed(2) || "0.00"}
+                10% Rabatt auf Bio-Produkte - {formatSwissPriceWithCHF(discountAmount || 0)}
               </div>
             </div>
           )}

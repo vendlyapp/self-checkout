@@ -1,4 +1,5 @@
 import React from "react";
+import { formatSwissPrice, formatSwissPriceWithCHF } from "@/lib/utils";
 
 type FooterContinueProps = {
   subtotal: number;
@@ -29,7 +30,7 @@ const FooterContinue: React.FC<FooterContinueProps> = ({
                 Zwischensumme
               </div>
               <div className="text-gray-800 text-[16px]">
-                CHF {subtotal.toFixed(2)}
+                {formatSwissPriceWithCHF(subtotal)}
               </div>
             </div>
             <div className="flex items-center justify-between mt-1">
@@ -37,7 +38,7 @@ const FooterContinue: React.FC<FooterContinueProps> = ({
                 10% Rabatt auf Bio-Produkte
               </div>
               <div className="text-[#3C7E44] text-[15px] font-semibold">
-                - CHF {discountAmount.toFixed(2)}
+                - {formatSwissPriceWithCHF(discountAmount)}
               </div>
             </div>
             {/* Código promocional aplicado */}
@@ -62,7 +63,7 @@ const FooterContinue: React.FC<FooterContinueProps> = ({
           </div>
         </div>
         <div className="text-black font-bold text-[24px]">
-          CHF {total.toFixed(2)}
+          {formatSwissPriceWithCHF(total)}
         </div>
       </div>
       <button

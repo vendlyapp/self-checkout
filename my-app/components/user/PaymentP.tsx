@@ -14,6 +14,7 @@ import { useCartStore } from "@/lib/stores/cartStore";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ModernSpinner } from "@/components/ui";
+import { formatSwissPriceWithCHF } from "@/lib/utils";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -282,14 +283,13 @@ export default function PaymentP() {
         <p className="text-xl pt-4 font-semibold text-[#373F49]">
           Heinigers Hofladen
         </p>
-        <p className="text-2xl font-bold">CHF {totalWithVAT.toFixed(2)}</p>
+        <p className="text-2xl font-bold">{formatSwissPriceWithCHF(totalWithVAT)}</p>
         <p className="text-lg font-semibold text-[#373F49]">
           inkl. MwSt • {totalItems} {totalItems === 1 ? "Artikel" : "Artikel"}
         </p>
         {subtotal !== totalWithVAT && (
           <p className="text-sm text-[#6E7996]">
-            Netto: CHF {subtotal.toFixed(2)} + MwSt (7.7%): CHF{" "}
-            {(totalWithVAT - subtotal).toFixed(2)}
+            Netto: {formatSwissPriceWithCHF(subtotal)} + MwSt (7.7%): {formatSwissPriceWithCHF(totalWithVAT - subtotal)}
           </p>
         )}
       </div>
@@ -342,7 +342,7 @@ export default function PaymentP() {
                 10% Rabatt auf Bio-Produkte
               </div>
               <div className="text-[#3C7E44] text-[15px]">
-                - CHF {discountAmount?.toFixed(2) || "0.00"}
+                - {formatSwissPriceWithCHF(discountAmount || 0)}
               </div>
             </div>
             <button

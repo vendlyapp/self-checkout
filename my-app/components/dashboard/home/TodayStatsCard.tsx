@@ -2,11 +2,12 @@
 
 import { DollarSign, Users } from 'lucide-react';
 import StatCard from './StatCard';
+import { formatSwissPriceWithCHF } from '@/lib/utils';
 
 const TodayStatsCard = () => (
   <section className="mb-6">
     <div className="bg-background-cream rounded-2xl p-4 border border-gray-200/50 shadow-sm">
-      
+
       {/* Section Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-gray-900">Heute</h2>
@@ -17,13 +18,13 @@ const TodayStatsCard = () => (
         <StatCard
           icon={<DollarSign className="w-4 h-4" />}
           label="Verkäufe"
-          amount="1580.-"
+          amount={"1580"}
           count="24 Verkäufe"
           trend="+12% vs gestern"
           showCurrency={true}
           showCount={true}
         />
-        
+
         <StatCard
           icon={<Users className="w-4 h-4" />}
           label="Kunden"
@@ -39,4 +40,4 @@ const TodayStatsCard = () => (
   </section>
 );
 
-export default TodayStatsCard; 
+export default TodayStatsCard;

@@ -3,6 +3,7 @@
 import { ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PieChart, Pie, ResponsiveContainer, Cell } from "recharts";
+import { formatSwissPriceWithCHF } from "@/lib/utils";
 
 interface DailyGoalCardProps {
   currentAmount: number;
@@ -88,9 +89,9 @@ const DailyGoalCard = ({
               {/* Amounts */}
               <div className="space-y-1">
                 <div className="text-2xl font-bold text-foreground">
-                  {currentAmount.toLocaleString("de-CH")}
+                  {formatSwissPriceWithCHF(currentAmount)}
                   <span className="text-base font-normal text-muted-foreground ml-1">
-                    / {goalAmount.toLocaleString("de-CH")}
+                    / {formatSwissPriceWithCHF(goalAmount)}
                   </span>
                 </div>
               </div>
@@ -100,7 +101,7 @@ const DailyGoalCard = ({
                 <div className="text-sm text-muted-foreground flex items-center gap-2 w-[160px]">
                   <p>
                     🥳 Fast geschafft! Noch CHF{" "}
-                    {remaining.toLocaleString("de-CH")} zum Ziel
+                    {formatSwissPriceWithCHF(remaining)} zum Ziel
                   </p>
                 </div>
               )}

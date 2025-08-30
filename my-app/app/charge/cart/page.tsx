@@ -6,6 +6,7 @@ import ProductCard from "@/components/dashboard/charge/ProductCard";
 import { useRouter } from "next/navigation";
 import HeaderNav from "@/components/navigation/HeaderNav";
 import { X } from "lucide-react";
+import { formatSwissPriceWithCHF } from "@/lib/utils";
 
 export default function CartPage() {
   const {
@@ -129,7 +130,7 @@ export default function CartPage() {
                       10% Rabatt auf Bio-Produkte
                     </div>
                     <div className="text-[#3C7E44] text-[15px]">
-                      - CHF {discountAmount.toFixed(2)}
+                      - {formatSwissPriceWithCHF(discountAmount)}
                     </div>
                   </div>
                   <button

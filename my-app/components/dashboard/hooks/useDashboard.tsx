@@ -46,7 +46,7 @@ const mockDashboardData: DashboardData = {
       name: 'Sandra Keller',
       receipt: 'Beleg #0388',
       time: '3h',
-      amount: 158.50,
+      amount: 158,
       paymentMethod: 'TWINT',
       status: 'completed'
     },
@@ -55,7 +55,7 @@ const mockDashboardData: DashboardData = {
       name: 'Gastkunde',
       receipt: 'Beleg #0384',
       time: '5h',
-      amount: 18,
+      amount: 18.20, // Precio con céntimos
       paymentMethod: 'Debitkarte',
       status: 'pending'
     },
@@ -64,7 +64,7 @@ const mockDashboardData: DashboardData = {
       name: 'Max Meier',
       receipt: 'Beleg #0382',
       time: '7h',
-      amount: 9,
+      amount: 9, // Precio redondo
       paymentMethod: 'Bar',
       status: 'cancelled'
     },
@@ -73,7 +73,7 @@ const mockDashboardData: DashboardData = {
       name: 'Max Meier',
       receipt: 'Beleg #0382',
       time: '10h',
-      amount: 100,
+      amount: 100, // Precio redondo
       paymentMethod: 'Bar',
       status: 'completed'
     }
@@ -101,7 +101,7 @@ export const useDashboard = (): UseDashboardReturn => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Estados de UI
   const [isStoreOpen, setIsStoreOpen] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -114,10 +114,10 @@ export const useDashboard = (): UseDashboardReturn => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const dashboardData = await fetchDashboardData();
       setData(dashboardData);
-      
+
     } catch (err) {
       console.error('Error loading dashboard data:', err);
       setError('Failed to load dashboard data');
@@ -132,9 +132,9 @@ export const useDashboard = (): UseDashboardReturn => {
       setSearchResults([]);
       return;
     }
-    
+
     setIsSearching(true);
-    
+
     try {
       const results = await searchData(query);
       setSearchResults(results);
@@ -184,4 +184,4 @@ export const useDashboard = (): UseDashboardReturn => {
     handleToggleStore,
     refreshData
   };
-}; 
+};

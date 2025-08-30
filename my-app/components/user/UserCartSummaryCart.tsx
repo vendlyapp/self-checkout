@@ -3,6 +3,7 @@ import { useCartStore } from '@/lib/stores/cartStore';
 import CartSummary from '../dashboard/charge/CartSummary';
 import { useRouter } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
+import { formatSwissPriceWithCHF } from '@/lib/utils';
 
 interface UserCartSummaryCartProps {
   variant?: 'inline';
@@ -15,11 +16,6 @@ export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProp
   // Solo productos con cantidad > 0
   const validCartItems = cartItems ? cartItems.filter(item => item.quantity > 0) : [];
   if (!validCartItems || validCartItems.length === 0) return null;
-
-  // Función para formatear precio
-  const formatPrice = (price: number) => {
-    return `CHF ${price.toFixed(2)}`;
-  };
 
   // Inline: diseño como la imagen
   if (variant === 'inline') {
@@ -39,7 +35,7 @@ export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProp
             </span>
           </div>
           <span className="text-2xl font-bold text-gray-900">
-            {formatPrice(totalPrice)}
+            {formatSwissPriceWithCHF(totalPrice)}
           </span>
         </div>
 
@@ -55,7 +51,7 @@ export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProp
               </div>
             </div>
             <div className="text-[#3C7E44] text-[13px]">
-              10% Rabatt auf Bio-Produkte - CHF {discountAmount?.toFixed(2) || "0.00"}
+              10% Rabatt auf Bio-Produkte - {formatSwissPriceWithCHF(discountAmount || 0)}
             </div>
           </div>
         )}

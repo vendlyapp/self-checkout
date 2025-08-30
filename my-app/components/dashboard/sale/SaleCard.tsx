@@ -3,6 +3,7 @@
 import { FileText, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { SaleCardProps } from '../types';
+import { formatSwissPriceWithCHF } from '@/lib/utils';
 
 const SaleCard = ({ sale }: SaleCardProps) => {
   // Get status configuration
@@ -65,10 +66,10 @@ const SaleCard = ({ sale }: SaleCardProps) => {
               </div>
             </div>
           </div>
-          
+
           <div className="text-right">
             <p className={`font-bold ${statusConfig.amountColor}`}>
-              {sale.amount.toFixed(sale.amount % 1 === 0 ? 0 : 2)}.-
+              {formatSwissPriceWithCHF(sale.amount)}
             </p>
             <p className="text-xs text-gray-500">{sale.paymentMethod}</p>
           </div>
@@ -78,4 +79,4 @@ const SaleCard = ({ sale }: SaleCardProps) => {
   );
 };
 
-export default SaleCard; 
+export default SaleCard;

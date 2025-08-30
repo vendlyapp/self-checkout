@@ -7,6 +7,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { CartData, TimePeriod } from './types';
+import { formatSwissPrice, formatSwissPriceWithCHF } from '@/lib/utils';
 
 interface CartGaugeProps {
   data: CartData;
@@ -22,11 +23,11 @@ const periodOptions: { value: TimePeriod; label: string }[] = [
   { value: 'jahr', label: 'Jahr' }
 ];
 
-const CartGauge: React.FC<CartGaugeProps> = ({ 
-  data, 
-  period, 
+const CartGauge: React.FC<CartGaugeProps> = ({
+  data,
+  period,
   onPeriodChange,
-  loading = false 
+  loading = false
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -37,12 +38,12 @@ const CartGauge: React.FC<CartGaugeProps> = ({
 
   // Calculate gauge value as percentage
   const gaugePercentage = Math.round((data.averageValue / data.maxValue) * 100);
-  
+
   const gaugeData = [
-    { 
-      name: 'cart', 
-      value: gaugePercentage, 
-      fill: '#10b981' 
+    {
+      name: 'cart',
+      value: gaugePercentage,
+      fill: '#10b981'
     }
   ];
 
@@ -78,10 +79,10 @@ const CartGauge: React.FC<CartGaugeProps> = ({
       <CardContent className="p-5">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-foreground">Ø Warenkorb</h3>
-          
+
           {/* Period Selector */}
           <div className="relative">
-            <button 
+            <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-fast px-2 py-1 rounded-lg hover:bg-muted tap-highlight-transparent"
               aria-label="Zeitraum für Warenkorb ändern"
@@ -89,7 +90,7 @@ const CartGauge: React.FC<CartGaugeProps> = ({
               {currentPeriodLabel}
               <ChevronDown className={`w-4 h-4 transition-fast ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
-            
+
             {isDropdownOpen && (
               <div className="absolute right-0 top-8 z-20 bg-background border border-border rounded-lg shadow-lg py-1 min-w-[120px]">
                 {periodOptions.map((option) => (
@@ -112,11 +113,11 @@ const CartGauge: React.FC<CartGaugeProps> = ({
           {/* Radial Gauge Chart */}
           <div className="relative w-32 h-32">
             <ResponsiveContainer width="100%" height="100%">
-              <RadialBarChart 
-                cx="50%" 
-                cy="50%" 
-                innerRadius="60%" 
-                outerRadius="90%" 
+              <RadialBarChart
+                cx="50%"
+                cy="50%"
+                innerRadius="60%"
+                outerRadius="90%"
                 data={gaugeData}
                 startAngle={225}
                 endAngle={-45}
@@ -128,20 +129,20 @@ const CartGauge: React.FC<CartGaugeProps> = ({
                 />
               </RadialBarChart>
             </ResponsiveContainer>
-            
+
             {/* Min/Max Labels */}
             <div className="absolute bottom-2 left-1 text-xs text-muted-foreground">
-              CHF {data.minValue}.
-            </div>  
-            <div className="absolute bottom-2 right-1 text-xs text-muted-foreground">
-              CHF {data.maxValue}.
+              {formatSwissPrice(data.minValue)}
             </div>
-            
+            <div className="absolute bottom-2 right-1 text-xs text-muted-foreground">
+              {formatSwissPrice(data.maxValue)}
+            </div>
+
             {/* Central Value Display */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
                 <div className="text-lg font-bold text-foreground">
-                  {data.averageValue}
+                  {formatSwissPrice(data.averageValue)}
                 </div>
                 <div className="text-xs text-muted-foreground -mt-1">
                   CHF
@@ -155,10 +156,10 @@ const CartGauge: React.FC<CartGaugeProps> = ({
             <div>
               <p className="text-sm text-muted-foreground mb-1">Ø Einkaufswert</p>
               <p className="text-2xl font-bold text-emerald-500">
-                CHF {data.averageValue}.
+                {formatSwissPriceWithCHF(data.averageValue)}
               </p>
             </div>
-            
+
             {/* Growth Indicator */}
             <div className="flex items-center gap-1 text-sm">
               {isPositiveGrowth ? (
@@ -172,7 +173,7 @@ const CartGauge: React.FC<CartGaugeProps> = ({
               <span className="text-muted-foreground">vs {data.comparisonPeriod}</span>
             </div>
 
-            
+
           </div>
         </div>
       </CardContent>
@@ -180,4 +181,4 @@ const CartGauge: React.FC<CartGaugeProps> = ({
   );
 };
 
-export default CartGauge; 
+export default CartGauge;
