@@ -1,5 +1,5 @@
 import React from "react";
-import { formatSwissPrice, formatSwissPriceWithCHF } from "@/lib/utils";
+import { formatSwissPriceWithCHF } from "@/lib/utils";
 
 type FooterContinueProps = {
   subtotal: number;

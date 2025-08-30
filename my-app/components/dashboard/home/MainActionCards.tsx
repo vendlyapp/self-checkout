@@ -3,13 +3,14 @@
 import ActionCard from './ActionCard';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 const MainActionCards = () => {
   const router = useRouter();
   const [pressedIndex, setPressedIndex] = useState<number | null>(null);
   const actions = [
     {
-      emoji:<img src="/Receipt.svg" alt="Receipt" width={60} height={60} className="w-[60px] h-[60px]" />,
+      emoji:<Image src="/Receipt.svg" alt="Receipt" width={60} height={60} className="w-[60px] h-[60px]" />,
       title: 'Kassieren',
       subtitle: 'Verkauf starten',
       isPrimary: true,
@@ -17,7 +18,7 @@ const MainActionCards = () => {
       link: '/charge',
     },
     {
-      emoji: <img src="/Package.svg" alt="Package" width={60} height={60} className="w-[60px] h-[60px]" />,
+      emoji: <Image src="/Package.svg" alt="Package" width={60} height={60} className="w-[60px] h-[60px]" />,
       title: 'Produkte',
       subtitle: '245 Artikel',
       onClick: () => router.push('/products_list'),
@@ -45,4 +46,4 @@ const MainActionCards = () => {
   );
 };
 
-export default MainActionCards; 
+export default MainActionCards;

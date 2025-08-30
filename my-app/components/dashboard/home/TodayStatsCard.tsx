@@ -2,7 +2,6 @@
 
 import { DollarSign, Users } from 'lucide-react';
 import StatCard from './StatCard';
-import { formatSwissPriceWithCHF } from '@/lib/utils';
 
 const TodayStatsCard = () => (
   <section className="mb-6">

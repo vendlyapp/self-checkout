@@ -14,7 +14,7 @@ export const useProducts = (): UseProductsReturn => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // For now, using mock data
       // In production, this would call the real API
       const result = await fetchProductsAnalytics();
@@ -49,7 +49,7 @@ export const useProductActions = () => {
   const router = useRouter();
   const handleNewProduct = useCallback(async () => {
     router.push('/products_list/add_product');
-  }, []);
+  }, [router]);
 
   const handleProductList = useCallback(async () => {
     console.log('Ver lista de productos');
@@ -69,4 +69,4 @@ export const useProductActions = () => {
     handleProductList,
     handleCategories
   };
-}; 
+};

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { QrCode, CheckCircle, ScanBarcode } from "lucide-react";
+import { CheckCircle, ScanBarcode } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const SnanerDash = () => {

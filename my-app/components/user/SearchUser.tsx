@@ -1,102 +1,78 @@
 "use client";
-import { useState, useCallback } from "react";
-import HeaderNav from "../navigation/HeaderNav";
-import { SearchInput } from "@/components/ui/search-input";
-import {
-  mockProducts,
-  Product,
-} from "@/components/dashboard/products_list/data/mockProducts";
-import { useCartStore } from "@/lib/stores/cartStore";
+import React, { useState, useCallback } from "react";
 import { Search, X } from "lucide-react";
+import HeaderNav from "@/components/navigation/HeaderNav";
+import { SearchInput } from "@/components/ui/search-input";
 import ProductCard from "@/components/dashboard/charge/ProductCard";
+import { useCartStore } from "@/lib/stores/cartStore";
+import { Product, mockProducts } from "@/components/dashboard/products_list/data/mockProducts";
+import Image from "next/image";
 
 export default function SearchUser() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const { cartItems, addToCart } = useCartStore();
+  const { addToCart, cartItems } = useCartStore();
+
+  // Función para obtener la cantidad actual de un producto en el carrito
+  const getCurrentQuantity = useCallback((productId: string) => {
+    const cartItem = cartItems.find((item) => item.product.id === productId);
+    return cartItem ? cartItem.quantity : 0;
+  }, [cartItems]);
 
   // Búsquedas populares
   const popularSearches = [
-    "Bauernbrot",
-    "Croissant",
-    "Käsekuchen",
-    "Brezel",
-    "Apfelstrudel",
-    "Sauerteigbrot",
-    "Schokobrötchen",
-    "Baguette",
+    "Äpfel",
+    "Brot",
+    "Milch",
+    "Käse",
+    "Tomaten",
+    "Zwiebeln"
   ];
 
-  // Función para obtener la cantidad actual de un producto en el carrito
-  const getCurrentQuantity = useCallback(
-    (productId: string) => {
-      const cartItem = cartItems.find((item) => item.product.id === productId);
-      return cartItem ? cartItem.quantity : 0;
-    },
-    [cartItems]
-  );
-
-  // Función para buscar productos
+  // Función de búsqueda
   const handleSearch = useCallback((query: string) => {
     if (!query.trim()) {
       setSearchResults([]);
-      setIsSearching(false);
       return;
     }
 
     setIsSearching(true);
-    const term = query.toLowerCase();
 
-    const results = mockProducts.filter(
-      (product) =>
-        product.name.toLowerCase().includes(term) ||
-        product.description.toLowerCase().includes(term) ||
-        product.tags.some((tag) => tag.toLowerCase().includes(term)) ||
-        product.category.toLowerCase().includes(term)
-    );
-
-    setSearchResults(results);
-    setIsSearching(false);
+    // Simular búsqueda
+    setTimeout(() => {
+      const results = mockProducts.filter((product: Product) =>
+        product.name.toLowerCase().includes(query.toLowerCase()) ||
+        product.category.toLowerCase().includes(query.toLowerCase()) ||
+        product.tags.some((tag: string) => tag.toLowerCase().includes(query.toLowerCase()))
+      );
+      setSearchResults(results);
+      setIsSearching(false);
+    }, 500);
   }, []);
 
-  // Función para manejar cambio en el input
-  const handleInputChange = useCallback(
-    (value: string) => {
-      setSearchTerm(value);
-      if (value.trim()) {
-        handleSearch(value);
-      } else {
-        setSearchResults([]);
-        setIsSearching(false);
-      }
-    },
-    [handleSearch]
-  );
+  const handleInputChange = useCallback((value: string) => {
+    setSearchTerm(value);
+    if (value.trim()) {
+      handleSearch(value);
+    } else {
+      setSearchResults([]);
+    }
+  }, [handleSearch]);
 
-  // Función para búsqueda rápida desde botones populares
-  const handlePopularSearch = useCallback(
-    (term: string) => {
-      setSearchTerm(term);
-      handleSearch(term);
-    },
-    [handleSearch]
-  );
+  const handlePopularSearch = useCallback((search: string) => {
+    setSearchTerm(search);
+    handleSearch(search);
+  }, [handleSearch]);
 
-  // Función para limpiar búsqueda
   const handleClearSearch = useCallback(() => {
     setSearchTerm("");
     setSearchResults([]);
-    setIsSearching(false);
   }, []);
 
-  // Agregar/actualizar cantidad usando ProductCard
-  const handleAddToCart = useCallback(
-    (product: Product, quantity: number) => {
-      addToCart(product, quantity);
-    },
-    [addToCart]
-  );
+  const handleAddToCart = useCallback((product: Product, quantity: number) => {
+    addToCart(product, quantity);
+  }, [addToCart]);
 
   return (
     <div className="flex flex-col">
@@ -123,7 +99,7 @@ export default function SearchUser() {
           /* Estado inicial - Búsquedas populares */
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <img src="/Fire.svg" alt="Flame" width={30} height={30} />
+              <Image src="/Fire.svg" alt="Flame" width={30} height={30} />
               <h2 className="text-lg font-semibold text-gray-800">
                 Meist gesucht bei Heiniger&apos;s:
               </h2>

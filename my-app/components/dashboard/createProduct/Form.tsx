@@ -61,7 +61,28 @@ export default function Form() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [saveProgress, setSaveProgress] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [createdProduct, setCreatedProduct] = useState<any>(null);
+  const [createdProduct, setCreatedProduct] = useState<{
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    originalPrice?: number;
+    category: string;
+    categoryId: string;
+    stock: number;
+    barcode: string;
+    sku: string;
+    tags: string[];
+    isNew: boolean;
+    rating: number;
+    reviews: number;
+    weight: number;
+    dimensions: { length: number; width: number; height: number };
+    createdAt: string;
+    updatedAt: string;
+    hasWeight: boolean;
+    discountPercentage?: number;
+  } | null>(null);
 
   // Data - Using useMemo to fix the warning
   const categories: Category[] = useMemo(
@@ -155,9 +176,7 @@ export default function Form() {
     [variants]
   );
 
-  const getSelectedCategory = useCallback(() => {
-    return categories.find((cat) => cat.value === productCategory);
-  }, [productCategory, categories]);
+
 
   // Agregar variante inicial cuando se activan las variantes
   const handleToggleVariants = useCallback(
@@ -281,7 +300,7 @@ export default function Form() {
             </h3>
 
             <p className="text-gray-600 mb-6">
-              Ihr Produkt "{createdProduct?.name}" wurde erfolgreich zum Katalog hinzugefügt.
+              Ihr Produkt &quot;{createdProduct?.name}&quot; wurde erfolgreich zum Katalog hinzugefügt.
             </p>
 
             <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
