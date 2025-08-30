@@ -17,16 +17,13 @@ const SnanerDash = () => {
       setIsScanning(false);
       setShowSuccessModal(true);
 
-      // Redirigir a /user después de 2 segundos
-      setTimeout(() => {
-        router.push("/user");
-      }, 2000);
+      // Ya no redirigimos automáticamente - el usuario elige qué hacer
     }, 2000);
   };
 
   const handleCloseModal = () => {
     setShowSuccessModal(false);
-    router.push("/user");
+    // Ya no redirigimos automáticamente - el usuario elige qué hacer
   };
 
   return (
@@ -117,12 +114,12 @@ const SnanerDash = () => {
                 <div className="text-center">
                   {/* Barcode icon with better styling */}
                   <div className="relative mb-6">
-                    <QrCode
+                    <ScanBarcode
                       className="w-20 h-20 text-gray-300 mx-auto animate-pulse"
                       strokeWidth={1.5}
                     />
-                    <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 font-medium">
-                      BARCODE
+                    <div className="justify-center items-center text-[10px] W-[100px] text-gray-500 font-medium">
+                      QR CODE / BARCODE
                     </div>
                   </div>
 
@@ -178,14 +175,27 @@ const SnanerDash = () => {
             <div className="w-16 h-16 bg-[#25D076] rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">¡Éxito!</h3>
-            <p className="text-gray-600 mb-6">Producto escaneado con éxito</p>
-            <button
-              onClick={handleCloseModal}
-              className="bg-[#25D076] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#25D076]/90 transition-colors w-full"
-            >
-              Continuar
-            </button>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Erfolgreich!</h3>
+            <p className="text-gray-600 mb-6">Produkt erfolgreich gescannt</p>
+
+            {/* Dos botones */}
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleCloseModal}
+                className="bg-[#25D076] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#25D076]/90 transition-colors w-full"
+              >
+                Weiter scannen
+              </button>
+              <button
+                onClick={() => {
+                  handleCloseModal();
+                  router.push('/user/cart');
+                }}
+                className="bg-white text-[#25D076] border-2 border-[#25D076] px-6 py-3 rounded-full font-semibold hover:bg-[#25D076] hover:text-white transition-colors w-full"
+              >
+                Warenkorb anzeigen
+              </button>
+            </div>
           </div>
         </div>
       )}
