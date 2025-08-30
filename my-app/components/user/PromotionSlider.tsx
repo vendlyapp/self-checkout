@@ -17,7 +17,7 @@ const PromotionSlider: React.FC<PromotionSliderProps> = ({ items, className }) =
     <div className={clsx("w-screen", className)}>
       <div
         ref={listRef}
-        className="w-screen h-[330px] overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth"
+        className="w-screen overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth"
       >
         <div className="flex px-4 ">
           {safeItems.map((props, idx) => (

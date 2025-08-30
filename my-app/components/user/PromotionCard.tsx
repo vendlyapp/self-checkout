@@ -65,8 +65,7 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
       className={clsx(
         // Layout y estructura
         "bg-white rounded-2xl p-4 flex flex-col items-center shrink-0",
-        // Sombra personalizada
-        "shadow-[0_4px_20px_rgba(0,0,0,0.08)]",
+
         className
       )}
       style={{
