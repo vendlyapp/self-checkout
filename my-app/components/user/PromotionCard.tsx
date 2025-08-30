@@ -52,7 +52,13 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
     if (onAdd) onAdd();
   };
 
+  // Debug: ver qué valor llega
+  console.log('ProgressFraction recibido:', progressFraction, 'Tipo:', typeof progressFraction);
+
   const progressWidth = `${Math.round(clamp01(progressFraction) * 100)}%`;
+
+  // Debug: ver el ancho calculado
+  console.log('ProgressWidth calculado:', progressWidth, 'Valor original:', progressFraction);
 
   return (
     <div
@@ -64,8 +70,8 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
         className
       )}
       style={{
-        width: '232px',
-        height: '292px',
+        width: "232px",
+        height: "292px",
       }}
       role="region"
       aria-label={`${title}: ${name}`}
@@ -80,12 +86,12 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
       {/* Image container with badges */}
       <div className="relative mb-4">
         {/* Image */}
-        <div 
+        <div
           className="relative overflow-hidden rounded-lg border border-[#E2DFDC] shrink-0"
           style={{
-            width: '136.5px',
-            height: '90px',
-            aspectRatio: '91/60',
+            width: "136.5px",
+            height: "90px",
+            aspectRatio: "91/60",
           }}
         >
           <Image
@@ -99,7 +105,7 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
 
         {/* Discount badge */}
         {typeof discountPercent === "number" && (
-          <div className="absolute -top-2 -left-2">
+          <div className="absolute -top-2 -left-6">
             <span className="w-10 h-6 px-6 py-2 bg-[#FD3F37] flex items-center justify-center text-white text-sm font-bold rounded-full">
               -{Math.round(discountPercent)}%
             </span>
@@ -107,7 +113,7 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
         )}
 
         {/* Price bubble */}
-        <div className="absolute -right-3 -bottom-3 w-[70px] h-[70px] bg-white rounded-full flex flex-col items-center justify-center border-2 border-gray-50 shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
+        <div className="absolute -right-10 bottom-3 w-[70px] h-[70px] bg-white rounded-full flex flex-col items-center justify-center border-2 border-gray-50 shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
           <span className="font-semibold leading-3 text-[10px] text-[#FD3F37]">
             {currency}
           </span>
@@ -123,27 +129,27 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
       </div>
 
       {/* Name */}
-      <div className="text-center mb-3 px-2">
-        <h4 className="font-semibold break-words text-sm leading-4 text-gray-800">
+      <div className="text-center px-2 w-full h-[60px] flex items-center justify-center">
+        <h4 className="font-semibold text-sm text-gray-800 leading-tight max-w-full truncate whitespace-nowrap overflow-hidden">
           {name}
         </h4>
       </div>
 
       {/* Progress bar */}
-      <div className="w-full mb-3">
-        <div className="w-full h-2 rounded-full bg-gray-200 overflow-hidden">
+      <div className="w-full mb-2 h-[40px] flex flex-col justify-center">
+        <div className="w-full h-3 rounded-full bg-[#F2EDE8] overflow-hidden shadow-inner">
           <div
-            className="h-full rounded-full transition-all duration-300"
-            style={{ 
+            className="h-full rounded-full transition-all duration-300 bg-gradient-to-r from-[#C9B27B] to-[#D4C08C] shadow-sm"
+            style={{
               width: progressWidth,
-              backgroundColor: '#C9B27B'
+              minWidth: progressFraction > 0 ? "8px" : "0px", // Mínimo 8px si hay progreso
             }}
             aria-hidden="true"
           />
         </div>
         {progressLabel && (
-          <div className="text-center mt-2">
-            <span className="font-medium text-[11px] text-gray-600">
+          <div className="text-center">
+            <span className="font-medium text-[10px] text-gray-600">
               {progressLabel}
             </span>
           </div>
@@ -164,15 +170,15 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
             // Transiciones
             "transition-all duration-200",
             // Estados
-            disabled 
-              ? "opacity-50 cursor-not-allowed bg-gray-400" 
+            disabled
+              ? "opacity-50 cursor-not-allowed bg-gray-400"
               : "bg-[#25D076] hover:bg-[#25D076]/90 hover:scale-105 active:scale-95",
             // Sombra personalizada
             "shadow-[0_7px_29px_0_rgba(100,100,111,0.20)]"
           )}
           style={{
-            width: '199.594px',
-            height: '35px',
+            width: "199.594px",
+            height: "35px",
           }}
           aria-label={`${actionLabel} ${name}`}
         >

@@ -47,7 +47,7 @@ const SliderP: React.FC = () => {
   const items = useMemo(() => {
     // Usar la nueva función para obtener productos promocionales
     const promotionalProducts = getPromotionalProducts();
-    
+
     const withDiscount = promotionalProducts
       .map((p) => ({ product: p, discount: computeDiscountPercent(p) }))
       .filter(({ product, discount }) => product.isOnSale || typeof discount === "number" || product.isPopular);
