@@ -130,12 +130,7 @@ const SnanerDash = () => {
                     Automatische Erkennung
                   </p>
 
-                  {/* Instruction dots */}
-                  <div className="flex justify-center space-x-1 mt-4">
-                    <div className="w-1 h-1 bg-gray-600 rounded-full"></div>
-                    <div className="w-1 h-1 bg-gray-600 rounded-full"></div>
-                    <div className="w-1 h-1 bg-gray-600 rounded-full"></div>
-                  </div>
+
                 </div>
               )}
             </div>

@@ -66,7 +66,7 @@ const HomeDashboard: React.FC = () => {
       <MainActionCards />
 
       {/* ===== SEARCH BAR ===== */}
-      <section className="">
+      <section className="pb-6">
         <SearchInput
           placeholder="Suche Produkte / Verkäufe"
           value={searchQuery}
