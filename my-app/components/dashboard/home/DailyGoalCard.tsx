@@ -76,8 +76,8 @@ const DailyGoalCard = ({
 
               {/* Contenido central del gráfico */}
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-xs  text-foreground flex flex-col items-center gap-1">
-                  <span className="text-[10px]">Total</span>
+                <span className="text-xs  text-foreground flex flex-col items-center ">
+                  <span className="text-[12px]">Total</span>
                   <span className="text-[14px] font-bold">{percentage}%</span>
                 </span>
               </div>
