@@ -102,7 +102,7 @@ export default function CartPage() {
                         setPromoError("");
                       }}
                       placeholder="Gib deinen Code ein"
-                      className="block w-full rounded-lg border-2 uppercase border-white px-3 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-brand-500"
+                      className="block w-full rounded-lg border-2 uppercase bg-white px-3 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-brand-500"
                       aria-label="Promo Code"
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleApplyPromo();

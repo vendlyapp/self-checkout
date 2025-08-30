@@ -10,6 +10,7 @@ import {
   Package,
   Percent,
   FolderOpen,
+  CheckCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -59,6 +60,8 @@ export default function Form() {
   const [vatRate, setVatRate] = useState("2.6"); // Cambiar a valor por defecto
   const [errors, setErrors] = useState<FormErrors>({});
   const [saveProgress, setSaveProgress] = useState(0);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [createdProduct, setCreatedProduct] = useState<any>(null);
 
   // Data - Using useMemo to fix the warning
   const categories: Category[] = useMemo(
@@ -234,8 +237,9 @@ export default function Form() {
 
     console.log("Nuevo producto creado:", newProduct);
 
-    // Navigate back to products list
-    router.push("/products_list");
+    // Set created product and show success modal
+    setCreatedProduct(newProduct);
+    setShowSuccessModal(true);
   }, [
     productName,
     productDescription,
@@ -247,8 +251,14 @@ export default function Form() {
     hasPromotion,
     errors,
     validateField,
-    router,
   ]);
+
+  // Handle navigation after modal close
+  const handleModalClose = useCallback(() => {
+    setShowSuccessModal(false);
+    setCreatedProduct(null);
+    router.push("/products_list");
+  }, [router]);
 
   // Exponer la función de guardado globalmente para que el botón pueda acceder a ella
   useEffect(() => {
@@ -258,6 +268,49 @@ export default function Form() {
 
   return (
     <div className="max-w-sm mx-auto bg-background-cream min-h-screen pt-4 pb-24">
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 text-center">
+            <div className="w-16 h-16 bg-[#25D076] rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-white" />
+            </div>
+
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              Produkt erfolgreich erstellt!
+            </h3>
+
+            <p className="text-gray-600 mb-6">
+              Ihr Produkt "{createdProduct?.name}" wurde erfolgreich zum Katalog hinzugefügt.
+            </p>
+
+            <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">Produkt-ID:</span>
+                <span className="text-sm text-gray-900 font-mono">{createdProduct?.id}</span>
+              </div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">SKU:</span>
+                <span className="text-sm text-gray-900 font-mono">{createdProduct?.sku}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Barcode:</span>
+                <span className="text-sm text-gray-900 font-mono">{createdProduct?.barcode}</span>
+              </div>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={handleModalClose}
+                className="flex-1 bg-[#25D076] text-white py-3 px-4 rounded-lg font-medium hover:bg-[#25D076]/90 transition-colors"
+              >
+                Zum Produktkatalog
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Progress Bar */}
       {saveProgress > 0 && (
         <div className="bg-white border-b border-gray-200 p-3">
@@ -418,23 +471,7 @@ export default function Form() {
                 </option>
               ))}
             </select>
-            {errors.productCategory && (
-              <div className="flex items-center space-x-1 mt-1">
-                <AlertCircle className="w-3 h-3 text-red-500" />
-                <p className="text-red-500 text-xs">{errors.productCategory}</p>
-              </div>
-            )}
-            {productCategory && (
-              <div className="mt-2">
-                <span
-                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    getSelectedCategory()?.color
-                  }`}
-                >
-                  {getSelectedCategory()?.icon} {productCategory}
-                </span>
-              </div>
-            )}
+
           </div>
 
           {/* Preis und Lagerbestand ohne Varianten */}
@@ -550,7 +587,7 @@ export default function Form() {
                         validateField("promotionPrice", e.target.value);
                       }}
                       placeholder="6.50"
-                      className={`w-full h-[46px] p-3 pl-12 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-[16px] font-medium transition-colors bg-white ${
+                      className={`w-full h-[46px] p-3 pl-12 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-[16px] text-[#FD3F37] font-medium transition-colors bg-white ${
                         errors.promotionPrice
                           ? "border-red-500"
                           : "border-gray-200"

@@ -62,22 +62,22 @@ export function FilterSlider({
         className="flex gap-2 overflow-x-auto scrollbar-hide px-4 py-3"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         role="listbox"
-        aria-label="Filter options"
+        aria-label="Filteroptionen"
       >
-        {/* Botón "Limpiar filtros" */}
+        {/* Botón "Alle Filter löschen" */}
         {selectedFilters.length > 0 && (
           <button
             onClick={clearAllFilters}
             className="flex items-center gap-1.5 whitespace-nowrap rounded-sm bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition-all hover:bg-red-100 hover:scale-105 active:scale-95 border border-red-200"
-            aria-label="Clear all filters"
+            aria-label="Alle Filter löschen"
             tabIndex={0}
           >
             <X className="h-3 w-3" />
-            Limpiar
+            Löschen
           </button>
         )}
 
-        {/* Chips de filtros */}
+        {/* Filterchips */}
         {filters.map((filter) => {
           const isSelected = selectedFilters.includes(filter.id)
           return (
@@ -106,11 +106,11 @@ export function FilterSlider({
                 <span
                   className={cn(
                     "ml-1 text-xs px-1.5 py-0.5 rounded-full",
-                    isSelected 
-                      ? "bg-white text-gray-600" 
+                    isSelected
+                      ? "bg-white text-gray-600"
                       : "bg-[#F2EDE8] text-gray-600"
                   )}
-                  aria-label={`${filter.count} items`}
+                  aria-label={`${filter.count} Artikel`}
                 >
                   {filter.count}
                 </span>
