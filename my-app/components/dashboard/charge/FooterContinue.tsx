@@ -6,6 +6,7 @@ type FooterContinueProps = {
   discountAmount: number;
   totalItems: number;
   total: number;
+  promoCode?: string;
   onContinue?: () => void;
 };
 
@@ -15,6 +16,7 @@ const FooterContinue: React.FC<FooterContinueProps> = ({
   discountAmount,
   totalItems,
   total,
+  promoCode,
   onContinue,
 }) => {
   return (
@@ -36,6 +38,15 @@ const FooterContinue: React.FC<FooterContinueProps> = ({
               </div>
               <div className="text-[#3C7E44] text-[15px] font-semibold">
                 - CHF {discountAmount.toFixed(2)}
+              </div>
+            </div>
+            {/* Código promocional aplicado */}
+            <div className="flex items-center justify-between mt-2 p-2 bg-[#F2FDF5] rounded-lg border border-[#3C7E44]/20">
+              <div className="text-[#3C7E44] text-[14px] font-medium">
+                Promo Code: <span className="font-bold">{promoCode?.toUpperCase()}</span>
+              </div>
+              <div className="text-[#3C7E44] text-[12px] bg-[#3C7E44]/10 px-2 py-1 rounded-full">
+                ✓ Angewendet
               </div>
             </div>
           </>

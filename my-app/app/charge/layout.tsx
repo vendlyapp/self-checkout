@@ -36,6 +36,7 @@ export default function ChargeLayout({ children }: { children: ReactNode }) {
     getTotalWithDiscount,
     promoApplied,
     discountAmount,
+    promoCode,
   } = useCartStore();
   const router = useRouter();
   const pathname = usePathname();
@@ -95,6 +96,7 @@ export default function ChargeLayout({ children }: { children: ReactNode }) {
             totalItems={totalItems}
             total={total}
             onContinue={handleContinue}
+            promoCode={promoCode}
           />
         )}
 

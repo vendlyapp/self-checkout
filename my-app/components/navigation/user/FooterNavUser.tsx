@@ -72,7 +72,7 @@ export default function FooterNav() {
   const [mounted, setMounted] = useState(false);
   const [isPulsing, setIsPulsing] = useState(true);
   const [pressedItem, setPressedItem] = useState<string | null>(null);
-  const { cartItems } = useCartStore();
+  const { cartItems, promoApplied, promoCode, discountAmount } = useCartStore();
 
   useEffect(() => {
     setMounted(true);
@@ -281,6 +281,23 @@ export default function FooterNav() {
       {!isCartRoute && !isPaymentRoute && (
         <div className="w-full flex flex-col gap-2 px-4">
           <UserCartSummary variant="inline" />
+
+          {/* Código promocional aplicado */}
+          {promoApplied && (
+            <div className="w-full bg-[#F2FDF5] rounded-lg p-3 border border-[#3C7E44]/20">
+              <div className="flex items-center justify-between mb-1">
+                <div className="text-[#3C7E44] text-[13px] font-medium">
+                  Promo Code: <span className="font-bold">{promoCode?.toUpperCase()}</span>
+                </div>
+                <div className="text-[#3C7E44] text-[11px] bg-[#3C7E44]/10 px-2 py-1 rounded-full">
+                  ✓ Angewendet
+                </div>
+              </div>
+              <div className="text-[#3C7E44] text-[12px]">
+                10% Rabatt auf Bio-Produkte - CHF {discountAmount?.toFixed(2) || "0.00"}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </nav>

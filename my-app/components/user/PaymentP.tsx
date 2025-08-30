@@ -20,6 +20,9 @@ interface PaymentModalProps {
   onClose: () => void;
   selectedMethod: string;
   totalAmount: number;
+  promoApplied?: boolean;
+  promoCode?: string;
+  discountAmount?: number;
   onPaymentSuccess: () => void;
 }
 
@@ -308,7 +311,7 @@ export default function PaymentP() {
                 autoCapitalize="characters"
                 maxLength={10}
                 value={localPromoCode}
-                onChange={(e) => setLocalPromoCode(e.target.value)}
+                onChange={(e) => setLocalPromoCode(e.target.value.toUpperCase())}
                 placeholder="Gib deinen Code ein"
                 className="block w-full rounded-lg border-2 uppercase bg-white px-3 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-brand-500"
                 aria-label="Promo Code"
@@ -410,6 +413,9 @@ export default function PaymentP() {
         onClose={() => setIsModalOpen(false)}
         selectedMethod={selectedPaymentMethod}
         totalAmount={totalWithVAT}
+        promoApplied={promoApplied}
+        promoCode={promoCode}
+        discountAmount={discountAmount}
         onPaymentSuccess={handlePaymentSuccess}
       />
     </>

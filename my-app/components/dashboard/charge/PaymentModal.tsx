@@ -9,6 +9,9 @@ interface PaymentModalProps {
   onClose: () => void;
   selectedMethod: string;
   totalAmount: number;
+  promoApplied?: boolean;
+  promoCode?: string;
+  discountAmount?: number;
   onPaymentSuccess: () => void;
 }
 
@@ -17,6 +20,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   onClose,
   selectedMethod,
   totalAmount,
+  promoApplied,
+  promoCode,
+  discountAmount,
   onPaymentSuccess,
 }) => {
   const [paymentStep, setPaymentStep] = useState<
@@ -109,6 +115,23 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   </span>
                 </div>
                 <p className="text-sm text-gray-500">inkl. MwSt</p>
+
+                {/* Código promocional aplicado */}
+                {promoApplied && (
+                  <div className="mt-3 p-3 bg-[#F2FDF5] rounded-lg border border-[#3C7E44]/20">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="text-[#3C7E44] text-[14px] font-medium">
+                        Promo Code: <span className="font-bold">{promoCode?.toUpperCase()}</span>
+                      </div>
+                      <div className="text-[#3C7E44] text-[12px] bg-[#3C7E44]/10 px-2 py-1 rounded-full">
+                        ✓ Angewendet
+                      </div>
+                    </div>
+                    <div className="text-[#3C7E44] text-[13px]">
+                      10% Rabatt auf Bio-Produkte - CHF {discountAmount?.toFixed(2) || "0.00"}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Botones de acción */}

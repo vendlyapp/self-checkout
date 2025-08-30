@@ -98,7 +98,7 @@ export default function CartPage() {
                       maxLength={10}
                       value={localPromoCode}
                       onChange={(e) => {
-                        setLocalPromoCode(e.target.value);
+                        setLocalPromoCode(e.target.value.toUpperCase());
                         setPromoError("");
                       }}
                       placeholder="Gib deinen Code ein"

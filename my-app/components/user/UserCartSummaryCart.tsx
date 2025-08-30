@@ -9,7 +9,7 @@ interface UserCartSummaryCartProps {
 }
 
 export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProps) {
-  const { cartItems } = useCartStore();
+  const { cartItems, promoApplied, promoCode, discountAmount } = useCartStore();
   const router = useRouter();
 
   // Solo productos con cantidad > 0
@@ -25,7 +25,7 @@ export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProp
   if (variant === 'inline') {
     const totalItems = validCartItems.reduce((sum, item) => sum + item.quantity, 0);
     const totalPrice = validCartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-    
+
     return (
       <div className="w-full bg-white rounded-lg p-4 mb-1 animate-fade-up">
         {/* Sección superior con Gesamtbetrag */}
@@ -42,7 +42,24 @@ export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProp
             {formatPrice(totalPrice)}
           </span>
         </div>
-        
+
+        {/* Código promocional aplicado */}
+        {promoApplied && (
+          <div className="mb-4 p-3 bg-[#F2FDF5] rounded-lg border border-[#3C7E44]/20">
+            <div className="flex items-center justify-between mb-1">
+              <div className="text-[#3C7E44] text-[14px] font-medium">
+                Promo Code: <span className="font-bold">{promoCode?.toUpperCase()}</span>
+              </div>
+              <div className="text-[#3C7E44] text-[12px] bg-[#3C7E44]/10 px-2 py-1 rounded-full">
+                ✓ Angewendet
+              </div>
+            </div>
+            <div className="text-[#3C7E44] text-[13px]">
+              10% Rabatt auf Bio-Produkte - CHF {discountAmount?.toFixed(2) || "0.00"}
+            </div>
+          </div>
+        )}
+
         {/* Botón Zur Bezahlung */}
         <button
           className="w-[80%] mx-auto bg-[#25D076] text-white py-4 rounded-full font-semibold text-lg hover:bg-[#25D076]/80 transition-colors flex items-center justify-center gap-2"
@@ -62,4 +79,4 @@ export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProp
       onContinue={() => router.push('/user/cart')}
     />
   );
-} 
+}
