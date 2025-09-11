@@ -39,7 +39,7 @@ const SnanerDash = () => {
             </p>
           </div>
           <div className="flex items-center justify-end">
-            <button className="bg-[#FFFFFF] text-[#6E7996] px-4 py-2 rounded-md hover:bg-gray-600 transition-colors">
+            <button className="bg-[#FFFFFF] text-[#6E7996] px-4 py-3 rounded-md hover:bg-gray-600 transition-colors touch-target tap-highlight-transparent active:scale-95" style={{ minHeight: '44px' }}>
               Kontakt
             </button>
           </div>
@@ -154,7 +154,9 @@ const SnanerDash = () => {
         <button
           onClick={simulateScan}
           disabled={isScanning}
-          className="bg-gradient-to-r from-[#25D076] to-[#25D076] text-white px-6 py-3 justify-center w-[305px] rounded-full mt-10 font-bold text-lg hover:from-[#25D076]/80 hover:to-[#25D076]/80 transition-all duration-300 disabled:opacity-50 shadow-2xl active:scale-95 flex items-center space-x-3 "
+          className="bg-gradient-to-r from-[#25D076] to-[#25D076] text-white px-6 py-4 justify-center w-[305px] rounded-full mt-10 font-bold text-lg hover:from-[#25D076]/80 hover:to-[#25D076]/80 transition-all duration-300 disabled:opacity-50 shadow-2xl active:scale-95 flex items-center space-x-3 touch-target tap-highlight-transparent"
+          style={{ minHeight: '56px' }}
+          aria-label={isScanning ? "Wird gescannt..." : "Produkt scannen"}
         >
           <ScanBarcode className="w-5 h-5" />
           <span className="text-white font-semibold text-[16px]">
@@ -177,7 +179,9 @@ const SnanerDash = () => {
             <div className="flex flex-col gap-3">
               <button
                 onClick={handleCloseModal}
-                className="bg-[#25D076] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#25D076]/90 transition-colors w-full"
+                className="bg-[#25D076] text-white px-6 py-4 rounded-full font-semibold hover:bg-[#25D076]/90 transition-colors w-full touch-target tap-highlight-transparent active:scale-95"
+                style={{ minHeight: '48px' }}
+                aria-label="Weiter scannen"
               >
                 Weiter scannen
               </button>
@@ -186,7 +190,9 @@ const SnanerDash = () => {
                   handleCloseModal();
                   router.push('/user/cart');
                 }}
-                className="bg-white text-[#25D076] border-2 border-[#25D076] px-6 py-3 rounded-full font-semibold hover:bg-[#25D076] hover:text-white transition-colors w-full"
+                className="bg-white text-[#25D076] border-2 border-[#25D076] px-6 py-4 rounded-full font-semibold hover:bg-[#25D076] hover:text-white transition-colors w-full touch-target tap-highlight-transparent active:scale-95"
+                style={{ minHeight: '48px' }}
+                aria-label="Warenkorb anzeigen"
               >
                 Warenkorb anzeigen
               </button>

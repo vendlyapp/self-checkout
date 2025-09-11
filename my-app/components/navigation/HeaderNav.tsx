@@ -31,8 +31,8 @@ export default function HeaderNav({
   const hasItems = cartItems.length > 0;
 
   return (
-    <div className="flex justify-between items-center p-4 bg-white border-b border-gray-200 left-0 right-0 z-50">
-      <div className="flex items-center gap-2 justify-between w-full px-4">
+    <div className="flex justify-between items-center p-4 bg-white border-b border-gray-200 left-0 right-0 z-50 safe-area-top pt-[calc(1rem+env(safe-area-inset-top))]">
+      <div className="flex items-center gap-2 justify-between w-full pt-[10px] px-4 touch-target">
         <button
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => router.back()}

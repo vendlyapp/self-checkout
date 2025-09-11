@@ -18,20 +18,21 @@ const UserLayout = ({ children }: UserLayoutProps) => {
   const headerBgClass = isScanRoute ? "bg-[#191F2D]" : "bg-white";
 
   return (
-    <div className={`flex flex-col h-full w-full ${containerBgClass}`}>
-      {/* Header principal fijo */}
-      <div className={`fixed top-0 left-0 right-0 z-50 ${headerBgClass}`}>
+    <div className={`flex flex-col h-mobile w-full ${containerBgClass} relative overflow-hidden`}>
+      {/* Header principal fijo con safe area */}
+      <div className={`fixed top-0 left-0 right-0 z-50 ${headerBgClass} safe-area-top`}>
         <HeaderUser isDarkMode={isScanRoute} />
       </div>
 
-      {/* Contenido principal con scroll y padding para el header fijo */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
-        <div className="pt-[85px]">{children}</div>
+      {/* Contenido principal optimizado para iOS */}
+      <main className="flex-1 overflow-y-auto overflow-x-hidden relative no-scrollbar pt-[calc(85px+env(safe-area-inset-top))] pb-[calc(100px+env(safe-area-inset-bottom))]">
+        <div className="w-full">{children}</div>
       </main>
 
-      {/* Footer de navegación fijo en la parte inferior */}
-
-      <FooterNavUser />
+      {/* Footer de navegación fijo con safe area */}
+      <div className="fixed bottom-0 left-0 right-0 z-40">
+        <FooterNavUser />
+      </div>
     </div>
   );
 };

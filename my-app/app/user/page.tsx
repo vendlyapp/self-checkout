@@ -4,20 +4,24 @@ import DashboardUser from "@/components/user/Dashboard";
 import React from "react";
 
 /**
- * Dashboard Page - Página principal del dashboard
+ * User Dashboard Page - Página principal del usuario optimizada para móvil
  *
  * Esta página actúa como un punto de entrada limpio que simplemente
- * renderiza el componente HomeDashboard. Toda la lógica de presentación
- * está en el componente HomeDashboard para seguir el principio de
+ * renderiza el componente DashboardUser. Toda la lógica de presentación
+ * está en el componente DashboardUser para seguir el principio de
  * separación de responsabilidades.
  *
- * Beneficios de esta arquitectura:
- * - Page solo se encarga de routing
- * - HomeDashboard maneja toda la lógica de presentación
- * - Facilita testing y reutilización
- * - Mejor preparado para SSR/SSG si se necesita
- * - Arquitectura escalable para futuras funcionalidades
+ * Optimizaciones móviles aplicadas:
+ * - Layout optimizado para iPhone 12+ con safe areas
+ * - Soporte completo para Safari iOS y barras de navegación
+ * - Viewport dinámico para evitar problemas con barras del navegador
+ * - Touch targets optimizados para pantallas táctiles
+ * - Scroll behavior mejorado para dispositivos iOS
  */
 export default function UserPage() {
-  return <DashboardUser />;
+  return (
+    <div className="w-full h-full ios-scroll-fix">
+      <DashboardUser />
+    </div>
+  );
 }

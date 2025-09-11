@@ -75,21 +75,21 @@ export default function Header() {
     <>
       {/* Overlay para cerrar dropdown */}
       {showNotifications && (
-        <div 
-          className="fixed inset-0 z-20" 
+        <div
+          className="fixed inset-0 z-20"
           onClick={handleClickOutside}
           aria-hidden="true"
         />
       )}
 
-      <header className="dashboard-header h-[85px] w-full ">
+      <header className="dashboard-header h-[calc(85px+env(safe-area-inset-top))] w-full pt-[env(safe-area-inset-top)]">
         <div className="dashboard-header-content bg-background-cream h-[85px] w-full">
           {/* Logo */}
-          <Link href="/dashboard" className="dashboard-logo-d">
-            <Image 
-              src="/logo.svg" 
-              alt="Self-Checkout Logo" 
-              width={100} 
+          <Link href="/dashboard" className="dashboard-logo-d touch-target tap-highlight-transparent">
+            <Image
+              src="/logo.svg"
+              alt="Self-Checkout Logo"
+              width={100}
               height={100}
               priority
             />
@@ -100,7 +100,7 @@ export default function Header() {
             {/* Search Button */}
             <button
               className={clsx(
-                "header-action-button rounded-full",
+                "header-action-button rounded-full touch-target",
                 pressedButton === 'search' && "button-pressed"
               )}
               onTouchStart={() => handleButtonPress('search')}
@@ -117,7 +117,7 @@ export default function Header() {
             {/* Notifications Button */}
             <button
               className={clsx(
-                "header-action-button rounded-full relative",
+                "header-action-button rounded-full relative touch-target",
                 pressedButton === 'notifications' && "button-pressed"
               )}
               onClick={(e) => {
@@ -137,7 +137,7 @@ export default function Header() {
               )}
             </button>
 
-           
+
           </div>
         </div>
         <div className="w-full h-px bg-white" />
@@ -155,7 +155,7 @@ export default function Header() {
                 </span>
               )}
             </div>
-            
+
             <div className="notification-list">
               {mockNotifications.map((notification) => (
                 <div

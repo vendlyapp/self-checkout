@@ -102,7 +102,7 @@ export default function FooterNav() {
   }, []);
 
   // Memoizar items procesados
-  const processedItems = useMemo(() => 
+  const processedItems = useMemo(() =>
     navItems.map(item => ({
       ...item,
       isActive: isItemActive(item),
@@ -122,8 +122,8 @@ export default function FooterNav() {
   }
 
   return (
-    <nav className="nav-container">
-      <div className="flex items-center justify-around h-full px-4 max-w-[430px] mx-auto">
+    <nav className="nav-container safe-area-bottom">
+      <div className="flex items-center justify-around h-full px-4 max-w-[430px] mx-auto pb-[env(safe-area-inset-bottom)]">
         {processedItems.map((item) => {
           const Icon = item.icon;
 
@@ -147,12 +147,12 @@ export default function FooterNav() {
                 onClick={handleValidInteraction}
                 aria-label="Agregar nuevo producto"
               >
-                <Icon 
+                <Icon
                   className={clsx(
                     "nav-main-icon",
                     item.isPressed && "scale-95"
-                  )} 
-                  strokeWidth={2.5} 
+                  )}
+                  strokeWidth={2.5}
                 />
               </Link>
             );
@@ -176,7 +176,7 @@ export default function FooterNav() {
               onClick={handleValidInteraction}
               aria-label={item.label}
             >
-              <Icon 
+              <Icon
                 className={clsx(
                   "nav-icon",
                   item.isActive && "nav-icon-active",
@@ -184,7 +184,7 @@ export default function FooterNav() {
                 )}
                 strokeWidth={item.isActive ? 2.2 : 1.8}
               />
-              <span 
+              <span
                 className={clsx(
                   "nav-label",
                   item.isActive && "nav-label-active"

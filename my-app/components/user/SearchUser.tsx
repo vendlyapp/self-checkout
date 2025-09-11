@@ -110,7 +110,9 @@ export default function SearchUser() {
                 <button
                   key={index}
                   onClick={() => handlePopularSearch(search)}
-                  className="bg-white rounded-lg px-4 py-3 text-left text-gray-700 font-medium shadow-sm border border-gray-100 hover:border-brand-200 hover:shadow-md transition-all duration-200"
+                  className="bg-white rounded-lg px-4 py-3 text-left text-gray-700 font-medium shadow-sm border border-gray-100 hover:border-brand-200 hover:shadow-md transition-all duration-200 touch-target tap-highlight-transparent active:scale-95"
+                  style={{ minHeight: '48px' }}
+                  aria-label={`Nach ${search} suchen`}
                 >
                   {search}
                 </button>
@@ -127,8 +129,9 @@ export default function SearchUser() {
               </h2>
               <button
                 onClick={handleClearSearch}
-                className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors touch-target tap-highlight-transparent active:scale-95"
                 aria-label="Búsqueda löschen"
+                style={{ minHeight: '44px', minWidth: '44px' }}
               >
                 <X className="w-5 h-5 text-gray-500" />
               </button>

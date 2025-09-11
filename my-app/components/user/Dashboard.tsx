@@ -110,7 +110,7 @@ const DashboardUser = () => {
             </p>
           </div>
           <div className="flex items-center justify-end">
-            <button className="bg-white text-gray-500 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors">
+            <button className="bg-white text-gray-500 px-4 py-3 rounded-md hover:bg-gray-50 transition-colors touch-target tap-highlight-transparent active:scale-95" style={{ minHeight: '44px' }}>
               Kontakt
             </button>
           </div>
@@ -129,7 +129,8 @@ const DashboardUser = () => {
           />
           <button
             onClick={handleScanQR}
-            className="bg-brand-500 cursor-pointer justify-center text-center text-white px-4 py-3 flex items-center text-[18px] font-semibold gap-2 rounded-[30px] w-[124px] h-[54px] hover:bg-brand-600 transition-colors"
+            className="bg-brand-500 cursor-pointer justify-center text-center text-white px-4 py-3 flex items-center text-[18px] font-semibold gap-2 rounded-[30px] w-[124px] h-[54px] hover:bg-brand-600 transition-colors touch-target tap-highlight-transparent active:scale-95"
+            aria-label="QR Code scannen"
           >
             <ScanBarcode className="w-6 h-6" />
             <span className="text-[16px] text-center">Scan</span>

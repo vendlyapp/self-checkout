@@ -149,11 +149,15 @@ export default function FooterNav() {
   const isPaymentRoute = pathname === "/user/payment";
 
   return (
-    <nav className="bg-white rounded-t-xl shadow-t-xl shadow-black">
-      {/* Resumen de carrito arriba solo cuando estoy en /user/cart */}
-      {isCartRoute && <UserCartSummaryCart variant="inline" />}
+    <nav className="bg-white rounded-t-xl shadow-t-xl shadow-black safe-area-bottom">
+      {/* Resumen de carrito arriba solo cuando estoy en /user/cart - con contenedor limitado */}
+      {isCartRoute && (
+        <div className="w-full max-w-[430px] mx-auto">
+          <UserCartSummaryCart variant="inline" />
+        </div>
+      )}
 
-      <div className="flex items-center justify-between w-full px-6 max-w-[430px] mx-auto pb-4 pt-2  border-t-2 border-black/10 rounded-t-xl">
+      <div className="flex items-center justify-between w-full px-6 max-w-[430px] mx-auto pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 border-t-2 border-black/10 rounded-t-xl">
         {processedItems.map((item) => {
           const Icon = item.icon;
 
@@ -278,27 +282,11 @@ export default function FooterNav() {
         })}
       </div>
 
-      {/* Resumen de carrito abajo solo cuando NO estoy en /user/cart Y NO estoy en /user/payment */}
+      {/* Resumen de carrito abajo solo cuando NO estoy en /user/cart Y NO estoy en /user/payment - con contenedor limitado */}
       {!isCartRoute && !isPaymentRoute && (
-        <div className="w-full flex flex-col gap-2 px-4">
+        <div className="w-full max-w-[430px] mx-auto flex flex-col gap-2 px-4 pb-[env(safe-area-inset-bottom)]">
           <UserCartSummary variant="inline" />
 
-          {/* Código promocional aplicado */}
-          {promoApplied && (
-            <div className="w-full bg-[#F2FDF5] rounded-lg p-3 border border-[#3C7E44]/20">
-              <div className="flex items-center justify-between mb-1">
-                <div className="text-[#3C7E44] text-[13px] font-medium">
-                  Promo Code: <span className="font-bold">{promoCode?.toUpperCase()}</span>
-                </div>
-                <div className="text-[#3C7E44] text-[11px] bg-[#3C7E44]/10 px-2 py-1 rounded-full">
-                  ✓ Angewendet
-                </div>
-              </div>
-              <div className="text-[#3C7E44] text-[12px]">
-                10% Rabatt auf Bio-Produkte - {formatSwissPriceWithCHF(discountAmount || 0)}
-              </div>
-            </div>
-          )}
         </div>
       )}
     </nav>

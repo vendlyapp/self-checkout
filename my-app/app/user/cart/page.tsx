@@ -48,7 +48,7 @@ export default function UserCartPage() {
     <>
       <HeaderNav title="Warenkorb" />
       {/* Lista de productos */}
-      <div className="flex-1 px-4 pt-4 pb-32 mt-4">
+      <div className="flex-1 px-4 pt-4 pb-48 mt-4">
         {cartItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full mt-16">
             <ShoppingCart className="w-20 h-20 text-[#766B6A] mb-4" />

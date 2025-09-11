@@ -23,7 +23,7 @@ const PromotionSlider: React.FC<PromotionSliderProps> = ({ items, className }) =
       <Swiper
         modules={[Autoplay, FreeMode]}
         spaceBetween={16}
-        slidesPerView={1.8}
+        slidesPerView={1.6}
         centeredSlides={true}
         freeMode={{
           enabled: true,
@@ -44,20 +44,6 @@ const PromotionSlider: React.FC<PromotionSliderProps> = ({ items, className }) =
         preventClicks={false}
         preventClicksPropagation={false}
         className="w-full"
-        breakpoints={{
-          640: {
-            slidesPerView: 2,
-            spaceBetween: 20,
-          },
-          768: {
-            slidesPerView: 2.5,
-            spaceBetween: 24,
-          },
-          1024: {
-            slidesPerView: 3,
-            spaceBetween: 30,
-          },
-        }}
       >
         {safeItems.map((props, idx) => (
           <SwiperSlide key={idx}>

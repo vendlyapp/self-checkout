@@ -323,8 +323,9 @@ export default function PaymentP() {
               />
               <button
                 onClick={handleApplyPromo}
-                className="bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg px-4 py-2 text-[15px] transition-colors"
+                className="bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg px-4 py-3 text-[15px] transition-colors touch-target tap-highlight-transparent active:scale-95"
                 aria-label="Promo anwenden"
+                style={{ minHeight: '44px' }}
               >
                 Anwenden
               </button>
@@ -347,9 +348,10 @@ export default function PaymentP() {
             </div>
             <button
               onClick={handleRemovePromo}
-              className="ml-2 p-1 rounded-full hover:bg-brand-200 focus:outline-none"
+              className="ml-2 p-2 rounded-full hover:bg-brand-200 focus:outline-none touch-target tap-highlight-transparent active:scale-95"
               aria-label="Promo entfernen"
               tabIndex={0}
+              style={{ minHeight: '44px', minWidth: '44px' }}
             >
               <X className="w-5 h-5 text-brand-700" />
             </button>
@@ -377,8 +379,10 @@ export default function PaymentP() {
               } px-4 py-4 w-[345px] h-[50px] text-sm rounded-full
                 flex items-center gap-2 justify-center transition-all duration-200
                 ${isSelected ? "ring-4 ring-blue-300 ring-opacity-50" : ""}
-                hover:scale-105 active:scale-95
+                hover:scale-105 active:scale-95 touch-target tap-highlight-transparent
               `}
+              style={{ minHeight: '50px' }}
+              aria-label={`${method.name} auswählen`}
             >
               <IconComponent className="w-6 h-6" />
               {method.name}
