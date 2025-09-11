@@ -10,7 +10,6 @@ import { lightFeedback } from "@/lib/utils/safeFeedback";
 import UserCartSummary from "@/components/user/UserCartSummary";
 import UserCartSummaryCart from "@/components/user/UserCartSummaryCart";
 import { useCartStore } from "@/lib/stores/cartStore";
-import { formatSwissPriceWithCHF } from '@/lib/utils';
 
 interface NavItemUser {
   id: string;
@@ -73,7 +72,7 @@ export default function FooterNav() {
   const [mounted, setMounted] = useState(false);
   const [isPulsing, setIsPulsing] = useState(true);
   const [pressedItem, setPressedItem] = useState<string | null>(null);
-  const { cartItems, promoApplied, promoCode, discountAmount } = useCartStore();
+  const { cartItems } = useCartStore();
 
   useEffect(() => {
     setMounted(true);
