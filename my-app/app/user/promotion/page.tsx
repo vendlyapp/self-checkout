@@ -31,11 +31,11 @@ const PromotionPage: React.FC = () => {
   return (
     <>
       <HeaderNav title="Aktionen" />
-      <div className="p-4 flex items-center justify-center mt-4">
+      <div className="w-full mt-4">
         <SliderP />
       </div>
       <div className="mb-24">
-        <h5 className="text-xl text-start ml-4 font-semibold">Alle Aktionen</h5>
+        <h5 className="text-xl text-start ml-4 mt-4 font-semibold">Alle Aktionen</h5>
         <ProductsList
           products={products}
           onAddToCart={handleAddToCart}

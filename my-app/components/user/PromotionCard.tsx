@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { Plus, Package } from "lucide-react";
+import { Plus, Package, Check } from "lucide-react";
 import { clsx } from "clsx";
-import React from "react";
+import React, { useState } from "react";
 
 export type PromotionCardProps = {
   title?: string;
@@ -47,18 +47,43 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
   className,
   disabled = false,
 }) => {
-  const handleAddClick = () => {
-    if (disabled) return;
-    if (onAdd) onAdd();
+  const [isAdding, setIsAdding] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
+
+  const handleAddClick = async (e?: React.MouseEvent | React.TouchEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+
+    console.log('🔔 Botón clicked!', { name, disabled, onAdd: !!onAdd });
+
+    if (disabled || isAdding) {
+      console.log('❌ Botón deshabilitado o ya agregando');
+      return;
+    }
+
+    if (onAdd) {
+      setIsAdding(true);
+      console.log('✅ Ejecutando onAdd para:', name);
+
+      try {
+        onAdd();
+        setJustAdded(true);
+
+        // Feedback visual temporal
+        setTimeout(() => {
+          setJustAdded(false);
+          setIsAdding(false);
+        }, 1500);
+      } catch (error) {
+        console.error('❌ Error al agregar al carrito:', error);
+        setIsAdding(false);
+      }
+    } else {
+      console.log('❌ No hay función onAdd disponible');
+    }
   };
 
-  // Debug: ver qué valor llega
-  console.log('ProgressFraction recibido:', progressFraction, 'Tipo:', typeof progressFraction);
-
   const progressWidth = `${Math.round(clamp01(progressFraction) * 100)}%`;
-
-  // Debug: ver el ancho calculado
-  console.log('ProgressWidth calculado:', progressWidth, 'Valor original:', progressFraction);
 
   return (
     <div
@@ -170,7 +195,8 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
         <button
           type="button"
           onClick={handleAddClick}
-          disabled={disabled}
+          onTouchStart={handleAddClick}
+          disabled={disabled || isAdding}
           className={clsx(
             // Layout y estructura
             "flex items-center justify-center gap-2 shrink-0 rounded-full",
@@ -178,9 +204,13 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
             "font-bold text-white text-sm",
             // Transiciones
             "transition-all duration-200",
+            // Evitar interferencia con Swiper
+            "relative z-10 pointer-events-auto",
             // Estados
-            disabled
+            disabled || isAdding
               ? "opacity-50 cursor-not-allowed bg-gray-400"
+              : justAdded
+              ? "bg-green-600 hover:bg-green-700"
               : "bg-[#25D076] hover:bg-[#25D076]/90 hover:scale-105 active:scale-95",
             // Sombra personalizada
             "shadow-[0_7px_29px_0_rgba(100,100,111,0.20)]"
@@ -188,11 +218,26 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
           style={{
             width: "199.594px",
             height: "35px",
+            touchAction: "manipulation"
           }}
           aria-label={`${actionLabel} ${name}`}
         >
-          {actionLabel}
-          <Plus className="w-4 h-4" />
+          {justAdded ? (
+            <>
+              Hinzugefügt!
+              <Check className="w-4 h-4" />
+            </>
+          ) : isAdding ? (
+            <>
+              Wird hinzugefügt...
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            </>
+          ) : (
+            <>
+              {actionLabel}
+              <Plus className="w-4 h-4" />
+            </>
+          )}
         </button>
       </div>
     </div>

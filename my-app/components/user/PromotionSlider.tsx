@@ -1,8 +1,14 @@
 "use client";
 
-import React, { useMemo, useRef } from "react";
+import React, { useMemo } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, FreeMode } from "swiper/modules";
 import PromotionCard, { PromotionCardProps } from "@/components/user/PromotionCard";
 import { clsx } from "clsx";
+
+// Import Swiper styles
+import "swiper/css";
+import "swiper/css/free-mode";
 
 export type PromotionSliderProps = {
   items: PromotionCardProps[];
@@ -10,26 +16,57 @@ export type PromotionSliderProps = {
 };
 
 const PromotionSlider: React.FC<PromotionSliderProps> = ({ items, className }) => {
-  const listRef = useRef<HTMLDivElement>(null);
   const safeItems = useMemo(() => items ?? [], [items]);
 
   return (
-    <div className={clsx("w-screen", className)}>
-      <div
-        ref={listRef}
-        className="w-screen overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth"
+    <div className={clsx("w-full", className)}>
+      <Swiper
+        modules={[Autoplay, FreeMode]}
+        spaceBetween={16}
+        slidesPerView={1.8}
+        centeredSlides={true}
+        freeMode={{
+          enabled: true,
+          momentum: true,
+          momentumRatio: 0.25,
+          momentumVelocityRatio: 0.5,
+        }}
+        autoplay={{
+          delay: 4000,
+          disableOnInteraction: false,
+          pauseOnMouseEnter: true,
+        }}
+        loop={true}
+        grabCursor={true}
+        touchRatio={1}
+        resistance={false}
+        allowTouchMove={true}
+        preventClicks={false}
+        preventClicksPropagation={false}
+        className="w-full"
+        breakpoints={{
+          640: {
+            slidesPerView: 2,
+            spaceBetween: 20,
+          },
+          768: {
+            slidesPerView: 2.5,
+            spaceBetween: 24,
+          },
+          1024: {
+            slidesPerView: 3,
+            spaceBetween: 30,
+          },
+        }}
       >
-        <div className="flex px-4 ">
-          {safeItems.map((props, idx) => (
-            <div
-              key={idx}
-              className="flex-shrink-0 w-[90vw] max-w-[250px] snap-center"
-            >
+        {safeItems.map((props, idx) => (
+          <SwiperSlide key={idx}>
+            <div className="flex justify-center">
               <PromotionCard {...props} />
             </div>
-          ))}
-        </div>
-      </div>
+          </SwiperSlide>
+        ))}
+      </Swiper>
     </div>
   );
 };

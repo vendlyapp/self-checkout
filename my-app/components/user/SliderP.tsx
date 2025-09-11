@@ -63,7 +63,15 @@ const SliderP: React.FC = () => {
     });
 
     const top = withDiscount.slice(0, 10).map(({ product, discount }) => {
-      const handleAdd = () => addToCart(product, 1);
+      const handleAdd = () => {
+        console.log('🛒 Intentando agregar al carrito:', {
+          productId: product.id,
+          productName: product.name,
+          product
+        });
+        addToCart(product, 1);
+        console.log('✅ addToCart ejecutado');
+      };
 
       // Manejar la imagen con fallback - pasar Package component si no hay imagen
       const imageUrl = product.image || <Package className="w-10 h-10 text-gray-400" />;
@@ -97,7 +105,15 @@ const SliderP: React.FC = () => {
       progressFraction: getProgressFraction(product),
       progressLabel: getProgressLabel(product),
       actionLabel: product.promotionActionLabel ?? "Jetzt hinzufügen",
-      onAdd: () => addToCart(product, 1),
+      onAdd: () => {
+        console.log('🛒 Fallback: Intentando agregar al carrito:', {
+          productId: product.id,
+          productName: product.name,
+          product
+        });
+        addToCart(product, 1);
+        console.log('✅ Fallback addToCart ejecutado');
+      },
     }));
   }, [addToCart]);
 
