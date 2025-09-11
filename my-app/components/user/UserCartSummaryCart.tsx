@@ -25,7 +25,7 @@ export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProp
     const totalPrice = validCartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
 
     return (
-      <div className="w-full max-w-[430px] mx-auto bg-white rounded-lg p-4 mb-1 animate-fade-up shadow-t-sm shadow-black border-t border-gray-100 safe-area-bottom overflow-hidden">
+      <div className="w-full max-w-[430px] mx-auto bg-white rounded-lg p-4 mb-1 animate-fade-up shadow-t-sm shadow-black border-t-2 border-black/10 rounded-t-xl safe-area-bottom overflow-hidden">
         {/* Sección superior con Gesamtbetrag */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex flex-col">
@@ -42,18 +42,20 @@ export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProp
         </div>
 
         {/* Código promocional aplicado */}
-        {promoApplied && pathname === '/user/cart' && (
+        {promoApplied && pathname === "/user/cart" && (
           <div className="mb-4 p-3 bg-[#F2FDF5] rounded-lg border border-[#3C7E44]/20">
             <div className="flex items-center justify-between mb-1">
               <div className="text-[#3C7E44] text-[14px] font-medium mobile-sm">
-                Promo Code: <span className="font-bold">{promoCode?.toUpperCase()}</span>
+                Promo Code:{" "}
+                <span className="font-bold">{promoCode?.toUpperCase()}</span>
               </div>
               <div className="text-[#3C7E44] text-[12px] bg-[#3C7E44]/10 px-2 py-1 rounded-full mobile-xs">
                 ✓ Angewendet
               </div>
             </div>
             <div className="text-[#3C7E44] text-[13px] mobile-xs">
-              10% Rabatt auf Bio-Produkte - {formatSwissPriceWithCHF(discountAmount || 0)}
+              10% Rabatt auf Bio-Produkte -{" "}
+              {formatSwissPriceWithCHF(discountAmount || 0)}
             </div>
           </div>
         )}
@@ -61,8 +63,8 @@ export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProp
         {/* Botón Zur Bezahlung optimizado para móvil */}
         <button
           className="w-[85%] mx-auto bg-[#25D076] text-white py-4 mb-2 px-6 rounded-full font-semibold text-lg hover:bg-[#25D076]/80 transition-colors flex items-center justify-center gap-2 touch-target tap-highlight-transparent active:scale-95 ios-scroll-fix"
-          onClick={() => router.push('/user/payment')}
-          style={{ minHeight: '48px' }}
+          onClick={() => router.push("/user/payment")}
+          style={{ minHeight: "48px" }}
           aria-label="Zur Bezahlung gehen"
         >
           Zur Bezahlung

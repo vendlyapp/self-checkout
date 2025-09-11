@@ -283,13 +283,16 @@ export default function PaymentP() {
         <p className="text-xl pt-4 font-semibold text-[#373F49]">
           Heinigers Hofladen
         </p>
-        <p className="text-2xl font-bold">{formatSwissPriceWithCHF(totalWithVAT)}</p>
+        <p className="text-2xl font-bold">
+          {formatSwissPriceWithCHF(totalWithVAT)}
+        </p>
         <p className="text-lg font-semibold text-[#373F49]">
           inkl. MwSt • {totalItems} {totalItems === 1 ? "Artikel" : "Artikel"}
         </p>
         {subtotal !== totalWithVAT && (
           <p className="text-sm text-[#6E7996]">
-            Netto: {formatSwissPriceWithCHF(subtotal)} + MwSt (7.7%): {formatSwissPriceWithCHF(totalWithVAT - subtotal)}
+            Netto: {formatSwissPriceWithCHF(subtotal)} + MwSt (7.7%):{" "}
+            {formatSwissPriceWithCHF(totalWithVAT - subtotal)}
           </p>
         )}
       </div>
@@ -311,9 +314,11 @@ export default function PaymentP() {
                 autoCapitalize="characters"
                 maxLength={10}
                 value={localPromoCode}
-                onChange={(e) => setLocalPromoCode(e.target.value.toUpperCase())}
+                onChange={(e) =>
+                  setLocalPromoCode(e.target.value.toUpperCase())
+                }
                 placeholder="Gib deinen Code ein"
-                className="block w-full rounded-lg border-2 uppercase bg-white px-3 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="block w-[60%] rounded-lg border-2 uppercase bg-white px-3 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-brand-500"
                 aria-label="Promo Code"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -323,18 +328,20 @@ export default function PaymentP() {
               />
               <button
                 onClick={handleApplyPromo}
-                className="bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg px-4 py-3 text-[15px] transition-colors touch-target tap-highlight-transparent active:scale-95"
+                className="bg-brand-500 justify-center items-center flex hover:bg-brand-600 text-white font-semibold rounded-lg px-4 py-3  transition-colors touch-target tap-highlight-transparent active:scale-95"
                 aria-label="Promo anwenden"
-                style={{ minHeight: '44px' }}
+                style={{ minHeight: "44px" }}
               >
-                Anwenden
+                <span className="text-white font-semibold text-base mobile-base text-[15px] truncate">
+                  Anwenden
+                </span>
               </button>
             </div>
-                         {promoError && (
-               <span className="text-red-600 text-[14px] font-medium mt-1">
-                 {promoError}
-               </span>
-             )}
+            {promoError && (
+              <span className="text-red-600 text-[14px] font-medium mt-1">
+                {promoError}
+              </span>
+            )}
           </div>
         ) : (
           <div className="flex items-center bg-[#F2FDF5] rounded-xl px-4 py-3 mt-2 mb-2 shadow-sm border border-brand-200 mr-12">
@@ -348,10 +355,10 @@ export default function PaymentP() {
             </div>
             <button
               onClick={handleRemovePromo}
-              className="ml-2 p-2 rounded-full hover:bg-brand-200 focus:outline-none touch-target tap-highlight-transparent active:scale-95"
+              className="ml-2 p-2 rounded-full justify-center items-center flex hover:bg-brand-200 focus:outline-none touch-target tap-highlight-transparent active:scale-95"
               aria-label="Promo entfernen"
               tabIndex={0}
-              style={{ minHeight: '44px', minWidth: '44px' }}
+              style={{ minHeight: "44px", minWidth: "44px" }}
             >
               <X className="w-5 h-5 text-brand-700" />
             </button>
@@ -381,7 +388,7 @@ export default function PaymentP() {
                 ${isSelected ? "ring-4 ring-blue-300 ring-opacity-50" : ""}
                 hover:scale-105 active:scale-95 touch-target tap-highlight-transparent
               `}
-              style={{ minHeight: '50px' }}
+              style={{ minHeight: "50px" }}
               aria-label={`${method.name} auswählen`}
             >
               <IconComponent className="w-6 h-6" />
