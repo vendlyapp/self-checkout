@@ -15,7 +15,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   const [pressed, setPressed] = useState(false);
 
   const baseClasses =
-    "btn-tap w-full rounded-2xl p-5 flex items-center justify-between transition-all group transition-transform duration-150 mb-2 mt-2";
+    "btn-tap w-full rounded-2xl p-5 flex items-center justify-between transition-all group transition-transform duration-150 mb-3 mt-3";
   const variantClasses =
     variant === "primary"
       ? "bg-primary text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/20"

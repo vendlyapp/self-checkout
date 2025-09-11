@@ -38,7 +38,7 @@ export default function ProductsDashboard() {
 
   return (
     <div className="pl-4 pr-4">
-      <section className="mb-8">
+      <div className="mb-8 mt-3">
         <SearchInput
           placeholder="Suche Produkte / Verkäufe"
           value={searchQuery}
@@ -46,8 +46,7 @@ export default function ProductsDashboard() {
           onSearch={() => {}}
           className="w-full"
         />
-      </section>
-
+      </div>
       {/* Tarjetas de Estadísticas */}
       <div className="grid grid-cols-2 gap-3">
         <StatCard
@@ -72,7 +71,6 @@ export default function ProductsDashboard() {
           className="bg-background-cream"
         />
       </div>
-
       {/* Botón de Acción Principal */}
       <ActionButton
         icon={<Plus className="w-5 h-5" />}
@@ -81,7 +79,6 @@ export default function ProductsDashboard() {
         onClick={handleNewProduct}
         variant="primary"
       />
-
       {/* Elementos de Navegación */}
       <div className="space-y-3">
         <NavigationItem
