@@ -37,7 +37,7 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
   return (
     <button
       type="button"
-      className={`w-full flex items-center gap-3 py-3 rounded-xl focus-visible:ring-2 focus-visible:ring-brand-500 group transition-transform duration-150 ${
+      className={`w-full flex items-center gap-4 py-4 rounded-xl focus-visible:ring-2 focus-visible:ring-brand-500 group transition-transform duration-150 ${
         pressed ? "scale-95" : ""
       } ${className}`}
       tabIndex={0}

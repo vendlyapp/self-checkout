@@ -42,7 +42,7 @@ const settings = [
 ];
 
 const SystemSettingsList = () => (
-  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-4 pt-4 pb-2 mb-5">
+  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-4 pt-4 pb-4 mb-5">
     <h3 className="font-semibold text-gray-900 mb-3">System-Einstellungen</h3>
     <ul className="divide-y divide-gray-100">
       {settings.map((item) => (
