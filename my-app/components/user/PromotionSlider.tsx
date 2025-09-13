@@ -3,7 +3,9 @@
 import React, { useMemo } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, FreeMode } from "swiper/modules";
-import PromotionCard, { PromotionCardProps } from "@/components/user/PromotionCard";
+import PromotionCard, {
+  PromotionCardProps,
+} from "@/components/user/PromotionCard";
 import { clsx } from "clsx";
 
 // Import Swiper styles
@@ -15,7 +17,10 @@ export type PromotionSliderProps = {
   className?: string;
 };
 
-const PromotionSlider: React.FC<PromotionSliderProps> = ({ items, className }) => {
+const PromotionSlider: React.FC<PromotionSliderProps> = ({
+  items,
+  className,
+}) => {
   const safeItems = useMemo(() => items ?? [], [items]);
 
   return (
@@ -23,7 +28,8 @@ const PromotionSlider: React.FC<PromotionSliderProps> = ({ items, className }) =
       <Swiper
         modules={[Autoplay, FreeMode]}
         spaceBetween={16}
-        slidesPerView={1.6}
+        slidesPerView={1.8}
+        maxBackfaceHiddenSlides={10}
         centeredSlides={true}
         freeMode={{
           enabled: true,
@@ -35,6 +41,11 @@ const PromotionSlider: React.FC<PromotionSliderProps> = ({ items, className }) =
           delay: 4000,
           disableOnInteraction: false,
           pauseOnMouseEnter: true,
+        }}
+        breakpoints={{
+          380: {
+            slidesPerView: 1.5,
+          },
         }}
         loop={true}
         grabCursor={true}
