@@ -28,8 +28,8 @@ const PromotionSlider: React.FC<PromotionSliderProps> = ({
       <Swiper
         modules={[Autoplay, FreeMode]}
         spaceBetween={8}
-        slidesPerView={1.7}
-        maxBackfaceHiddenSlides={10}
+        slidesPerView={1.6}
+        maxBackfaceHiddenSlides={9}
         centeredSlides={true}
         freeMode={{
           enabled: true,
@@ -38,19 +38,19 @@ const PromotionSlider: React.FC<PromotionSliderProps> = ({
           momentumVelocityRatio: 0.5,
         }}
         autoplay={{
-          delay: 4000,
+          delay: 3000,
           disableOnInteraction: false,
           pauseOnMouseEnter: true,
         }}
         breakpoints={{
           320: {
-            slidesPerView: 1.4,
-          },
-          380: {
             slidesPerView: 1.6,
           },
-          480: {
+          380: {
             slidesPerView: 1.7,
+          },
+          480: {
+            slidesPerView: 1.8,
           },
           640: {
             slidesPerView: 2,
