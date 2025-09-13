@@ -97,7 +97,7 @@ export default function SearchUser() {
         {/* Contenido principal */}
         {!searchTerm ? (
           /* Estado inicial - Búsquedas populares */
-          <div>
+          <div className="safe-area-top">
             <div className="flex items-center gap-2 mb-4">
               <Image src="/Fire.svg" alt="Flame" width={30} height={30} />
               <h2 className="text-lg font-semibold text-gray-800">
@@ -111,7 +111,7 @@ export default function SearchUser() {
                   key={index}
                   onClick={() => handlePopularSearch(search)}
                   className="bg-white rounded-lg px-4 py-3 text-left text-gray-700 font-medium shadow-sm border border-gray-100 hover:border-brand-200 hover:shadow-md transition-all duration-200 touch-target tap-highlight-transparent active:scale-95"
-                  style={{ minHeight: '48px' }}
+                  style={{ minHeight: "48px" }}
                   aria-label={`Nach ${search} suchen`}
                 >
                   {search}
@@ -121,9 +121,9 @@ export default function SearchUser() {
           </div>
         ) : (
           /* Estado de resultados de búsqueda */
-          <div>
+          <div className="safe-area-top bg-[#F9F6F4] pl-2 pr-2">
             {/* Header fijo para resultados */}
-            <div className="flex items-center justify-between mb-4 sticky top-[70px] bg-background-cream pt-2 pb-2 z-10">
+            <div className="flex items-center justify-between mb-4 sticky top-[70px] pt-2 pb-2 z-10 bg-[#F9F6F4]">
               <h2 className="text-lg font-semibold text-gray-800">
                 Schnell hinzufügen
               </h2>
@@ -131,7 +131,7 @@ export default function SearchUser() {
                 onClick={handleClearSearch}
                 className="p-2 rounded-full hover:bg-gray-100 transition-colors touch-target tap-highlight-transparent active:scale-95"
                 aria-label="Búsqueda löschen"
-                style={{ minHeight: '44px', minWidth: '44px' }}
+                style={{ minHeight: "44px", minWidth: "44px" }}
               >
                 <X className="w-5 h-5 text-gray-500" />
               </button>
