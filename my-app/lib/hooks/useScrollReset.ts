@@ -27,6 +27,7 @@ export const useScrollReset = () => {
         });
       } catch (error) {
         // Fallback para navegadores más antiguos
+        console.error(error);
         container.scrollTop = 0;
         container.scrollLeft = 0;
       }
@@ -40,6 +41,7 @@ export const useScrollReset = () => {
         // Double-check para iOS (a veces necesita un segundo intento)
         requestAnimationFrame(() => {
           if (container.scrollTop > 0) {
+            console.log('🔔 Double-check para iOS (a veces necesita un segundo intento)');
             container.scrollTop = 0;
           }
         });
@@ -90,6 +92,7 @@ export const useScrollToTop = (dependency?: string) => {
         });
       } catch (error) {
         // Fallback
+        console.error(error);
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
       }
