@@ -27,8 +27,8 @@ const PromotionSlider: React.FC<PromotionSliderProps> = ({
     <div className={clsx("w-full", className)}>
       <Swiper
         modules={[Autoplay, FreeMode]}
-        spaceBetween={16}
-        slidesPerView={1.8}
+        spaceBetween={8}
+        slidesPerView={1.7}
         maxBackfaceHiddenSlides={10}
         centeredSlides={true}
         freeMode={{
@@ -43,8 +43,17 @@ const PromotionSlider: React.FC<PromotionSliderProps> = ({
           pauseOnMouseEnter: true,
         }}
         breakpoints={{
+          320: {
+            slidesPerView: 1.4,
+          },
           380: {
-            slidesPerView: 1.5,
+            slidesPerView: 1.6,
+          },
+          480: {
+            slidesPerView: 1.7,
+          },
+          640: {
+            slidesPerView: 2,
           },
         }}
         loop={true}
