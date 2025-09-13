@@ -47,13 +47,13 @@ const PromotionSlider: React.FC<PromotionSliderProps> = ({
             slidesPerView: 1.6,
           },
           380: {
-            slidesPerView: 1.7,
+            slidesPerView: 1.6,
           },
           480: {
-            slidesPerView: 1.8,
+            slidesPerView: 1.7,
           },
           640: {
-            slidesPerView: 2,
+            slidesPerView: 1.7,
           },
         }}
         loop={true}

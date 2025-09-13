@@ -94,8 +94,8 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
         className
       )}
       style={{
-        width: "232px",
-        height: "292px",
+        width: "220px",
+        height: "280px",
       }}
       role="region"
       aria-label={`${title}: ${name}`}
