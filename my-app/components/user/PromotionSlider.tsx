@@ -23,7 +23,7 @@ const PromotionSlider: React.FC<PromotionSliderProps> = ({ items, className }) =
       <Swiper
         modules={[Autoplay, FreeMode]}
         spaceBetween={16}
-        slidesPerView={1.8}
+        slidesPerView={1.6}
         centeredSlides={true}
         freeMode={{
           enabled: true,

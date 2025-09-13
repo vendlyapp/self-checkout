@@ -120,18 +120,19 @@ const AnalyticsDashboard: React.FC = () => {
   }
 
   return (
-    <div className="px-4 py-2">
-      {/* Search Section */}
-      <section className="mb-6">
-        <SearchInput
-          placeholder="Suche Produkte / Verkäufe"
-          value={searchQuery}
-          onChange={setSearchQuery}
-          onSearch={handleSearch}
-          className="w-full"
-          esHome={false}
-        />
-      </section>
+    <div className="w-full">
+      <div className="p-4 space-y-6">
+        {/* Search Section */}
+        <div>
+          <SearchInput
+            placeholder="Suche Produkte / Verkäufe"
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onSearch={handleSearch}
+            className="w-full"
+            esHome={false}
+          />
+        </div>
 
       {/* Search Results */}
       {(isSearching || searchResults.length > 0) && (
@@ -212,6 +213,7 @@ const AnalyticsDashboard: React.FC = () => {
             loading={loading}
           />
         </section>
+      </div>
       </div>
     </div>
   );

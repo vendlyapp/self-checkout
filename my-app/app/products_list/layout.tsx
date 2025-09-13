@@ -9,10 +9,12 @@ import {
 } from "@/components/dashboard/products_list/ProductsListContext";
 import { useRouter } from "next/navigation";
 import Header from "@/components/navigation/Header";
+import { useScrollReset } from "@/lib/hooks";
 
 function ProductsListLayoutContent({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { scrollContainerRef } = useScrollReset();
   const { totalProducts, filteredProducts, hasActiveFilters, isLoading } =
     useProductsList();
 
@@ -38,7 +40,10 @@ function ProductsListLayoutContent({ children }: { children: ReactNode }) {
     <div className="flex flex-col h-full w-full bg-background-cream">
       <Header />
 
-      <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
+      <main
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto overflow-x-hidden relative ios-scroll-fix"
+      >
         <div className="pb-24">{children}</div>
       </main>
 

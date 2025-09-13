@@ -5,6 +5,7 @@ import { ReactNode } from "react";
 import FooterNavUser from "@/components/navigation/user/FooterNavUser";
 import HeaderUser from "@/components/navigation/user/HeaderUser";
 import { usePathname } from "next/navigation";
+import { useScrollReset } from "@/lib/hooks";
 
 interface UserLayoutProps {
   children: ReactNode;
@@ -12,6 +13,7 @@ interface UserLayoutProps {
 
 const UserLayout = ({ children }: UserLayoutProps) => {
   const pathname = usePathname();
+  const { scrollContainerRef } = useScrollReset();
   const isScanRoute = pathname === "/user/scan";
 
   const containerBgClass = isScanRoute ? "bg-[#191F2D]" : "bg-background-cream";
@@ -24,8 +26,11 @@ const UserLayout = ({ children }: UserLayoutProps) => {
         <HeaderUser isDarkMode={isScanRoute} />
       </div>
 
-      {/* Contenido principal optimizado para iOS */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden relative no-scrollbar pt-[calc(85px+env(safe-area-inset-top))] pb-[calc(100px+env(safe-area-inset-bottom))]">
+      {/* Contenido principal optimizado para PWA iOS */}
+      <main
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto overflow-x-hidden relative no-scrollbar ios-scroll-fix pt-[calc(85px+env(safe-area-inset-top))] pb-[calc(100px+env(safe-area-inset-bottom))]"
+      >
         <div className="w-full">{children}</div>
       </main>
 

@@ -118,7 +118,9 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
             aspectRatio: "91/60",
           }}
         >
-          {imageUrl && typeof imageUrl === 'string' && imageUrl.trim() !== '' ? (
+          {imageUrl &&
+          typeof imageUrl === "string" &&
+          imageUrl.trim() !== "" ? (
             <Image
               src={imageUrl}
               alt={name}
@@ -128,7 +130,8 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
             />
           ) : (
             <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-              {typeof imageUrl === 'object' && React.isValidElement(imageUrl) ? (
+              {typeof imageUrl === "object" &&
+              React.isValidElement(imageUrl) ? (
                 imageUrl
               ) : (
                 <Package className="w-10 h-10 text-gray-400" />
@@ -210,15 +213,15 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
             disabled || isAdding
               ? "opacity-50 cursor-not-allowed bg-gray-400"
               : justAdded
-              ? "bg-green-600 hover:bg-green-700"
-              : "bg-[#25D076] hover:bg-[#25D076]/90 hover:scale-105 active:scale-95",
+              ? "bg-brand-500-600 hover:bg-brand-600"
+              : "bg-brand-500 hover:bg-brand-500/90 hover:scale-105 active:scale-95",
             // Sombra personalizada
             "shadow-[0_7px_29px_0_rgba(100,100,111,0.20)]"
           )}
           style={{
             width: "199.594px",
             height: "35px",
-            touchAction: "manipulation"
+            touchAction: "manipulation",
           }}
           aria-label={`${actionLabel} ${name}`}
         >

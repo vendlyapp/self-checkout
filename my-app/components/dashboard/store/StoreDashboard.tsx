@@ -30,40 +30,42 @@ const services = [
 ];
 
 const StoreDashboard = () => (
-  <div className="px-4 pt-4 pb-4 min-h-screen bg-background">
-    {/* Header Card */}
-    <StoreHeaderCard />
+  <div className="w-full">
+    <div className="p-4 space-y-6">
+      {/* Header Card */}
+      <StoreHeaderCard />
 
-    {/* Search Bar */}
-    <div className="my-5">
-      <SearchInput placeholder="Einstellungen durchsuchen..." esHome={false} />
-    </div>
-
-    {/* Plan Card */}
-    <PlanCard />
-
-    {/* Services */}
-    <div className="mt-6">
-      <h2 className="text-base font-semibold text-gray-900 mb-3">Services:</h2>
-      <div className="grid grid-cols-2 gap-4">
-        {services.map((service) => (
-          <ServiceCard key={service.title} {...service} />
-        ))}
+      {/* Search Bar */}
+      <div>
+        <SearchInput placeholder="Einstellungen durchsuchen..." esHome={false} />
       </div>
+
+      {/* Plan Card */}
+      <PlanCard />
+
+      {/* Services */}
+      <div>
+        <h2 className="text-base font-semibold text-gray-900 mb-3">Services:</h2>
+        <div className="grid grid-cols-2 gap-4">
+          {services.map((service) => (
+            <ServiceCard key={service.title} {...service} />
+          ))}
+        </div>
+      </div>
+
+      {/* System Settings List */}
+      <div>
+        <SystemSettingsList />
+      </div>
+
+      {/* Contact Card */}
+      <ContactCard />
+
+      {/* Footer */}
+      <p className="text-[12px] font-regular text-[#6E7996] text-center pt-4">
+        Version 1.02.2 • Self-Checkout • 29.6.2025
+      </p>
     </div>
-
-    {/* System Settings List */}
-    <div className="mt-7">
-      <SystemSettingsList />
-    </div>
-
-    {/* Contact Card */}
-    <ContactCard />
-
-    {/* Footer */}
-    <p className="text-[12px] font-regular text-[#6E7996] mt-5 text-center pt-4">
-      Version 1.02.2 • Self-Checkout • 29.6.2025
-    </p>
   </div>
 );
 

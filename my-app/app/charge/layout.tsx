@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Header from "@/components/navigation/Header";
 import FooterContinue from "@/components/dashboard/charge/FooterContinue";
 import CartSummary from "@/components/dashboard/charge/CartSummary";
+import { useScrollReset } from "@/lib/hooks";
 
 import { useCartStore } from "@/lib/stores/cartStore";
 
@@ -28,6 +29,7 @@ export const useFilterModal = () => {
 
 export default function ChargeLayout({ children }: { children: ReactNode }) {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const { scrollContainerRef } = useScrollReset();
 
   const {
     cartItems,
@@ -83,7 +85,10 @@ export default function ChargeLayout({ children }: { children: ReactNode }) {
       <div className="flex flex-col h-full w-full bg-background-cream">
         <Header />
 
-        <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
+        <main
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto overflow-x-hidden relative ios-scroll-fix"
+        >
           <div>{children}</div>
         </main>
 

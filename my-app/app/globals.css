@@ -207,13 +207,21 @@
   body {
     @apply text-foreground antialiased;
     font-family: var(--font-sans), system-ui, sans-serif;
-    /* Mejorar comportamiento del scroll */
-    overscroll-behavior: auto;
+    /* Optimizaciones PWA iOS - Comportamiento nativo */
+    overscroll-behavior: none; /* Evita bounce/refresh en iOS */
     -webkit-overflow-scrolling: touch;
-    /* Prevenir scroll horizontal no deseado */
+    /* Prevenir scroll horizontal */
     overflow-x: hidden;
-    /* Mejorar scroll en móviles */
-    scroll-behavior: smooth;
+    /* Scroll instantáneo para navegación (como apps nativas) */
+    scroll-behavior: auto;
+    /* iOS Safari optimizations */
+    -webkit-scroll-behavior: auto;
+    scroll-snap-type: none;
+    /* Prevenir zoom accidental en iOS */
+    touch-action: manipulation;
+    /* Mejorar rendimiento en iOS */
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
@@ -276,11 +284,24 @@
     touch-action: none;
   }
 
-  /* Optimizaciones específicas para Safari iOS */
+  /* Optimizaciones específicas para Safari iOS - PWA Native Feel */
   .ios-scroll-fix {
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-    scroll-behavior: smooth;
+    overscroll-behavior: none; /* Elimina bounce/refresh completamente */
+    scroll-behavior: auto; /* Scroll instantáneo como apps nativas */
+    -webkit-scroll-behavior: auto;
+    /* Mejoras para PWA iOS */
+    scroll-snap-type: none;
+    -webkit-transform: translate3d(0,0,0);
+    transform: translate3d(0,0,0);
+    will-change: scroll-position;
+    /* Prevenir problemas de touch en iOS */
+    touch-action: pan-y; /* Solo scroll vertical */
+    -webkit-touch-callout: none;
+    /* Mejorar rendimiento en scroll */
+    contain: layout style paint;
+    /* Eliminar delay de tap en iOS */
+    -webkit-tap-highlight-color: transparent;
   }
 
   /* Prevenir zoom en inputs en Safari iOS */

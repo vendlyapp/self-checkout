@@ -110,7 +110,7 @@ const DashboardUser = () => {
             </p>
           </div>
           <div className="flex items-center justify-end">
-            <button className="bg-white text-gray-500 px-4 py-3 rounded-md hover:bg-gray-50 transition-colors touch-target tap-highlight-transparent active:scale-95" style={{ minHeight: '44px' }}>
+            <button className="bg-white text-gray-500 px-4 rounded-md hover:bg-gray-50 transition-colors touch-target tap-highlight-transparent active:scale-95" style={{ minHeight: '35px' }}>
               Kontakt
             </button>
           </div>

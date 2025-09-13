@@ -30,7 +30,6 @@ interface FormErrors {
 
 interface Category {
   value: string;
-  icon: string;
   color: string;
 }
 
@@ -87,9 +86,9 @@ export default function Form() {
   // Data - Using useMemo to fix the warning
   const categories: Category[] = useMemo(
     () => [
-      { value: "Früchte", icon: "🍎", color: "bg-red-50 text-red-700" },
-      { value: "Gemüse", icon: "🥕", color: "bg-orange-50 text-orange-700" },
-      { value: "Alle", icon: "🛒", color: "bg-gray-50 text-gray-700" },
+      { value: "Früchte", color: "bg-red-50 text-red-700" },
+      { value: "Gemüse", color: "bg-orange-50 text-orange-700" },
+      { value: "Alle", color: "bg-gray-50 text-gray-700" },
     ],
     []
   );
@@ -486,7 +485,7 @@ export default function Form() {
               <option value="">Kategorie wählen...</option>
               {categories.map((category) => (
                 <option key={category.value} value={category.value}>
-                  {category.icon} {category.value}
+                  {category.value}
                 </option>
               ))}
             </select>

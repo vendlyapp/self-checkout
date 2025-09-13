@@ -183,7 +183,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           {paymentStep === "success" && (
             <div className="text-center py-8">
               {/* Icono de éxito con animación */}
-              <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+              <div className="w-20 h-20 bg-gradient-to-br from-brand-500 to-brand-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
                 <CheckCircle className="w-10 h-10 text-white" />
               </div>
 
@@ -201,7 +201,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 {/* Indicador de progreso para redirección */}
                 <div className="w-full bg-gray-200 rounded-full h-1 mt-4">
                   <div
-                    className="bg-gradient-to-r from-green-500 to-green-600 h-1 rounded-full animate-pulse"
+                    className="bg-gradient-to-r from-brand-500 to-brand-600 h-1 rounded-full animate-pulse"
                     style={{ width: "100%" }}
                   ></div>
                 </div>

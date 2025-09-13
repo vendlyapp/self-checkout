@@ -37,16 +37,17 @@ export default function ProductsDashboard() {
   const activeCategoriesCount = getActiveCategoriesCount(data.categories);
 
   return (
-    <div className="pl-4 pr-4">
-      <div className="mb-8 mt-3">
-        <SearchInput
-          placeholder="Suche Produkte / Verkäufe"
-          value={searchQuery}
-          onChange={setSearchQuery}
-          onSearch={() => {}}
-          className="w-full"
-        />
-      </div>
+    <div className="w-full">
+      <div className="p-4 space-y-6">
+        <div>
+          <SearchInput
+            placeholder="Suche Produkte / Verkäufe"
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onSearch={() => {}}
+            className="w-full"
+          />
+        </div>
       {/* Tarjetas de Estadísticas */}
       <div className="grid grid-cols-2 gap-3">
         <StatCard
@@ -105,7 +106,8 @@ export default function ProductsDashboard() {
           subtitle="erstellen & bearbeiten"
           badge={`${activeProductsCount} aktiv`}
           badgeVariant="success"
-        />
+          />
+        </div>
       </div>
     </div>
   );

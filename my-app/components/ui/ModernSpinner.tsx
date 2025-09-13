@@ -27,9 +27,9 @@ const ModernSpinner: React.FC<ModernSpinnerProps> = ({
       center: "bg-blue-500",
     },
     green: {
-      border: "border-t-green-500 border-r-green-400 border-b-green-300",
-      inner: "bg-green-50",
-      center: "bg-green-500",
+      border: "border-t-brand-500 border-r-brand-400 border-b-brand-300",
+      inner: "bg-brand-50",
+      center: "bg-brand-500",
     },
     brand: {
       border: "border-t-brand-500 border-r-brand-400 border-b-brand-300",

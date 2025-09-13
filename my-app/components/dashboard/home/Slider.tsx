@@ -19,38 +19,38 @@ const sliderData = [
   {
     icon: Users,
     text: "Kunden",
-    color: "bg-green-500",
+    color: "bg-brand-500",
   },
   {
     icon: Flame,
     text: "Bestseller",
-    color: "bg-green-500",
+    color: "bg-brand-500",
   },
   {
     icon: Receipt,
     text: "Verkäufe",
-    color: "bg-green-500",
+    color: "bg-brand-500",
   },
   {
     icon: Tag,
     text: "Rabatte",
-    color: "bg-green-500",
+    color: "bg-brand-500",
   },
   {
     icon: Calculator,
     text: "Rechner",
-    color: "bg-green-500",
+    color: "bg-brand-500",
   },
   {
     icon: ShoppingCart,
     text: "Warenkorb",
-    color: "bg-green-500",
+    color: "bg-brand-500",
   },
 ];
 
 export default function Slider() {
   return (
-    <div className="w-full mb-8">
+    <div className="w-full">
       <Swiper
         modules={[Autoplay, FreeMode]}
         spaceBetween={4}
@@ -70,6 +70,11 @@ export default function Slider() {
         grabCursor={true}
         touchRatio={1}
         resistance={false}
+        touchStartPreventDefault={false}
+        touchMoveStopPropagation={false}
+        simulateTouch={true}
+        allowTouchMove={true}
+        nested={true}
         className="w-full"
       >
         {sliderData.map((item, index) => (

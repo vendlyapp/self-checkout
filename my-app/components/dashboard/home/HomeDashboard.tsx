@@ -55,51 +55,53 @@ const HomeDashboard: React.FC = () => {
   const { currentAmount, goalAmount, percentage, recentSales } = data;
 
   return (
-    <div className="p-4">
-      {/* ===== GREETING & STATUS ===== */}
-      <GreetingSection
-        isStoreOpen={isStoreOpen}
-        onToggleStore={handleToggleStore}
-      />
-
-      {/* ===== MAIN ACTIONS ===== */}
-      <MainActionCards />
-
-      {/* ===== SEARCH BAR ===== */}
-      <section className="pb-6">
-        <SearchInput
-          placeholder="Suche Produkte / Verkäufe"
-          value={searchQuery}
-          onChange={setSearchQuery}
-          onSearch={handleSearch}
-          className="w-full"
-          esHome={true}
+    <div className="w-full">
+      <div className="p-4 space-y-6">
+        {/* ===== GREETING & STATUS ===== */}
+        <GreetingSection
+          isStoreOpen={isStoreOpen}
+          onToggleStore={handleToggleStore}
         />
-      </section>
 
-      {/* ===== TODAY'S STATS ===== */}
-      <TodayStatsCard />
+        {/* ===== MAIN ACTIONS ===== */}
+        <MainActionCards />
 
-      {/* ===== DAILY GOAL ===== */}
-      <DailyGoalCard
-        currentAmount={currentAmount}
-        goalAmount={goalAmount}
-        percentage={percentage}
-      />
+        {/* ===== SEARCH BAR ===== */}
+        <div>
+          <SearchInput
+            placeholder="Suche Produkte / Verkäufe"
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onSearch={handleSearch}
+            className="w-full"
+            esHome={true}
+          />
+        </div>
 
-      {/* ===== SLIDER ===== */}
-      <Slider />
+        {/* ===== TODAY'S STATS ===== */}
+        <TodayStatsCard />
 
-      {/* ===== RECENT SALES ===== */}
-      <RecentSalesSection sales={recentSales} />
-
-      {/* ===== SEARCH RESULTS ===== */}
-      {(isSearching || searchResults.length > 0) && (
-        <SearchResultsSection
-          isSearching={isSearching}
-          results={searchResults}
+        {/* ===== DAILY GOAL ===== */}
+        <DailyGoalCard
+          currentAmount={currentAmount}
+          goalAmount={goalAmount}
+          percentage={percentage}
         />
-      )}
+
+        {/* ===== SLIDER ===== */}
+        <Slider />
+
+        {/* ===== RECENT SALES ===== */}
+        <RecentSalesSection sales={recentSales} />
+
+        {/* ===== SEARCH RESULTS ===== */}
+        {(isSearching || searchResults.length > 0) && (
+          <SearchResultsSection
+            isSearching={isSearching}
+            results={searchResults}
+          />
+        )}
+      </div>
     </div>
   );
 };
