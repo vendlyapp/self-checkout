@@ -115,33 +115,33 @@ const SalesChart: React.FC<SalesChartProps> = ({
     periodOptions.find((option) => option.value === period)?.label || "Woche";
 
   return (
-    <Card className="bg-card rounded-2xl border border-border/50 transition-fast hover:shadow-md">
-      <CardContent className="p-5">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-foreground">Umsatz</h3>
+    <Card className="bg-card rounded-2xl border border-border/50 transition-all duration-200 hover:shadow-md">
+      <CardContent className="p-5 lg:p-6">
+        <div className="flex justify-between items-center mb-4 lg:mb-5">
+          <h3 className="text-lg lg:text-xl font-semibold text-foreground">Umsatz</h3>
 
           {/* Period Selector */}
           <div className="relative">
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-fast px-2 py-1 rounded-lg hover:bg-muted tap-highlight-transparent"
+              className="flex items-center gap-1 text-sm lg:text-base text-muted-foreground hover:text-foreground transition-all duration-200 px-2 py-1 lg:px-3 lg:py-2 rounded-lg hover:bg-muted tap-highlight-transparent"
               aria-label="Zeitraum ändern"
             >
               {currentPeriodLabel}
               <ChevronDown
-                className={`w-4 h-4 transition-fast ${
+                className={`w-4 h-4 lg:w-5 lg:h-5 transition-all duration-200 ${
                   isDropdownOpen ? "rotate-180" : ""
                 }`}
               />
             </button>
 
             {isDropdownOpen && (
-              <div className="absolute right-0 top-8 z-20 bg-background border border-border rounded-lg shadow-lg py-1 min-w-[120px]">
+              <div className="absolute right-0 top-8 z-20 bg-background border border-border rounded-lg shadow-lg py-1 min-w-[120px] lg:min-w-[140px]">
                 {periodOptions.map((option) => (
                   <button
                     key={option.value}
                     onClick={() => handlePeriodSelect(option.value)}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-fast ${
+                    className={`w-full text-left px-3 py-2 lg:px-4 lg:py-2.5 text-sm lg:text-base hover:bg-muted transition-all duration-200 ${
                       period === option.value
                         ? "text-primary font-medium"
                         : "text-foreground"
@@ -155,20 +155,20 @@ const SalesChart: React.FC<SalesChartProps> = ({
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 lg:space-y-5">
           {/* Total und Vergleich */}
           <div className="flex items-center justify-between w-full">
-            <div className="flex items-baseline gap-2">
-              <span className="text-[14px] text-muted-foreground">CHF</span>
-              <span className="text-3xl font-bold text-foreground">
+            <div className="flex items-baseline gap-2 lg:gap-3">
+              <span className="text-[14px] lg:text-base text-muted-foreground">CHF</span>
+              <span className="text-3xl lg:text-4xl font-bold text-foreground">
                 {formatSwissPrice(totalSales)}
               </span>
             </div>
-            <div className="flex items-center justify-end gap-2 text-sm">
+            <div className="flex items-center justify-end gap-2 lg:gap-3 text-sm lg:text-base">
               {isPositiveGrowth ? (
-                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                <TrendingUp className="w-4 h-4 lg:w-5 lg:h-5 text-emerald-500" />
               ) : (
-                <TrendingDown className="w-4 h-4 text-red-500" />
+                <TrendingDown className="w-4 h-4 lg:w-5 lg:h-5 text-red-500" />
               )}
               <span
                 className={`font-medium ${
@@ -185,7 +185,7 @@ const SalesChart: React.FC<SalesChartProps> = ({
           </div>
 
           {/* Recharts Line Chart */}
-          <div className="h-40">
+          <div className="h-40 lg:h-48">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={data}
@@ -230,13 +230,13 @@ const SalesChart: React.FC<SalesChartProps> = ({
           </div>
 
           {/* Legende */}
-          <div className="flex justify-between text-xs text-muted-foreground">
+          <div className="flex justify-between text-xs lg:text-sm text-muted-foreground">
             <span className="flex items-center gap-2">
-              <span className="w-4 h-0.5 bg-emerald-500 rounded"></span>
+              <span className="w-4 h-0.5 lg:w-5 lg:h-0.5 bg-emerald-500 rounded"></span>
               6. Juni - 5. Juli 2025
             </span>
             <span className="flex items-center gap-2">
-              <span className="w-4 h-0.5 bg-muted-foreground rounded border-dashed border-t border-muted-foreground"></span>
+              <span className="w-4 h-0.5 lg:w-5 lg:h-0.5 bg-muted-foreground rounded border-dashed border-t border-muted-foreground"></span>
               7. Mai - 5. Juni 2025
             </span>
           </div>

@@ -18,8 +18,8 @@ const TodayStatsCard = () => {
       </div>
 
       {/* Stats Grid - Responsive */}
-      <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 lg:gap-4">
-        {/* Móvil: 2 cards principales */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+        {/* Móvil: 2 cards principales, Desktop: 4 cards en una fila */}
         <StatCard
           icon={<DollarSign className="w-4 h-4" />}
           label="Verkäufe"

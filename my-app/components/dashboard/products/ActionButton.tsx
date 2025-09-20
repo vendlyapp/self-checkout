@@ -33,18 +33,18 @@ const ActionButton: React.FC<ActionButtonProps> = ({
       onMouseUp={() => setPressed(false)}
       onMouseLeave={() => setPressed(false)}
     >
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 lg:gap-5">
         <div
-          className={`w-10 h-10 ${
+          className={`w-10 h-10 lg:w-12 lg:h-12 ${
             variant === "primary" ? "bg-white/20" : "bg-muted"
           } rounded-xl flex items-center justify-center`}
         >
-          {icon}
+          <div className="lg:scale-110">{icon}</div>
         </div>
-        <div className="text-left">
-          <h3 className="font-semibold text-base">{title}</h3>
+        <div className="text-left flex-1">
+          <h3 className="font-semibold text-base lg:text-lg">{title}</h3>
           <p
-            className={`text-sm ${
+            className={`text-sm lg:text-base ${
               variant === "primary" ? "opacity-90" : "text-muted-foreground"
             }`}
           >
@@ -52,7 +52,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
           </p>
         </div>
       </div>
-      <ArrowRight className="w-5 h-5 opacity-70 group-hover:translate-x-0.5 transition-transform" />
+      <ArrowRight className="w-5 h-5 lg:w-6 lg:h-6 opacity-70 group-hover:translate-x-0.5 lg:group-hover:translate-x-1 transition-transform" />
     </button>
   );
 };

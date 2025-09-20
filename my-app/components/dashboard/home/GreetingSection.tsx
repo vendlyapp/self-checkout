@@ -6,7 +6,6 @@ import { useStoreState } from '@/lib/stores';
 import type { GreetingSectionProps } from '../types';
 
 const GreetingSection = ({
-  isStoreOpen,
   onToggleStore
 }: GreetingSectionProps) => {
   const { isStoreOpen: globalStoreOpen, toggleStore } = useStoreState();
@@ -49,77 +48,156 @@ const GreetingSection = ({
 
   return (
     <section className="mb-6 mt-4">
-      {/* Top Row: Greeting + Store Toggle */}
-      <div className="flex items-start justify-between mb-2 lg:mb-4">
-        <div className="flex-1 flex items-center">
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
-            Hoi Peter
-            <span className="ml-2">👋</span>
-          </h1>
+      {/* Mobile Layout */}
+      <div className="block lg:hidden">
+        {/* Top Row: Greeting + Store Toggle */}
+        <div className="flex items-start justify-between mb-2">
+          <div className="flex-1 flex items-center">
+            <h1 className="text-2xl font-bold text-gray-900 leading-tight">
+              Hoi Peter
+              <span className="ml-2">👋</span>
+            </h1>
+          </div>
+
+          {/* Store Status Toggle with text inside */}
+          <div className="flex items-center gap-2 ml-4">
+            <button
+              onClick={() => {
+                toggleStore();
+                onToggleStore(); // Mantener compatibilidad con props
+              }}
+              className={`
+                relative inline-flex h-8 items-center rounded-full
+                transition-all duration-200 ease-in-out
+                focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2
+                ${globalStoreOpen ? 'bg-brand-500' : 'bg-gray-300'}
+              `}
+              style={{
+                width: globalStoreOpen ? '100px' : '120px'
+              }}
+              role="switch"
+              aria-checked={globalStoreOpen}
+              aria-label="Toggle store status"
+            >
+              <span
+                className={`
+                  absolute left-4 text-xs font-medium text-white transition-all duration-200 ease-in-out
+                  ${globalStoreOpen ? 'opacity-100' : 'opacity-0'}
+                `}
+              >
+                {globalStoreOpen ? 'Geöffnet' : ''}
+              </span>
+              <span
+                className={`
+                  absolute right-4 text-xs font-medium text-gray-600 transition-all duration-200 ease-in-out
+                  ${globalStoreOpen ? 'opacity-0' : 'opacity-100'}
+                `}
+              >
+                Geschlossen
+              </span>
+              <span
+                className={`
+                  inline-block h-6 w-6 transform rounded-full bg-white
+                  transition duration-200 ease-in-out shadow-sm
+                  ${globalStoreOpen ? 'translate-x-[70px]' : 'translate-x-1'}
+                `}
+              />
+            </button>
+          </div>
         </div>
 
-        {/* Store Status Toggle with text inside */}
-        <div className="flex items-center gap-2 ml-4">
-          <button
-            onClick={() => {
-              toggleStore();
-              onToggleStore(); // Mantener compatibilidad con props
-            }}
-            className={`
-              relative inline-flex h-8 lg:h-10 items-center rounded-full
-              transition-all duration-200 ease-in-out
-              focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2
-              ${globalStoreOpen ? 'bg-brand-500' : 'bg-gray-300'}
-            `}
-            style={{
-              width: globalStoreOpen ? '100px' : '120px'
-            }}
-            role="switch"
-            aria-checked={globalStoreOpen}
-            aria-label="Toggle store status"
-          >
-            <span
-              className={`
-                absolute left-4 text-xs font-medium text-white transition-all duration-200 ease-in-out
-                ${globalStoreOpen ? 'opacity-100' : 'opacity-0'}
-              `}
-            >
-              {globalStoreOpen ? 'Geöffnet' : ''}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <Sun className="w-4 h-4 text-yellow-500" />
+            <span className="text-sm text-gray-600">
+              {weather} • {new Date().toLocaleDateString('de-DE', {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'long'
+              })}
             </span>
-            <span
-              className={`
-                absolute right-4 text-xs font-medium text-gray-600 transition-all duration-200 ease-in-out
-                ${globalStoreOpen ? 'opacity-0' : 'opacity-100'}
-              `}
-            >
-              Geschlossen
-            </span>
-            <span
-              className={`
-                inline-block h-6 w-6 transform rounded-full bg-white
-                transition duration-200 ease-in-out shadow-sm
-                ${globalStoreOpen ? 'translate-x-[70px]' : 'translate-x-1'}
-              `}
-            />
-          </button>
+          </div>
+          <div className="flex items-center gap-4 text-sm text-gray-600">
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              <span>seit {currentTime} Uhr</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <Sun className="w-4 h-4 text-yellow-500" />
-          <span className="text-sm lg:text-base text-gray-600">
-            {weather} • {new Date().toLocaleDateString('de-DE', {
-              weekday: 'short',
-              day: 'numeric',
-              month: 'long'
-            })}
-          </span>
-        </div>
-        <div className="flex items-center gap-4 text-sm lg:text-base text-gray-600">
-          <div className="flex items-center gap-1">
-            <Clock className="w-4 h-4" />
-            <span>seit {currentTime} Uhr</span>
+      {/* Desktop Layout - Más compacto y organizado */}
+      <div className="hidden lg:block">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold text-gray-900">
+              Hoi Peter
+              <span className="ml-2">👋</span>
+            </h1>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Sun className="w-4 h-4 text-yellow-500" />
+              <span>{weather}</span>
+              <span>•</span>
+              <span>{new Date().toLocaleDateString('de-DE', {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'long'
+              })}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Clock className="w-4 h-4" />
+              <span>seit {currentTime} Uhr</span>
+            </div>
+
+            {/* Store Status Toggle - más compacto en desktop */}
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-600">Geschäft:</span>
+              <button
+                onClick={() => {
+                  toggleStore();
+                  onToggleStore();
+                }}
+                className={`
+                  relative inline-flex h-8 items-center rounded-full
+                  transition-all duration-200 ease-in-out
+                  focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2
+                  ${globalStoreOpen ? 'bg-brand-500' : 'bg-gray-300'}
+                `}
+                style={{
+                  width: globalStoreOpen ? '80px' : '100px'
+                }}
+                role="switch"
+                aria-checked={globalStoreOpen}
+                aria-label="Toggle store status"
+              >
+                <span
+                  className={`
+                    absolute left-3 text-xs font-medium text-white transition-all duration-200 ease-in-out
+                    ${globalStoreOpen ? 'opacity-100' : 'opacity-0'}
+                  `}
+                >
+                  {globalStoreOpen ? 'Offen' : ''}
+                </span>
+                <span
+                  className={`
+                    absolute right-3 text-xs font-medium text-gray-600 transition-all duration-200 ease-in-out
+                    ${globalStoreOpen ? 'opacity-0' : 'opacity-100'}
+                  `}
+                >
+                  Zu
+                </span>
+                <span
+                  className={`
+                    inline-block h-5 w-5 transform rounded-full bg-white
+                    transition duration-200 ease-in-out shadow-sm
+                    ${globalStoreOpen ? 'translate-x-[55px]' : 'translate-x-1'}
+                  `}
+                />
+              </button>
+            </div>
           </div>
         </div>
       </div>

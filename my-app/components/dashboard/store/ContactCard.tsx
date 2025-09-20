@@ -1,7 +1,7 @@
 import { MessageCircle } from 'lucide-react';
 
 const ContactCard = () => (
-  <div className="flex items-center bg-background-cream rounded-2xl shadow-sm border border-gray-100 px-4 py-4 mb-4">
+  <div className="flex items-center bg-background-cream rounded-2xl shadow-sm border border-gray-100 px-4 py-4 ">
     <div className="w-10 h-10  bg-white rounded-lg p-2 flex items-center justify-center mr-3">
       <MessageCircle className="w-5 h-5 text-brand-700 " />
     </div>
@@ -20,4 +20,4 @@ const ContactCard = () => (
   </div>
 );
 
-export default ContactCard; 
+export default ContactCard;

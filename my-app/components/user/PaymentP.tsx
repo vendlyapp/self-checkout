@@ -75,7 +75,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const methodInfo = getMethodInfo(selectedMethod);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-white/20 backdrop-blur-md flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-hidden shadow-2xl">
         {/* Header del modal */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">

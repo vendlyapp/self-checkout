@@ -42,7 +42,6 @@ export interface SaleCardProps {
 }
 
 export interface GreetingSectionProps {
-  isStoreOpen: boolean;
   onToggleStore: () => void;
 }
 
@@ -77,4 +76,4 @@ export interface SearchResult {
 export interface SearchResultsSectionProps {
   isSearching: boolean;
   results: SearchResult[];
-} 
+}

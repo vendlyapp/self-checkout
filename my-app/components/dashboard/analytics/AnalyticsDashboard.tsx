@@ -121,99 +121,209 @@ const AnalyticsDashboard: React.FC = () => {
 
   return (
     <div className="w-full">
-      <div className="p-4 space-y-6">
-        {/* Search Section */}
-        <div>
-          <SearchInput
-            placeholder="Suche Produkte / Verkäufe"
-            value={searchQuery}
-            onChange={setSearchQuery}
-            onSearch={handleSearch}
-            className="w-full"
-            esHome={false}
-          />
+      {/* ===== MOBILE LAYOUT ===== */}
+      <div className="block lg:hidden">
+        <div className="p-4 space-y-6">
+          {/* Search Section */}
+          <div>
+            <SearchInput
+              placeholder="Suche Produkte / Verkäufe"
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onSearch={handleSearch}
+              className="w-full"
+              esHome={false}
+            />
+          </div>
+
+          {/* Search Results */}
+          {(isSearching || searchResults.length > 0) && (
+            <section className="mb-6">
+              <SearchResultsSection
+                isSearching={isSearching}
+                results={searchResults}
+              />
+            </section>
+          )}
+
+          {/* Analytics Components */}
+          <div className="space-y-6">
+            {/* Shop Activity Section */}
+            <section>
+              <ActiveCustomers
+                data={
+                  data?.shopActivity || {
+                    activeCustomers: [],
+                    totalActive: 0,
+                    totalInactive: 0,
+                    openCartsValue: 0,
+                    progressPercentage: 0,
+                  }
+                }
+                loading={loading}
+              />
+            </section>
+
+            {/* Sales Chart Section */}
+            <section>
+              <SalesChart
+                data={data?.salesData || []}
+                totalSales={totalSales}
+                salesGrowth={salesGrowth}
+                period={salesPeriod}
+                onPeriodChange={setSalesPeriod}
+                loading={loading}
+              />
+            </section>
+
+            {/* Quick Access Section */}
+            <section>
+              <QuickAccessGrid
+                onSalesAction={handleSalesAction}
+                onCancelAction={handleCancelAction}
+                onReceiptsAction={handleReceiptsAction}
+                onCartAction={handleCartAction}
+                loading={loading}
+              />
+            </section>
+
+            {/* Payment Methods Section */}
+            <section>
+              <PaymentMethods
+                data={data?.paymentMethods || []}
+                period={paymentPeriod}
+                onPeriodChange={setPaymentPeriod}
+                loading={loading}
+              />
+            </section>
+
+            {/* Cart Gauge Section */}
+            <section>
+              <CartGauge
+                data={
+                  data?.cartData || {
+                    averageValue: 0,
+                    percentageChange: 0,
+                    trend: "up",
+                    comparisonPeriod: "gestern",
+                    maxValue: 100,
+                    minValue: 0,
+                  }
+                }
+                period={cartPeriod}
+                onPeriodChange={setCartPeriod}
+                loading={loading}
+              />
+            </section>
+          </div>
         </div>
-
-      {/* Search Results */}
-      {(isSearching || searchResults.length > 0) && (
-        <section className="mb-6">
-          <SearchResultsSection
-            isSearching={isSearching}
-            results={searchResults}
-          />
-        </section>
-      )}
-
-      {/* Analytics Components */}
-      <div className="space-y-6">
-        {/* Shop Activity Section */}
-        <section>
-          <ActiveCustomers
-            data={
-              data?.shopActivity || {
-                activeCustomers: [],
-                totalActive: 0,
-                totalInactive: 0,
-                openCartsValue: 0,
-                progressPercentage: 0,
-              }
-            }
-            loading={loading}
-          />
-        </section>
-
-        {/* Sales Chart Section */}
-        <section>
-          <SalesChart
-            data={data?.salesData || []}
-            totalSales={totalSales}
-            salesGrowth={salesGrowth}
-            period={salesPeriod}
-            onPeriodChange={setSalesPeriod}
-            loading={loading}
-          />
-        </section>
-
-        {/* Quick Access Section */}
-        <section>
-          <QuickAccessGrid
-            onSalesAction={handleSalesAction}
-            onCancelAction={handleCancelAction}
-            onReceiptsAction={handleReceiptsAction}
-            onCartAction={handleCartAction}
-            loading={loading}
-          />
-        </section>
-
-        {/* Payment Methods Section */}
-        <section>
-          <PaymentMethods
-            data={data?.paymentMethods || []}
-            period={paymentPeriod}
-            onPeriodChange={setPaymentPeriod}
-            loading={loading}
-          />
-        </section>
-
-        {/* Cart Gauge Section */}
-        <section>
-          <CartGauge
-            data={
-              data?.cartData || {
-                averageValue: 0,
-                percentageChange: 0,
-                trend: "up",
-                comparisonPeriod: "gestern",
-                maxValue: 100,
-                minValue: 0,
-              }
-            }
-            period={cartPeriod}
-            onPeriodChange={setCartPeriod}
-            loading={loading}
-          />
-        </section>
       </div>
+
+      {/* ===== DESKTOP LAYOUT ===== */}
+      <div className="hidden lg:block">
+        <div className="p-6 space-y-8">
+          {/* Header Section */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Analytics & Verkäufe</h1>
+              <p className="text-gray-600 mt-1">Überwachen Sie Ihre Verkaufsleistung und Kundenaktivität</p>
+            </div>
+            <div className="w-full lg:w-[500px]">
+              <SearchInput
+                placeholder="Analytics durchsuchen..."
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onSearch={handleSearch}
+                className="w-full"
+                esHome={false}
+              />
+            </div>
+          </div>
+
+          {/* Search Results */}
+          {(isSearching || searchResults.length > 0) && (
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <SearchResultsSection
+                isSearching={isSearching}
+                results={searchResults}
+              />
+            </div>
+          )}
+
+          {/* Top Row: Active Customers & Sales Chart */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Shop Activity Section */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <ActiveCustomers
+                data={
+                  data?.shopActivity || {
+                    activeCustomers: [],
+                    totalActive: 0,
+                    totalInactive: 0,
+                    openCartsValue: 0,
+                    progressPercentage: 0,
+                  }
+                }
+                loading={loading}
+              />
+            </div>
+
+            {/* Sales Chart Section */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <SalesChart
+                data={data?.salesData || []}
+                totalSales={totalSales}
+                salesGrowth={salesGrowth}
+                period={salesPeriod}
+                onPeriodChange={setSalesPeriod}
+                loading={loading}
+              />
+            </div>
+          </div>
+
+          {/* Middle Row: Quick Access & Payment Methods */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Quick Access Section */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <QuickAccessGrid
+                onSalesAction={handleSalesAction}
+                onCancelAction={handleCancelAction}
+                onReceiptsAction={handleReceiptsAction}
+                onCartAction={handleCartAction}
+                loading={loading}
+              />
+            </div>
+
+            {/* Payment Methods Section */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <PaymentMethods
+                data={data?.paymentMethods || []}
+                period={paymentPeriod}
+                onPeriodChange={setPaymentPeriod}
+                loading={loading}
+              />
+            </div>
+          </div>
+
+          {/* Bottom Row: Cart Gauge - Full Width */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <CartGauge
+              data={
+                data?.cartData || {
+                  averageValue: 0,
+                  percentageChange: 0,
+                  trend: "up",
+                  comparisonPeriod: "gestern",
+                  maxValue: 100,
+                  minValue: 0,
+                }
+              }
+              period={cartPeriod}
+              onPeriodChange={setCartPeriod}
+              loading={loading}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

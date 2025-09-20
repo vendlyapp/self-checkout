@@ -36,7 +36,6 @@ const HomeDashboard: React.FC = () => {
     data,
     loading,
     error,
-    isStoreOpen,
     searchQuery,
     isSearching,
     searchResults,
@@ -66,7 +65,6 @@ const HomeDashboard: React.FC = () => {
         <div className="p-4 space-y-6">
           {/* ===== GREETING & STATUS ===== */}
           <GreetingSection
-            isStoreOpen={isStoreOpen}
             onToggleStore={handleToggleStore}
           />
 
@@ -115,18 +113,44 @@ const HomeDashboard: React.FC = () => {
       <div className="hidden lg:block">
         <div className="p-6 space-y-8">
           {/* ===== HEADER SECTION ===== */}
-          <DashboardSection
-            title="Dashboard"
-            subtitle="Willkommen zurück, Peter! Hier ist dein Überblick für heute."
-            variant="spacious"
-          >
-            <DashboardContainer variant="section">
-              <GreetingSection
-                isStoreOpen={isStoreOpen}
-                onToggleStore={handleToggleStore}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-gray-600 mt-1">Willkommen zurück, Peter! Hier ist dein Überblick für heute.</p>
+            </div>
+            <div className="w-full lg:w-[500px]">
+              <SearchInput
+                placeholder="Produkte / Verkäufe suchen"
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onSearch={handleSearch}
+                className="w-full"
+                esHome={true}
+                showFilters={true}
+                onFilterClick={() => {
+                  // TODO: Implementar modal de filtros
+                  console.log('Abrir filtros');
+                }}
+                recentSearches={[
+                  'Produkte',
+                  'Verkäufe heute',
+                  'Kunden',
+                  'Rabatte'
+                ]}
+                onRecentSearchClick={(search) => {
+                  setSearchQuery(search);
+                  handleSearch(search);
+                }}
               />
-            </DashboardContainer>
-          </DashboardSection>
+            </div>
+          </div>
+
+          {/* ===== GREETING SECTION ===== */}
+          <DashboardContainer variant="card">
+            <GreetingSection
+              onToggleStore={handleToggleStore}
+            />
+          </DashboardContainer>
 
           {/* ===== QUICK ACTIONS BAR ===== */}
           <DashboardContainer variant="card">
@@ -135,40 +159,8 @@ const HomeDashboard: React.FC = () => {
             </DashboardSection>
           </DashboardContainer>
 
-          {/* ===== TOP ROW: SEARCH & SYSTEM STATUS ===== */}
-          <DashboardGrid cols={{ desktop: 3 }} gap="lg">
-            {/* Search Section - Takes 2 columns */}
-            <DashboardContainer variant="card" className="lg:col-span-2">
-              <DashboardSection title="Schnellsuche" variant="compact">
-                <SearchInput
-                  placeholder="Produkte / Verkäufe suchen"
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  onSearch={handleSearch}
-                  className="w-full"
-                  esHome={true}
-                  showFilters={true}
-                  onFilterClick={() => {
-                    // TODO: Implementar modal de filtros
-                    console.log('Abrir filtros');
-                  }}
-                  recentSearches={[
-                    'Produkte',
-                    'Verkäufe heute',
-                    'Kunden',
-                    'Rabatte'
-                  ]}
-                  onRecentSearchClick={(search) => {
-                    setSearchQuery(search);
-                    handleSearch(search);
-                  }}
-                />
-              </DashboardSection>
-            </DashboardContainer>
-
-            {/* System Status - Takes 1 column */}
-            <SystemStatusWidget />
-          </DashboardGrid>
+          {/* ===== SYSTEM STATUS ===== */}
+          <SystemStatusWidget />
 
           {/* ===== STATS ROW: TODAY'S STATS ===== */}
           <DashboardContainer variant="card">

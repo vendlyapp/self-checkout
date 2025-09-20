@@ -124,22 +124,83 @@ export default function Charge() {
 
   return (
     <>
-      <FixedHeaderContainer
-        title="Verkauf starten"
-        showAddButton={false}
-        searchQuery={searchQuery}
-        onSearch={handleSearch}
-        selectedFilters={selectedFilters}
-        onFilterChange={handleFilterChange}
-        onOpenFilterModal={handleOpenFilterModal}
-        activeFiltersCount={activeFiltersCount}
-        productsListFilters={chargeFilters}
-      >
-        <DashBoardCharge
+      {/* Mobile Layout */}
+      <div className="block lg:hidden">
+        <FixedHeaderContainer
+          title="Verkauf starten"
+          showAddButton={false}
           searchQuery={searchQuery}
+          onSearch={handleSearch}
           selectedFilters={selectedFilters}
-        />
-      </FixedHeaderContainer>
+          onFilterChange={handleFilterChange}
+          onOpenFilterModal={handleOpenFilterModal}
+          activeFiltersCount={activeFiltersCount}
+          productsListFilters={chargeFilters}
+        >
+          <DashBoardCharge
+            searchQuery={searchQuery}
+            selectedFilters={selectedFilters}
+          />
+        </FixedHeaderContainer>
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="hidden lg:block">
+        <div className="p-6 space-y-6">
+          {/* Header Section */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Verkauf starten</h1>
+              <p className="text-gray-600 mt-1">Wählen Sie Produkte für den Verkauf aus</p>
+            </div>
+            <div className="w-full lg:w-[500px]">
+              <input
+                type="text"
+                placeholder="Produkte durchsuchen..."
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Filters Section */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Kategorien</h2>
+            <div className="flex flex-wrap gap-3">
+              {chargeFilters.map((filter) => (
+                <button
+                  key={filter.id}
+                  onClick={() => handleFilterChange(
+                    selectedFilters.includes(filter.id)
+                      ? selectedFilters.filter(f => f !== filter.id)
+                      : [...selectedFilters, filter.id]
+                  )}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 ${
+                    selectedFilters.includes(filter.id)
+                      ? 'bg-brand-500 text-white border-brand-500'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-brand-500'
+                  }`}
+                >
+                  {filter.icon}
+                  <span className="font-medium">{filter.label}</span>
+                  <span className="text-xs bg-white/20 px-2 py-1 rounded-full">
+                    {filter.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Products Section */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <DashBoardCharge
+              searchQuery={searchQuery}
+              selectedFilters={selectedFilters}
+            />
+          </div>
+        </div>
+      </div>
 
       {/* Modal de filtros */}
       <FilterModal

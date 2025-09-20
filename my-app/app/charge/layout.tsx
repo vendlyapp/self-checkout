@@ -30,7 +30,7 @@ export const useFilterModal = () => {
 
 export default function ChargeLayout({ children }: { children: ReactNode }) {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const { scrollContainerRef } = useScrollReset();
+  const { } = useScrollReset();
   const { isMobile } = useResponsive();
 
   const {
@@ -85,12 +85,7 @@ export default function ChargeLayout({ children }: { children: ReactNode }) {
       value={{ isFilterModalOpen, setIsFilterModalOpen }}
     >
       <AdminLayout>
-        <main
-          ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto overflow-x-hidden relative ios-scroll-fix"
-        >
-          <div>{children}</div>
-        </main>
+        {children}
 
         {/* FooterContinue para cart y payment - Solo en móvil */}
         {isMobile && shouldShowFooterContinue() && (

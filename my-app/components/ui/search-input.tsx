@@ -27,7 +27,6 @@ export function SearchInput({
   showFilters = false,
   onFilterClick,
   recentSearches = [],
-  onRecentSearchClick,
 }: SearchInputProps) {
   const [internalValue, setInternalValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -191,14 +190,14 @@ export function SearchInput({
             {/* Sugerencias de búsqueda */}
             {value && (
               <div className="p-3">
-                <div className="text-xs text-gray-500 mb-2">Buscar "{value}"</div>
+                <div className="text-xs text-gray-500 mb-2">Buscar &quot;{value}&quot;</div>
                 <div className="space-y-1">
                   <button
                     onClick={() => handleSuggestionClick(value)}
                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-150 flex items-center gap-2"
                   >
                     <Search className="w-3 h-3 text-gray-400" />
-                    Buscar "{value}"
+                    Buscar &quot;{value}&quot;
                   </button>
                 </div>
               </div>

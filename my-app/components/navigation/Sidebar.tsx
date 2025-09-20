@@ -1,12 +1,14 @@
 'use client';
 
-import { Home, Package, Plus, ShoppingBag, Store, Menu, X, User, Settings, LogOut } from 'lucide-react';
+import { Home, Package, Plus, ShoppingBag, Store, User, Settings, LogOut, CreditCard, ShoppingCart, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
 import Image from 'next/image';
+import CartSummary from '@/components/cart/CartSummary';
+import { useCartStore } from '@/lib/stores/cartStore';
 
 interface NavItem {
   id: string;
@@ -40,8 +42,7 @@ const navItems: NavItem[] = [
     icon: Store,
     label: "Geschäft",
     href: "/store",
-  }
-  ,
+  },
   {
     id: "add",
     icon: Plus,
@@ -51,16 +52,42 @@ const navItems: NavItem[] = [
   },
 ];
 
+// Flujo de Charge (Verkauf starten)
+const chargeFlowItems: NavItem[] = [
+  {
+    id: "charge-start",
+    icon: Zap,
+    label: "Verkauf starten",
+    href: "/charge",
+  },
+  {
+    id: "charge-cart",
+    icon: ShoppingCart,
+    label: "Warenkorb",
+    href: "/charge/cart",
+  },
+  {
+    id: "charge-payment",
+    icon: CreditCard,
+    label: "Bezahlung",
+    href: "/charge/payment",
+  },
+];
+
 interface SidebarProps {
   isCollapsed?: boolean;
   onToggle?: () => void;
   isMobile?: boolean;
 }
 
-export default function Sidebar({ isCollapsed = false, onToggle, isMobile = false }: SidebarProps) {
+export default function Sidebar({ isCollapsed = false, isMobile = false }: SidebarProps) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [pressedItem, setPressedItem] = useState<string | null>(null);
+  const { cartItems, getTotalItems } = useCartStore();
+  const totalItems = getTotalItems();
+  const isEmpty = cartItems.length === 0;
+
 
   useEffect(() => {
     setMounted(true);
@@ -138,8 +165,16 @@ export default function Sidebar({ isCollapsed = false, onToggle, isMobile = fals
         </Link>
       </div>
 
+      {/* Cart Summary - Solo en desktop/tablet y en la ruta /charge */}
+      {pathname === '/charge' && (
+        <div className="px-6 py-4 border-b border-gray-200">
+          <CartSummary isMobile={false} />
+        </div>
+      )}
+
       {/* Navegación */}
       <nav className="flex-1 p-6 space-y-3">
+        {/* Navegación principal */}
         {processedItems.map((item) => {
           const Icon = item.icon;
 
@@ -204,6 +239,68 @@ export default function Sidebar({ isCollapsed = false, onToggle, isMobile = fals
             </Link>
           );
         })}
+
+        {/* Separador */}
+        <div className="my-6 border-t border-gray-200"></div>
+
+        {/* Flujo de Charge */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+            Verkauf Flow
+          </h3>
+          {chargeFlowItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = isItemActive(item);
+            const isPressed = pressedItem === item.id;
+            const isWarenkorb = item.id === "charge-cart";
+
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                className={clsx(
+                  "flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 relative",
+                  "hover:bg-gray-50 hover:shadow-sm",
+                  isActive && "bg-brand-50 text-brand-700 border border-brand-200 shadow-sm",
+                  isPressed && "scale-95"
+                )}
+                onTouchStart={() => handlePress(item.id)}
+                onMouseDown={(e) => {
+                  handlePress(item.id);
+                  handleValidInteraction(e);
+                }}
+                onClick={handleValidInteraction}
+                aria-label={item.label}
+              >
+                <Icon
+                  className={clsx(
+                    "w-5 h-5 flex-shrink-0",
+                    isActive ? "text-brand-600" : "text-gray-500"
+                  )}
+                  strokeWidth={isActive ? 2.2 : 1.8}
+                />
+                <span className={clsx(
+                  "text-sm font-medium flex-1",
+                  isActive ? "text-brand-700" : "text-gray-600"
+                )}>
+                  {item.label}
+                </span>
+
+                {/* Badge de cantidad para Warenkorb - Posicionado a la derecha */}
+                {isWarenkorb && !isEmpty && totalItems > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">
+                      {totalItems} {totalItems === 1 ? 'Artikel' : 'Artikel'}
+                    </span>
+                    <span className="bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] shadow-sm">
+                      {totalItems}
+                    </span>
+                  </div>
+                )}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
       {/* Footer del Sidebar */}

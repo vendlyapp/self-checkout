@@ -47,31 +47,31 @@ const SaleCard = ({ sale }: SaleCardProps) => {
   const statusConfig = getStatusConfig(sale.status);
 
   return (
-    <Card className="bg-white rounded-2xl border border-gray-200 shadow-sm">
-      <CardContent className="p-4">
+    <Card className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+      <CardContent className="p-4 lg:p-5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 ${statusConfig.bgColor} rounded-xl flex items-center justify-center`}>
-              <div className={statusConfig.textColor}>
+          <div className="flex items-center gap-3 lg:gap-4">
+            <div className={`w-10 h-10 lg:w-12 lg:h-12 ${statusConfig.bgColor} rounded-xl flex items-center justify-center`}>
+              <div className={`${statusConfig.textColor} lg:scale-110`}>
                 {statusConfig.icon}
               </div>
             </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">{sale.name}</h3>
-              <p className="text-sm text-gray-600">{sale.receipt} • {sale.time}</p>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-gray-900 lg:text-base">{sale.name}</h3>
+              <p className="text-sm lg:text-base text-gray-600">{sale.receipt} • {sale.time}</p>
               <div className="flex items-center gap-1 mt-1">
-                <span className={`text-xs font-medium ${statusConfig.textColor}`}>
+                <span className={`text-xs lg:text-sm font-medium ${statusConfig.textColor}`}>
                   {statusConfig.label}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="text-right">
-            <p className={`font-bold ${statusConfig.amountColor}`}>
+          <div className="text-right flex-shrink-0">
+            <p className={`font-bold lg:text-lg ${statusConfig.amountColor}`}>
               {formatSwissPriceWithCHF(sale.amount)}
             </p>
-            <p className="text-xs text-gray-500">{sale.paymentMethod}</p>
+            <p className="text-xs lg:text-sm text-gray-500">{sale.paymentMethod}</p>
           </div>
         </div>
       </CardContent>

@@ -13,10 +13,10 @@ import {
 import { StatCardProps } from './types';
 import CustomTooltip from './CustomTooltip';
 
-const StatCard: React.FC<StatCardProps> = ({ 
-  icon, 
-  value, 
-  subtitle, 
+const StatCard: React.FC<StatCardProps> = ({
+  icon,
+  value,
+  subtitle,
   trend = 'neutral',
   trendData = [40, 55, 45, 60, 50, 65, 55],
   badge,
@@ -40,36 +40,36 @@ const StatCard: React.FC<StatCardProps> = ({
   const percentChange = previousValue ? ((lastValue - previousValue) / previousValue * 100).toFixed(1) : 0;
 
   return (
-    <Card className={`bg-card rounded-2xl border-0 shadow-sm hover:shadow-md transition-shadow ${className}`}>
-      <CardContent className="p-5">
-        <div className="flex items-center justify-between mb-3">
-          <div className="w-10 h-10 bg-[#C4BAAF] rounded-xl flex items-center justify-center ">
-            {icon}
+    <Card className={`bg-card rounded-2xl border-0 shadow-sm hover:shadow-md transition-all duration-200 ${className}`}>
+      <CardContent className="p-5 lg:p-6">
+        <div className="flex items-center justify-between mb-3 lg:mb-4">
+          <div className="w-10 h-10 lg:w-12 lg:h-12 bg-[#C4BAAF] rounded-xl flex items-center justify-center">
+            <div className="lg:scale-110">{icon}</div>
           </div>
           {badge && (
-            <span className="text-xs text-muted-foreground bg-white px-2 py-1 rounded-md font-medium">
+            <span className="text-xs lg:text-sm text-muted-foreground bg-white px-2 py-1 lg:px-3 lg:py-1.5 rounded-md font-medium">
               {badge}
             </span>
           )}
         </div>
 
-        <div className="mb-4">
-          <h3 className="text-3xl font-bold text-foreground mb-1">{value}</h3>
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
+        <div className="mb-4 lg:mb-5">
+          <h3 className="text-3xl lg:text-4xl font-bold text-foreground mb-1 lg:mb-2">{value}</h3>
+          <p className="text-sm lg:text-base text-muted-foreground">{subtitle}</p>
         </div>
 
         {/* Mini gráfico de tendencia con Recharts */}
-        <div className="h-12 -mx-2">
+        <div className="h-12 lg:h-14 -mx-2">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
-              <Tooltip 
+              <Tooltip
                 content={<CustomTooltip />}
                 cursor={false}
               />
               <YAxis hide domain={['dataMin - 10', 'dataMax + 10']} />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
+              <Line
+                type="monotone"
+                dataKey="value"
                 stroke={trendColor}
                 strokeWidth={2}
                 dot={false}
@@ -82,13 +82,13 @@ const StatCard: React.FC<StatCardProps> = ({
 
         {/* Indicador de tendencia */}
         {trend !== 'neutral' && (
-          <div className="flex items-center gap-1 mt-2">
+          <div className="flex items-center gap-1 mt-2 lg:mt-3">
             {trend === 'up' ? (
-              <TrendingUp className="w-3 h-3 text-emerald-500" />
+              <TrendingUp className="w-3 h-3 lg:w-4 lg:h-4 text-emerald-500" />
             ) : (
-              <TrendingDown className="w-3 h-3 text-red-500" />
+              <TrendingDown className="w-3 h-3 lg:w-4 lg:h-4 text-red-500" />
             )}
-            <span className={`text-xs font-medium ${trend === 'up' ? 'text-emerald-500' : 'text-red-500'}`}>
+            <span className={`text-xs lg:text-sm font-medium ${trend === 'up' ? 'text-emerald-500' : 'text-red-500'}`}>
               {percentChange}%
             </span>
           </div>
@@ -98,4 +98,4 @@ const StatCard: React.FC<StatCardProps> = ({
   );
 };
 
-export default StatCard; 
+export default StatCard;

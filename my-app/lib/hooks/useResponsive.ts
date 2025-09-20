@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface ResponsiveState {
   isMobile: boolean;
@@ -14,6 +14,7 @@ interface ResponsiveState {
 export function useResponsive(): ResponsiveState {
   const [screenWidth, setScreenWidth] = useState(0);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
     // Función para actualizar el tamaño de pantalla
@@ -36,12 +37,15 @@ export function useResponsive(): ResponsiveState {
   const isTablet = screenWidth >= 768 && screenWidth < 1024;
   const isDesktop = screenWidth >= 1024;
 
-  // Auto-colapsar sidebar en móvil
+  // Auto-colapsar sidebar en móvil solo en la inicialización
   useEffect(() => {
-    if (isMobile) {
-      setIsCollapsed(true);
+    if (!hasInitialized.current && screenWidth > 0) {
+      hasInitialized.current = true;
+      if (isMobile) {
+        setIsCollapsed(true);
+      }
     }
-  }, [isMobile]);
+  }, [isMobile, screenWidth]);
 
   return {
     isMobile,

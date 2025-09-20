@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, ChartNoAxesColumn, Menu, Search, User, Settings, LogOut, ChevronDown, Plus, ShoppingCart, Package, BarChart3 } from 'lucide-react';
+import { Bell, ChartNoAxesColumn, Menu } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useCallback, useMemo } from 'react';
@@ -47,7 +47,6 @@ export default function ResponsiveHeader({
   onMenuToggle,
   showMenuButton = false,
   isMobile = false,
-  isTablet = false,
   isDesktop = false
 }: ResponsiveHeaderProps) {
   const pathname = usePathname();
@@ -92,11 +91,6 @@ export default function ResponsiveHeader({
     }
   }, [showNotifications, showUserMenu]);
 
-  // Toggle user menu
-  const handleUserMenuToggle = useCallback(() => {
-    setShowUserMenu(prev => !prev);
-    handleButtonPress('user');
-  }, [handleButtonPress]);
 
   return (
     <>
@@ -119,7 +113,7 @@ export default function ResponsiveHeader({
             {/* Barra superior con info del negocio */}
             <div className="h-full bg-gray-50 border-b border-gray-100 flex items-center justify-between px-6 text-xs text-gray-600">
               <div className="flex items-center gap-4">
-                <span>Heiniger's Hofladen</span>
+                <span>Heiniger&apos;s Hofladen</span>
                 <span>•</span>
                 <span>Admin Dashboard</span>
                 <span>•</span>

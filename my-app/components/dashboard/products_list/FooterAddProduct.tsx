@@ -81,36 +81,38 @@ const FooterAddProduct: React.FC<FooterAddProductProps> = ({
   };
 
   return (
-    <div className="bottom-0 left-0 right-0 border-t w-full border-gray-200 p-4 z-10 bg-white">
-      <button
-        className={`w-full font-semibold rounded-lg py-3 text-[18px] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all duration-150 ${
-          pressed ? "scale-95" : ""
-        } ${
-          isAddProductPage && !formValid
-            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-            : "bg-brand-500 hover:bg-brand-600 text-white"
-        }`}
-        aria-label={buttonText}
-        onClick={onAddProduct}
-        disabled={isDisabled}
-        onTouchStart={() => !isDisabled && setPressed(true)}
-        onTouchEnd={() => setPressed(false)}
-        onMouseDown={() => !isDisabled && setPressed(true)}
-        onMouseUp={() => setPressed(false)}
-        onMouseLeave={() => setPressed(false)}
-      >
-        {isLoading ? (
-          <>
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-            <span>Wird geladen...</span>
-          </>
-        ) : (
-          <>
-            {getIcon()}
-            <span>{buttonText}</span>
-          </>
-        )}
-      </button>
+    <div className="nav-container">
+      <div className="p-4">
+        <button
+          className={`w-full font-semibold rounded-lg py-3 text-[18px] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all duration-150 ${
+            pressed ? "scale-95" : ""
+          } ${
+            isAddProductPage && !formValid
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-brand-500 hover:bg-brand-600 text-white"
+          }`}
+          aria-label={buttonText}
+          onClick={onAddProduct}
+          disabled={isDisabled}
+          onTouchStart={() => !isDisabled && setPressed(true)}
+          onTouchEnd={() => setPressed(false)}
+          onMouseDown={() => !isDisabled && setPressed(true)}
+          onMouseUp={() => setPressed(false)}
+          onMouseLeave={() => setPressed(false)}
+        >
+          {isLoading ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              <span>Wird geladen...</span>
+            </>
+          ) : (
+            <>
+              {getIcon()}
+              <span>{buttonText}</span>
+            </>
+          )}
+        </button>
+      </div>
     </div>
   );
 };

@@ -8,19 +8,31 @@ import ResponsiveHeader from '@/components/navigation/ResponsiveHeader';
 import ResponsiveFooterNav from '@/components/navigation/ResponsiveFooterNav';
 import { useResponsive } from '@/lib/hooks/useResponsive';
 import { useScrollReset } from '@/lib/hooks';
+import { useCartStore } from '@/lib/stores/cartStore';
+import FooterAddProduct from '@/components/dashboard/products_list/FooterAddProduct';
 
 interface AdminLayoutProps {
   children: ReactNode;
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  const { isMobile, isTablet, isDesktop, isCollapsed, setIsCollapsed } = useResponsive();
+  const { isMobile, isTablet, isDesktop, isCollapsed } = useResponsive();
   const { scrollContainerRef } = useScrollReset();
+  const { } = useCartStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
 
+
+
+  // Determinar si estamos en la ruta de productos
+  const isProductsListRoute = pathname?.startsWith('/products_list');
+
   // Determinar si mostrar el sidebar
   const shouldShowSidebar = isDesktop || isTablet;
+
+  // No mostrar CartSummary móvil aquí, se maneja en el sidebar
+  const shouldShowCartSummary = false;
+
 
   // Manejar toggle del sidebar
   const handleSidebarToggle = () => {
@@ -30,12 +42,25 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     // En desktop y tablet no hay toggle - la sidebar siempre está visible
   };
 
-  // Cerrar sidebar en móvil al cambiar de ruta
-  const handleRouteChange = () => {
-    if (isMobile) {
-      setSidebarOpen(false);
+  // Manejar el botón de agregar producto
+  const handleAddProduct = () => {
+    if (pathname === "/products_list/add_product") {
+      // Si estamos en la página de agregar producto, ejecutar la función de guardado
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (typeof window !== "undefined" && (window as any).saveProduct) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).saveProduct();
+      }
+    } else {
+      // Si estamos en la lista, navegamos a agregar producto
+      window.location.href = "/products_list/add_product";
     }
   };
+
+  // Determinar el texto del botón según la ruta
+  const isAddProductPage = pathname === "/products_list/add_product";
+  const buttonText = isAddProductPage ? "Produkt speichern" : "Neues Produkt";
+
 
   return (
     <div className="flex h-responsive bg-background-cream">
@@ -70,12 +95,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           isDesktop={isDesktop}
         />
 
+
         {/* Contenido principal */}
         <main
           ref={scrollContainerRef}
           className={clsx(
             "flex-1 overflow-y-auto overflow-x-hidden",
-            isMobile ? "ios-scroll-fix" : "scroll-smooth"
+            isMobile ? "ios-scroll-fix" : "scroll-smooth",
+            shouldShowCartSummary && "pb-24" // Padding para el CartSummary fixed
           )}
         >
           <div className={clsx(
@@ -86,9 +113,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </div>
         </main>
 
-        {/* Footer móvil - Solo en móvil y cuando no estamos en ciertas rutas */}
-        {isMobile && !pathname.includes('/charge/cart') && (
+        {/* Footer móvil - Solo en móvil */}
+        {isMobile && !isProductsListRoute && (
           <ResponsiveFooterNav />
+        )}
+
+        {/* FooterAddProduct - Solo en móvil y en la ruta de productos */}
+        {isMobile && isProductsListRoute && (
+          <FooterAddProduct
+            onAddProduct={handleAddProduct}
+            buttonText={buttonText}
+            isAddProductPage={isAddProductPage}
+          />
         )}
       </div>
     </div>

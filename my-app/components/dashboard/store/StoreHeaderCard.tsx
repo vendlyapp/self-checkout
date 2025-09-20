@@ -1,15 +1,15 @@
 import { User } from 'lucide-react';
 
 const StoreHeaderCard = () => (
-  <div className="flex items-center justify-between bg-background-cream rounded-2xl  px-5 py-4 mb-5">
-    <div>
-      <h1 className="text-lg font-bold text-gray-900 leading-tight">Heiniger’s Hofladen</h1>
-      <p className="text-sm text-gray-500 mt-0.5">Einstellungen & Funktionen</p>
+  <div className="flex items-center justify-between bg-background-cream px-5 py-4 lg:px-6 lg:py-5 w-full h-full">
+    <div className="flex-1">
+      <h1 className="text-lg lg:text-xl font-bold text-gray-900 leading-tight">Heiniger&apos;s Hofladen</h1>
+      <p className="text-sm lg:text-base text-gray-500 mt-0.5 lg:mt-1">Einstellungen & Funktionen</p>
     </div>
-    <div className="flex items-center justify-center w-11 h-11 rounded-full bg-brand-500">
-      <User className="w-6 h-6 text-white" aria-label="Profil" />
+    <div className="flex items-center justify-center w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-brand-500 hover:bg-brand-600 transition-colors duration-200">
+      <User className="w-6 h-6 lg:w-7 lg:h-7 text-white" aria-label="Profil" />
     </div>
   </div>
 );
 
-export default StoreHeaderCard; 
+export default StoreHeaderCard;

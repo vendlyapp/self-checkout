@@ -34,11 +34,6 @@ const DashboardContainer = ({
     xl: 'p-10'
   };
 
-  const responsiveClasses = responsive ? {
-    mobile: 'p-4',
-    tablet: 'md:p-6',
-    desktop: 'lg:p-8'
-  } : {};
 
   return (
     <div className={clsx(

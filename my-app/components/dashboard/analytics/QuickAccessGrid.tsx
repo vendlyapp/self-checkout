@@ -86,15 +86,15 @@ const QuickAccessGrid: React.FC<QuickAccessGridProps> = ({
   }
 
   return (
-    <div className="space-y-3">
-      <h3 className="text-lg font-semibold text-foreground">Schnellzugriff</h3>
-      <div className="grid grid-cols-2 gap-3 ">
+    <div className="space-y-3 lg:space-y-4">
+      <h3 className="text-lg lg:text-xl font-semibold text-foreground">Schnellzugriff</h3>
+      <div className="grid grid-cols-2 gap-3 lg:gap-4">
         {items.map((item) => (
           <button
             key={item.id}
             onClick={item.action}
             onKeyDown={(e) => handleKeyDown(e, item.action)}
-            className={`group bg-card border border-border/50 rounded-2xl p-5 text-left hover:shadow-md  transition-transform duration-150 ${
+            className={`group bg-card border border-border/50 rounded-2xl p-5 lg:p-6 text-left hover:shadow-md transition-all duration-200 ${
               pressedId === item.id ? "scale-95" : ""
             }`}
             aria-label={`${item.title}: ${item.subtitle}`}
@@ -105,26 +105,26 @@ const QuickAccessGrid: React.FC<QuickAccessGridProps> = ({
             onMouseUp={() => setPressedId(null)}
             onMouseLeave={() => setPressedId(null)}
           >
-            <div className="flex justify-between items-start mb-3">
+            <div className="flex justify-between items-start mb-3 lg:mb-4">
               {/* Icon Container */}
               <div
-                className={`w-12 h-12 ${item.color} rounded-xl flex items-center justify-center transition-all duration-200`}
+                className={`w-12 h-12 lg:w-14 lg:h-14 ${item.color} rounded-xl flex items-center justify-center transition-all duration-200`}
               >
                 <div
-                  className={`${item.iconColor} transition-colors duration-200`}
+                  className={`${item.iconColor} transition-colors duration-200 lg:scale-110`}
                 >
                   {item.icon}
                 </div>
               </div>
               {/* Arrow Icon */}
-              <ChevronRight className="w-5 h-5 text-muted-foreground transition-all duration-200 group-hover:text-primary group-hover:translate-x-1" />
+              <ChevronRight className="w-5 h-5 lg:w-6 lg:h-6 text-muted-foreground transition-all duration-200 group-hover:text-primary group-hover:translate-x-1" />
             </div>
             {/* Content */}
-            <div className="space-y-1">
-              <h4 className="font-semibold text-foreground transition-colors duration-200 group-hover:text-primary">
+            <div className="space-y-1 lg:space-y-2">
+              <h4 className="font-semibold text-foreground lg:text-lg transition-colors duration-200 group-hover:text-primary">
                 {item.title}
               </h4>
-              <p className="text-sm text-muted-foreground leading-tight">
+              <p className="text-sm lg:text-base text-muted-foreground leading-tight">
                 {item.subtitle}
               </p>
             </div>

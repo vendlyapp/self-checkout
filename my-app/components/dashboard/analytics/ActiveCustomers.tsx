@@ -49,33 +49,33 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
   } = data;
 
   return (
-    <div className="bg-card border border-border/50 transition-fast hover:shadow-md w-full max-w-md rounded-xl">
-      <div className="p-5">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-foreground">
+    <div className="bg-card border border-border/50 transition-all duration-200 hover:shadow-md w-full max-w-md lg:max-w-none rounded-xl">
+      <div className="p-5 lg:p-6">
+        <div className="flex justify-between items-center mb-4 lg:mb-6">
+          <h3 className="text-lg lg:text-xl font-semibold text-foreground">
             Jetzt im Shop:
           </h3>
           <button
-            className="p-1 rounded-lg hover:bg-muted transition-fast tap-highlight-transparent"
+            className="p-1 lg:p-2 rounded-lg hover:bg-muted transition-all duration-200 tap-highlight-transparent"
             aria-label="Mehr Details anzeigen"
           >
-            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            <ChevronRight className="w-5 h-5 lg:w-6 lg:h-6 text-muted-foreground" />
           </button>
         </div>
 
-        <div className="space-y-4">
-          {/* Avatare und Zähler */}
+        <div className="space-y-4 lg:space-y-6">
+          {/* Avatare und Zähler - Mejorado para desktop */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 lg:gap-4">
               {/* Kundenavatare */}
               <div
-                className="flex -space-x-3"
+                className="flex -space-x-3 lg:-space-x-2"
                 aria-label={`${totalActive} aktive Kunden`}
               >
                 {activeCustomers.slice(0, 2).map((customer, idx) => (
                   <div
                     key={customer.id}
-                    className="w-10 h-10 rounded-full border-2 border-white bg-muted flex items-center justify-center text-sm font-medium relative"
+                    className="w-10 h-10 lg:w-14 lg:h-14 rounded-full border-2 border-white bg-muted flex items-center justify-center text-sm lg:text-lg font-medium relative shadow-sm hover:shadow-md transition-shadow duration-200"
                     style={{ zIndex: idx + 1 }}
                     title={customer.name}
                   >
@@ -84,7 +84,7 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
                 ))}
                 {totalInactive > 0 && (
                   <div
-                    className="w-10 h-10 rounded-full border-2 border-white bg-muted flex items-center justify-center text-sm font-medium text-muted-foreground relative"
+                    className="w-10 h-10 lg:w-14 lg:h-14 rounded-full border-2 border-white bg-muted flex items-center justify-center text-sm lg:text-lg font-medium text-muted-foreground relative shadow-sm hover:shadow-md transition-shadow duration-200"
                     style={{ zIndex: 10 }}
                     title={`+${totalInactive} weitere Kunden`}
                   >
@@ -93,41 +93,55 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
                 )}
               </div>
 
-              {/* Kundenstatistiken */}
-              <div className="flex items-center justify-end w-full gap-2 text-sm">
-                <span
-                  className="font-bold text-3xl text-[#373F49]"
-                  aria-label="Aktive Kunden"
-                >
-                  {totalActive}
-                </span>
-                <span className="font-semibold text-[#373F49]">
-                  Kunden aktiv
-                </span>
-                <span className="text-muted-foreground pl-16">
+              {/* Kundenstatistiken - Mejorado para desktop */}
+              <div className="flex items-center justify-end w-full gap-2 lg:gap-4 text-sm lg:text-base">
+                <div className="flex items-baseline gap-1 lg:gap-2">
+                  <span
+                    className="font-bold text-3xl lg:text-5xl text-[#373F49]"
+                    aria-label="Aktive Kunden"
+                  >
+                    {totalActive}
+                  </span>
+                  <span className="font-semibold text-[#373F49] lg:text-lg">
+                    Kunden aktiv
+                  </span>
+                </div>
+                <div className="hidden lg:block w-px h-8 bg-border mx-2"></div>
+                <span className="text-muted-foreground lg:text-lg">
                   {totalInactive} inaktiv
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Fortschrittsbalken */}
-          <div className="relative h-2 bg-muted rounded-full overflow-hidden">
+          {/* Fortschrittsbalken - Mejorado para desktop */}
+          <div className="relative h-2 lg:h-4 bg-muted rounded-full overflow-hidden">
             <div
               className="absolute left-0 h-full bg-primary rounded-full transition-all duration-500 ease-out"
               style={{ width: `${progressPercentage}%` }}
               aria-label={`${progressPercentage}% Auslastung`}
             />
+            {/* Indicador de porcentaje en desktop */}
+            <div className="hidden lg:block absolute right-2 top-1/2 transform -translate-y-1/2 text-xs font-medium text-primary">
+              {progressPercentage}%
+            </div>
           </div>
 
-          {/* Warenkorb-Information */}
+          {/* Warenkorb-Information - Mejorado para desktop */}
           <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-[#373F49]">
-                CHF {openCartsValue}.–
-              </span>{" "}
-              in offenen Warenkörben
-            </p>
+            <div className="flex items-center gap-2 lg:gap-3">
+              <div className="w-2 h-2 lg:w-3 lg:h-3 bg-primary rounded-full"></div>
+              <p className="text-sm lg:text-base text-muted-foreground">
+                <span className="font-semibold text-[#373F49] lg:text-lg">
+                  CHF {openCartsValue}.–
+                </span>{" "}
+                in offenen Warenkörben
+              </p>
+            </div>
+            {/* Información adicional para desktop */}
+            <div className="hidden lg:flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Letzte Aktivität: vor 2 Min</span>
+            </div>
           </div>
         </div>
       </div>
