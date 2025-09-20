@@ -8,13 +8,15 @@ import {
   useProductsList,
 } from "@/components/dashboard/products_list/ProductsListContext";
 import { useRouter } from "next/navigation";
-import Header from "@/components/navigation/Header";
+import AdminLayout from "@/components/admin/AdminLayout";
 import { useScrollReset } from "@/lib/hooks";
+import { useResponsive } from "@/lib/hooks";
 
 function ProductsListLayoutContent({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { scrollContainerRef } = useScrollReset();
+  const { isMobile } = useResponsive();
   const { totalProducts, filteredProducts, hasActiveFilters, isLoading } =
     useProductsList();
 
@@ -37,27 +39,27 @@ function ProductsListLayoutContent({ children }: { children: ReactNode }) {
   const buttonText = isAddProductPage ? "Produkt speichern" : "Neues Produkt";
 
   return (
-    <div className="flex flex-col h-full w-full bg-background-cream">
-      <Header />
-
+    <AdminLayout>
       <main
         ref={scrollContainerRef}
         className="flex-1 overflow-y-auto overflow-x-hidden relative ios-scroll-fix"
       >
-        <div className="pb-24">{children}</div>
+        <div className={isMobile ? "pb-24" : "pb-6"}>{children}</div>
       </main>
 
-      {/* Footer siempre visible */}
-      <FooterAddProduct
-        onAddProduct={handleAddProduct}
-        totalProducts={totalProducts}
-        isLoading={isLoading}
-        filteredProducts={filteredProducts}
-        hasActiveFilters={hasActiveFilters}
-        isAddProductPage={isAddProductPage}
-        buttonText={buttonText}
-      />
-    </div>
+      {/* Footer solo en móvil */}
+      {isMobile && (
+        <FooterAddProduct
+          onAddProduct={handleAddProduct}
+          totalProducts={totalProducts}
+          isLoading={isLoading}
+          filteredProducts={filteredProducts}
+          hasActiveFilters={hasActiveFilters}
+          isAddProductPage={isAddProductPage}
+          buttonText={buttonText}
+        />
+      )}
+    </AdminLayout>
   );
 }
 

@@ -32,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="de" className="h-mobile">
+    <html lang="de" className="h-responsive">
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -41,11 +41,11 @@ export default function RootLayout({
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="apple-touch-fullscreen" content="yes" />
       </head>
-      <body className={`${inter.className} h-mobile antialiased tap-highlight-transparent`}>
-        {/* Container principal para móviles iPhone */}
-        <div className="mx-auto h-mobile w-full max-w-[430px] relative bg-[#F2EDE8] shadow-xl sm:border-x sm:border-gray-200 overflow-hidden safe-area-top safe-area-bottom">
-          {/* Contenedor interno optimizado para iOS Safari */}
-          <div className="h-mobile w-full overflow-y-auto overflow-x-hidden no-scrollbar">
+      <body className={`${inter.className} h-responsive antialiased tap-highlight-transparent`}>
+        {/* Container principal responsive */}
+        <div className="h-responsive w-full relative bg-[#F2EDE8] overflow-hidden">
+          {/* Contenedor interno responsive */}
+          <div className="h-responsive w-full overflow-y-auto overflow-x-hidden no-scrollbar">
             {children}
           </div>
         </div>

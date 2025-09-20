@@ -2,10 +2,11 @@
 
 import { ReactNode, useState, createContext, useContext } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import Header from "@/components/navigation/Header";
+import AdminLayout from "@/components/admin/AdminLayout";
 import FooterContinue from "@/components/dashboard/charge/FooterContinue";
 import CartSummary from "@/components/dashboard/charge/CartSummary";
 import { useScrollReset } from "@/lib/hooks";
+import { useResponsive } from "@/lib/hooks";
 
 import { useCartStore } from "@/lib/stores/cartStore";
 
@@ -30,6 +31,7 @@ export const useFilterModal = () => {
 export default function ChargeLayout({ children }: { children: ReactNode }) {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const { scrollContainerRef } = useScrollReset();
+  const { isMobile } = useResponsive();
 
   const {
     cartItems,
@@ -82,9 +84,7 @@ export default function ChargeLayout({ children }: { children: ReactNode }) {
     <FilterModalContext.Provider
       value={{ isFilterModalOpen, setIsFilterModalOpen }}
     >
-      <div className="flex flex-col h-full w-full bg-background-cream">
-        <Header />
-
+      <AdminLayout>
         <main
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto overflow-x-hidden relative ios-scroll-fix"
@@ -92,8 +92,8 @@ export default function ChargeLayout({ children }: { children: ReactNode }) {
           <div>{children}</div>
         </main>
 
-        {/* FooterContinue para cart y payment */}
-        {shouldShowFooterContinue() && (
+        {/* FooterContinue para cart y payment - Solo en móvil */}
+        {isMobile && shouldShowFooterContinue() && (
           <FooterContinue
             subtotal={subtotal}
             promoApplied={promoApplied}
@@ -105,8 +105,8 @@ export default function ChargeLayout({ children }: { children: ReactNode }) {
           />
         )}
 
-        {/* CartSummary para la página principal */}
-        {shouldShowCartSummary() && (
+        {/* CartSummary para la página principal - Solo en móvil */}
+        {isMobile && shouldShowCartSummary() && (
           <CartSummary
             items={cartItems}
             onContinue={handleContinue}
@@ -114,15 +114,15 @@ export default function ChargeLayout({ children }: { children: ReactNode }) {
           />
         )}
 
-        {/* Mostrar CartSummary vacío cuando no hay items en la página principal */}
-        {pathname === "/charge" && cartItems.length === 0 && (
+        {/* Mostrar CartSummary vacío cuando no hay items en la página principal - Solo en móvil */}
+        {isMobile && pathname === "/charge" && cartItems.length === 0 && (
           <CartSummary
             items={[]}
             onContinue={handleContinueToProducts}
             isVisible={!isFilterModalOpen}
           />
         )}
-      </div>
+      </AdminLayout>
     </FilterModalContext.Provider>
   );
 }
