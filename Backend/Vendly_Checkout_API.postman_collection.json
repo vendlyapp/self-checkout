@@ -1,0 +1,463 @@
+{
+  "info": {
+    "name": "Vendly Checkout API",
+    "description": "Colección completa para probar todos los endpoints de la API de Vendly Checkout",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🏠 General",
+      "item": [
+        {
+          "name": "API Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            }
+          }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Usuarios",
+      "item": [
+        {
+          "name": "Listar Usuarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear Usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@ejemplo.com\",\n  \"name\": \"Usuario Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Usuario por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "USER_ID_AQUI"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Usuario",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nuevo@ejemplo.com\",\n  \"name\": \"Usuario Actualizado\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "USER_ID_AQUI"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Eliminar Usuario",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "USER_ID_AQUI"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Estadísticas de Usuarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 Productos",
+      "item": [
+        {
+          "name": "Listar Productos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products?limit=10&search=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear Producto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Producto Test\",\n  \"price\": 29.99,\n  \"description\": \"Descripción del producto test\",\n  \"stock\": 100,\n  \"qrCode\": \"QR123456789\",\n  \"image\": \"https://ejemplo.com/imagen.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Producto por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "PRODUCT_ID_AQUI"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener Producto por QR",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/qr/:qrCode",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "qr", ":qrCode"],
+              "variable": [
+                {
+                  "key": "qrCode",
+                  "value": "QR123456789"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Producto",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Producto Actualizado\",\n  \"price\": 39.99,\n  \"description\": \"Nueva descripción\",\n  \"stock\": 150\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "PRODUCT_ID_AQUI"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Stock",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stock\": 200\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/:id/stock",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", ":id", "stock"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "PRODUCT_ID_AQUI"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Eliminar Producto",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "PRODUCT_ID_AQUI"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Estadísticas de Productos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛒 Órdenes",
+      "item": [
+        {
+          "name": "Estadísticas de Órdenes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Órdenes Recientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/recent?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "recent"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener Orden por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "ORDER_ID_AQUI"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Estado de Orden",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/:id/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", ":id", "status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "ORDER_ID_AQUI"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Órdenes de Usuario",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/users/:userId/orders?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "users", ":userId", "orders"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "USER_ID_AQUI"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear Orden",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"productId\": \"PRODUCT_ID_AQUI\",\n      \"quantity\": 2\n    },\n    {\n      \"productId\": \"OTRO_PRODUCT_ID\",\n      \"quantity\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/users/:userId/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "users", ":userId", "orders"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "USER_ID_AQUI"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
