@@ -93,8 +93,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T06:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
     promotionTitle: 'Aktion',
     promotionType: 'percentage',
     promotionStartAt: '2024-01-22T05:00:00Z',
@@ -127,8 +127,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T07:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
     promotionTitle: 'Tagesaktion',
     promotionType: 'flash',
     promotionStartAt: '2024-01-22T07:00:00Z',
@@ -161,8 +161,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T08:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
     promotionTitle: 'Weekend Deal',
     promotionType: 'amount',
     promotionStartAt: '2024-01-22T08:00:00Z',
@@ -191,8 +191,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T09:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
   },
   {
     id: 'prod-005',
@@ -215,8 +215,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T10:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
     isOnSale: true,
     discountPercentage: 10,
     promotionTitle: 'Aktion',
@@ -248,8 +248,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T11:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
   },
   {
     id: 'prod-007',
@@ -272,8 +272,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T12:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
     isOnSale: true,
     discountPercentage: 5,
     promotionTitle: 'Empfehlung',
@@ -304,8 +304,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T13:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
   },
   {
     id: 'prod-009',
@@ -328,8 +328,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T14:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
     isOnSale: true,
     discountPercentage: 10,
     promotionTitle: 'Aktion',
@@ -360,8 +360,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T15:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
   },
   {
     id: 'prod-011',
@@ -384,8 +384,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T16:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
     isOnSale: true,
     discountPercentage: 12,
     promotionTitle: 'Tagesaktion',
@@ -416,8 +416,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T17:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
   },
   {
     id: 'prod-013',
@@ -439,8 +439,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T18:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
   },
   {
     id: 'prod-014',
@@ -463,8 +463,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T19:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
     isOnSale: true,
     discountPercentage: 8,
     promotionTitle: 'Aktion',
@@ -495,8 +495,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T20:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
   },
   {
     id: 'prod-016',
@@ -518,8 +518,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T21:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
   },
   {
     id: 'prod-017',
@@ -541,8 +541,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T22:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
   },
   {
     id: 'prod-018',
@@ -565,8 +565,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-22T23:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
     isOnSale: true,
     discountPercentage: 10,
     promotionTitle: 'Tagesaktion',
@@ -597,8 +597,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-23T00:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
   },
   {
     id: 'prod-020',
@@ -620,8 +620,8 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-01-23T01:00:00Z',
     hasWeight: true,
     currency: 'CHF',
-    image: '',
-    images: ['',],
+    image: undefined,
+    images: [],
   }
 ]
 
@@ -657,18 +657,112 @@ export const sortProducts = (products: Product[], sortBy: 'name' | 'price' | 'ra
   })
 }
 
-// Simulación de API
+// API Real - Conecta con el backend
+import { ProductService, Product as ApiProduct } from '@/lib/services/productService';
+
+// Función helper para convertir valores booleanos del backend
+const parseBoolean = (value: unknown): boolean => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') return value === 'true';
+  return false;
+};
+
+// Función helper para asegurar que los datos del backend tengan el formato correcto
+const normalizeProductData = (product: ApiProduct): Product => {
+  return {
+    ...product,
+    price: typeof product.price === 'string' ? parseFloat(product.price) : product.price,
+    originalPrice: product.originalPrice ? (typeof product.originalPrice === 'string' ? parseFloat(product.originalPrice) : product.originalPrice) : undefined,
+    stock: typeof product.stock === 'string' ? parseInt(product.stock) : product.stock,
+    initialStock: product.initialStock ? (typeof product.initialStock === 'string' ? parseInt(product.initialStock) : product.initialStock) : undefined,
+    rating: product.rating ? (typeof product.rating === 'string' ? parseFloat(product.rating) : product.rating) : undefined,
+    reviews: product.reviews ? (typeof product.reviews === 'string' ? parseInt(product.reviews) : product.reviews) : undefined,
+    weight: product.weight ? (typeof product.weight === 'string' ? parseFloat(product.weight) : product.weight) : undefined,
+    discountPercentage: product.discountPercentage ? (typeof product.discountPercentage === 'string' ? parseInt(product.discountPercentage) : product.discountPercentage) : undefined,
+    promotionPriority: product.promotionPriority ? (typeof product.promotionPriority === 'string' ? parseInt(product.promotionPriority) : product.promotionPriority) : undefined,
+    isActive: parseBoolean(product.isActive),
+    isNew: parseBoolean(product.isNew),
+    isPopular: parseBoolean(product.isPopular),
+    isOnSale: parseBoolean(product.isOnSale),
+    hasWeight: parseBoolean(product.hasWeight),
+    // Asegurar que categoryId existe
+    categoryId: product.categoryId || product.category?.toLowerCase().replace(/\s+/g, '-') || 'uncategorized',
+    // Asegurar que sku existe
+    sku: product.sku || product.barcode || `SKU-${product.id}`,
+    // Asegurar que tags es un array
+    tags: Array.isArray(product.tags) ? product.tags : [],
+    // Asegurar que images es un array y filtrar URLs vacías
+    images: Array.isArray(product.images) 
+      ? product.images.filter((img: string) => img && img.trim() !== '') 
+      : (product.image && product.image.trim() !== '' ? [product.image] : []),
+    // Asegurar que image no sea una cadena vacía
+    image: product.image && product.image.trim() !== '' ? product.image : undefined,
+  };
+};
+
 export const fetchProducts = async (filters?: {
   categoryId?: string
   searchTerm?: string
   sortBy?: 'name' | 'price' | 'rating' | 'newest'
 }): Promise<Product[]> => {
-  // Simular delay de API
-  await new Promise(resolve => setTimeout(resolve, 300))
+  console.log('🔍 Obteniendo productos del backend...', filters);
+  
+  try {
+    // Usar la API directamente sin timeout restrictivo
+    const response = await ProductService.getProducts({
+      category: filters?.categoryId !== 'all' ? filters?.categoryId : undefined,
+      search: filters?.searchTerm,
+      isActive: true,
+    });
+    
+    if (response.success && response.data) {
+      console.log('✅ Productos obtenidos del backend:', response.data.length);
+      const normalizedProducts = response.data.map(normalizeProductData);
+      let products = normalizedProducts;
+      if (filters?.sortBy) {
+        products = sortProducts(products, filters.sortBy);
+      }
+      return products;
+    } else {
+      console.warn('⚠️ Respuesta de API no exitosa:', response.error);
+      throw new Error(response.error || 'API response not successful');
+    }
+  } catch (error) {
+    console.error('❌ Error al obtener productos del backend:', error);
+    console.log('📦 Fallback a datos mock locales');
+    return getMockProductsWithFilters(filters);
+  }
+}
 
+export const fetchProductById = async (id: string): Promise<Product | null> => {
+  console.log('🔍 Obteniendo producto por ID del backend:', id);
+  
+  try {
+    const response = await ProductService.getProductById(id);
+    
+    if (response.success && response.data) {
+      console.log('✅ Producto obtenido del backend:', response.data.name);
+      return normalizeProductData(response.data);
+    } else {
+      console.warn('⚠️ Respuesta de API no exitosa:', response.error);
+      throw new Error(response.error || 'API response not successful');
+    }
+  } catch (error) {
+    console.error('❌ Error al obtener producto del backend:', error);
+    console.log('📦 Fallback a datos mock locales');
+    return mockProducts.find(product => product.id === id) || null;
+  }
+}
+
+// Función helper para aplicar filtros a datos mock (fallback)
+const getMockProductsWithFilters = (filters?: {
+  categoryId?: string
+  searchTerm?: string
+  sortBy?: 'name' | 'price' | 'rating' | 'newest'
+}): Product[] => {
   let filteredProducts = [...mockProducts]
 
-  if (filters?.categoryId) {
+  if (filters?.categoryId && filters.categoryId !== 'all') {
     filteredProducts = filterProductsByCategory(filteredProducts, filters.categoryId)
   }
 
@@ -683,14 +777,81 @@ export const fetchProducts = async (filters?: {
   return filteredProducts
 }
 
-export const fetchProductById = async (id: string): Promise<Product | null> => {
-  await new Promise(resolve => setTimeout(resolve, 200))
-  return mockProducts.find(product => product.id === id) || null
-}
-
 export const fetchCategories = async (): Promise<ProductCategory[]> => {
   await new Promise(resolve => setTimeout(resolve, 100))
   return productCategories
+}
+
+// Funciones CRUD - Conectan con el backend
+export const createProduct = async (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> => {
+  try {
+    console.log('➕ Creando producto en el backend:', productData.name);
+    
+    const response = await ProductService.createProduct(productData);
+    
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Error al crear producto');
+    }
+
+    console.log('✅ Producto creado exitosamente:', response.data.name);
+    return normalizeProductData(response.data);
+  } catch (error) {
+    console.error('❌ Error al crear producto:', error);
+    throw error;
+  }
+}
+
+export const updateProduct = async (id: string, productData: Partial<Product>): Promise<Product> => {
+  try {
+    console.log('✏️ Actualizando producto en el backend:', id);
+    
+    const response = await ProductService.updateProduct(id, productData);
+    
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Error al actualizar producto');
+    }
+
+    console.log('✅ Producto actualizado exitosamente:', response.data.name);
+    return normalizeProductData(response.data);
+  } catch (error) {
+    console.error('❌ Error al actualizar producto:', error);
+    throw error;
+  }
+}
+
+export const deleteProduct = async (id: string): Promise<void> => {
+  try {
+    console.log('🗑️ Eliminando producto del backend:', id);
+    
+    const response = await ProductService.deleteProduct(id);
+    
+    if (!response.success) {
+      throw new Error(response.error || 'Error al eliminar producto');
+    }
+
+    console.log('✅ Producto eliminado exitosamente');
+  } catch (error) {
+    console.error('❌ Error al eliminar producto:', error);
+    throw error;
+  }
+}
+
+export const updateProductStock = async (id: string, quantity: number): Promise<Product> => {
+  try {
+    console.log('📦 Actualizando stock del producto:', id, 'nueva cantidad:', quantity);
+    
+    const response = await ProductService.updateStock(id, quantity);
+    
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Error al actualizar stock');
+    }
+
+    console.log('✅ Stock actualizado exitosamente');
+    return normalizeProductData(response.data);
+  } catch (error) {
+    console.error('❌ Error al actualizar stock:', error);
+    throw error;
+  }
 }
 
 // Actualizar contadores de categorías basado en productos reales

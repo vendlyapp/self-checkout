@@ -1,4 +1,5 @@
 import { FormErrors, ProductVariant } from './types';
+import { CreateProductRequest } from '@/lib/services/productService';
 
 // Validation function for form fields
 export const validateField = (
@@ -102,6 +103,15 @@ export const validateField = (
         delete newErrors.location;
       }
       break;
+    case "stock":
+      if (!value || parseInt(value) < 0) {
+        newErrors.stock = "Lagerbestand ist erforderlich";
+      } else if (parseInt(value) > 9999) {
+        newErrors.stock = "Lagerbestand zu hoch";
+      } else {
+        delete newErrors.stock;
+      }
+      break;
   }
   return newErrors;
 };
@@ -133,47 +143,59 @@ export const createProductObject = (
   location?: string,
   notes?: string
 ) => {
-  return {
-    // El backend generará el ID, QR, SKU y barcode automáticamente
+  // Crear objeto básico que el backend puede manejar
+  const baseProduct: CreateProductRequest = {
     name: productName,
     description: productDescription,
     price: parseFloat(productPrice),
-    originalPrice: hasPromotion ? parseFloat(promotionPrice) : undefined,
     category: productCategory,
-    categoryId: productCategory === "Alle" ? "all" : productCategory.toLowerCase(),
     stock: stock,
-    initialStock: stock,
-    // Si se proporcionan, el backend los validará; si no, los generará automáticamente
-    barcode: barcode || undefined,
-    sku: sku || undefined,
-    tags: productDescription
-      ? productDescription.toLowerCase().split(" ")
-      : [],
-    isNew: true,
     isActive: true,
-    rating: 0,
-    reviews: 0,
-    weight: hasVariants ? 0 : 1000,
-    hasWeight: !hasVariants,
-    dimensions: { length: 15, width: 12, height: 8 },
-    currency: "CHF",
-    // Campos adicionales de gestión
-    supplier: supplier || undefined,
-    costPrice: costPrice ? parseFloat(costPrice) : undefined,
-    margin: costPrice ? Math.round(((parseFloat(productPrice) - parseFloat(costPrice)) / parseFloat(productPrice)) * 100) : undefined,
-    taxRate: 7.7, // IVA suizo por defecto
-    expiryDate: expiryDate || undefined,
-    location: location || undefined,
-    notes: notes || undefined,
-    // Campos de promoción
-    promotionTitle: hasPromotion ? "Aktion" : undefined,
-    promotionType: hasPromotion ? ("percentage" as const) : undefined,
-    promotionBadge: hasPromotion ? `-${Math.round(
-      ((parseFloat(productPrice) - parseFloat(promotionPrice)) /
-        parseFloat(productPrice)) *
-        100
-    )}%` : undefined,
-    promotionActionLabel: hasPromotion ? "Jetzt hinzufügen" : undefined,
-    promotionPriority: hasPromotion ? 10 : undefined,
+    // El backend requiere SKU, así que generamos uno si no se proporciona
+    sku: sku && sku.trim() ? sku.trim() : `AUTO-${Date.now()}`,
   };
+
+  // Agregar campos opcionales solo si tienen valor
+  if (hasPromotion && promotionPrice) {
+    baseProduct.originalPrice = parseFloat(promotionPrice);
+  }
+
+  if (barcode && barcode.trim()) {
+    baseProduct.barcode = barcode.trim();
+  }
+
+  if (supplier && supplier.trim()) {
+    baseProduct.supplier = supplier.trim();
+  }
+
+  if (costPrice && costPrice.trim()) {
+    baseProduct.costPrice = parseFloat(costPrice);
+  }
+
+  if (location && location.trim()) {
+    baseProduct.location = location.trim();
+  }
+
+  if (notes && notes.trim()) {
+    baseProduct.notes = notes.trim();
+  }
+
+  if (expiryDate && expiryDate.trim()) {
+    baseProduct.expiryDate = expiryDate;
+  }
+
+  // Campos de promoción solo si hay promoción
+  if (hasPromotion && promotionPrice) {
+    const discountPercentage = Math.round(
+      ((parseFloat(productPrice) - parseFloat(promotionPrice)) / parseFloat(productPrice)) * 100
+    );
+    
+    baseProduct.promotionTitle = "Aktion";
+    baseProduct.promotionType = "percentage";
+    baseProduct.promotionBadge = `-${discountPercentage}%`;
+    baseProduct.promotionActionLabel = "Jetzt hinzufügen";
+    baseProduct.promotionPriority = 10;
+  }
+
+  return baseProduct;
 };

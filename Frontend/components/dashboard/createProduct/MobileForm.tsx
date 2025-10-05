@@ -26,6 +26,8 @@ export default function MobileForm(props: SharedFormProps) {
     setProductCategory,
     productImages,
     setProductImages,
+    stock,
+    setStock,
     isActive,
     setIsActive,
     hasPromotion,
@@ -40,6 +42,14 @@ export default function MobileForm(props: SharedFormProps) {
     variants,
     vatRate,
     setVatRate,
+    sku,
+    setSku,
+    barcode,
+    setBarcode,
+    supplier,
+    setSupplier,
+    location,
+    setLocation,
     errors,
     saveProgress,
     showSuccessModal,
@@ -263,35 +273,70 @@ export default function MobileForm(props: SharedFormProps) {
           {/* Preis und Lagerbestand ohne Varianten */}
           {!hasVariants && (
             <div className="grid grid-cols-1 gap-3">
-              <label className="block text-[16px] font-semibold text-gray-700 mb-2">
-                Preis <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  step="0.05"
-                  value={productPrice}
-                  onChange={(e) => {
-                    setProductPrice(e.target.value);
-                    validateField("productPrice", e.target.value);
-                  }}
-                  placeholder="8.50"
-                  className={`w-full h-[46px] p-3 pl-12 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-[16px] font-medium transition-colors bg-white ${
-                    errors.productPrice ? "border-red-500" : "border-gray-200"
-                  }`}
-                />
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">
-                  CHF
+              <div>
+                <label className="block text-[16px] font-semibold text-gray-700 mb-2">
+                  Preis <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.05"
+                    value={productPrice}
+                    onChange={(e) => {
+                      setProductPrice(e.target.value);
+                      validateField("productPrice", e.target.value);
+                    }}
+                    placeholder="8.50"
+                    className={`w-full h-[46px] p-3 pl-12 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-[16px] font-medium transition-colors bg-white ${
+                      errors.productPrice ? "border-red-500" : "border-gray-200"
+                    }`}
+                  />
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">
+                    CHF
+                  </div>
+                </div>
+                {errors.productPrice && (
+                  <div className="flex items-center space-x-1 mt-1">
+                    <AlertCircle className="w-3 h-3 text-red-500" />
+                    <p className="text-red-500 text-xs">
+                      {errors.productPrice}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-[16px] font-semibold text-gray-700 mb-2">
+                  Lagerbestand <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={stock}
+                    onChange={(e) => {
+                      setStock(parseInt(e.target.value) || 0);
+                      validateField("stock", e.target.value);
+                    }}
+                    placeholder="50"
+                    className={`w-full h-[46px] p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-[16px] font-medium transition-colors bg-white ${
+                      errors.stock ? "border-red-500" : "border-gray-200"
+                    }`}
+                  />
+                  {errors.stock && (
+                    <div className="flex items-center space-x-1 mt-1">
+                      <AlertCircle className="w-3 h-3 text-red-500" />
+                      <p className="text-red-500 text-xs">
+                        {errors.stock}
+                      </p>
+                    </div>
+                  )}
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">
+                    Stück
+                  </div>
                 </div>
               </div>
-              {errors.productPrice && (
-                <div className="flex items-center space-x-1 mt-1">
-                  <AlertCircle className="w-3 h-3 text-red-500" />
-                  <p className="text-red-500 text-xs">
-                    {errors.productPrice}
-                  </p>
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -547,6 +592,75 @@ export default function MobileForm(props: SharedFormProps) {
                 }`}
               />
             </button>
+          </div>
+        </div>
+
+        {/* Información Adicional */}
+        <div className="border-t border-gray-200 pt-4">
+          <div className="flex items-center space-x-2 mb-4">
+            <Package className="w-[30px] h-[30px]" />
+            <div>
+              <div className="text-sm font-semibold text-[16px] text-gray-800">
+                Información Adicional
+              </div>
+              <div className="text-[14px] text-gray-500">
+                SKU, Barcode y más detalles
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                SKU <span className="text-gray-500">(opcional)</span>
+              </label>
+              <input
+                type="text"
+                value={sku}
+                onChange={(e) => setSku(e.target.value)}
+                placeholder="SKU-001"
+                className="w-full h-[46px] p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Barcode <span className="text-gray-500">(opcional)</span>
+              </label>
+              <input
+                type="text"
+                value={barcode}
+                onChange={(e) => setBarcode(e.target.value)}
+                placeholder="1234567890123"
+                className="w-full h-[46px] p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Lieferant <span className="text-gray-500">(opcional)</span>
+              </label>
+              <input
+                type="text"
+                value={supplier}
+                onChange={(e) => setSupplier(e.target.value)}
+                placeholder="Nombre del proveedor"
+                className="w-full h-[46px] p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Standort <span className="text-gray-500">(opcional)</span>
+              </label>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Estante A1, Refrigerador B2"
+                className="w-full h-[46px] p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-white"
+              />
+            </div>
           </div>
         </div>
 

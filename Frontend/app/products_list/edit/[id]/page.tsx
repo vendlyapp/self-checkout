@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { fetchProductById } from '@/components/dashboard/products_list/data/mockProducts';
+import { fetchProductById, updateProduct } from '@/components/dashboard/products_list/data/mockProducts';
 
 interface Product {
   id: string;
@@ -41,7 +41,13 @@ interface PageProps {
 export default function EditProduct({ params }: PageProps) {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [productId, setProductId] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  
+  // Formulario de edición
+  const [formData, setFormData] = useState<Partial<Product>>({});
 
   useEffect(() => {
     const loadParams = async () => {
@@ -57,9 +63,13 @@ export default function EditProduct({ params }: PageProps) {
     const loadProduct = async () => {
       try {
         const productData = await fetchProductById(productId);
-        setProduct(productData);
+        if (productData) {
+          setProduct(productData);
+          setFormData(productData);
+        }
       } catch (error) {
         console.error('Error loading product:', error);
+        setError('Error al cargar el producto');
       } finally {
         setLoading(false);
       }
@@ -67,6 +77,37 @@ export default function EditProduct({ params }: PageProps) {
 
     loadProduct();
   }, [productId]);
+
+  // Función para manejar cambios en el formulario
+  const handleInputChange = (field: keyof Product, value: string | number) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Función para guardar los cambios
+  const handleSave = async () => {
+    if (!product || !formData) return;
+
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const updatedProduct = await updateProduct(product.id, formData);
+      setProduct(updatedProduct);
+      setSuccess('Producto actualizado exitosamente');
+      
+      // Limpiar mensaje de éxito después de 3 segundos
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (error) {
+      console.error('Error updating product:', error);
+      setError(error instanceof Error ? error.message : 'Error al actualizar el producto');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -125,10 +166,108 @@ export default function EditProduct({ params }: PageProps) {
                 </div>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-gray-100">
-                <p className="text-gray-600 text-center">
-                  Formular zum Bearbeiten wird hier implementiert...
-                </p>
+              {/* Formulario de edición */}
+              <div className="mt-6 pt-4 border-t border-gray-100 space-y-4">
+                {/* Mensajes de estado */}
+                {error && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-red-600 text-sm">{error}</p>
+                  </div>
+                )}
+                
+                {success && (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-green-600 text-sm">{success}</p>
+                  </div>
+                )}
+
+                {/* Campos del formulario */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nombre del Producto
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.name || ''}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Descripción
+                    </label>
+                    <textarea
+                      value={formData.description || ''}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Precio (CHF)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.price || ''}
+                        onChange={(e) => handleInputChange('price', parseFloat(e.target.value))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Stock
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.stock || ''}
+                        onChange={(e) => handleInputChange('stock', parseInt(e.target.value))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Categoría
+                    </label>
+                    <select
+                      value={formData.category || ''}
+                      onChange={(e) => handleInputChange('category', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="Brot">Brot</option>
+                      <option value="Gebäck">Gebäck</option>
+                      <option value="Kuchen">Kuchen</option>
+                      <option value="Sandwiches">Sandwiches</option>
+                    </select>
+                  </div>
+
+                  {/* Botones */}
+                  <div className="flex gap-2 pt-4">
+                    <button
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {saving ? 'Guardando...' : 'Guardar Cambios'}
+                    </button>
+                    
+                    <button
+                      onClick={() => window.history.back()}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -203,23 +342,118 @@ export default function EditProduct({ params }: PageProps) {
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900 mb-6">Produkt bearbeiten</h2>
 
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">📝</span>
+                {/* Mensajes de estado */}
+                {error && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-red-600 text-sm">{error}</p>
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Bearbeitungsformular</h3>
-                  <p className="text-gray-600 mb-6">
-                    Das vollständige Bearbeitungsformular wird hier implementiert...
-                  </p>
-                  <div className="bg-gray-50 rounded-lg p-4 text-left">
-                    <h4 className="font-medium text-gray-900 mb-2">Geplante Funktionen:</h4>
-                    <ul className="text-sm text-gray-600 space-y-1">
-                      <li>• Produktdaten bearbeiten</li>
-                      <li>• Bilder hochladen/ändern</li>
-                      <li>• Preise und Varianten verwalten</li>
-                      <li>• Kategorien zuweisen</li>
-                      <li>• Lagerbestand aktualisieren</li>
-                    </ul>
+                )}
+                
+                {success && (
+                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-green-600 text-sm">{success}</p>
+                  </div>
+                )}
+
+                {/* Formulario completo */}
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Nombre del Producto
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.name || ''}
+                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Categoría
+                      </label>
+                      <select
+                        value={formData.category || ''}
+                        onChange={(e) => handleInputChange('category', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="Brot">Brot</option>
+                        <option value="Gebäck">Gebäck</option>
+                        <option value="Kuchen">Kuchen</option>
+                        <option value="Sandwiches">Sandwiches</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Descripción
+                    </label>
+                    <textarea
+                      value={formData.description || ''}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Precio (CHF)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.price || ''}
+                        onChange={(e) => handleInputChange('price', parseFloat(e.target.value))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Stock
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.stock || ''}
+                        onChange={(e) => handleInputChange('stock', parseInt(e.target.value))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        SKU
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.sku || ''}
+                        onChange={(e) => handleInputChange('sku', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Botones */}
+                  <div className="flex gap-4 pt-6 border-t border-gray-200">
+                    <button
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    >
+                      {saving ? 'Guardando...' : 'Guardar Cambios'}
+                    </button>
+                    
+                    <button
+                      onClick={() => window.history.back()}
+                      className="px-6 py-3 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 font-medium"
+                    >
+                      Cancelar
+                    </button>
                   </div>
                 </div>
               </div>

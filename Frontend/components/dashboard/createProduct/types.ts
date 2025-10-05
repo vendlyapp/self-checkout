@@ -10,6 +10,7 @@ export interface FormErrors {
   productPrice?: string;
   productCategory?: string;
   promotionPrice?: string;
+  stock?: string;
   sku?: string;
   barcode?: string;
   costPrice?: string;
