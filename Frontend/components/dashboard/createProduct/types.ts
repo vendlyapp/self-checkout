@@ -46,10 +46,6 @@ export interface SharedFormProps {
   setIsActive: (value: boolean) => void;
   stock: number; // Stock fijo de 999 (solo lectura)
 
-  // Campos opcionales
-  notes: string;
-  setNotes: (value: string) => void;
-
   // Promociones
   hasPromotion: boolean;
   setHasPromotion: (value: boolean) => void;

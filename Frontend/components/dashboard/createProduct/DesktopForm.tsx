@@ -40,8 +40,6 @@ export default function DesktopForm(props: SharedFormProps) {
     variants,
     vatRate,
     setVatRate,
-    notes,
-    setNotes,
     errors,
     saveProgress,
     showSuccessModal,

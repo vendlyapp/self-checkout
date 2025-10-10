@@ -40,8 +40,6 @@ export default function MobileForm(props: SharedFormProps) {
     variants,
     vatRate,
     setVatRate,
-    notes,
-    setNotes,
     errors,
     saveProgress,
     showSuccessModal,

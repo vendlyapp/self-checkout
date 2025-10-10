@@ -8,6 +8,7 @@ import { FormProps, CreatedProduct, ProductVariant, FormErrors } from "./types";
 import { validateField, createProductObject } from "./validations";
 import { CATEGORIES, VAT_RATES, SAVE_PROGRESS_STEPS } from "./constants";
 import { ProductService } from "@/lib/services/productService";
+import { Product } from "@/components/dashboard/products_list/data/mockProducts";
 
 export default function Form({ isDesktop = false }: FormProps) {
   const router = useRouter();
@@ -19,9 +20,6 @@ export default function Form({ isDesktop = false }: FormProps) {
   const [productCategory, setProductCategory] = useState("");
   const [productImages, setProductImages] = useState<string[]>([]);
   const [isActive, setIsActive] = useState(true);
-
-  // Campos opcionales
-  const [notes, setNotes] = useState("");
   
   // Stock siempre es 999 (no se muestra en el formulario)
   const stock = 999;
@@ -113,7 +111,6 @@ export default function Form({ isDesktop = false }: FormProps) {
         promotionPrice,
         hasVariants,
         hasPromotion,
-        notes
       );
 
       try {
@@ -155,7 +152,6 @@ export default function Form({ isDesktop = false }: FormProps) {
           ...(productData.supplier && { supplier: productData.supplier }),
           ...(productData.costPrice && { costPrice: productData.costPrice }),
           ...(productData.location && { location: productData.location }),
-          ...(productData.notes && { notes: productData.notes }),
           ...(productData.expiryDate && { expiryDate: productData.expiryDate }),
           ...(productData.promotionTitle && { promotionTitle: productData.promotionTitle }),
           ...(productData.promotionType && { promotionType: productData.promotionType }),
@@ -198,7 +194,6 @@ export default function Form({ isDesktop = false }: FormProps) {
     promotionPrice,
     hasVariants,
     hasPromotion,
-    notes,
     errors,
     handleValidateField,
   ]);
@@ -210,7 +205,10 @@ export default function Form({ isDesktop = false }: FormProps) {
   }, [router]);
 
   useEffect(() => {
-    (window as any).saveProduct = handleSave;
+    interface WindowWithSaveProduct extends Window {
+      saveProduct?: () => Promise<void>;
+    }
+    (window as WindowWithSaveProduct).saveProduct = handleSave;
   }, [handleSave]);
   const sharedProps = {
     productName,
@@ -226,8 +224,6 @@ export default function Form({ isDesktop = false }: FormProps) {
     isActive,
     setIsActive,
     stock,
-    notes,
-    setNotes,
     hasPromotion,
     setHasPromotion,
     promotionPrice,
