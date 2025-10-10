@@ -174,22 +174,23 @@ async function main() {
   log('🛠️  Vendly Checkout - Utilidades de Base de Datos', 'blue');
   log('=' * 50, 'blue');
 
-  if (args.includes('--stats')) {
+  const command = args[0];
+  
+  if (command === 'stats' || args.includes('--stats')) {
     await showDatabaseStats();
-  } else if (args.includes('--recent')) {
+  } else if (command === 'recent' || args.includes('--recent')) {
     const limit = args.find(arg => arg.startsWith('--limit='))?.split('=')[1] || 5;
     await showRecentProducts(parseInt(limit));
-  } else if (args.includes('--categories')) {
+  } else if (command === 'categories' || args.includes('--categories')) {
     await showTopCategories();
-  } else if (args.includes('--health')) {
+  } else if (command === 'health' || args.includes('--health')) {
     await checkDatabaseHealth();
   } else {
-    log('📋 Comandos disponibles:', 'blue');
-    log('  --stats       : Mostrar estadísticas completas', 'blue');
-    log('  --recent      : Mostrar productos recientes', 'blue');
-    log('  --categories  : Mostrar categorías con más productos', 'blue');
-    log('  --health      : Verificar salud de la base de datos', 'blue');
-    log('  --limit=N     : Limitar resultados (ej: --limit=10)', 'blue');
+    log('\n📋 Comandos disponibles:', 'cyan');
+    log('  npm run utils:stats       - Estadísticas completas');
+    log('  npm run utils:recent      - Productos recientes');
+    log('  npm run utils:categories  - Info de categorías');
+    log('  npm run utils:health      - Estado de salud\n');
   }
 }
 

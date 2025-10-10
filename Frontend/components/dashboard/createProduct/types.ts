@@ -10,13 +10,6 @@ export interface FormErrors {
   productPrice?: string;
   productCategory?: string;
   promotionPrice?: string;
-  stock?: string;
-  sku?: string;
-  barcode?: string;
-  costPrice?: string;
-  supplier?: string;
-  expiryDate?: string;
-  location?: string;
 }
 
 export interface Category {
@@ -49,26 +42,11 @@ export interface SharedFormProps {
   setProductCategory: (value: string) => void;
   productImages: string[];
   setProductImages: (images: string[]) => void;
-  stock: number;
-  setStock: (value: number) => void;
   isActive: boolean;
   setIsActive: (value: boolean) => void;
+  stock: number; // Stock fijo de 999 (solo lectura)
 
-  // Campos de identificación
-  sku: string;
-  setSku: (value: string) => void;
-  barcode: string;
-  setBarcode: (value: string) => void;
-
-  // Campos de gestión
-  supplier: string;
-  setSupplier: (value: string) => void;
-  costPrice: string;
-  setCostPrice: (value: string) => void;
-  expiryDate: string;
-  setExpiryDate: (value: string) => void;
-  location: string;
-  setLocation: (value: string) => void;
+  // Campos opcionales
   notes: string;
   setNotes: (value: string) => void;
 

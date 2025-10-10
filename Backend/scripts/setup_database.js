@@ -20,8 +20,7 @@ async function setupDatabase() {
     log('🗄️  Configurando base de datos Vendly Checkout...', 'blue');
     log('=' * 50, 'blue');
 
-    // Leer el archivo SQL
-    const sqlPath = path.join(__dirname, '..', 'setup_database.sql');
+    const sqlPath = path.join(__dirname, 'setup_database.sql');
 
     if (!fs.existsSync(sqlPath)) {
       throw new Error('Archivo setup_database.sql no encontrado');

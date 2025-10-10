@@ -8,7 +8,6 @@ import { FormProps, CreatedProduct, ProductVariant, FormErrors } from "./types";
 import { validateField, createProductObject } from "./validations";
 import { CATEGORIES, VAT_RATES, SAVE_PROGRESS_STEPS } from "./constants";
 import { ProductService } from "@/lib/services/productService";
-import { Product } from "@/components/dashboard/products_list/data/mockProducts";
 
 export default function Form({ isDesktop = false }: FormProps) {
   const router = useRouter();
@@ -19,19 +18,13 @@ export default function Form({ isDesktop = false }: FormProps) {
   const [productPrice, setProductPrice] = useState("");
   const [productCategory, setProductCategory] = useState("");
   const [productImages, setProductImages] = useState<string[]>([]);
-  const [stock, setStock] = useState(0);
   const [isActive, setIsActive] = useState(true);
 
-  // Campos de identificación
-  const [sku, setSku] = useState("");
-  const [barcode, setBarcode] = useState("");
-
-  // Campos de gestión
-  const [supplier, setSupplier] = useState("");
-  const [costPrice, setCostPrice] = useState("");
-  const [expiryDate, setExpiryDate] = useState("");
-  const [location, setLocation] = useState("");
+  // Campos opcionales
   const [notes, setNotes] = useState("");
+  
+  // Stock siempre es 999 (no se muestra en el formulario)
+  const stock = 999;
 
   // Promociones
   const [hasPromotion, setHasPromotion] = useState(false);
@@ -96,24 +89,15 @@ export default function Form({ isDesktop = false }: FormProps) {
     [variants.length]
   );
 
-  // Función para guardar el producto
   const handleSave = useCallback(async () => {
     try {
-      // Validation
       handleValidateField("productName", productName);
       handleValidateField("productCategory", productCategory);
-      handleValidateField("stock", stock.toString());
 
-      if (!hasVariants) {
-        handleValidateField("productPrice", productPrice);
-      }
-      if (hasPromotion) {
-        handleValidateField("promotionPrice", promotionPrice);
-      }
-
+      if (!hasVariants) handleValidateField("productPrice", productPrice);
+      if (hasPromotion) handleValidateField("promotionPrice", promotionPrice);
       if (Object.keys(errors).length > 0) return;
 
-      // Simulate progress steps
       for (let i = 0; i < SAVE_PROGRESS_STEPS.length; i++) {
         setSaveProgress(((i + 1) / SAVE_PROGRESS_STEPS.length) * 100);
         await new Promise((resolve) => setTimeout(resolve, SAVE_PROGRESS_STEPS[i].duration));
@@ -121,26 +105,17 @@ export default function Form({ isDesktop = false }: FormProps) {
 
       setSaveProgress(0);
 
-      // Create product object using centralized function
       const productData = createProductObject(
         productName,
         productDescription,
         productPrice,
         productCategory,
         promotionPrice,
-        stock,
         hasVariants,
         hasPromotion,
-        sku,
-        barcode,
-        supplier,
-        costPrice,
-        expiryDate,
-        location,
         notes
       );
 
-      // Enviar al backend - el backend generará el ID y QR automáticamente
       try {
         const response = await ProductService.createProduct(productData);
         
@@ -221,36 +196,23 @@ export default function Form({ isDesktop = false }: FormProps) {
     productCategory,
     productPrice,
     promotionPrice,
-    stock,
     hasVariants,
     hasPromotion,
-    sku,
-    barcode,
-    supplier,
-    costPrice,
-    expiryDate,
-    location,
     notes,
     errors,
     handleValidateField,
   ]);
 
-  // Handle navigation after modal close
   const handleModalClose = useCallback(() => {
     setShowSuccessModal(false);
     setCreatedProduct(null);
     router.push("/products_list");
   }, [router]);
 
-  // Exponer la función de guardado globalmente
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).saveProduct = handleSave;
   }, [handleSave]);
-
-  // Props compartidas entre MobileForm y DesktopForm
   const sharedProps = {
-    // Campos básicos
     productName,
     setProductName,
     productDescription,
@@ -261,30 +223,11 @@ export default function Form({ isDesktop = false }: FormProps) {
     setProductCategory,
     productImages,
     setProductImages,
-    stock,
-    setStock,
     isActive,
     setIsActive,
-
-    // Campos de identificación
-    sku,
-    setSku,
-    barcode,
-    setBarcode,
-
-    // Campos de gestión
-    supplier,
-    setSupplier,
-    costPrice,
-    setCostPrice,
-    expiryDate,
-    setExpiryDate,
-    location,
-    setLocation,
+    stock,
     notes,
     setNotes,
-
-    // Promociones
     hasPromotion,
     setHasPromotion,
     promotionPrice,
@@ -293,32 +236,22 @@ export default function Form({ isDesktop = false }: FormProps) {
     setPromotionDuration,
     customEndDate,
     setCustomEndDate,
-
-    // Variantes
     hasVariants,
     setHasVariants,
     variants,
     setVariants,
-
-    // Impuestos
     vatRate,
     setVatRate,
-
-    // Estado del formulario
     errors,
     saveProgress,
     showSuccessModal,
     createdProduct,
     handleModalClose,
     validateField: handleValidateField,
-
-    // Funciones de variantes
     addVariant,
     removeVariant,
     updateVariant,
     handleToggleVariants,
-
-    // Datos estáticos
     categories,
     vatRates,
   };

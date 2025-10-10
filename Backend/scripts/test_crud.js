@@ -1,107 +1,93 @@
-/**
- * Prueba del CRUD con SQL directo
- */
-
 const productService = require('../src/services/ProductService');
 const { testConnection } = require('../lib/database');
 
+const colors = {
+  green: '\x1b[32m',
+  red: '\x1b[31m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  reset: '\x1b[0m'
+};
+
+const log = (message, color = 'reset') => {
+  console.log(`${colors[color]}${message}${colors.reset}`);
+};
+
 async function testCRUD() {
-  console.log('🧪 Prueba del CRUD con SQL directo\n');
+  log('\n🧪 Test CRUD de Productos - Vendly Checkout\n', 'blue');
 
   try {
-    // Probar conexión
-    console.log('1️⃣ Probando conexión a la base de datos...');
+    log('1️⃣ Verificando conexión...', 'yellow');
     const connected = await testConnection();
-    if (!connected) {
-      throw new Error('No se pudo conectar a la base de datos');
-    }
-    console.log('✅ Conexión establecida\n');
+    if (!connected) throw new Error('No se pudo conectar a la base de datos');
+    log('✅ Conexión exitosa\n', 'green');
 
-    // Datos de prueba
     const testProduct = {
-      name: "Pan SQL Test",
-      description: "Pan de prueba con SQL directo",
-      price: 2.50,
+      name: "Test Product QR",
+      description: "Producto de prueba con QR automático",
+      price: 9.99,
       category: "Brot",
-      stock: 10,
-      sku: "PAN-SQL-001",
-      barcode: "1234567890001",
-      supplier: "Panadería SQL",
-      costPrice: 1.50,
-      location: "Estante SQL",
-      notes: "Producto de prueba SQL"
+      notes: "Test product con sistema optimizado"
     };
 
-    console.log('2️⃣ Creando producto...');
-    const result = await productService.create(testProduct);
-    console.log('✅ Producto creado:', result.data.name);
-    console.log('📝 ID:', result.data.id);
-    console.log('💰 Precio:', result.data.price);
-    console.log('📦 Stock:', result.data.stock);
-    console.log('🏪 SKU:', result.data.sku);
-    console.log('🏢 Proveedor:', result.data.supplier);
-    console.log('📍 Ubicación:', result.data.location);
-    console.log('');
+    log('2️⃣ Creando producto...', 'yellow');
+    const created = await productService.create(testProduct);
+    log('✅ Producto creado', 'green');
+    log(`   ID: ${created.data.id}`);
+    log(`   Nombre: ${created.data.name}`);
+    log(`   Precio: CHF ${created.data.price}`);
+    log(`   Stock: ${created.data.stock}`);
+    log(`   SKU: ${created.data.sku}`);
+    log(`   QR Code: ${created.data.qrCode ? '✅ Generado' : '❌ No'}\n`);
 
-    const productId = result.data.id;
+    const productId = created.data.id;
 
-    console.log('3️⃣ Obteniendo producto por ID...');
-    const getResult = await productService.findById(productId);
-    console.log('✅ Producto obtenido:', getResult.data.name);
-    console.log('');
+    log('3️⃣ Obteniendo producto por ID...', 'yellow');
+    const found = await productService.findById(productId);
+    log('✅ Producto encontrado', 'green');
+    log(`   ${found.data.name} - CHF ${found.data.price}\n`);
 
-    console.log('4️⃣ Actualizando producto...');
-    const updateResult = await productService.update(productId, {
-      name: "Pan SQL Actualizado",
-      stock: 20,
-      price: 3.00,
-      supplier: "Proveedor SQL Actualizado"
+    log('4️⃣ Listando todos los productos...', 'yellow');
+    const all = await productService.findAll({ limit: 5 });
+    log(`✅ ${all.data.length} productos encontrados`, 'green');
+    all.data.forEach((p, i) => {
+      log(`   ${i + 1}. ${p.name} - CHF ${p.price} - Stock: ${p.stock}`);
     });
-    console.log('✅ Producto actualizado:', updateResult.data.name);
-    console.log('💰 Nuevo precio:', updateResult.data.price);
-    console.log('📦 Nuevo stock:', updateResult.data.stock);
-    console.log('🏢 Nuevo proveedor:', updateResult.data.supplier);
-    console.log('');
+    log('');
 
-    console.log('5️⃣ Listando todos los productos...');
-    const listResult = await productService.findAll();
-    console.log('✅ Total productos:', listResult.count);
-    listResult.data.forEach((p, i) => {
-      console.log(`   ${i + 1}. ${p.name} - ${p.price} CHF - Stock: ${p.stock}`);
+    log('5️⃣ Actualizando producto...', 'yellow');
+    const updated = await productService.update(productId, {
+      price: 12.50,
+      name: "Test Product Updated"
     });
-    console.log('');
+    log('✅ Producto actualizado', 'green');
+    log(`   ${updated.data.name} - CHF ${updated.data.price}\n`);
 
-    console.log('6️⃣ Obteniendo estadísticas...');
-    const statsResult = await productService.getStats();
-    console.log('📊 Estadísticas:');
-    console.log('   Total:', statsResult.data.total);
-    console.log('   Disponibles:', statsResult.data.available);
-    console.log('   Stock bajo:', statsResult.data.lowStock);
-    console.log('   Sin stock:', statsResult.data.outOfStock);
-    console.log('');
+    log('6️⃣ Obteniendo estadísticas...', 'yellow');
+    const stats = await productService.getStats();
+    log('✅ Estadísticas obtenidas', 'green');
+    log(`   Total: ${stats.data.total}`);
+    log(`   Disponibles: ${stats.data.available}`);
+    log(`   Stock bajo: ${stats.data.lowStock}\n`);
 
-    console.log('7️⃣ Probando búsqueda...');
-    const searchResult = await productService.search('Pan');
-    console.log('🔍 Resultados de búsqueda:', searchResult.count);
-    searchResult.data.forEach((p, i) => {
-      console.log(`   ${i + 1}. ${p.name} - ${p.price} CHF`);
-    });
-    console.log('');
+    log('7️⃣ Eliminando producto de prueba...', 'yellow');
+    await productService.delete(productId);
+    log('✅ Producto eliminado\n', 'green');
 
-    console.log('8️⃣ Eliminando producto...');
-    const deleteResult = await productService.delete(productId);
-    console.log('✅ Producto eliminado:', deleteResult.message);
-    console.log('');
-
-    console.log('🎉 ¡CRUD con SQL directo funcionando perfectamente!');
-
+    log('🎉 ¡Todas las pruebas pasaron exitosamente!\n', 'green');
+    
   } catch (error) {
-    console.error('❌ Error:', error.message);
-    console.log('\n🔧 Posibles soluciones:');
-    console.log('   1. Verificar que las tablas estén creadas en Supabase');
-    console.log('   2. Verificar variables de entorno (.env)');
-    console.log('   3. Verificar conexión a Supabase');
+    log(`\n❌ Error: ${error.message}`, 'red');
+    log('\n💡 Verifica:', 'yellow');
+    log('   1. Base de datos creada (npm run db:setup)');
+    log('   2. Archivo .env configurado');
+    log('   3. Conexión a Supabase\n');
+    process.exit(1);
   }
 }
 
-testCRUD();
+if (require.main === module) {
+  testCRUD().then(() => process.exit(0));
+}
+
+module.exports = { testCRUD };

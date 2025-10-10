@@ -1,185 +1,190 @@
-# Scripts de Vendly Checkout Backend
+# 🛠️ Scripts de Vendly Checkout
 
-Esta carpeta contiene todos los scripts de utilidad para el backend de Vendly Checkout.
+Scripts para gestión completa de base de datos y utilidades.
 
-## 📁 Archivos Disponibles
-
-### 🧪 Testing
-- **`test_crud.js`** - Pruebas básicas del CRUD de productos
-- **`test_all_endpoints.js`** - Suite completa de pruebas de todos los endpoints
-
-### 🗄️ Base de Datos
-- **`setup_database.js`** - Configuración inicial de la base de datos
-- **`clean_database.js`** - Limpieza de datos y tablas
-
-### 🛠️ Utilidades
-- **`utils.js`** - Utilidades generales y estadísticas
-
-## 🚀 Uso desde package.json
-
-Todos los scripts están configurados en `package.json` para fácil acceso:
+## ⚡ Quick Start
 
 ```bash
-# Testing
-npm test                    # Pruebas básicas CRUD
-npm run test:all           # Pruebas completas de endpoints
+# 1. Primera instalación
+npm run db:setup      # Crear tablas
+npm run db:seed       # Cargar 20 productos con QR
+npm test              # Verificar funcionamiento
 
-# Base de datos
-npm run db:setup           # Configurar base de datos
-npm run db:clean           # Limpiar base de datos
-npm run db:check           # Verificar estado de base de datos
+# 2. Si ya existe la BD
+npm run db:migrate    # Aplicar optimizaciones
+npm run db:seed       # Recargar productos
 
-# Utilidades
-npm run utils:stats        # Estadísticas completas
-npm run utils:recent       # Productos recientes
-npm run utils:health       # Salud de la base de datos
+# 3. Desarrollo diario
+npm run utils:stats   # Ver estadísticas
+npm test              # Probar CRUD
 ```
 
-## 📋 Comandos Detallados
-
-### Testing
-
-#### `npm test` - Pruebas CRUD Básicas
-```bash
-npm test
-```
-- Prueba conexión a base de datos
-- Crea, lee, actualiza y elimina productos
-- Verifica estadísticas y búsqueda
-- Limpia datos de prueba al final
-
-#### `npm run test:all` - Pruebas Completas
-```bash
-npm run test:all
-```
-- Prueba todos los endpoints de la API
-- Incluye productos, categorías, usuarios y órdenes
-- Verifica documentación Swagger
-- Genera reporte completo de pruebas
+## 📋 Comandos Disponibles
 
 ### Base de Datos
 
-#### `npm run db:setup` - Configurar Base de Datos
-```bash
-npm run db:setup
-```
-- Ejecuta `setup_database.sql`
-- Crea todas las tablas y tipos
-- Verifica que las tablas se crearon correctamente
+| Comando | Descripción |
+|---------|-------------|
+| `npm run db:setup` | Crear todas las tablas y configuración inicial |
+| `npm run db:migrate` | Aplicar migraciones (actualizaciones de schema) |
+| `npm run db:seed` | Cargar 20 productos realistas con QR codes |
+| `npm run db:check` | Verificar que todas las tablas existan |
+| `npm run db:clean` | Limpiar datos (interactivo con confirmación) |
+| `npm run db:clean-all` | Limpiar todo sin confirmación ⚠️ |
 
-#### `npm run db:clean` - Limpiar Base de Datos
-```bash
-npm run db:clean --data     # Solo limpiar datos
-npm run db:clean --tables   # Eliminar tablas
-npm run db:clean --all      # Limpieza completa
-```
+### Testing
 
-#### `npm run db:check` - Verificar Estado
-```bash
-npm run db:check
-```
-- Verifica que todas las tablas existan
-- Muestra estado actual de la base de datos
+| Comando | Descripción |
+|---------|-------------|
+| `npm test` | Test completo del CRUD + QR generation |
 
 ### Utilidades
 
-#### `npm run utils:stats` - Estadísticas Completas
-```bash
-npm run utils:stats
-```
-- Estadísticas de usuarios, categorías, productos y órdenes
-- Ingresos totales y promedios
-- Resumen completo del sistema
+| Comando | Descripción |
+|---------|-------------|
+| `npm run utils:stats` | Estadísticas completas de la BD |
+| `npm run utils:recent` | Últimos productos creados |
+| `npm run utils:categories` | Información de categorías |
+| `npm run utils:health` | Estado de salud del sistema |
 
-#### `npm run utils:recent` - Productos Recientes
-```bash
-npm run utils:recent
-npm run utils:recent --limit=10
-```
-- Muestra los últimos productos creados
-- Opción de limitar cantidad de resultados
+## 🗂️ Estructura
 
-#### `npm run utils:health` - Salud de Base de Datos
-```bash
-npm run utils:health
 ```
+scripts/
+├── migrations/
+│   └── 01_optimize_product_table.sql  # Optimización QR/SKU/Stock
+├── setup_database.sql                 # Schema completo optimizado
+├── setup_database.js                  # Ejecutor de setup
+├── run_migration.js                   # Ejecutor de migraciones
+├── seed_realistic_products.js         # Seed 20 productos + QR
+├── clean_database.js                  # Limpieza de datos
+├── test_crud.js                       # Tests CRUD completos
+├── utils.js                           # Estadísticas y utilidades
+└── README.md                          # Esta documentación
+```
+
+**Total: 8 scripts esenciales**
+
+## 🔧 Configuración de Productos
+
+### Auto-generación al Crear
+- ✅ **SKU**: `SKU-{timestamp}-{index}` si no se proporciona
+- ✅ **Stock**: 999 (ilimitado) por defecto
+- ✅ **QR Code**: Siempre auto-generado con ID del producto
+- ✅ **ID**: UUID automático
+
+### Datos del Seed (20 productos)
+
+El comando `npm run db:seed` crea:
+- 🥖 **4 Brot**: Vollkornbrot, Baguette, Zopf, Brötchen
+- 🥕 **5 Obst & Gemüse**: Äpfel, Tomaten, Bananen, Karotten, Salat
+- 🥛 **4 Milchprodukte**: Emmentaler, Jogurt, Milch, Mozzarella
+- 🥐 **4 Gebäck**: Croissant, Schokoladecroissant, Apfelstrudel
+- 🥤 **3 Getränke**: Mineralwasser, Orangensaft, Eistee
+
+Características:
+- ✅ Nombres en alemán
+- ✅ Precios CHF realistas
+- ✅ Stock 999 (todos)
+- ✅ QR único por producto
+- ✅ Algunos con descuentos
+- ✅ Tags: isNew, isPopular, isOnSale
+
+### Schema de Tabla Product
+
+```sql
+CREATE TABLE "Product" (
+    "id" TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    "name" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "price" DECIMAL(10,2) NOT NULL,
+    "originalPrice" DECIMAL(10,2),        -- Para descuentos
+    "category" TEXT NOT NULL,
+    "categoryId" TEXT,
+    "stock" INTEGER NOT NULL DEFAULT 999,  -- ← Ilimitado
+    "sku" TEXT,                            -- ← Opcional, auto-gen
+    "qrCode" TEXT,                         -- ← Auto-generado
+    "barcode" TEXT,                        -- ← Opcional
+    "isActive" BOOLEAN DEFAULT true,
+    "isNew" BOOLEAN DEFAULT false,
+    "isPopular" BOOLEAN DEFAULT false,
+    "isOnSale" BOOLEAN DEFAULT false,
+    "rating" DECIMAL(3,2),
+    "reviews" INTEGER DEFAULT 0,
+    "tags" TEXT[],
+    "notes" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    -- ... más campos de promoción y gestión
+);
+```
+
+### Migraciones Aplicadas
+
+**`01_optimize_product_table.sql`:**
+1. ✅ Removido UNIQUE de `qrCode` (Data URL muy grande para índice btree)
+2. ✅ SKU ahora opcional (NOT NULL removido)
+3. ✅ Stock default cambiado de 0 → 999
+4. ✅ Removido UNIQUE de `barcode`
+
+### Generación de QR Code
+
+**Librería:** `qrcode` npm package  
+**Ubicación:** `src/utils/qrCodeGenerator.js`  
+**Contenido:** ID del producto (UUID)  
+**Formato:** Data URL PNG base64  
+**Tamaño:** 256x256px  
+**Error Correction:** L (baja, más pequeño)
+
+**Proceso:**
+1. Producto se crea en BD
+2. QR se genera con `qrCodeGenerator.generateQRCode(id, name)`
+3. QR se actualiza en columna `qrCode`
+4. Producto completo retorna al frontend
+
+## 🎯 Flujo Completo de Producto
+
+```
+Frontend: Crear Producto
+    ↓
+Backend: Validar datos
+    ↓
+Backend: INSERT en tabla Product
+    ↓
+Backend: Generar QR Code (256x256 PNG)
+    ↓
+Backend: UPDATE qrCode en Product
+    ↓
+Frontend: Recibe producto con QR
+    ↓
+Frontend: Puede visualizar y descargar QR
+```
+
+## 🆘 Troubleshooting
+
+### Error: "index row size exceeds btree maximum"
+✅ **Solucionado** con migración `01_optimize_product_table.sql`
+
+### Error: "SKU es requerido"
+✅ **Solucionado**: SKU ahora es opcional y auto-generado
+
+### Error: "cannot connect to database"
+- Verifica `.env` tiene `DATABASE_URL`
 - Verifica conexión a Supabase
-- Comprueba existencia de todas las tablas
-- Reporte de salud del sistema
 
-## 🔧 Desarrollo
-
-### Agregar Nuevos Scripts
-
-1. Crear archivo en `scripts/`
-2. Agregar comando en `package.json`
-3. Documentar en este README
-
-### Estructura de Scripts
-
-```javascript
-// Colores para la consola
-const colors = {
-  green: '\x1b[32m',
-  red: '\x1b[31m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  reset: '\x1b[0m'
-};
-
-function log(message, color = 'reset') {
-  console.log(`${colors[color]}${message}${colors.reset}`);
-}
-
-// Función principal
-async function main() {
-  // Tu código aquí
-}
-
-// Ejecutar si es llamado directamente
-if (require.main === module) {
-  main().catch(error => {
-    log(`❌ Error fatal: ${error.message}`, 'red');
-    process.exit(1);
-  });
-}
-
-module.exports = { main };
-```
-
-## 🐛 Troubleshooting
-
-### Error de Conexión
-```bash
-# Verificar variables de entorno
-cat .env
-
-# Probar conexión
-npm run utils:health
-```
-
-### Error de Tablas
-```bash
-# Verificar estado
-npm run db:check
-
-# Recrear tablas
-npm run db:clean --all
-npm run db:setup
-```
-
-### Error de Permisos
-```bash
-# Verificar permisos de archivos
-ls -la scripts/
-
-# Dar permisos de ejecución
-chmod +x scripts/*.js
-```
+### Productos sin QR
+- Ejecuta `npm run db:seed` para regenerar
+- Nuevos productos siempre incluyen QR
 
 ## 📝 Notas
 
-- Todos los scripts usan colores para mejor legibilidad
-- Los scripts de limpieza incluyen confirmaciones de seguridad
-- Los scripts de testing limpian datos de prueba automáticamente
-- Los scripts de utilidades son de solo lectura (no modifican datos)
+- ✅ Migraciones no pierden datos
+- ✅ Seed reemplaza productos existentes
+- ✅ Tests no afectan datos reales
+- ✅ QR se genera en cada creación
+- ⚠️ `db:clean-all` elimina TODO
+
+---
+
+**Vendly Checkout Backend v2.0**  
+Última actualización: 10/10/2025

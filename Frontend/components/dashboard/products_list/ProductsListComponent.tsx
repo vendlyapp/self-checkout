@@ -384,7 +384,7 @@ export default function ProductsListComponent({
                   <ProductCardList
                     key={product.id}
                     product={product}
-                    onClick={() => handleProductClick(product)}
+                    onClick={onProductClick ? () => handleProductClick(product) : undefined}
                   />
                 ))}
               </div>
@@ -436,7 +436,7 @@ export default function ProductsListComponent({
                 <ProductCardList
                   key={product.id}
                   product={product}
-                  onClick={() => handleProductClick(product)}
+                  onClick={onProductClick ? () => handleProductClick(product) : undefined}
                 />
               ))}
             </div>

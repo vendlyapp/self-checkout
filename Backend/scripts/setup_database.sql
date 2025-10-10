@@ -36,7 +36,7 @@ CREATE TABLE "ProductCategory" (
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- 6. Crear tabla de productos (simplificada para el formulario)
+-- 6. Crear tabla de productos (optimizada)
 CREATE TABLE "Product" (
     "id" TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     "name" TEXT NOT NULL,
@@ -45,11 +45,11 @@ CREATE TABLE "Product" (
     "originalPrice" DECIMAL(10,2),
     "category" TEXT NOT NULL,
     "categoryId" TEXT,
-    "stock" INTEGER NOT NULL DEFAULT 0,
+    "stock" INTEGER NOT NULL DEFAULT 999,
     "initialStock" INTEGER,
-    "barcode" TEXT UNIQUE,
-    "sku" TEXT UNIQUE NOT NULL,
-    "qrCode" TEXT UNIQUE,
+    "barcode" TEXT,
+    "sku" TEXT,
+    "qrCode" TEXT,
     "tags" TEXT[],
     "isNew" BOOLEAN DEFAULT false,
     "isPopular" BOOLEAN DEFAULT false,
@@ -107,8 +107,8 @@ CREATE TABLE "OrderItem" (
 
 -- 9. Crear índices para mejor rendimiento
 CREATE INDEX "idx_user_email" ON "User"("email");
-CREATE INDEX "idx_product_sku" ON "Product"("sku");
-CREATE INDEX "idx_product_barcode" ON "Product"("barcode");
+CREATE INDEX "idx_product_sku" ON "Product"("sku") WHERE "sku" IS NOT NULL;
+CREATE INDEX "idx_product_barcode" ON "Product"("barcode") WHERE "barcode" IS NOT NULL;
 CREATE INDEX "idx_product_category" ON "Product"("category");
 CREATE INDEX "idx_product_active" ON "Product"("isActive");
 CREATE INDEX "idx_order_user" ON "Order"("userId");

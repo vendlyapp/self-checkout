@@ -43,19 +43,22 @@ interface ProductCardListProps {
 export default function ProductCardList({ product, onClick }: ProductCardListProps) {
   const router = useRouter()
 
-  const formatPrice = (price: number) => {
-    if (price % 1 === 0) {
-      return `CHF ${price}.-` 
-    }
-    return `CHF ${price.toFixed(2)}`
+  const formatPrice = (price: number): string => {
+    return price % 1 === 0 ? `CHF ${price}.-` : `CHF ${price.toFixed(2)}`
   }
 
   const handleProductClick = () => {
     if (onClick) {
       onClick(product)
     } else {
-      // Comportamiento por defecto: navegar a editar
-      router.push(`/products_list/edit/${product.id}`)
+      router.push(`/products_list/view/${product.id}`)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleProductClick()
     }
   }
 
@@ -64,21 +67,14 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
       className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-all duration-200"
       onClick={handleProductClick}
       tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          handleProductClick()
-        }
-      }}
-      aria-label={`Produkt bearbeiten: ${product.name}`}
+      onKeyDown={handleKeyDown}
+      aria-label={`Produkt anzeigen: ${product.name}`}
     >
       <div className="flex items-center gap-4">
-        {/* Icono del producto - usando Package de Lucide React */}
         <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
           <Package className="w-8 h-8 text-gray-600" />
         </div>
 
-        {/* Información del producto */}
         <div className="flex-1 min-w-0">
           <h3 className="text-gray-900 text-[16px] font-semibold leading-tight mb-1 truncate">
             {product.name}
@@ -101,7 +97,6 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
           </div>
         </div>
 
-        {/* Flecha para editar */}
         <div className="flex-shrink-0">
           <ChevronRight className="w-5 h-5 text-gray-400" />
         </div>

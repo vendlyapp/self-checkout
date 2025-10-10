@@ -1,9 +1,9 @@
 const { query } = require('../../lib/database');
+const qrCodeGenerator = require('../utils/qrCodeGenerator');
 
 class ProductService {
 
   async create(productData) {
-    // Validaciones requeridas según el formulario
     if (!productData.name || !productData.name.trim()) {
       throw new Error('El nombre del producto es requerido');
     }
@@ -12,29 +12,19 @@ class ProductService {
       throw new Error('La descripción del producto es requerida');
     }
 
-    if (!productData.price || isNaN(parseFloat(productData.price))) {
-      throw new Error('El precio debe ser un número válido');
-    }
-
-    if (parseFloat(productData.price) < 0) {
-      throw new Error('El precio no puede ser negativo');
+    const price = parseFloat(productData.price);
+    if (isNaN(price) || price < 0) {
+      throw new Error('El precio debe ser un número válido y positivo');
     }
 
     if (!productData.category || !productData.category.trim()) {
       throw new Error('La categoría es requerida');
     }
 
-    if (!productData.sku || !productData.sku.trim()) {
-      throw new Error('El SKU es requerido');
-    }
-
-    // Validar stock
-    const stock = parseInt(productData.stock) || 0;
+    const stock = productData.stock !== undefined ? parseInt(productData.stock) : 999;
     if (stock < 0) {
       throw new Error('El stock no puede ser negativo');
     }
-
-    // Preparar datos para inserción
     const insertQuery = `
       INSERT INTO "Product" (
         "name", "description", "price", "originalPrice", "category", "categoryId",
@@ -59,9 +49,9 @@ class ProductService {
       productData.category.trim(),
       productData.categoryId || productData.category.toLowerCase().replace(/\s+/g, '_'),
       stock,
-      productData.initialStock ? parseInt(productData.initialStock) : null,
+      productData.initialStock ? parseInt(productData.initialStock) : stock,
       productData.barcode?.trim() || null,
-      productData.sku.trim(),
+      productData.sku?.trim() || `SKU-${Date.now()}`,
       productData.qrCode?.trim() || null,
       productData.tags || [],
       Boolean(productData.isNew),
@@ -97,9 +87,15 @@ class ProductService {
     const result = await query(insertQuery, values);
     const product = result.rows[0];
 
+    const qrCode = await qrCodeGenerator.generateQRCode(product.id, product.name);
+    
+    const updateQRQuery = 'UPDATE "Product" SET "qrCode" = $1 WHERE "id" = $2 RETURNING *';
+    const updatedResult = await query(updateQRQuery, [qrCode, product.id]);
+    const productWithQR = updatedResult.rows[0];
+
     return {
       success: true,
-      data: product,
+      data: productWithQR,
       message: 'Producto creado exitosamente'
     };
   }
@@ -118,14 +114,12 @@ class ProductService {
     const params = [];
     let paramCount = 0;
 
-    // Filtro por categoría
     if (categoryId && categoryId !== 'all') {
       paramCount++;
       whereClause += ` AND "categoryId" = $${paramCount}`;
       params.push(categoryId);
     }
 
-    // Filtro de búsqueda
     if (search) {
       paramCount++;
       whereClause += ` AND (
@@ -136,17 +130,13 @@ class ProductService {
       params.push(`%${search}%`);
     }
 
-    // Ordenamiento
-    let orderByClause = 'ORDER BY "name" ASC';
-    if (sortBy === 'price') {
-      orderByClause = 'ORDER BY "price" ASC';
-    } else if (sortBy === 'rating') {
-      orderByClause = 'ORDER BY "rating" DESC NULLS LAST';
-    } else if (sortBy === 'newest') {
-      orderByClause = 'ORDER BY "createdAt" DESC';
-    }
-
-    // Consulta principal
+    const orderByMap = {
+      'price': 'ORDER BY "price" ASC',
+      'rating': 'ORDER BY "rating" DESC NULLS LAST',
+      'newest': 'ORDER BY "createdAt" DESC',
+      'default': 'ORDER BY "name" ASC'
+    };
+    const orderByClause = orderByMap[sortBy] || orderByMap.default;
     const selectQuery = `
       SELECT * FROM "Product"
       ${whereClause}
@@ -155,19 +145,16 @@ class ProductService {
     `;
     params.push(limit, offset);
 
-    const result = await query(selectQuery, params);
-    const products = result.rows;
-
-    // Contar total
-    const countQuery = `SELECT COUNT(*) FROM "Product" ${whereClause}`;
-    const countResult = await query(countQuery, params.slice(0, -2));
-    const total = parseInt(countResult.rows[0].count);
+    const [productsResult, countResult] = await Promise.all([
+      query(selectQuery, params),
+      query(`SELECT COUNT(*) FROM "Product" ${whereClause}`, params.slice(0, -2))
+    ]);
 
     return {
       success: true,
-      data: products,
-      count: products.length,
-      total: total
+      data: productsResult.rows,
+      count: productsResult.rows.length,
+      total: parseInt(countResult.rows[0].count)
     };
   }
 
@@ -200,18 +187,15 @@ class ProductService {
   }
 
   async update(id, productData) {
-    // Verificar que el producto existe
     const existingProduct = await this.findById(id);
     if (!existingProduct.success) {
       throw new Error('Producto no encontrado');
     }
 
-    // Construir query de actualización dinámicamente
     const updateFields = [];
     const values = [];
     let paramCount = 0;
 
-    // Campos que se pueden actualizar
     const updatableFields = [
       'name', 'description', 'price', 'category', 'stock', 'sku', 'barcode',
       'supplier', 'costPrice', 'location', 'notes', 'isActive', 'rating',
@@ -220,20 +204,23 @@ class ProductService {
       'margin', 'taxRate', 'expiryDate'
     ];
 
+    const numericFields = ['price', 'costPrice', 'rating', 'weight', 'margin', 'taxRate'];
+    const integerFields = ['stock', 'promotionPriority'];
+    const dateFields = ['promotionStartAt', 'promotionEndAt', 'expiryDate'];
+
     for (const field of updatableFields) {
       if (productData[field] !== undefined) {
         paramCount++;
         updateFields.push(`"${field}" = $${paramCount}`);
 
-        // Procesar valores según el tipo
         let value = productData[field];
-        if (field === 'price' || field === 'costPrice' || field === 'rating' || field === 'weight' || field === 'margin' || field === 'taxRate') {
+        if (numericFields.includes(field)) {
           value = parseFloat(value);
-        } else if (field === 'stock' || field === 'promotionPriority') {
+        } else if (integerFields.includes(field)) {
           value = parseInt(value);
         } else if (field === 'isActive') {
           value = Boolean(value);
-        } else if (field === 'promotionStartAt' || field === 'promotionEndAt' || field === 'expiryDate') {
+        } else if (dateFields.includes(field)) {
           value = value ? new Date(value) : null;
         } else if (typeof value === 'string') {
           value = value.trim();
@@ -247,7 +234,6 @@ class ProductService {
       throw new Error('No hay campos para actualizar');
     }
 
-    // Agregar ID como último parámetro
     paramCount++;
     values.push(id);
 
@@ -269,14 +255,12 @@ class ProductService {
   }
 
   async delete(id) {
-    // Verificar que el producto existe
     const existingProduct = await this.findById(id);
     if (!existingProduct.success) {
       throw new Error('Producto no encontrado');
     }
 
-    const deleteQuery = 'DELETE FROM "Product" WHERE "id" = $1';
-    await query(deleteQuery, [id]);
+    await query('DELETE FROM "Product" WHERE "id" = $1', [id]);
 
     return {
       success: true,
@@ -335,7 +319,7 @@ class ProductService {
 
   // Métodos adicionales para compatibilidad
   async findAvailable() {
-    return this.findAll({ where: { isActive: true } });
+    return this.findAll({ isActive: true });
   }
 
   async findByCategory(categoryId) {
@@ -343,31 +327,24 @@ class ProductService {
   }
 
   async updateStock(id, stock) {
-    // Verificar que el producto existe
     const existingProduct = await this.findById(id);
     if (!existingProduct.success) {
       throw new Error('Producto no encontrado');
     }
 
-    // Validar stock
     const newStock = parseInt(stock);
     if (isNaN(newStock) || newStock < 0) {
       throw new Error('El stock debe ser un número entero no negativo');
     }
 
-    const updateQuery = `
-      UPDATE "Product"
-      SET stock = $1, "updatedAt" = CURRENT_TIMESTAMP
-      WHERE id = $2
-      RETURNING *
-    `;
-
-    const result = await query(updateQuery, [newStock, id]);
-    const product = result.rows[0];
+    const result = await query(
+      'UPDATE "Product" SET stock = $1, "updatedAt" = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+      [newStock, id]
+    );
 
     return {
       success: true,
-      data: product,
+      data: result.rows[0],
       message: 'Stock actualizado exitosamente'
     };
   }
