@@ -1,7 +1,10 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { FilterState } from "./FilterModal";
+import { FilterOption } from "@/components/Sliders/SliderFIlter";
+import { updateCategoryCounts } from "./data/mockProducts";
+import { getIcon } from "./data/iconMap";
 
 interface ProductsListContextType {
   totalProducts: number;
@@ -11,6 +14,9 @@ interface ProductsListContextType {
   filterState: FilterState;
   selectedFilters: string[];
   searchQuery: string;
+  activeFiltersCount: number;
+  productsListFilters: FilterOption[];
+  isFilterModalOpen: boolean;
   setTotalProducts: (count: number) => void;
   setFilteredProducts: (count: number) => void;
   setHasActiveFilters: (hasFilters: boolean) => void;
@@ -18,6 +24,10 @@ interface ProductsListContextType {
   setFilterState: (filters: FilterState) => void;
   setSelectedFilters: (filters: string[]) => void;
   setSearchQuery: (query: string) => void;
+  onSearch: (query: string) => void;
+  onFilterChange: (filters: string[]) => void;
+  onOpenFilterModal: () => void;
+  onCloseFilterModal: () => void;
 }
 
 const ProductsListContext = createContext<ProductsListContextType | undefined>(
@@ -41,6 +51,9 @@ export const useProductsList = () => {
       },
       selectedFilters: [],
       searchQuery: "",
+      activeFiltersCount: 0,
+      productsListFilters: [],
+      isFilterModalOpen: false,
       setTotalProducts: () => {},
       setFilteredProducts: () => {},
       setHasActiveFilters: () => {},
@@ -48,6 +61,10 @@ export const useProductsList = () => {
       setFilterState: () => {},
       setSelectedFilters: () => {},
       setSearchQuery: () => {},
+      onSearch: () => {},
+      onFilterChange: () => {},
+      onOpenFilterModal: () => {},
+      onCloseFilterModal: () => {},
     };
   }
   return context;
@@ -72,6 +89,40 @@ export const ProductsListProvider: React.FC<ProductsListProviderProps> = ({
   });
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeFiltersCount, setActiveFiltersCount] = useState(0);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+
+  // Calcular filtros de productos con contadores
+  const productsListFilters: FilterOption[] = updateCategoryCounts().map((category) => {
+    return {
+      id: category.id,
+      label: category.name,
+      icon: getIcon(category.icon),
+      count: category.count,
+    };
+  });
+
+  // Actualizar contador de filtros activos
+  useEffect(() => {
+    setActiveFiltersCount(selectedFilters.length);
+  }, [selectedFilters]);
+
+  // Handlers
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleFilterChange = (filters: string[]) => {
+    setSelectedFilters(filters);
+  };
+
+  const handleOpenFilterModal = () => {
+    setIsFilterModalOpen(true);
+  };
+
+  const handleCloseFilterModal = () => {
+    setIsFilterModalOpen(false);
+  };
 
   const value = {
     totalProducts,
@@ -81,6 +132,9 @@ export const ProductsListProvider: React.FC<ProductsListProviderProps> = ({
     filterState,
     selectedFilters,
     searchQuery,
+    activeFiltersCount,
+    productsListFilters,
+    isFilterModalOpen,
     setTotalProducts,
     setFilteredProducts,
     setHasActiveFilters,
@@ -88,6 +142,10 @@ export const ProductsListProvider: React.FC<ProductsListProviderProps> = ({
     setFilterState,
     setSelectedFilters,
     setSearchQuery,
+    onSearch: handleSearch,
+    onFilterChange: handleFilterChange,
+    onOpenFilterModal: handleOpenFilterModal,
+    onCloseFilterModal: handleCloseFilterModal,
   };
 
   return (

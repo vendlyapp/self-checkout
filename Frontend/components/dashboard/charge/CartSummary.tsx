@@ -63,7 +63,7 @@ export default function CartSummary({
   }
 
   return (
-    <div className="bottom-0 left-0 right-0 bg-white text-white p-2 shadow-lg z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-white text-white p-2 shadow-lg z-50">
       <div className="flex items-center justify-between bg-brand-500 rounded-lg p-4">
         {/* Cart Info */}
         <div className="flex items-center gap-3">

@@ -24,10 +24,10 @@ export default function ProductsList({
 
   if (loading) {
     return (
-      <div className={`p-4 ${className}`}>
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500 mx-auto"></div>
-          <p className="mt-2 text-sm text-muted-foreground">
+      <div className={`p-4 pb-32 lg:p-0 lg:pb-0 ${className}`}>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-500 mx-auto"></div>
+          <p className="mt-4 text-base text-gray-500 font-medium">
             Produkte werden geladen...
           </p>
         </div>
@@ -37,9 +37,9 @@ export default function ProductsList({
 
   if (products.length === 0) {
     return (
-      <div className={`p-4 ${className}`}>
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">
+      <div className={`p-4 pb-32 lg:p-0 lg:pb-0 ${className}`}>
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-base font-medium">
             {searchQuery
               ? `Keine Produkte für "${searchQuery}" gefunden`
               : "Keine Produkte verfügbar"}
@@ -50,8 +50,26 @@ export default function ProductsList({
   }
 
   return (
-    <div className={`p-4 pb-24 ${className}`}>
-      <div className="space-y-2">
+    <div className={`p-4 pb-32 lg:p-0 lg:pb-8 ${className}`}>
+      {/* Mobile: Lista vertical */}
+      <div className="lg:hidden space-y-2">
+        {products.map((product) => {
+          const cartItem = cartItems.find(
+            (item) => item.product.id === product.id
+          );
+          return (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onAddToCart={onAddToCart}
+              initialQuantity={cartItem?.quantity || 0}
+            />
+          );
+        })}
+      </div>
+
+      {/* Desktop/Tablet: Grid compacto */}
+      <div className="hidden lg:grid lg:grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-3">
         {products.map((product) => {
           const cartItem = cartItems.find(
             (item) => item.product.id === product.id

@@ -355,20 +355,10 @@ export default function ProductsListComponent({
     loadInitialProducts();
   }, [loadInitialProducts]);
 
-  // Si es standalone, usar el contenedor fijo
+  // Si es standalone, usar el contenedor fijo (HeaderNav y filtros se renderizan desde AdminLayout)
   if (isStandalone) {
     return (
-      <FixedHeaderContainer
-        title={title}
-        showAddButton={showAddButton}
-        searchQuery={searchQuery}
-        onSearch={handleSearch}
-        selectedFilters={selectedFilters}
-        onFilterChange={handleFilterChange}
-        onOpenFilterModal={handleOpenFilterModal}
-        activeFiltersCount={activeFiltersCount}
-        productsListFilters={productsListFilters}
-      >
+      <FixedHeaderContainer>
         <div className={`${className}`}>
           <div className="p-4">
             {isLoading ? (

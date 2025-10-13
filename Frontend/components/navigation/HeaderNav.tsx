@@ -11,12 +11,14 @@ interface HeaderNavProps {
   title?: string;
   showAddButton?: boolean;
   closeDestination?: string;
+  isFixed?: boolean;
 }
 
 export default function HeaderNav({
   title = "Warenkorb",
   showAddButton = false,
   closeDestination = "/dashboard",
+  isFixed = false,
 }: HeaderNavProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -31,7 +33,7 @@ export default function HeaderNav({
   const hasItems = cartItems.length > 0;
 
   return (
-    <div className="flex justify-between items-center p-4 bg-white border-b border-gray-200 left-0 right-0 z-50 safe-area-top pt-[calc(1rem+env(safe-area-inset-top))]">
+    <div className={`${isFixed ? 'fixed top-[80px]' : ''} flex justify-between items-center p-4 bg-white border-b border-gray-200 left-0 right-0 z-40 safe-area-top pt-[calc(1rem+env(safe-area-inset-top))]`}>
       <div className="flex items-center gap-2 justify-between w-full pt-[10px] px-4 touch-target">
         <button
           className="flex items-center gap-2 cursor-pointer"

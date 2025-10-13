@@ -6,44 +6,7 @@ import FixedHeaderContainer from "@/components/dashboard/products_list/FixedHead
 import FilterModal, {
   FilterState,
 } from "@/components/dashboard/products_list/FilterModal";
-import {
-  productCategories,
-  mockProducts,
-  Product,
-} from "@/components/dashboard/products_list/data/mockProducts";
-import { getIcon } from "@/components/dashboard/products_list/data/iconMap";
-import { FilterOption } from "@/components/Sliders/SliderFIlter";
-import { useFilterModal } from "./layout";
-
-// Convertir categorías a formato FilterOption con contadores reales
-const chargeFilters: FilterOption[] = productCategories.map((category) => {
-  let count = 0;
-
-  if (category.id === "all") {
-    count = mockProducts.length;
-  } else if (category.id === "new") {
-    count = mockProducts.filter((p: Product) => p.isNew).length;
-  } else if (category.id === "popular") {
-    count = mockProducts.filter((p: Product) => p.isPopular).length;
-  } else if (category.id === "sale") {
-    count = mockProducts.filter((p: Product) => p.isOnSale).length;
-  } else if (category.id === "promotions") {
-    count = mockProducts.filter(
-      (p: Product) => p.isOnSale || p.originalPrice
-    ).length;
-  } else {
-    count = mockProducts.filter(
-      (p: Product) => p.categoryId === category.id
-    ).length;
-  }
-
-  return {
-    id: category.id,
-    label: category.name,
-    icon: getIcon(category.icon),
-    count: count,
-  };
-});
+import { useFilterModal, useChargeContext } from "./layout";
 
 /**
  * Charge Page - Página principal del charge
@@ -61,9 +24,6 @@ const chargeFilters: FilterOption[] = productCategories.map((category) => {
  * - Arquitectura escalable para futuras funcionalidades
  */
 export default function Charge() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-  const [activeFiltersCount, setActiveFiltersCount] = useState(0);
   const [currentFilterState, setCurrentFilterState] = useState<FilterState>({
     sortBy: "name" as const,
     categories: ["all"],
@@ -71,28 +31,19 @@ export default function Charge() {
     priceRange: { min: 0, max: 50 },
   });
 
-  // Usar el contexto del modal
+  // Usar los contextos
   const { isFilterModalOpen, setIsFilterModalOpen } = useFilterModal();
+  const chargeContext = useChargeContext();
 
-  // Calcular filtros activos
-  useEffect(() => {
-    const count = selectedFilters.length;
-    setActiveFiltersCount(count);
-  }, [selectedFilters]);
+  // Si no hay contexto, retornar null (no debería pasar, pero por seguridad)
+  if (!chargeContext) return null;
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    // Aquí puedes implementar la lógica de búsqueda
-  };
-
-  const handleFilterChange = (filters: string[]) => {
-    setSelectedFilters(filters);
-    // Aquí puedes implementar la lógica de filtros
-  };
-
-  const handleOpenFilterModal = () => {
-    setIsFilterModalOpen(true);
-  };
+  const {
+    searchQuery,
+    onSearch,
+    selectedFilters,
+    onFilterChange,
+  } = chargeContext;
 
   const handleCloseFilterModal = () => {
     setIsFilterModalOpen(false);
@@ -103,7 +54,7 @@ export default function Charge() {
 
     // Convertir filtros del modal a filtros de categorías
     const newSelectedFilters = filters.categories.filter((id) => id !== "all");
-    setSelectedFilters(newSelectedFilters);
+    onFilterChange(newSelectedFilters);
 
     // Aquí puedes implementar la lógica adicional de filtrado
     console.log("Filtros aplicados:", filters);
@@ -116,7 +67,7 @@ export default function Charge() {
       status: "all",
       priceRange: { min: 0, max: 50 },
     });
-    setSelectedFilters([]);
+    onFilterChange([]);
 
     // Aquí puedes implementar la lógica de limpieza
     console.log("Filtros limpiados");
@@ -126,17 +77,7 @@ export default function Charge() {
     <>
       {/* Mobile Layout */}
       <div className="block lg:hidden">
-        <FixedHeaderContainer
-          title="Verkauf starten"
-          showAddButton={false}
-          searchQuery={searchQuery}
-          onSearch={handleSearch}
-          selectedFilters={selectedFilters}
-          onFilterChange={handleFilterChange}
-          onOpenFilterModal={handleOpenFilterModal}
-          activeFiltersCount={activeFiltersCount}
-          productsListFilters={chargeFilters}
-        >
+        <FixedHeaderContainer>
           <DashBoardCharge
             searchQuery={searchQuery}
             selectedFilters={selectedFilters}
@@ -145,46 +86,62 @@ export default function Charge() {
       </div>
 
       {/* Desktop Layout */}
-      <div className="hidden lg:block">
-        <div className="p-6 space-y-6">
-          {/* Header Section */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
+      <div className="hidden lg:block min-h-screen">
+        <div className="max-w-[1600px] mx-auto px-8 py-8 space-y-8">
+          {/* Header Section - Más limpio y espacioso */}
+          <div className="flex items-center justify-between gap-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Verkauf starten</h1>
-              <p className="text-gray-600 mt-1">Wählen Sie Produkte für den Verkauf aus</p>
+              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Verkauf starten</h1>
+              <p className="text-gray-500 mt-2 text-base">Wählen Sie Produkte für den Verkauf aus</p>
             </div>
-            <div className="w-full lg:w-[500px]">
+            <div className="w-full max-w-md">
               <input
                 type="text"
                 placeholder="Produkte durchsuchen..."
                 value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                onChange={(e) => onSearch(e.target.value)}
+                className="w-full px-5 py-3.5 bg-white border-2 border-gray-200 rounded-2xl 
+                         focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent 
+                         transition-all duration-200 text-base placeholder:text-gray-400
+                         shadow-sm hover:border-gray-300"
               />
             </div>
           </div>
 
-          {/* Filters Section */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Kategorien</h2>
-            <div className="flex flex-wrap gap-3">
-              {chargeFilters.map((filter) => (
+          {/* Filters Section - Sin fondo blanco, más moderno */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-gray-700">Kategorien</h2>
+              {selectedFilters.length > 0 && (
+                <span className="px-3 py-1 bg-brand-500 text-white text-xs font-medium rounded-full">
+                  {selectedFilters.length}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2.5">
+              {chargeContext.chargeFilters.map((filter) => (
                 <button
                   key={filter.id}
-                  onClick={() => handleFilterChange(
+                  onClick={() => onFilterChange(
                     selectedFilters.includes(filter.id)
                       ? selectedFilters.filter(f => f !== filter.id)
                       : [...selectedFilters, filter.id]
                   )}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 ${
+                  className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl 
+                           transition-all duration-200 font-medium text-sm
+                           ${
                     selectedFilters.includes(filter.id)
-                      ? 'bg-brand-500 text-white border-brand-500'
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-brand-500'
+                      ? 'bg-brand-500 text-white shadow-md shadow-brand-500/30 scale-[1.02]'
+                      : 'bg-white text-gray-700 hover:bg-white hover:shadow-md hover:scale-[1.02] border border-gray-200'
                   }`}
                 >
-                  {filter.icon}
-                  <span className="font-medium">{filter.label}</span>
-                  <span className="text-xs bg-white/20 px-2 py-1 rounded-full">
+                  <span className="text-lg">{filter.icon}</span>
+                  <span>{filter.label}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                    selectedFilters.includes(filter.id)
+                      ? 'bg-white/25 text-white'
+                      : 'bg-gray-100 text-gray-600'
+                  }`}>
                     {filter.count}
                   </span>
                 </button>
@@ -192,8 +149,8 @@ export default function Charge() {
             </div>
           </div>
 
-          {/* Products Section */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          {/* Products Section - Sin contenedor adicional */}
+          <div className="pt-4">
             <DashBoardCharge
               searchQuery={searchQuery}
               selectedFilters={selectedFilters}

@@ -1,13 +1,15 @@
 "use client";
 
-import { ReactNode, useState, createContext, useContext } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { ReactNode, useState, createContext, useContext, useEffect } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import FooterContinue from "@/components/dashboard/charge/FooterContinue";
-import CartSummary from "@/components/dashboard/charge/CartSummary";
-import { useScrollReset, useResponsive } from "@/hooks";
-
-import { useCartStore } from "@/lib/stores/cartStore";
+import { useScrollReset } from "@/hooks";
+import { FilterOption } from "@/components/Sliders/SliderFIlter";
+import {
+  productCategories,
+  mockProducts,
+  Product,
+} from "@/components/dashboard/products_list/data/mockProducts";
+import { getIcon } from "@/components/dashboard/products_list/data/iconMap";
 
 // Contexto para el modal de filtros
 interface FilterModalContextType {
@@ -27,96 +29,101 @@ export const useFilterModal = () => {
   return context;
 };
 
-export default function ChargeLayout({ children }: { children: ReactNode }) {
+// Contexto para compartir datos de charge con AdminLayout
+interface ChargeContextType {
+  searchQuery: string;
+  onSearch: (query: string) => void;
+  selectedFilters: string[];
+  onFilterChange: (filters: string[]) => void;
+  onOpenFilterModal: () => void;
+  activeFiltersCount: number;
+  chargeFilters: FilterOption[];
+}
+
+const ChargeContext = createContext<ChargeContextType | undefined>(undefined);
+
+export const useChargeContext = () => {
+  const context = useContext(ChargeContext);
+  return context;
+};
+
+interface ChargeLayoutProps {
+  children: ReactNode;
+}
+
+export default function ChargeLayout({ children }: ChargeLayoutProps) {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [activeFiltersCount, setActiveFiltersCount] = useState(0);
   const { } = useScrollReset();
-  const { isMobile } = useResponsive();
 
-  const {
-    cartItems,
-    getTotalItems,
-    getSubtotal,
-    getTotalWithDiscount,
-    promoApplied,
-    discountAmount,
-    promoCode,
-  } = useCartStore();
-  const router = useRouter();
-  const pathname = usePathname();
+  // Calcular filtros de charge con contadores
+  const chargeFilters: FilterOption[] = productCategories.map((category) => {
+    let count = 0;
 
-  // Cálculos del carrito
-  const totalItems = getTotalItems();
-  const subtotal = getSubtotal();
-  const total = getTotalWithDiscount();
-
-  // Navegación inteligente basada en la ruta actual
-  const handleContinue = () => {
-    if (pathname === "/charge") {
-      // Si estamos en la página principal, ir al carrito
-      router.push("/charge/cart");
-    } else if (pathname === "/charge/cart") {
-      // Si estamos en el carrito, ir al pago
-      router.push("/charge/payment");
+    if (category.id === "all") {
+      count = mockProducts.length;
+    } else if (category.id === "new") {
+      count = mockProducts.filter((p: Product) => p.isNew).length;
+    } else if (category.id === "popular") {
+      count = mockProducts.filter((p: Product) => p.isPopular).length;
+    } else if (category.id === "sale") {
+      count = mockProducts.filter((p: Product) => p.isOnSale).length;
+    } else if (category.id === "promotions") {
+      count = mockProducts.filter(
+        (p: Product) => p.isOnSale || p.originalPrice
+      ).length;
     } else {
-      // Por defecto, ir al pago
-      router.push("/charge/payment");
+      count = mockProducts.filter(
+        (p: Product) => p.categoryId === category.id
+      ).length;
     }
+
+    return {
+      id: category.id,
+      label: category.name,
+      icon: getIcon(category.icon),
+      count: count,
+    };
+  });
+
+  // Actualizar contador de filtros activos
+  useEffect(() => {
+    setActiveFiltersCount(selectedFilters.length);
+  }, [selectedFilters]);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
   };
 
-  // Navegación para el CartSummary (cuando no hay items)
-  const handleContinueToProducts = () => {
-    router.push("/charge");
+  const handleFilterChange = (filters: string[]) => {
+    setSelectedFilters(filters);
   };
 
-  // Determinar qué componente mostrar basado en la ruta y el estado del carrito
-  const shouldShowFooterContinue = () => {
-    // Mostrar FooterContinue SOLO en cart cuando hay items (NO en payment)
-    return pathname === "/charge/cart" && cartItems.length > 0;
+  const handleOpenFilterModal = () => {
+    setIsFilterModalOpen(true);
   };
 
-  const shouldShowCartSummary = () => {
-    // Mostrar CartSummary en la página principal cuando hay items
-    return pathname === "/charge" && cartItems.length > 0;
+  const chargeContextValue: ChargeContextType = {
+    searchQuery,
+    onSearch: handleSearch,
+    selectedFilters,
+    onFilterChange: handleFilterChange,
+    onOpenFilterModal: handleOpenFilterModal,
+    activeFiltersCount,
+    chargeFilters,
   };
 
   return (
     <FilterModalContext.Provider
       value={{ isFilterModalOpen, setIsFilterModalOpen }}
     >
-      <AdminLayout>
-        {children}
-
-        {/* FooterContinue para cart y payment - Solo en móvil */}
-        {isMobile && shouldShowFooterContinue() && (
-          <FooterContinue
-            subtotal={subtotal}
-            promoApplied={promoApplied}
-            discountAmount={discountAmount}
-            totalItems={totalItems}
-            total={total}
-            onContinue={handleContinue}
-            promoCode={promoCode}
-          />
-        )}
-
-        {/* CartSummary para la página principal - Solo en móvil */}
-        {isMobile && shouldShowCartSummary() && (
-          <CartSummary
-            items={cartItems}
-            onContinue={handleContinue}
-            isVisible={!isFilterModalOpen}
-          />
-        )}
-
-        {/* Mostrar CartSummary vacío cuando no hay items en la página principal - Solo en móvil */}
-        {isMobile && pathname === "/charge" && cartItems.length === 0 && (
-          <CartSummary
-            items={[]}
-            onContinue={handleContinueToProducts}
-            isVisible={!isFilterModalOpen}
-          />
-        )}
-      </AdminLayout>
+      <ChargeContext.Provider value={chargeContextValue}>
+        <AdminLayout>
+          {children}
+        </AdminLayout>
+      </ChargeContext.Provider>
     </FilterModalContext.Provider>
   );
 }

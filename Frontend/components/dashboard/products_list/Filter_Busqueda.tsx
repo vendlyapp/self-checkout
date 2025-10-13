@@ -12,6 +12,7 @@ interface FilterBusquedaProps {
   onOpenFilterModal: () => void;
   activeFiltersCount: number;
   productsListFilters: FilterOption[];
+  isFixed?: boolean;
 }
 
 export default function Filter_Busqueda({
@@ -22,11 +23,12 @@ export default function Filter_Busqueda({
   onOpenFilterModal,
   activeFiltersCount,
   productsListFilters,
+  isFixed = false,
 }: FilterBusquedaProps) {
   return (
     <>
       {/* Barra de búsqueda y filtros - FIJOS */}
-      <div className="p-4 flex flex-col-2 gap-4 items-center justify-center bg-background-cream border-b border-gray-100">
+      <div className={`${isFixed ? 'fixed top-[140px]' : ''} left-0 right-0 p-4 flex flex-col-2 gap-4 items-center justify-center bg-background-cream border-b border-gray-100 ${isFixed ? 'z-40' : ''}`}>
         <SearchInput
           placeholder="Produkte durchsuchen…"
           className="w-[260.5px] h-[54px]"
@@ -50,7 +52,7 @@ export default function Filter_Busqueda({
       </div>
 
       {/* Filtros de categorías - FIJOS */}
-      <div className="bg-background-cream border-b border-gray-100">
+      <div className={`${isFixed ? 'fixed top-[225px]' : ''} left-0 right-0 bg-background-cream border-b border-gray-100 ${isFixed ? 'z-40' : ''}`}>
         <FilterSlider
           filters={productsListFilters}
           selectedFilters={selectedFilters}

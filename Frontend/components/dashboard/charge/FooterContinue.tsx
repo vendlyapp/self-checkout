@@ -21,7 +21,7 @@ const FooterContinue: React.FC<FooterContinueProps> = ({
   onContinue,
 }) => {
   return (
-    <div className="bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-10">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
       <div className="mb-2">
         {promoApplied && (
           <>

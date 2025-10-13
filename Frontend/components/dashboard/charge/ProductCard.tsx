@@ -29,37 +29,40 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
   }
 
   return (
-    <div className="bg-white rounded-[20px] lg:rounded-2xl h-[130px] lg:h-[160px] p-4 lg:p-6 relative hover:shadow-md transition-all duration-200">
+    <div className="bg-white rounded-[20px] lg:rounded-xl h-[130px] lg:h-[140px] p-4 lg:p-4 relative 
+                    shadow-sm hover:shadow-md lg:border lg:border-gray-100 
+                    transition-all duration-200 hover:scale-[1.01] group">
       {/* Badge de precio */}
-      <div className="absolute top-3 right-3 lg:top-4 lg:right-4">
+      <div className="absolute top-3 right-3 lg:top-3 lg:right-3">
         {product.originalPrice ? (
           <div className="flex flex-col items-end gap-1">
             {/* Precio nuevo en rojo */}
-            <span className="text-[15px] lg:text-[16px] bg-[#F2EDE8] rounded-lg px-2 py-1 lg:px-3 lg:py-1.5 font-bold text-red-600">
-              <span className="text-[10px] lg:text-[11px] font-semibold">CHF</span> {formatPrice(product.price)}
+            <span className="text-[15px] lg:text-[14px] bg-[#F2EDE8] rounded-lg px-2 py-1 lg:px-2.5 lg:py-1 font-bold text-red-600">
+              <span className="text-[10px] font-semibold">CHF</span> {formatPrice(product.price)}
             </span>
             {/* Precio original tachado */}
-            <span className="text-[12px] lg:text-[13px] text-gray-500 line-through">
-            <span className="text-[10px] lg:text-[11px] font-semibold">CHF</span> {formatPrice(product.originalPrice)}
+            <span className="text-[12px] text-gray-500 line-through">
+            <span className="text-[10px] font-semibold">CHF</span> {formatPrice(product.originalPrice)}
             </span>
           </div>
         ) : (
-          <span className="text-[15px] lg:text-[16px] bg-[#F2EDE8] rounded-lg px-2 py-1 lg:px-3 lg:py-1.5 font-bold text-gray-800">
-            <span className="text-[10px] lg:text-[11px] font-semibold">CHF</span> {formatPrice(product.price)}
+          <span className="text-[15px] lg:text-[14px] bg-[#F2EDE8] rounded-lg px-2 py-1 lg:px-2.5 lg:py-1 font-bold text-gray-800">
+            <span className="text-[10px] font-semibold">CHF</span> {formatPrice(product.price)}
           </span>
         )}
       </div>
 
       {/* Badge de descuento */}
       {product.discountPercentage && (
-        <div className="absolute top-3 left-3 lg:top-4 lg:left-4 bg-red-500 rounded-full w-6 h-6 lg:w-7 lg:h-7 flex items-center justify-center shadow-md">
+        <div className="absolute top-3 left-3 lg:top-3 lg:left-3 bg-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-md z-10">
           <div className="flex items-center justify-center">
-            <Percent className="w-4 h-4 lg:w-5 lg:h-5 text-white" strokeWidth={3} />
+            <Percent className="w-4 h-4 text-white" strokeWidth={3} />
           </div>
         </div>
       )}
 
-      <div className="flex items-start gap-4 lg:gap-6 mt-2">
+      {/* Mobile: Layout horizontal */}
+      <div className="flex lg:hidden items-start gap-4 mt-2">
         {/* Icono del producto */}
         <div className='flex items-center gap-2 w-[80px] h-[80px] lg:w-[100px] lg:h-[100px] rounded-[16px] lg:rounded-2xl overflow-hidden mr-4'>
             {product.image ? (
@@ -143,6 +146,97 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
                 className="w-10 h-10 lg:w-11 lg:h-11 rounded-full bg-[#25D076] hover:bg-[#25D076]/80 disabled:bg-[#25D076]/50 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all duration-200 shadow-sm"
               >
                 <Plus className="w-6 h-6 lg:w-7 lg:h-7" strokeWidth={2.5} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop/Tablet: Layout horizontal compacto */}
+      <div className="hidden lg:flex items-start gap-4">
+        {/* Imagen del producto - izquierda más pequeña */}
+        <div className="w-[100px] h-[100px] rounded-xl overflow-hidden bg-gray-50 flex-shrink-0">
+          {product.image ? (
+            <Image
+              src={product.image}
+              alt={product.name}
+              width={100}
+              height={100}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Package className="w-10 h-10 text-gray-300" />
+            </div>
+          )}
+        </div>
+
+        {/* Contenido - derecha */}
+        <div className="flex-1 flex flex-col justify-between min-h-[100px]">
+          {/* Título del producto */}
+          <div className="pr-20">
+            <h3 className="text-gray-900 text-[15px] leading-tight tracking-tight font-semibold line-clamp-2">
+              {product.name}
+            </h3>
+          </div>
+
+          {/* Controles en la parte inferior */}
+          <div className="flex items-center justify-between">
+            {/* Selector de peso */}
+            {product.hasWeight ? (
+              <div className="relative bg-gray-50 rounded-lg w-[75px] h-[32px] flex items-center justify-center">
+                <button
+                  onClick={() => setShowWeightOptions(!showWeightOptions)}
+                  className="flex items-center gap-1 text-[14px] text-gray-700 hover:text-gray-900 transition-colors"
+                >
+                  <span className="font-medium">{selectedWeight}</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+                </button>
+                {showWeightOptions && (
+                  <div className="absolute bottom-full left-0 mb-2 bg-white rounded-lg shadow-xl border border-gray-100 py-1 z-20 min-w-[90px]">
+                    {['250g', '500g', '1kg'].map((weight) => (
+                      <button
+                        key={weight}
+                        onClick={() => {
+                          setSelectedWeight(weight)
+                          setShowWeightOptions(false)
+                        }}
+                        className="block w-full text-left px-3 py-2 text-[14px] font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        {weight}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-[14px] text-gray-500 font-medium">
+                Unidad
+              </div>
+            )}
+
+            {/* Controles de cantidad */}
+            <div className="flex items-center gap-2">
+              {initialQuantity > 0 && (
+                <>
+                  <button
+                    onClick={() => handleQuantityChange(initialQuantity - 1)}
+                    className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center justify-center transition-all duration-200"
+                    disabled={initialQuantity <= 0}
+                  >
+                    <Minus className="w-4 h-4" strokeWidth={2.5} />
+                  </button>
+                  <span className="text-[16px] font-bold text-gray-900 min-w-[24px] text-center select-none">
+                    {initialQuantity}
+                  </span>
+                </>
+              )}
+              <button
+                onClick={() => handleQuantityChange(initialQuantity + 1)}
+                disabled={initialQuantity >= product.stock}
+                className="w-9 h-9 rounded-full bg-brand-500 hover:bg-brand-600 disabled:bg-brand-300 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all duration-200 shadow-sm"
+              >
+                <Plus className="w-5 h-5" strokeWidth={2.5} />
               </button>
             </div>
           </div>
