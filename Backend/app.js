@@ -7,6 +7,7 @@ const swaggerSpecs = require('./config/swagger');
 const { errorHandler, notFoundHandler } = require('./src/middleware/errorHandler');
 
 const indexRoutes = require("./routes/index");
+const authRoutes = require("./src/routes/authRoutes");
 const usersRoutes = require("./src/routes/userRoutes");
 const productsRoutes = require("./src/routes/productRoutes");
 const categoriesRoutes = require("./src/routes/categoryRoutes");
@@ -28,6 +29,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
 }));
 
 app.use("/", indexRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/products", productsRoutes);
 app.use("/api/categories", categoriesRoutes);
