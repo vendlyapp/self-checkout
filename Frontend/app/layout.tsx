@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { AuthProvider } from "@/lib/auth/AuthContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -42,25 +43,27 @@ export default function RootLayout({
         <meta name="apple-touch-fullscreen" content="yes" />
       </head>
       <body className={`${inter.className} h-responsive antialiased tap-highlight-transparent`}>
-        {/* Container principal responsive */}
-        <div className="h-responsive w-full relative bg-[#F2EDE8] overflow-hidden">
-          {/* Contenedor interno responsive */}
-          <div className="h-responsive w-full overflow-y-auto overflow-x-hidden no-scrollbar">
-            {children}
+        <AuthProvider>
+          {/* Container principal responsive */}
+          <div className="h-responsive w-full relative bg-[#F2EDE8] overflow-hidden">
+            {/* Contenedor interno responsive */}
+            <div className="h-responsive w-full overflow-y-auto overflow-x-hidden no-scrollbar">
+              {children}
+            </div>
           </div>
-        </div>
 
-        {/* Toast notifications optimizadas para móvil */}
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            style: {
-              maxWidth: "380px",
-              fontSize: "14px",
-              marginTop: "env(safe-area-inset-top, 0px)",
-            },
-          }}
-        />
+          {/* Toast notifications optimizadas para móvil */}
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              style: {
+                maxWidth: "380px",
+                fontSize: "14px",
+                marginTop: "env(safe-area-inset-top, 0px)",
+              },
+            }}
+          />
+        </AuthProvider>
       </body>
     </html>
   );

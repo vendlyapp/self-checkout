@@ -2,13 +2,15 @@
 
 import { Home, Package, Plus, ShoppingBag, Store, User, Settings, LogOut, CreditCard, ShoppingCart, Zap } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { clsx } from 'clsx';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
 import Image from 'next/image';
 import CartSummary from '@/components/cart/CartSummary';
 import { useCartStore } from '@/lib/stores/cartStore';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { toast } from 'sonner';
 
 interface NavItem {
   id: string;
@@ -82,6 +84,8 @@ interface SidebarProps {
 
 export default function Sidebar({ isCollapsed = false, isMobile = false }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { signOut, user } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [pressedItem, setPressedItem] = useState<string | null>(null);
   const { cartItems, getTotalItems } = useCartStore();
@@ -310,8 +314,12 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
             <User className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-semibold text-gray-900">Admin User</p>
-            <p className="text-xs text-gray-500">admin@selfcheckout.com</p>
+            <p className="text-sm font-semibold text-gray-900 truncate">
+              {user?.user_metadata?.name || 'Admin User'}
+            </p>
+            <p className="text-xs text-gray-500 truncate">
+              {user?.email || 'admin@vendly.ch'}
+            </p>
           </div>
         </div>
 
@@ -323,9 +331,20 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
             <Settings className="w-4 h-4 text-gray-500" />
             <span className="text-sm text-gray-700">Einstellungen</span>
           </Link>
-          <button className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors w-full text-left">
-            <LogOut className="w-4 h-4 text-gray-500" />
-            <span className="text-sm text-gray-700">Abmelden</span>
+          <button
+            onClick={async () => {
+              try {
+                await signOut();
+                toast.success('Erfolgreich abgemeldet');
+                router.push('/');
+              } catch (error) {
+                toast.error('Fehler beim Abmelden');
+              }
+            }}
+            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors w-full text-left group"
+          >
+            <LogOut className="w-4 h-4 text-gray-500 group-hover:text-red-600 transition-colors" />
+            <span className="text-sm text-gray-700 group-hover:text-red-600 transition-colors">Abmelden</span>
           </button>
         </div>
       </div>
