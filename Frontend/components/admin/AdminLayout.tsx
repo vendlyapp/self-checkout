@@ -13,7 +13,7 @@ import CartSummary from '@/components/dashboard/charge/CartSummary';
 import FooterContinue from '@/components/dashboard/charge/FooterContinue';
 import HeaderNav from '@/components/navigation/HeaderNav';
 import Filter_Busqueda from '@/components/dashboard/products_list/Filter_Busqueda';
-import { useChargeContext } from '@/app/charge/layout';
+import { useChargeContext } from '@/app/charge/contexts';
 import { useProductsList } from '@/components/dashboard/products_list/ProductsListContext';
 
 interface AdminLayoutProps {

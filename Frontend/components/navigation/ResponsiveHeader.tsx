@@ -54,7 +54,7 @@ export default function ResponsiveHeader({
   const pathname = usePathname();
   const router = useRouter();
   const { getStoreStatus } = useStoreState();
-  const { signOut, user } = useAuth();
+  const { signOut } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [pressedButton, setPressedButton] = useState<string | null>(null);
@@ -212,7 +212,7 @@ export default function ResponsiveHeader({
                     await signOut();
                     toast.success('Erfolgreich abgemeldet');
                     router.push('/');
-                  } catch (error) {
+                  } catch {
                     toast.error('Fehler beim Abmelden');
                   }
                 }}
@@ -322,7 +322,7 @@ export default function ResponsiveHeader({
                     await signOut();
                     toast.success('Erfolgreich abgemeldet');
                     router.push('/');
-                  } catch (error) {
+                  } catch {
                     toast.error('Fehler beim Abmelden');
                   }
                 }}

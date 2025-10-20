@@ -18,7 +18,6 @@ const DashboardUser = () => {
 
   // Mensaje de estado
   const hasStore = !!store?.slug;
-  const hasProducts = products.length > 0;
 
   // Cargar productos iniciales
   const loadInitialProducts = useCallback(async () => {
@@ -38,7 +37,7 @@ const DashboardUser = () => {
       
       if (result.success && result.data) {
         // Convertir a formato correcto
-        const productsWithNumbers = result.data.map((p: any) => ({
+        const productsWithNumbers = result.data.map((p: Partial<Product>) => ({
           ...p,
           price: typeof p.price === 'string' ? parseFloat(p.price) : p.price,
           stock: typeof p.stock === 'string' ? parseInt(p.stock) : p.stock,
@@ -59,30 +58,6 @@ const DashboardUser = () => {
     }
   }, [store?.slug]);
 
-  // Manejar cambio de filtros
-  const handleFilterChange = (filters: string[]) => {
-    if (!hasStore || allProducts.length === 0) {
-      return;
-    }
-
-    let filtered = [...allProducts];
-
-    // Filtrar por categoría
-    if (filters.length > 0 && filters[0] !== 'all') {
-      filtered = filtered.filter((p: any) => p.categoryId === filters[0]);
-    }
-
-    // Filtrar por búsqueda
-    if (searchQuery) {
-      filtered = filtered.filter((p: any) => 
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    setProducts(filtered);
-  };
-
   // Manejar búsqueda
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -95,7 +70,7 @@ const DashboardUser = () => {
 
     // Filtrar por búsqueda
     if (query) {
-      filtered = filtered.filter((p: any) => 
+      filtered = filtered.filter((p: Product) => 
         p.name.toLowerCase().includes(query.toLowerCase()) ||
         p.description.toLowerCase().includes(query.toLowerCase())
       );

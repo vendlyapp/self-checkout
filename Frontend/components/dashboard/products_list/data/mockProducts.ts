@@ -724,7 +724,7 @@ export const fetchProducts = async (filters?: {
     } else {
       throw new Error(response.error || 'API response not successful');
     }
-  } catch (error) {
+  } catch {
     return getMockProductsWithFilters(filters);
   }
 }
@@ -739,7 +739,7 @@ export const fetchProductById = async (id: string): Promise<Product | null> => {
     } else {
       throw new Error(response.error || 'API response not successful');
     }
-  } catch (error) {
+  } catch {
     return mockProducts.find(product => product.id === id) || null;
   }
 }

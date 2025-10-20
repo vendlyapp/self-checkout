@@ -8,8 +8,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, name: string, role?: string) => Promise<{ data: any; error: AuthError | null }>;
-  signIn: (email: string, password: string) => Promise<{ data: any; error: AuthError | null }>;
+  signUp: (email: string, password: string, name: string, role?: string) => Promise<{ data: { user: User | null; session: Session | null } | null; error: AuthError | null }>;
+  signIn: (email: string, password: string) => Promise<{ data: { user: User | null; session: Session | null } | null; error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
   isAuthenticated: boolean;
 }

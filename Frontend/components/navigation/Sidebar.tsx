@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Package, Plus, ShoppingBag, Store, User, Settings, LogOut, CreditCard, ShoppingCart, Zap, QrCode } from 'lucide-react';
+import { Home, Package, Plus, ShoppingBag, Store, User, Settings, LogOut, CreditCard, ShoppingCart, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { clsx } from 'clsx';
@@ -337,9 +337,9 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
                 await signOut();
                 toast.success('Erfolgreich abgemeldet');
                 router.push('/');
-              } catch (error) {
-                toast.error('Fehler beim Abmelden');
-              }
+      } catch {
+        toast.error('Fehler beim Abmelden');
+      }
             }}
             className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors w-full text-left group"
           >

@@ -44,7 +44,7 @@ const PromotionPage: React.FC = () => {
         
         if (result.success && result.data) {
           // Convertir y filtrar solo productos con promoción
-          const allProducts = result.data.map((p: any) => ({
+          const allProducts = result.data.map((p: Partial<Product>) => ({
             ...p,
             price: typeof p.price === 'string' ? parseFloat(p.price) : p.price,
             originalPrice: p.originalPrice ? (typeof p.originalPrice === 'string' ? parseFloat(p.originalPrice) : p.originalPrice) : undefined,
@@ -53,7 +53,7 @@ const PromotionPage: React.FC = () => {
           }));
 
           // Filtrar solo productos en promoción
-          const promotional = allProducts.filter((p: any) => 
+          const promotional = allProducts.filter((p: Product) => 
             p.isOnSale || p.originalPrice || p.discountPercentage || p.promotionTitle
           );
           

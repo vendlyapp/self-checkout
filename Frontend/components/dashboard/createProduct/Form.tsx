@@ -128,7 +128,7 @@ export default function Form({ isDesktop = false }: FormProps) {
         };
         setCreatedProduct(frontendProduct);
         setShowSuccessModal(true);
-      } catch (backendError) {
+      } catch {
         // Fallback: crear producto localmente con datos mock
         const mockCreatedProduct: Product = {
           id: `mock-${Date.now()}`,

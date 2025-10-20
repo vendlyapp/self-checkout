@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LogIn, QrCode, Store } from 'lucide-react';
-import Image from 'next/image';
 import { QRScannerModal } from '@/components/user/QRScannerModal';
 
 const WelcomeAuth: React.FC = () => {

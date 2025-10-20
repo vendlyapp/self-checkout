@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { LogIn, Mail, Lock, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get('returnUrl') || '/dashboard';
@@ -56,11 +56,11 @@ export default function LoginPage() {
         return;
       }
 
-      if (data.user) {
+      if (data?.user) {
         toast.success('¡Bienvenido de nuevo!');
         router.push(returnUrl);
       }
-    } catch (err) {
+    } catch {
       setError('Error inesperado al iniciar sesión');
       toast.error('Error inesperado');
     } finally {
@@ -223,5 +223,17 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 via-background-cream to-brand-100">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

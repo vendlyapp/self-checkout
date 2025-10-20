@@ -84,7 +84,7 @@ export default function RegisterPage() {
         return;
       }
 
-      if (data.user) {
+      if (data?.user) {
         toast.success('¡Cuenta creada exitosamente!');
         
         // Si necesita confirmar email, mostrar mensaje
@@ -96,7 +96,7 @@ export default function RegisterPage() {
           router.push('/dashboard');
         }
       }
-    } catch (err) {
+    } catch {
       setError('Error inesperado al registrar');
       toast.error('Error inesperado');
     } finally {

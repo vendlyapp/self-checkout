@@ -38,7 +38,7 @@ export default function EditProduct({ params }: PageProps) {
           setProduct(productData);
           setFormData(productData);
         }
-      } catch (error) {
+      } catch {
         setError('Error al cargar el producto');
       } finally {
         setLoading(false);

@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import DashBoardCharge from "@/components/dashboard/charge/DashBoard";
 import FixedHeaderContainer from "@/components/dashboard/products_list/FixedHeaderContainer";
 import FilterModal, {
   FilterState,
 } from "@/components/dashboard/products_list/FilterModal";
-import { useFilterModal, useChargeContext } from "./layout";
+import { useFilterModal, useChargeContext } from "./contexts";
 
 /**
  * Charge Page - Página principal del charge

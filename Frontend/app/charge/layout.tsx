@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useState, createContext, useContext, useEffect } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useScrollReset } from "@/hooks";
 import { FilterOption } from "@/components/Sliders/SliderFIlter";
@@ -10,26 +10,9 @@ import {
   Product,
 } from "@/components/dashboard/products_list/data/mockProducts";
 import { getIcon } from "@/components/dashboard/products_list/data/iconMap";
+import { FilterModalProvider, ChargeProvider } from "./contexts";
 
-// Contexto para el modal de filtros
-interface FilterModalContextType {
-  isFilterModalOpen: boolean;
-  setIsFilterModalOpen: (open: boolean) => void;
-}
-
-const FilterModalContext = createContext<FilterModalContextType | undefined>(
-  undefined
-);
-
-export const useFilterModal = () => {
-  const context = useContext(FilterModalContext);
-  if (!context) {
-    throw new Error("useFilterModal must be used within FilterModalProvider");
-  }
-  return context;
-};
-
-// Contexto para compartir datos de charge con AdminLayout
+// Tipos internos
 interface ChargeContextType {
   searchQuery: string;
   onSearch: (query: string) => void;
@@ -39,13 +22,6 @@ interface ChargeContextType {
   activeFiltersCount: number;
   chargeFilters: FilterOption[];
 }
-
-const ChargeContext = createContext<ChargeContextType | undefined>(undefined);
-
-export const useChargeContext = () => {
-  const context = useContext(ChargeContext);
-  return context;
-};
 
 interface ChargeLayoutProps {
   children: ReactNode;
@@ -116,14 +92,14 @@ export default function ChargeLayout({ children }: ChargeLayoutProps) {
   };
 
   return (
-    <FilterModalContext.Provider
+    <FilterModalProvider
       value={{ isFilterModalOpen, setIsFilterModalOpen }}
     >
-      <ChargeContext.Provider value={chargeContextValue}>
+      <ChargeProvider value={chargeContextValue}>
         <AdminLayout>
           {children}
         </AdminLayout>
-      </ChargeContext.Provider>
-    </FilterModalContext.Provider>
+      </ChargeProvider>
+    </FilterModalProvider>
   );
 }
