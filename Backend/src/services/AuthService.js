@@ -1,5 +1,6 @@
 const { supabase } = require('../../lib/supabase');
 const { query } = require('../../lib/database');
+const storeService = require('./StoreService');
 
 class AuthService {
   /**
@@ -53,6 +54,15 @@ class AuthService {
            ON CONFLICT (id) DO UPDATE SET name = $3, role = $4`,
           [authData.user.id, email, name, role, 'supabase-auth'] // Password manejado por Supabase
         );
+
+        // Si es ADMIN, crear tienda automáticamente
+        if (role === 'ADMIN') {
+          const storeName = `${name}'s Store`;
+          await storeService.create(authData.user.id, { 
+            name: storeName,
+            logo: null 
+          });
+        }
       } catch (dbError) {
         console.error('Error al guardar en tabla User:', dbError.message);
         // Continuar aunque falle, el usuario ya está en Auth

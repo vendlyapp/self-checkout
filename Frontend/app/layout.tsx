@@ -33,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="de" className="h-responsive">
+    <html lang="de" className="h-responsive" suppressHydrationWarning>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -42,7 +42,7 @@ export default function RootLayout({
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="apple-touch-fullscreen" content="yes" />
       </head>
-      <body className={`${inter.className} h-responsive antialiased tap-highlight-transparent`}>
+      <body className={`${inter.className} h-responsive antialiased tap-highlight-transparent`} suppressHydrationWarning>
         <AuthProvider>
           {/* Container principal responsive */}
           <div className="h-responsive w-full relative bg-[#F2EDE8] overflow-hidden">

@@ -1,18 +1,62 @@
 "use client";
-import React, { useState, useCallback } from "react";
-import { Search, X } from "lucide-react";
+import React, { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Search, X, Store } from "lucide-react";
 import HeaderNav from "@/components/navigation/HeaderNav";
 import { SearchInput } from "@/components/ui/search-input";
 import ProductCard from "@/components/dashboard/charge/ProductCard";
 import { useCartStore } from "@/lib/stores/cartStore";
-import { Product, mockProducts } from "@/components/dashboard/products_list/data/mockProducts";
+import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
+import { Product } from "@/components/dashboard/products_list/data/mockProducts";
 import Image from "next/image";
 
 export default function SearchUser() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const { addToCart, cartItems } = useCartStore();
+  const { store } = useScannedStoreStore();
+
+  // Redirigir a /store/[slug]/search si hay tienda
+  useEffect(() => {
+    if (store?.slug && typeof window !== 'undefined') {
+      const currentPath = window.location.pathname;
+      if (currentPath === '/user/search') {
+        router.replace(`/store/${store.slug}/search`);
+      }
+    }
+  }, [store?.slug, router]);
+
+  // Cargar productos de la tienda
+  useEffect(() => {
+    const loadProducts = async () => {
+      if (!store?.slug) {
+        setAllProducts([]);
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://localhost:5000/api/store/${store.slug}/products`);
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+          const products = result.data.map((p: any) => ({
+            ...p,
+            price: typeof p.price === 'string' ? parseFloat(p.price) : p.price,
+            stock: typeof p.stock === 'string' ? parseInt(p.stock) : p.stock,
+            categoryId: p.categoryId || p.category?.toLowerCase().replace(/\s+/g, '_'),
+          }));
+          setAllProducts(products);
+        }
+      } catch (error) {
+        console.error('Error loading products:', error);
+      }
+    };
+
+    loadProducts();
+  }, [store?.slug]);
 
   // Función para obtener la cantidad actual de un producto en el carrito
   const getCurrentQuantity = useCallback((productId: string) => {
@@ -37,19 +81,24 @@ export default function SearchUser() {
       return;
     }
 
+    if (!store?.slug || allProducts.length === 0) {
+      setSearchResults([]);
+      return;
+    }
+
     setIsSearching(true);
 
-    // Simular búsqueda
+    // Buscar en productos reales
     setTimeout(() => {
-      const results = mockProducts.filter((product: Product) =>
+      const results = allProducts.filter((product: Product) =>
         product.name.toLowerCase().includes(query.toLowerCase()) ||
         product.category.toLowerCase().includes(query.toLowerCase()) ||
-        product.tags.some((tag: string) => tag.toLowerCase().includes(query.toLowerCase()))
+        (product.tags && product.tags.some((tag: string) => tag.toLowerCase().includes(query.toLowerCase())))
       );
       setSearchResults(results);
       setIsSearching(false);
-    }, 500);
-  }, []);
+    }, 300);
+  }, [allProducts, store?.slug]);
 
   const handleInputChange = useCallback((value: string) => {
     setSearchTerm(value);
@@ -95,13 +144,24 @@ export default function SearchUser() {
         </div>
 
         {/* Contenido principal */}
-        {!searchTerm ? (
+        {!store ? (
+          /* Sin tienda */
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <Store className="w-16 h-16 text-gray-300 mb-4" />
+            <p className="text-gray-600 font-medium">
+              Kein Geschäft ausgewählt
+            </p>
+            <p className="text-gray-400 text-sm mt-2">
+              Scannen Sie einen QR-Code
+            </p>
+          </div>
+        ) : !searchTerm ? (
           /* Estado inicial - Búsquedas populares */
           <div className="safe-area-top">
             <div className="flex items-center gap-2 mb-4">
               <Image src="/Fire.svg" alt="Flame" width={30} height={30} />
               <h2 className="text-lg font-semibold text-gray-800">
-                Meist gesucht bei Heiniger&apos;s:
+                Meist gesucht:
               </h2>
             </div>
 

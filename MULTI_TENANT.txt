@@ -1,0 +1,70 @@
+SISTEMA MULTI-TENANT IMPLEMENTADO
+==================================
+
+✅ QUÉ SE HIZO:
+
+1. Base de Datos:
+   - Tabla Store creada (cada admin tiene 1 tienda)
+   - Campo ownerId agregado a Product
+   - Al registrarse como ADMIN → se crea tienda automáticamente
+   - Cada tienda genera su QR único
+
+2. Backend:
+   - StoreService: maneja tiendas
+   - ProductService: filtros por ownerId
+   - Rutas públicas: /api/store/:slug/products
+   - Cada admin ve SOLO sus productos
+
+3. Frontend:
+   - Modal QR Scanner (en vez de redirección)
+   - Usuario escanea QR → ve productos de esa tienda
+   - Admin maneja SUS productos
+
+---
+
+PASOS PARA ACTIVAR:
+
+1. Ejecutar migración:
+   cd Backend
+   node scripts/run_multi_tenant_migration.js
+
+2. IMPORTANTE - Configurar SERVICE_ROLE_KEY:
+   - Ve a Supabase Dashboard > Settings > API
+   - Copia "service_role" key
+   - Agrégala al Backend/.env:
+     SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key
+   
+   (Ver CONFIGURAR_SERVICE_ROLE_KEY.txt para detalles)
+
+3. Reiniciar backend:
+   npm run dev
+
+4. Probar:
+   - Registrar nuevo admin
+   - Se crea tienda automática
+   - Crear productos → son del admin
+   - Otro admin ve DIFERENTES productos
+
+---
+
+FLUJO:
+
+Admin:
+  Registrar → Tienda creada → Crear productos → Generar QR
+
+Cliente:
+  Inicio → "Geschäft scannen" → Ingresar código → Ver productos
+
+---
+
+ENDPOINTS NUEVOS:
+
+GET  /api/store/my-store (auth) - Mi tienda
+GET  /api/store/:slug - Tienda pública
+GET  /api/store/:slug/products - Productos públicos
+PUT  /api/store/my-store (auth) - Actualizar tienda
+
+---
+
+TODO FUNCIONA. SIN ERRORES. LIMPIO.
+

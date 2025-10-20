@@ -102,9 +102,32 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signOut = async () => {
     try {
+      // Limpiar sesión de Supabase
       const { error } = await supabase.auth.signOut();
+      
+      // Limpiar estados locales
+      setUser(null);
+      setSession(null);
+      
+      // Limpiar localStorage y sessionStorage
+      if (typeof window !== 'undefined') {
+        // Limpiar tokens de Supabase
+        localStorage.removeItem('vendly-auth-token');
+        sessionStorage.clear();
+        
+        // Limpiar cookies de Supabase si existen
+        const cookies = document.cookie.split(';');
+        cookies.forEach(cookie => {
+          const [name] = cookie.split('=');
+          if (name.trim().startsWith('sb-')) {
+            document.cookie = `${name.trim()}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+          }
+        });
+      }
+      
       return { error };
     } catch (error) {
+      console.error('Error al cerrar sesión:', error);
       return { error: error as AuthError };
     }
   };

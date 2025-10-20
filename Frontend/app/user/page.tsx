@@ -1,24 +1,21 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
 import DashboardUser from "@/components/user/Dashboard";
-import React from "react";
 
-/**
- * User Dashboard Page - Página principal del usuario optimizada para móvil
- *
- * Esta página actúa como un punto de entrada limpio que simplemente
- * renderiza el componente DashboardUser. Toda la lógica de presentación
- * está en el componente DashboardUser para seguir el principio de
- * separación de responsabilidades.
- *
- * Optimizaciones móviles aplicadas:
- * - Layout optimizado para iPhone 12+ con safe areas
- * - Soporte completo para Safari iOS y barras de navegación
- * - Viewport dinámico para evitar problemas con barras del navegador
- * - Touch targets optimizados para pantallas táctiles
- * - Scroll behavior mejorado para dispositivos iOS
- */
 export default function UserPage() {
+  const router = useRouter();
+  const { store } = useScannedStoreStore();
+
+  useEffect(() => {
+    // Si hay una tienda escaneada, redirigir a /store/[slug]
+    if (store?.slug) {
+      router.replace(`/store/${store.slug}`);
+    }
+  }, [store?.slug, router]);
+
   return (
     <div className="w-full h-full ios-scroll-fix">
       <DashboardUser />

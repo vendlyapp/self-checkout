@@ -1,14 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { LogIn, Mail, Lock, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get('returnUrl') || '/dashboard';
   const { signIn, isAuthenticated, loading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,9 +21,9 @@ export default function LoginPage() {
   // Redirigir si ya está logueado
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      router.push('/dashboard');
+      router.push(returnUrl);
     }
-  }, [isAuthenticated, authLoading, router]);
+  }, [isAuthenticated, authLoading, router, returnUrl]);
 
   // Mostrar loading mientras verifica autenticación
   if (authLoading) {
@@ -55,7 +58,7 @@ export default function LoginPage() {
 
       if (data.user) {
         toast.success('¡Bienvenido de nuevo!');
-        router.push('/dashboard');
+        router.push(returnUrl);
       }
     } catch (err) {
       setError('Error inesperado al iniciar sesión');
@@ -195,8 +198,11 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {/* Google Login Button */}
+          <GoogleLoginButton />
+
           {/* Register Link */}
-          <div className="text-center">
+          <div className="text-center mt-8">
             <p className="text-gray-600">
               Noch kein Konto?{' '}
               <Link

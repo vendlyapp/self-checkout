@@ -1,0 +1,46 @@
+CONFIGURAR SERVICE_ROLE_KEY (IMPORTANTE)
+=========================================
+
+Para que el authMiddleware funcione correctamente, necesitas agregar el SERVICE_ROLE_KEY.
+
+PASOS:
+
+1. Ve a Supabase Dashboard: https://supabase.com/dashboard
+2. Selecciona tu proyecto
+3. Ve a: Settings > API
+4. Encuentra "service_role" key (marcada como "secret" - NO la compartas públicamente)
+5. Cópiala
+
+6. Agrega al archivo Backend/.env:
+
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+7. Reinicia el backend:
+   cd Backend
+   npm run dev
+
+---
+
+POR QUÉ ES NECESARIO:
+
+- El ANON_KEY es para el frontend (público)
+- El SERVICE_ROLE_KEY es para el backend (privado)
+- Permite verificar tokens JWT correctamente
+- Sin él, la autenticación puede fallar
+
+---
+
+ALTERNATIVA TEMPORAL:
+
+El código ya está configurado para usar ANON_KEY como fallback,
+pero es MENOS SEGURO. Úsalo solo en desarrollo.
+
+---
+
+DESPUÉS DE CONFIGURAR:
+
+✅ Crear productos funcionará
+✅ Editar productos funcionará  
+✅ Ver solo TUS productos funcionará
+✅ Multi-tenant funcionará 100%
+

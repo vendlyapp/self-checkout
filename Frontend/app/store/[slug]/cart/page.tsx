@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
@@ -7,25 +7,34 @@ import React, { useEffect } from "react";
 import ProductCard from "@/components/dashboard/charge/ProductCard";
 import { Product } from "@/components/dashboard/products_list/data/mockProducts";
 import { ChevronRight, ShoppingCart, X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { formatSwissPriceWithCHF } from "@/lib/utils";
 import { usePromoLogic } from "@/hooks";
 
-export default function UserCartPage() {
+export default function StoreCartPage() {
   const router = useRouter();
+  const params = useParams();
+  const slug = params.slug as string;
   const { cartItems, updateQuantity } = useCartStore();
-  const { store } = useScannedStoreStore();
+  const { store, setStore } = useScannedStoreStore();
 
-  // Redirigir a /store/[slug]/cart si hay tienda
+  // Cargar info de tienda si no está en el store
   useEffect(() => {
-    if (store?.slug && typeof window !== 'undefined') {
-      const currentPath = window.location.pathname;
-      if (currentPath === '/user/cart') {
-        router.replace(`/store/${store.slug}/cart`);
-        return;
-      }
+    if (!store && slug) {
+      const loadStore = async () => {
+        try {
+          const response = await fetch(`http://localhost:5000/api/store/${slug}`);
+          const result = await response.json();
+          if (result.success) {
+            setStore(result.data);
+          }
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      };
+      loadStore();
     }
-  }, [store?.slug, router]);
+  }, [slug, store, setStore]);
 
   const {
     promoApplied,
@@ -55,10 +64,7 @@ export default function UserCartPage() {
             </p>
             <button
               className="bg-[#25D076] text-white px-4 py-2 font-semibold rounded-full mt-4 w-65 h-12 flex items-center justify-center gap-2"
-              onClick={() => {
-                const target = store?.slug ? `/store/${store.slug}` : '/user';
-                router.push(target);
-              }}
+              onClick={() => router.push(`/store/${slug}`)}
             >
               Produkte anzeigen{" "}
               <ChevronRight className="w-5 h-5 text-white font-semibold" />
@@ -145,3 +151,5 @@ export default function UserCartPage() {
     </>
   );
 }
+
+

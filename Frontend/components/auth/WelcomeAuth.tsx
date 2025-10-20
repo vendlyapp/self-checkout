@@ -1,24 +1,29 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogIn, UserPlus, Store } from 'lucide-react';
+import { LogIn, QrCode, Store } from 'lucide-react';
 import Image from 'next/image';
+import { QRScannerModal } from '@/components/user/QRScannerModal';
 
 const WelcomeAuth: React.FC = () => {
   const router = useRouter();
+  const [showQRModal, setShowQRModal] = useState(false);
 
   const handleLogin = () => {
     router.push('/login');
   };
 
-  const handleRegister = () => {
-    router.push('/register');
+  const handleScanStore = () => {
+    setShowQRModal(true);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <>
+      <QRScannerModal isOpen={showQRModal} onClose={() => setShowQRModal(false)} />
+      
+      <div className="min-h-screen bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
         {/* Logo y Título */}
         <div className="text-center mb-12">
           <div className="flex justify-center mb-6">
@@ -40,10 +45,10 @@ const WelcomeAuth: React.FC = () => {
         <div className="bg-white rounded-3xl shadow-2xl p-8 space-y-4">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Willkommen zurück!
+              Willkommen!
             </h2>
             <p className="text-gray-500">
-              Melde dich an oder erstelle ein Konto
+              Als Händler anmelden oder Geschäft scannen
             </p>
           </div>
 
@@ -73,26 +78,29 @@ const WelcomeAuth: React.FC = () => {
             </div>
           </div>
 
-          {/* Botón de Registro */}
+          {/* Botón de Escanear Tienda */}
           <button
             type="button"
-            onClick={handleRegister}
+            onClick={handleScanStore}
             className="w-full bg-white hover:bg-gray-50 text-gray-900 rounded-2xl px-6 py-4 
                      font-semibold text-lg flex items-center justify-center gap-3 
                      transition-all duration-200 border-2 border-gray-200 hover:border-brand-500
                      hover:scale-[1.02] active:scale-[0.98]
                      focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
-            aria-label="Konto erstellen"
+            aria-label="Geschäft scannen"
             tabIndex={0}
           >
-            <UserPlus className="w-6 h-6" strokeWidth={2.5} />
-            Konto erstellen
+            <QrCode className="w-6 h-6" strokeWidth={2.5} />
+            Geschäft scannen
           </button>
 
           {/* Información adicional */}
-          <div className="mt-8 pt-6 border-t border-gray-100 text-center">
-            <p className="text-sm text-gray-500">
-              Für Geschäfte und Einzelhändler
+          <div className="mt-8 pt-6 border-t border-gray-100 text-center space-y-2">
+            <p className="text-sm text-gray-600 font-medium">
+              💼 Händler? Melde dich an
+            </p>
+            <p className="text-xs text-gray-500">
+              🛍️ Kunde? Scanne den QR-Code deines Geschäfts
             </p>
           </div>
         </div>
@@ -103,8 +111,9 @@ const WelcomeAuth: React.FC = () => {
             © 2025 Vendly. Alle Rechte vorbehalten.
           </p>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

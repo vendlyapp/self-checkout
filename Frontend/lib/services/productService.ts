@@ -143,15 +143,31 @@ const makeRequest = async <T>(
     const url = buildApiUrl(endpoint);
     console.log('🌐 Llamada a API:', url);
     
+    // Obtener token de Supabase
+    const { supabase } = await import('@/lib/supabase/client');
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    
     // Crear AbortController para timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
     
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Agregar token si existe
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    // Agregar headers adicionales del options
+    if (options.headers) {
+      Object.assign(headers, options.headers);
+    }
+    
     const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
       signal: controller.signal,
       ...options,
     });

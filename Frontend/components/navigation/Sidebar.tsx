@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Package, Plus, ShoppingBag, Store, User, Settings, LogOut, CreditCard, ShoppingCart, Zap } from 'lucide-react';
+import { Home, Package, Plus, ShoppingBag, Store, User, Settings, LogOut, CreditCard, ShoppingCart, Zap, QrCode } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { clsx } from 'clsx';

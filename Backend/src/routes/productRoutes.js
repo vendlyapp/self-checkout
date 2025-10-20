@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const productController = require('../controllers/ProductController');
 const { validateUUID, validateProduct } = require('../middleware/validation');
+const { authMiddleware } = require('../middleware/authMiddleware');
 
 /**
  * @swagger
@@ -46,7 +47,7 @@ const { validateUUID, validateProduct } = require('../middleware/validation');
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/', productController.getAllProducts);
+router.get('/', authMiddleware, productController.getAllProducts);
 
 /**
  * @swagger
@@ -90,7 +91,7 @@ router.get('/', productController.getAllProducts);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/stats', productController.getStats);
+router.get('/stats', authMiddleware, productController.getStats);
 
 /**
  * @swagger
@@ -247,7 +248,7 @@ router.get('/:id', validateUUID('id'), productController.getProductById);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/', validateProduct, productController.createProduct);
+router.post('/', authMiddleware, validateProduct, productController.createProduct);
 
 /**
  * @swagger
@@ -324,7 +325,7 @@ router.post('/', validateProduct, productController.createProduct);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put('/:id', validateUUID('id'), productController.updateProduct);
+router.put('/:id', authMiddleware, validateUUID('id'), productController.updateProduct);
 
 /**
  * @swagger
@@ -432,6 +433,6 @@ router.patch('/:id/stock', validateUUID('id'), productController.updateStock);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.delete('/:id', validateUUID('id'), productController.deleteProduct);
+router.delete('/:id', authMiddleware, validateUUID('id'), productController.deleteProduct);
 
 module.exports = router;

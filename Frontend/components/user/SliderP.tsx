@@ -1,11 +1,15 @@
 "use client"
 
 import PromotionSlider from "@/components/user/PromotionSlider";
-import { getPromotionalProducts, Product } from "@/components/dashboard/products_list/data/mockProducts";
+import { Product } from "@/components/dashboard/products_list/data/mockProducts";
 import { useMemo } from "react";
 import { useCartStore } from "@/lib/stores/cartStore";
 import type React from "react";
 import { Package } from "lucide-react";
+
+interface SliderPProps {
+  products?: Product[];
+}
 
 const computeDiscountPercent = (product: Product): number | undefined => {
   if (typeof product.discountPercentage === "number") return product.discountPercentage;
@@ -42,14 +46,13 @@ const getProgressLabel = (product: Product): string | undefined => {
   return `Noch ${product.stock} auf Lager`;
 };
 
-const SliderP: React.FC = () => {
+const SliderP: React.FC<SliderPProps> = ({ products = [] }) => {
   const addToCart = useCartStore((s) => s.addToCart);
 
   const items = useMemo(() => {
-    // Usar la nueva función para obtener productos promocionales
-    const promotionalProducts = getPromotionalProducts();
+    if (products.length === 0) return [];
 
-    const withDiscount = promotionalProducts
+    const withDiscount = products
       .map((p) => ({ product: p, discount: computeDiscountPercent(p) }))
       .filter(({ product, discount }) => product.isOnSale || typeof discount === "number" || product.isPopular);
 
@@ -62,12 +65,11 @@ const SliderP: React.FC = () => {
       return rb - ra;
     });
 
-    const top = withDiscount.slice(0, 10).map(({ product, discount }) => {
+    return withDiscount.slice(0, 10).map(({ product, discount }) => {
       const handleAdd = () => {
         addToCart(product, 1);
       };
 
-      // Manejar la imagen con fallback - pasar Package component si no hay imagen
       const imageUrl = product.image || <Package className="w-10 h-10 text-gray-400" />;
 
       return {
@@ -84,26 +86,9 @@ const SliderP: React.FC = () => {
         onAdd: handleAdd,
       } as const;
     });
+  }, [products, addToCart]);
 
-    if (top.length > 0) return top;
-
-    // Fallback: show first few promotional products
-    return promotionalProducts.slice(0, 10).map((product) => ({
-      title: product.promotionTitle ?? (product.isOnSale ? "Aktion" : "Empfehlung"),
-      discountPercent: computeDiscountPercent(product),
-      imageUrl: product.image || <Package className="w-10 h-10 text-gray-400" />,
-      name: product.name,
-      currency: product.currency ?? "CHF",
-      price: product.price,
-      originalPrice: product.originalPrice,
-      progressFraction: getProgressFraction(product),
-      progressLabel: getProgressLabel(product),
-      actionLabel: product.promotionActionLabel ?? "Jetzt hinzufügen",
-      onAdd: () => {
-        addToCart(product, 1);
-      },
-    }));
-  }, [addToCart]);
+  if (items.length === 0) return null;
 
   return (
     <PromotionSlider items={items} />
