@@ -42,7 +42,7 @@ export default function SearchUser() {
         const result = await response.json();
         
         if (result.success && result.data) {
-          const products = result.data.map((p: any) => ({
+          const products = result.data.map((p: Partial<Product>) => ({
             ...p,
             price: typeof p.price === 'string' ? parseFloat(p.price) : p.price,
             stock: typeof p.stock === 'string' ? parseInt(p.stock) : p.stock,

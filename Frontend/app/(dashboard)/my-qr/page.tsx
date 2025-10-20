@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth/AuthContext'
-import { Store, QrCode, Download, Edit2, Save, X, Loader2, ExternalLink, Copy, Share2 } from 'lucide-react'
+import { QrCode, Download, Edit2, Save, X, Loader2, Copy, Share2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface StoreData {
@@ -18,7 +18,7 @@ interface StoreData {
 }
 
 export default function MyQRPage() {
-  const { user } = useAuth()
+  const { } = useAuth()
   const [store, setStore] = useState<StoreData | null>(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
@@ -56,8 +56,7 @@ export default function MyQRPage() {
       } else {
         toast.error('Error al cargar tienda')
       }
-    } catch (error) {
-      console.error('Error:', error)
+    } catch {
       toast.error('Error al cargar tienda')
     } finally {
       setLoading(false)
@@ -91,8 +90,7 @@ export default function MyQRPage() {
       } else {
         toast.error('Error al actualizar')
       }
-    } catch (error) {
-      console.error('Error:', error)
+    } catch {
       toast.error('Error al actualizar')
     } finally {
       setSaving(false)
@@ -130,7 +128,7 @@ export default function MyQRPage() {
           text: `Besuchen Sie ${store?.name}`,
           url: url
         })
-      } catch (error) {
+      } catch {
         // Share cancelled
       }
     } else {

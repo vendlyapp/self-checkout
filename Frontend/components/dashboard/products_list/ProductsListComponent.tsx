@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   fetchProducts,
-  updateCategoryCounts,
   Product,
   productCategories,
 } from "./data/mockProducts";
@@ -38,14 +37,12 @@ export default function ProductsListComponent({
   onProductClick,
   className = "",
   maxHeight = "100vh",
-  title = "Produkte",
-  showAddButton = false,
 }: ProductsListComponentProps) {
   const searchParams = useSearchParams();
   const refreshParam = searchParams?.get('refresh');
   
   // Estado local para cuando NO es standalone
-  const [localSelectedFilters, setLocalSelectedFilters] = useState<string[]>(
+  const [, setLocalSelectedFilters] = useState<string[]>(
     []
   );
   const [localSearchQuery, setLocalSearchQuery] = useState("");
@@ -59,11 +56,10 @@ export default function ProductsListComponent({
   // Estado compartido para productos y modal
   const [products, setProducts] = useState<Product[]>([]);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [filters, setFilters] = useState(productsListFilters);
+  const [, setFilters] = useState(productsListFilters);
 
   const {
     filterState: contextFilterState,
-    selectedFilters: contextSelectedFilters,
     searchQuery: contextSearchQuery,
     setFilterState: setContextFilterState,
     setSelectedFilters: setContextSelectedFilters,
@@ -76,9 +72,6 @@ export default function ProductsListComponent({
   } = useProductsList();
 
   // Usar estado del contexto cuando es standalone, estado local cuando no
-  const selectedFilters = isStandalone
-    ? contextSelectedFilters
-    : localSelectedFilters;
   const searchQuery = isStandalone ? contextSearchQuery : localSearchQuery;
   const filterState = isStandalone ? contextFilterState : localFilterState;
 
@@ -225,7 +218,7 @@ export default function ProductsListComponent({
         setFilteredProducts(filteredProducts.length);
         setHasActiveFilters(activeFiltersCount > 0);
       }
-    } catch (error) {
+    } catch {
       // Error silencioso
     } finally {
       if (isStandalone) {
@@ -242,67 +235,6 @@ export default function ProductsListComponent({
     applyFiltersToProducts,
     activeFiltersCount,
   ]);
-
-  const handleFilterChange = async (filters: string[]) => {
-    setSelectedFilters(filters);
-
-    if (isStandalone) {
-      setIsLoading(true);
-    }
-
-    try {
-      const categoryId = filters.length > 0 ? filters[0] : "all";
-      const filteredProducts = await fetchProducts({
-        categoryId,
-        searchTerm: searchQuery,
-      });
-      setProducts(filteredProducts);
-
-      if (isStandalone) {
-        setFilteredProducts(filteredProducts.length);
-        setHasActiveFilters(filters.length > 0);
-      }
-    } catch (error) {
-      console.error("Error al filtrar productos:", error);
-    } finally {
-      if (isStandalone) {
-        setIsLoading(false);
-      }
-    }
-  };
-
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-
-    if (isStandalone) {
-      setIsLoading(true);
-    }
-
-    try {
-      const categoryId =
-        selectedFilters.length > 0 ? selectedFilters[0] : "all";
-      const filteredProducts = await fetchProducts({
-        categoryId,
-        searchTerm: query,
-      });
-      setProducts(filteredProducts);
-
-      if (isStandalone) {
-        setFilteredProducts(filteredProducts.length);
-        setHasActiveFilters(query.length > 0 || selectedFilters.length > 0);
-      }
-    } catch (error) {
-      console.error("Error al buscar productos:", error);
-    } finally {
-      if (isStandalone) {
-        setIsLoading(false);
-      }
-    }
-  };
-
-  const handleOpenFilterModal = () => {
-    setIsFilterModalOpen(true);
-  };
 
   const handleCloseFilterModal = () => {
     setIsFilterModalOpen(false);
@@ -332,8 +264,8 @@ export default function ProductsListComponent({
         setHasActiveFilters(getActiveFiltersCount() > 0);
         setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Error al aplicar filtros:", error);
+    } catch {
+      // Error al aplicar filtros
       if (isStandalone) {
         setIsLoading(false);
       }

@@ -130,7 +130,7 @@ export default function FooterNav() {
         isActive: isItemActive(item),
         isPressed: pressedItem === item.id,
       })),
-    [isItemActive, pressedItem]
+    [isItemActive, pressedItem, navItems]
   );
 
   // Contador de artículos en el carrito (suma de cantidades > 0)

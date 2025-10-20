@@ -1,8 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import ProductsListComponent from '@/components/dashboard/products_list/ProductsListComponent';
 import { useResponsive } from '@/hooks';
+
+// Hacer la página dinámica para evitar pre-rendering
+export const dynamic = 'force-dynamic';
 
 /**
  * ProductsList Page - Diseño optimizado para móvil y desktop
@@ -13,10 +16,16 @@ export default function ProductsList() {
   return (
     <div className="w-full">
       {/* Mobile Layout - Diseño original con HeaderNav */}
-      <div className="min-h-screen pb-24">
-        <ProductsListComponent
-          isStandalone={true}
-        />
+      <div className="block lg:hidden">
+        <Suspense fallback={
+          <div className="min-h-screen flex items-center justify-center bg-background-cream">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
+          </div>
+        }>
+          <ProductsListComponent
+            isStandalone={true}
+          />
+        </Suspense>
       </div>
 
       {/* Desktop Layout - Diseño limpio */}
@@ -42,13 +51,19 @@ export default function ProductsList() {
 
           {/* Products List */}
           <div className="pt-2">
-            <ProductsListComponent
-              isStandalone={false}
-              maxHeight="none"
-            />
+            <Suspense fallback={
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-500 mx-auto"></div>
+              </div>
+            }>
+              <ProductsListComponent
+                isStandalone={false}
+                maxHeight="none"
+              />
+            </Suspense>
           </div>
         </div>
-      </div>    
+      </div>
     </div>
   );
 }
