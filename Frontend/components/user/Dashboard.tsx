@@ -1,83 +1,107 @@
 import React, { useState, useEffect, useCallback } from "react";
 import ProductsList from "../dashboard/charge/ProductsList";
-import {
-  fetchProducts,
-  updateCategoryCounts,
-  Product,
-} from "../dashboard/products_list/data/mockProducts";
-import { getIcon } from "../dashboard/products_list/data/iconMap";
+import { Product } from "../dashboard/products_list/data/mockProducts";
 import { useCartStore } from "@/lib/stores/cartStore";
+import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
 import { SearchInput } from "@/components/ui/search-input";
-import { ScanBarcode } from "lucide-react";
-import { FilterSlider } from "@/components/Sliders/SliderFIlter";
+import { ScanBarcode, Store as StoreIcon, ShoppingBag } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const DashboardUser = () => {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCartStore();
+  const { store } = useScannedStoreStore();
 
-  // Obtener filtros de categorías con contadores reales
-  const productsListFilters = updateCategoryCounts().map((category) => {
-    return {
-      id: category.id,
-      label: category.name,
-      icon: getIcon(category.icon),
-      count: category.count,
-    };
-  });
+  // Mensaje de estado
+  const hasStore = !!store?.slug;
+  const hasProducts = products.length > 0;
 
   // Cargar productos iniciales
   const loadInitialProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const initialProducts = await fetchProducts();
-      setProducts(initialProducts);
+      if (!store?.slug) {
+        // Sin tienda escaneada, no mostrar nada
+        setProducts([]);
+        setAllProducts([]);
+        setLoading(false);
+        return;
+      }
+
+      // Cargar productos de la tienda desde la API
+      const response = await fetch(`http://localhost:5000/api/store/${store.slug}/products`);
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        // Convertir a formato correcto
+        const productsWithNumbers = result.data.map((p: any) => ({
+          ...p,
+          price: typeof p.price === 'string' ? parseFloat(p.price) : p.price,
+          stock: typeof p.stock === 'string' ? parseInt(p.stock) : p.stock,
+          categoryId: p.categoryId || p.category?.toLowerCase().replace(/\s+/g, '_'),
+        }));
+        setProducts(productsWithNumbers);
+        setAllProducts(productsWithNumbers);
+      } else {
+        setProducts([]);
+        setAllProducts([]);
+      }
     } catch (error) {
       console.error("Error al cargar productos:", error);
+      setProducts([]);
+      setAllProducts([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [store?.slug]);
 
   // Manejar cambio de filtros
-  const handleFilterChange = async (filters: string[]) => {
-    setSelectedFilters(filters);
-    setLoading(true);
-
-    try {
-      const categoryId = filters.length > 0 ? filters[0] : "all";
-      const filteredProducts = await fetchProducts({
-        categoryId,
-        searchTerm: searchQuery,
-      });
-      setProducts(filteredProducts);
-    } catch (error) {
-      console.error("Error al filtrar productos:", error);
-    } finally {
-      setLoading(false);
+  const handleFilterChange = (filters: string[]) => {
+    if (!hasStore || allProducts.length === 0) {
+      return;
     }
+
+    let filtered = [...allProducts];
+
+    // Filtrar por categoría
+    if (filters.length > 0 && filters[0] !== 'all') {
+      filtered = filtered.filter((p: any) => p.categoryId === filters[0]);
+    }
+
+    // Filtrar por búsqueda
+    if (searchQuery) {
+      filtered = filtered.filter((p: any) => 
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.description.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    setProducts(filtered);
   };
 
   // Manejar búsqueda
-  const handleSearch = async (query: string) => {
+  const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setLoading(true);
-
-    try {
-      const categoryId =
-        selectedFilters.length > 0 ? selectedFilters[0] : "all";
-      const filteredProducts = await fetchProducts({
-        categoryId,
-        searchTerm: query,
-      });
-      setProducts(filteredProducts);
-    } catch (error) {
-      console.error("Error al filtrar productos:", error);
-    } finally {
-      setLoading(false);
+    
+    if (!hasStore || allProducts.length === 0) {
+      return;
     }
+
+    let filtered = [...allProducts];
+
+    // Filtrar por búsqueda
+    if (query) {
+      filtered = filtered.filter((p: any) => 
+        p.name.toLowerCase().includes(query.toLowerCase()) ||
+        p.description.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+
+    setProducts(filtered);
   };
 
   // Manejar agregar al carrito
@@ -87,8 +111,7 @@ const DashboardUser = () => {
 
   // Manejar escaneo QR
   const handleScanQR = () => {
-    // Funcionalidad de escaneo
-    console.log("Scan button clicked");
+    router.push('/user/scan');
   };
 
   // Cargar productos al montar el componente
@@ -101,13 +124,26 @@ const DashboardUser = () => {
       {/* Header con información de la tienda */}
       <div className="bg-background-cream border-b border-white">
         <div className="flex items-center justify-between w-full px-4 py-3">
-          <div className="flex flex-col items-start justify-start">
-            <p className="text-sm text-black font-bold text-[21px]">
-              Heinigers Hofladen
-            </p>
-            <p className="text-sm text-gray-500 text-[14px]">
-              Grundhof 3, 8305 Dietlikon • ⭐ 4.8
-            </p>
+          <div className="flex items-center gap-3">
+            {store?.logo ? (
+              <img 
+                src={store.logo} 
+                alt={store.name} 
+                className="w-12 h-12 rounded-xl object-cover"
+              />
+            ) : store ? (
+              <div className="w-12 h-12 bg-brand-500 rounded-xl flex items-center justify-center">
+                <StoreIcon className="w-7 h-7 text-white" />
+              </div>
+            ) : null}
+            <div className="flex flex-col items-start justify-start">
+              <p className="text-black font-bold text-[17px]">
+                {store?.name || 'Heinigers Hofladen'}
+              </p>
+              <p className="text-gray-500 text-[13px]">
+                {store ? `${products.length} Produkte verfügbar` : 'Grundhof 3, 8305 Dietlikon • ⭐ 4.8'}
+              </p>
+            </div>
           </div>
           <div className="flex items-center justify-end">
             <button className="bg-white text-gray-500 px-4 rounded-md hover:bg-gray-50 transition-colors touch-target tap-highlight-transparent active:scale-95" style={{ minHeight: '35px' }}>
@@ -118,45 +154,72 @@ const DashboardUser = () => {
       </div>
 
       {/* Contenedor de búsqueda y filtros */}
-      <div className="bg-background-cream">
-        {/* Barra de búsqueda y botón QR */}
-        <div className="p-4 flex gap-4 items-center justify-center bg-background-cream">
-          <SearchInput
-            placeholder="Produkte suchen..."
-            className="flex-1 max-w-[260px] h-[54px]"
-            value={searchQuery}
-            onChange={handleSearch}
-          />
-          <button
-            onClick={handleScanQR}
-            className="bg-brand-500 cursor-pointer justify-center text-center text-white px-4 py-3 flex items-center text-[18px] font-semibold gap-2 rounded-[30px] w-[124px] h-[54px] hover:bg-brand-600 transition-colors touch-target tap-highlight-transparent active:scale-95"
-            aria-label="QR Code scannen"
-          >
-            <ScanBarcode className="w-6 h-6" />
-            <span className="text-[16px] text-center">Scan</span>
-          </button>
-        </div>
-
-        {/* Filtros de categorías */}
+      {store && (
         <div className="bg-background-cream">
-          <FilterSlider
-            filters={productsListFilters}
-            selectedFilters={selectedFilters}
-            onFilterChange={handleFilterChange}
-            showCount={true}
-            multiSelect={true}
-          />
+          {/* Barra de búsqueda y botón QR */}
+          <div className="p-4 flex gap-4 items-center justify-center bg-background-cream">
+            <SearchInput
+              placeholder="Produkte suchen..."
+              className="flex-1 max-w-[260px] h-[54px]"
+              value={searchQuery}
+              onChange={handleSearch}
+            />
+            <button
+              onClick={handleScanQR}
+              className="bg-brand-500 cursor-pointer justify-center text-center text-white px-4 py-3 flex items-center text-[18px] font-semibold gap-2 rounded-[30px] w-[124px] h-[54px] hover:bg-brand-600 transition-colors touch-target tap-highlight-transparent active:scale-95"
+              aria-label="QR Code scannen"
+            >
+              <ScanBarcode className="w-6 h-6" />
+              <span className="text-[16px] text-center">Scan</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Lista de productos con scroll propio */}
       <div className="flex-1 overflow-y-auto">
-        <ProductsList
-          products={products}
-          onAddToCart={handleAddToCart}
-          loading={loading}
-          searchQuery={searchQuery}
-        />
+        {!store ? (
+          // Sin tienda escaneada
+          <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+            <div className="w-24 h-24 bg-gray-100 rounded-3xl flex items-center justify-center mb-6">
+              <ShoppingBag className="w-12 h-12 text-gray-400" strokeWidth={1.5} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              Kein Geschäft ausgewählt
+            </h2>
+            <p className="text-gray-600 mb-6 max-w-md">
+              Scannen Sie den QR-Code eines Geschäfts, um die Produkte anzuzeigen
+            </p>
+            <button
+              onClick={handleScanQR}
+              className="flex items-center gap-3 px-6 py-3 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-colors font-semibold"
+            >
+              <ScanBarcode className="w-5 h-5" />
+              Jetzt scannen
+            </button>
+          </div>
+        ) : products.length === 0 && !loading ? (
+          // Tienda sin productos
+          <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+            <div className="w-24 h-24 bg-gray-100 rounded-3xl flex items-center justify-center mb-6">
+              <StoreIcon className="w-12 h-12 text-gray-400" strokeWidth={1.5} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              Keine Produkte verfügbar
+            </h2>
+            <p className="text-gray-600 mb-6 max-w-md">
+              Dieses Geschäft hat noch keine Produkte hinzugefügt
+            </p>
+          </div>
+        ) : (
+          // Mostrar productos
+          <ProductsList
+            products={products}
+            onAddToCart={handleAddToCart}
+            loading={loading}
+            searchQuery={searchQuery}
+          />
+        )}
       </div>
     </div>
   );

@@ -28,7 +28,7 @@ export default function Charge() {
     sortBy: "name" as const,
     categories: ["all"],
     status: "all" as const,
-    priceRange: { min: 0, max: 50 },
+    priceRange: { min: 0, max: 1000 },
   });
 
   // Usar los contextos
@@ -56,8 +56,7 @@ export default function Charge() {
     const newSelectedFilters = filters.categories.filter((id) => id !== "all");
     onFilterChange(newSelectedFilters);
 
-    // Aquí puedes implementar la lógica adicional de filtrado
-    console.log("Filtros aplicados:", filters);
+    // Filtros aplicados
   };
 
   const handleClearFilters = () => {
@@ -65,12 +64,9 @@ export default function Charge() {
       sortBy: "name",
       categories: ["all"],
       status: "all",
-      priceRange: { min: 0, max: 50 },
+      priceRange: { min: 0, max: 1000 },
     });
     onFilterChange([]);
-
-    // Aquí puedes implementar la lógica de limpieza
-    console.log("Filtros limpiados");
   };
 
   return (

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { fetchProductById, updateProduct } from '@/components/dashboard/products_list/data/mockProducts';
 import { Product } from '@/components/dashboard/products_list/data/mockProducts';
 import HeaderNav from '@/components/navigation/HeaderNav';
@@ -10,6 +11,7 @@ interface PageProps {
 }
 
 export default function EditProduct({ params }: PageProps) {
+  const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -37,7 +39,6 @@ export default function EditProduct({ params }: PageProps) {
           setFormData(productData);
         }
       } catch (error) {
-        console.error('Error loading product:', error);
         setError('Error al cargar el producto');
       } finally {
         setLoading(false);
@@ -64,14 +65,13 @@ export default function EditProduct({ params }: PageProps) {
       setSuccess('Produkt erfolgreich aktualisiert');
       setTimeout(() => setSuccess(null), 3000);
     } catch (error) {
-      console.error('Error updating product:', error);
       setError(error instanceof Error ? error.message : 'Fehler beim Aktualisieren');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleBack = () => window.history.back();
+  const handleBack = () => router.push(`/products_list?refresh=${Date.now()}`);
 
   if (loading) {
     return (

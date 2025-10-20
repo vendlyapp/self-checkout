@@ -3,7 +3,7 @@
 
 import { Home, Percent, ScanBarcode, Search, ShoppingCart } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import { clsx } from "clsx";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { lightFeedback } from "@/lib/utils/safeFeedback";
@@ -19,37 +19,37 @@ interface NavItemUser {
   isMain?: boolean;
 }
 
-const navItems: NavItemUser[] = [
+const getNavItems = (baseRoute: string): NavItemUser[] => [
   {
     id: "home",
     icon: Home,
     label: "Home",
-    href: "/user",
+    href: baseRoute,
   },
   {
     id: "search",
     icon: Search,
     label: "Suche",
-    href: "/user/search",
+    href: `${baseRoute}/search`,
   },
   {
     id: "actions",
     icon: ScanBarcode,
     label: "",
-    href: "/user/scan",
+    href: "/user/scan", // Siempre va a scan para cambiar de tienda
     isMain: true,
   },
   {
     id: "promotion",
     icon: Percent,
     label: "Aktionen",
-    href: "/user/promotion",
+    href: `${baseRoute}/promotion`,
   },
   {
     id: "cart",
     icon: ShoppingCart,
     label: "Warenkorb",
-    href: "/user/cart",
+    href: `${baseRoute}/cart`,
   },
 ];
 
@@ -69,10 +69,18 @@ const SkeletonLoader = () => (
 
 export default function FooterNav() {
   const pathname = usePathname();
+  const params = useParams();
   const [mounted, setMounted] = useState(false);
   const [isPulsing, setIsPulsing] = useState(true);
   const [pressedItem, setPressedItem] = useState<string | null>(null);
   const { cartItems } = useCartStore();
+
+  // Determinar base route según si estamos en /store/[slug] o /user
+  const isStoreRoute = pathname?.startsWith('/store/');
+  const slug = params?.slug as string | undefined;
+  const baseRoute = isStoreRoute && slug ? `/store/${slug}` : '/user';
+  
+  const navItems = useMemo(() => getNavItems(baseRoute), [baseRoute]);
 
   useEffect(() => {
     setMounted(true);
@@ -89,11 +97,11 @@ export default function FooterNav() {
   // Memoizar función para verificar item activo
   const isItemActive = useCallback(
     (item: NavItemUser) => {
-      if (item.href === "/user" && pathname === "/user") return true;
-      if (item.href !== "/user" && pathname?.startsWith(item.href)) return true;
+      if (item.href === baseRoute && pathname === baseRoute) return true;
+      if (item.href !== baseRoute && pathname?.startsWith(item.href)) return true;
       return false;
     },
-    [pathname]
+    [pathname, baseRoute]
   );
 
   // Manejar interacción con vibración háptica
@@ -144,8 +152,8 @@ export default function FooterNav() {
   }
 
   // Determinar qué componente de carrito mostrar basado en la ruta
-  const isCartRoute = pathname === "/user/cart";
-  const isPaymentRoute = pathname === "/user/payment";
+  const isCartRoute = pathname === "/user/cart" || pathname?.includes('/cart');
+  const isPaymentRoute = pathname === "/user/payment" || pathname?.includes('/payment');
 
   return (
     <nav className="bg-white rounded-t-xl shadow-t-xl shadow-black safe-area-bottom">

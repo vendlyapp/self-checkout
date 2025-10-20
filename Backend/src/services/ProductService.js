@@ -3,7 +3,11 @@ const qrCodeGenerator = require('../utils/qrCodeGenerator');
 
 class ProductService {
 
-  async create(productData) {
+  async create(productData, ownerId) {
+    if (!ownerId) {
+      throw new Error('Owner ID es requerido');
+    }
+
     if (!productData.name || !productData.name.trim()) {
       throw new Error('El nombre del producto es requerido');
     }
@@ -27,7 +31,7 @@ class ProductService {
     }
     const insertQuery = `
       INSERT INTO "Product" (
-        "name", "description", "price", "originalPrice", "category", "categoryId",
+        "ownerId", "name", "description", "price", "originalPrice", "category", "categoryId",
         "stock", "initialStock", "barcode", "sku", "qrCode", "tags",
         "isNew", "isPopular", "isOnSale", "isActive", "rating", "reviews",
         "weight", "hasWeight", "dimensions", "discountPercentage", "image", "images",
@@ -35,13 +39,14 @@ class ProductService {
         "promotionBadge", "promotionActionLabel", "promotionPriority", "supplier",
         "costPrice", "margin", "taxRate", "expiryDate", "location", "notes"
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18,
-        $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34,
-        $35, $36, $37, $38, $39
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19,
+        $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35,
+        $36, $37, $38, $39, $40
       ) RETURNING *
     `;
 
     const values = [
+      ownerId, // NUEVO: Owner ID
       productData.name.trim(),
       productData.description.trim(),
       parseFloat(productData.price),
@@ -107,12 +112,20 @@ class ProductService {
       search = null,
       categoryId = null,
       sortBy = 'name',
-      order = 'ASC'
+      order = 'ASC',
+      ownerId = null // NUEVO: Filtrar por dueño
     } = options;
 
     let whereClause = 'WHERE "isActive" = true';
     const params = [];
     let paramCount = 0;
+
+    // NUEVO: Filtrar por ownerId si se proporciona
+    if (ownerId) {
+      paramCount++;
+      whereClause += ` AND "ownerId" = $${paramCount}`;
+      params.push(ownerId);
+    }
 
     if (categoryId && categoryId !== 'all') {
       paramCount++;

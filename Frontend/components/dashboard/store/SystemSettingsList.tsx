@@ -5,10 +5,17 @@ import {
   Download,
   Bell,
   HelpCircle,
+  QrCode,
 } from "lucide-react";
 import NavigationItem from "@/components/ui/NavigationItem";
 
 const settings = [
+  {
+    icon: <QrCode className="w-5 h-5" />,
+    title: "Mein QR-Code",
+    subtitle: "QR verwalten & teilen",
+    href: "/my-qr",
+  },
   {
     icon: <Building2 className="w-5 h-5" />,
     title: "Geschäftsdaten",
@@ -55,6 +62,7 @@ const SystemSettingsList = () => (
                 title={item.title}
                 subtitle={item.subtitle}
                 showArrow
+                href={item.href}
               />
             </li>
           ))}
@@ -73,6 +81,7 @@ const SystemSettingsList = () => (
               title={item.title}
               subtitle={item.subtitle}
               showArrow
+              href={item.href}
             />
           </div>
         ))}

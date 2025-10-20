@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export type NavigationItemProps = {
   icon: React.ReactNode;
@@ -9,6 +10,7 @@ export type NavigationItemProps = {
   badge?: string;
   badgeVariant?: "success" | "info" | "warning" | "danger";
   onClick?: () => void;
+  href?: string;
   ariaLabel?: string;
   showArrow?: boolean;
   className?: string;
@@ -29,11 +31,22 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
   badge,
   badgeVariant = "default",
   onClick,
+  href,
   ariaLabel,
   showArrow = true,
   className = "",
 }) => {
   const [pressed, setPressed] = useState(false);
+  const router = useRouter();
+
+  const handleClick = () => {
+    if (href) {
+      router.push(href);
+    } else if (onClick) {
+      onClick();
+    }
+  };
+
   return (
     <button
       type="button"
@@ -42,7 +55,7 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
       } ${className}`}
       tabIndex={0}
       aria-label={ariaLabel || title}
-      onClick={onClick}
+      onClick={handleClick}
       onTouchStart={() => setPressed(true)}
       onTouchEnd={() => setPressed(false)}
       onMouseDown={() => setPressed(true)}

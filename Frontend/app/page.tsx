@@ -1,9 +1,9 @@
-import Welcome from "@/components/welcome/W";
+import WelcomeAuth from "@/components/auth/WelcomeAuth";
 
 export default function Home() {
   return (
     <div className="h-full w-full overflow-hidden">
-      <Welcome />
+      <WelcomeAuth />
     </div>
   );
 }

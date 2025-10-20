@@ -1,13 +1,15 @@
 'use client';
 
-import { Bell, ChartNoAxesColumn, Menu } from 'lucide-react';
+import { Bell, ChartNoAxesColumn, Menu, LogOut } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState, useCallback, useMemo } from 'react';
 import { clsx } from 'clsx';
 import Image from 'next/image';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
 import { useStoreState } from '@/lib/stores';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { toast } from 'sonner';
 
 interface Notification {
   id: string;
@@ -50,7 +52,9 @@ export default function ResponsiveHeader({
   isDesktop = false
 }: ResponsiveHeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { getStoreStatus } = useStoreState();
+  const { signOut, user } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [pressedButton, setPressedButton] = useState<string | null>(null);
@@ -194,6 +198,33 @@ export default function ResponsiveHeader({
                   <span className="notification-badge" aria-hidden="true" />
                 )}
               </button>
+
+              {/* Logout Button */}
+              <button
+                className={clsx(
+                  "header-action-button rounded-full touch-target",
+                  pressedButton === 'logout' && "button-pressed"
+                )}
+                onClick={async (e) => {
+                  handleButtonPress('logout');
+                  handleValidInteraction(e);
+                  try {
+                    await signOut();
+                    toast.success('Erfolgreich abgemeldet');
+                    router.push('/');
+                  } catch (error) {
+                    toast.error('Fehler beim Abmelden');
+                  }
+                }}
+                onTouchStart={() => handleButtonPress('logout')}
+                onMouseDown={(e) => {
+                  handleButtonPress('logout');
+                  handleValidInteraction(e);
+                }}
+                aria-label="Abmelden"
+              >
+                <LogOut className="header-icon" />
+              </button>
             </div>
           </div>
         ) : (
@@ -276,6 +307,33 @@ export default function ResponsiveHeader({
                 {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
                 )}
+              </button>
+
+              {/* Logout Button */}
+              <button
+                className={clsx(
+                  "p-2 rounded-lg hover:bg-red-50 transition-colors group",
+                  pressedButton === 'logout' && "scale-95"
+                )}
+                onClick={async (e) => {
+                  handleButtonPress('logout');
+                  handleValidInteraction(e);
+                  try {
+                    await signOut();
+                    toast.success('Erfolgreich abgemeldet');
+                    router.push('/');
+                  } catch (error) {
+                    toast.error('Fehler beim Abmelden');
+                  }
+                }}
+                onTouchStart={() => handleButtonPress('logout')}
+                onMouseDown={(e) => {
+                  handleButtonPress('logout');
+                  handleValidInteraction(e);
+                }}
+                aria-label="Abmelden"
+              >
+                <LogOut className="w-5 h-5 text-gray-600 group-hover:text-red-600 transition-colors" />
               </button>
             </div>
           </div>

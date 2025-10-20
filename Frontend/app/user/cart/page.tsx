@@ -1,8 +1,9 @@
 "use client";
 
 import { useCartStore } from "@/lib/stores/cartStore";
+import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
 import HeaderNav from "@/components/navigation/HeaderNav";
-import React from "react";
+import React, { useEffect } from "react";
 import ProductCard from "@/components/dashboard/charge/ProductCard";
 import { Product } from "@/components/dashboard/products_list/data/mockProducts";
 import { ChevronRight, ShoppingCart, X } from "lucide-react";
@@ -13,6 +14,19 @@ import { usePromoLogic } from "@/hooks";
 export default function UserCartPage() {
   const router = useRouter();
   const { cartItems, updateQuantity } = useCartStore();
+  const { store } = useScannedStoreStore();
+
+  // Redirigir a /store/[slug]/cart si hay tienda
+  useEffect(() => {
+    if (store?.slug && typeof window !== 'undefined') {
+      const currentPath = window.location.pathname;
+      if (currentPath === '/user/cart') {
+        router.replace(`/store/${store.slug}/cart`);
+        return;
+      }
+    }
+  }, [store?.slug, router]);
+
   const {
     promoApplied,
     discountAmount,
@@ -41,7 +55,10 @@ export default function UserCartPage() {
             </p>
             <button
               className="bg-[#25D076] text-white px-4 py-2 font-semibold rounded-full mt-4 w-65 h-12 flex items-center justify-center gap-2"
-              onClick={() => router.push("/user")}
+              onClick={() => {
+                const target = store?.slug ? `/store/${store.slug}` : '/user';
+                router.push(target);
+              }}
             >
               Produkte anzeigen{" "}
               <ChevronRight className="w-5 h-5 text-white font-semibold" />

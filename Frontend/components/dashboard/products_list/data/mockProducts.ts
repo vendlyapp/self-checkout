@@ -58,13 +58,15 @@ export interface ProductCategory {
   color?: string
 }
 
-// Categorías de productos para la panadería
+// Categorías de productos
 export const productCategories: ProductCategory[] = [
-  { id: 'all', name: 'Alle', icon: 'ShoppingCart', count: 20 },
-  { id: 'bread', name: 'Brot', icon: 'Bread', count: 8 },
-  { id: 'pastries', name: 'Gebäck', icon: 'Croissant', count: 6 },
-  { id: 'cakes', name: 'Kuchen', icon: 'Cake', count: 4 },
-  { id: 'sandwiches', name: 'Sandwiches', icon: 'Sandwich', count: 2 }
+  { id: 'all', name: 'Alle', icon: 'ShoppingCart', count: 0 },
+  { id: 'brot', name: 'Brot', icon: 'Bread', count: 0 },
+  { id: 'gebäck', name: 'Gebäck', icon: 'Croissant', count: 0 },
+  { id: 'kuchen', name: 'Kuchen', icon: 'Cake', count: 0 },
+  { id: 'sandwiches', name: 'Sandwiches', icon: 'Sandwich', count: 0 },
+  { id: 'früchte', name: 'Früchte', icon: 'Apple', count: 0 },
+  { id: 'gemüse', name: 'Gemüse', icon: 'Carrot', count: 0 }
 ]
 
 // Mock de productos para la panadería
@@ -705,10 +707,7 @@ export const fetchProducts = async (filters?: {
   searchTerm?: string
   sortBy?: 'name' | 'price' | 'rating' | 'newest'
 }): Promise<Product[]> => {
-  console.log('🔍 Obteniendo productos del backend...', filters);
-  
   try {
-    // Usar la API directamente sin timeout restrictivo
     const response = await ProductService.getProducts({
       category: filters?.categoryId !== 'all' ? filters?.categoryId : undefined,
       search: filters?.searchTerm,
@@ -716,7 +715,6 @@ export const fetchProducts = async (filters?: {
     });
     
     if (response.success && response.data) {
-      console.log('✅ Productos obtenidos del backend:', response.data.length);
       const normalizedProducts = response.data.map(normalizeProductData);
       let products = normalizedProducts;
       if (filters?.sortBy) {
@@ -724,32 +722,24 @@ export const fetchProducts = async (filters?: {
       }
       return products;
     } else {
-      console.warn('⚠️ Respuesta de API no exitosa:', response.error);
       throw new Error(response.error || 'API response not successful');
     }
   } catch (error) {
-    console.error('❌ Error al obtener productos del backend:', error);
-    console.log('📦 Fallback a datos mock locales');
     return getMockProductsWithFilters(filters);
   }
 }
 
 export const fetchProductById = async (id: string): Promise<Product | null> => {
-  console.log('🔍 Obteniendo producto por ID del backend:', id);
   
   try {
     const response = await ProductService.getProductById(id);
     
     if (response.success && response.data) {
-      console.log('✅ Producto obtenido del backend:', response.data.name);
       return normalizeProductData(response.data);
     } else {
-      console.warn('⚠️ Respuesta de API no exitosa:', response.error);
       throw new Error(response.error || 'API response not successful');
     }
   } catch (error) {
-    console.error('❌ Error al obtener producto del backend:', error);
-    console.log('📦 Fallback a datos mock locales');
     return mockProducts.find(product => product.id === id) || null;
   }
 }
@@ -785,7 +775,6 @@ export const fetchCategories = async (): Promise<ProductCategory[]> => {
 // Funciones CRUD - Conectan con el backend
 export const createProduct = async (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> => {
   try {
-    console.log('➕ Creando producto en el backend:', productData.name);
     
     const response = await ProductService.createProduct(productData);
     
@@ -793,17 +782,14 @@ export const createProduct = async (productData: Omit<Product, 'id' | 'createdAt
       throw new Error(response.error || 'Error al crear producto');
     }
 
-    console.log('✅ Producto creado exitosamente:', response.data.name);
     return normalizeProductData(response.data);
   } catch (error) {
-    console.error('❌ Error al crear producto:', error);
     throw error;
   }
 }
 
 export const updateProduct = async (id: string, productData: Partial<Product>): Promise<Product> => {
   try {
-    console.log('✏️ Actualizando producto en el backend:', id);
     
     const response = await ProductService.updateProduct(id, productData);
     
@@ -811,17 +797,14 @@ export const updateProduct = async (id: string, productData: Partial<Product>): 
       throw new Error(response.error || 'Error al actualizar producto');
     }
 
-    console.log('✅ Producto actualizado exitosamente:', response.data.name);
     return normalizeProductData(response.data);
   } catch (error) {
-    console.error('❌ Error al actualizar producto:', error);
     throw error;
   }
 }
 
 export const deleteProduct = async (id: string): Promise<void> => {
   try {
-    console.log('🗑️ Eliminando producto del backend:', id);
     
     const response = await ProductService.deleteProduct(id);
     
@@ -829,16 +812,13 @@ export const deleteProduct = async (id: string): Promise<void> => {
       throw new Error(response.error || 'Error al eliminar producto');
     }
 
-    console.log('✅ Producto eliminado exitosamente');
   } catch (error) {
-    console.error('❌ Error al eliminar producto:', error);
     throw error;
   }
 }
 
 export const updateProductStock = async (id: string, quantity: number): Promise<Product> => {
   try {
-    console.log('📦 Actualizando stock del producto:', id, 'nueva cantidad:', quantity);
     
     const response = await ProductService.updateStock(id, quantity);
     
@@ -846,10 +826,8 @@ export const updateProductStock = async (id: string, quantity: number): Promise<
       throw new Error(response.error || 'Error al actualizar stock');
     }
 
-    console.log('✅ Stock actualizado exitosamente');
     return normalizeProductData(response.data);
   } catch (error) {
-    console.error('❌ Error al actualizar stock:', error);
     throw error;
   }
 }

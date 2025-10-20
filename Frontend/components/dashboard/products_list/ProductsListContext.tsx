@@ -47,7 +47,7 @@ export const useProductsList = () => {
         sortBy: "name" as const,
         categories: ["all"],
         status: "all" as const,
-        priceRange: { min: 0, max: 50 },
+        priceRange: { min: 0, max: 1000 },
       },
       selectedFilters: [],
       searchQuery: "",
@@ -85,7 +85,7 @@ export const ProductsListProvider: React.FC<ProductsListProviderProps> = ({
     sortBy: "name" as const,
     categories: ["all"],
     status: "all" as const,
-    priceRange: { min: 0, max: 50 },
+    priceRange: { min: 0, max: 1000 },
   });
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");

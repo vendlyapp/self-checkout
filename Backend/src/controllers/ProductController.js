@@ -5,13 +5,16 @@ class ProductController {
   async getAllProducts(req, res) {
     try {
       const { limit, search } = req.query;
+      const ownerId = req.user?.userId; // Obtener del usuario autenticado
 
       if (search) {
-        const result = await productService.search(search);
+        const result = await productService.search(search, { ownerId });
         return res.status(HTTP_STATUS.OK).json(result);
       }
 
-      const options = limit ? { limit: parseInt(limit) } : {};
+      const options = { ownerId };
+      if (limit) options.limit = parseInt(limit);
+      
       const result = await productService.findAll(options);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
@@ -63,7 +66,16 @@ class ProductController {
 
   async createProduct(req, res) {
     try {
-      const result = await productService.create(req.body);
+      const ownerId = req.user?.userId; // Obtener del usuario autenticado
+      
+      if (!ownerId) {
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+          success: false,
+          error: 'Usuario no autenticado'
+        });
+      }
+
+      const result = await productService.create(req.body, ownerId);
       res.status(HTTP_STATUS.CREATED).json(result);
     } catch (error) {
       const statusCode = error.message.includes('ya está en uso')
