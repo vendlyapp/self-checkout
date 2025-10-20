@@ -3,12 +3,14 @@
 import { useParams } from 'next/navigation'
 import { useEffect } from 'react'
 import { useScannedStoreStore } from '@/lib/stores/scannedStoreStore'
+import { useCartStore } from '@/lib/stores/cartStore'
 import DashboardUser from '@/components/user/Dashboard'
 
 export default function StoreProductsPage() {
   const params = useParams()
   const slug = params.slug as string
   const { setStore } = useScannedStoreStore()
+  const { setCurrentStore } = useCartStore()
 
   useEffect(() => {
     // Cargar información de la tienda
@@ -19,6 +21,7 @@ export default function StoreProductsPage() {
         
         if (result.success) {
           setStore(result.data)
+          setCurrentStore(slug) // Cambiar al carrito de esta tienda
         }
       } catch (error) {
         console.error('Error loading store:', error)
@@ -26,7 +29,7 @@ export default function StoreProductsPage() {
     }
 
     loadStore()
-  }, [slug, setStore])
+  }, [slug, setStore, setCurrentStore])
 
   return <DashboardUser />
 }

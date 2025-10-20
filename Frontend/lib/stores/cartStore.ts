@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { Product } from "@/components/dashboard/products_list/data/mockProducts";
 
 export type CartItem = {
@@ -8,10 +8,18 @@ export type CartItem = {
 };
 
 interface CartState {
+  currentStoreSlug: string | null;
+  cartsByStore: Record<string, {
+    cartItems: CartItem[];
+    promoCode: string;
+    promoApplied: boolean;
+    discountAmount: number;
+  }>;
   cartItems: CartItem[];
   promoCode: string;
   promoApplied: boolean;
   discountAmount: number;
+  setCurrentStore: (slug: string | null) => void;
   addToCart: (product: Product, quantity?: number) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
@@ -27,10 +35,42 @@ interface CartState {
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
+      currentStoreSlug: null,
+      cartsByStore: {},
       cartItems: [],
       promoCode: "",
       promoApplied: false,
       discountAmount: 0,
+
+      setCurrentStore: (slug) => {
+        set((state) => {
+          if (!slug) return { currentStoreSlug: null };
+
+          // Guardar carrito actual antes de cambiar
+          if (state.currentStoreSlug) {
+            state.cartsByStore[state.currentStoreSlug] = {
+              cartItems: state.cartItems,
+              promoCode: state.promoCode,
+              promoApplied: state.promoApplied,
+              discountAmount: state.discountAmount,
+            };
+          }
+
+          // Cargar carrito de la nueva tienda
+          const storeCart = state.cartsByStore[slug] || {
+            cartItems: [],
+            promoCode: "",
+            promoApplied: false,
+            discountAmount: 0,
+          };
+
+          return {
+            currentStoreSlug: slug,
+            cartsByStore: { ...state.cartsByStore },
+            ...storeCart,
+          };
+        });
+      },
 
       addToCart: (product, quantity = 1) => {
         set((state) => {
@@ -117,13 +157,8 @@ export const useCartStore = create<CartState>()(
       },
     }),
     {
-      name: "cart-storage",
-      partialize: (state) => ({
-        cartItems: state.cartItems,
-        promoCode: state.promoCode,
-        promoApplied: state.promoApplied,
-        discountAmount: state.discountAmount,
-      }),
+      name: "cart-storage-multi-store",
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );

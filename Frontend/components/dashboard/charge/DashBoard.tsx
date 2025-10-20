@@ -33,7 +33,7 @@ export default function DashBoardCharge({
         const initialProducts = await fetchProducts();
         setProducts(initialProducts);
       } catch (error) {
-        console.error("Error al cargar productos:", error);
+        // Error al cargar productos
       } finally {
         setLoading(false);
       }
@@ -55,7 +55,7 @@ export default function DashBoardCharge({
         });
         setProducts(filteredProducts);
       } catch (error) {
-        console.error("Error al filtrar productos:", error);
+        // Error al filtrar productos
       } finally {
         setLoading(false);
       }

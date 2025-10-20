@@ -37,7 +37,6 @@ export const useProducts = (): UseProductsReturn => {
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar datos de productos');
-      console.error('Error fetching products data:', err);
     } finally {
       setLoading(false);
     }
@@ -88,12 +87,10 @@ export const useProductActions = (): ProductActionsReturn => {
   }, [router]);
 
   const handleProductList = useCallback(async () => {
-    console.log('Ver lista de productos');
     // Future implementation: navigate to products list page or open modal
   }, []);
 
   const handleCategories = useCallback(async () => {
-    console.log('Gestionar categorías');
     // Future implementation: navigate to categories page or open modal
   }, []);
 

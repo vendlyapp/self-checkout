@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, QrCode, Camera, Loader2 } from 'lucide-react'
 import { useScannedStoreStore } from '@/lib/stores/scannedStoreStore'
+import { useCartStore } from '@/lib/stores/cartStore'
 import { toast } from 'sonner'
 
 interface QRScannerModalProps {
@@ -14,6 +15,7 @@ interface QRScannerModalProps {
 export const QRScannerModal = ({ isOpen, onClose }: QRScannerModalProps) => {
   const router = useRouter()
   const { setStore } = useScannedStoreStore()
+  const { setCurrentStore } = useCartStore()
   const [storeSlug, setStoreSlug] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -47,6 +49,8 @@ export const QRScannerModal = ({ isOpen, onClose }: QRScannerModalProps) => {
 
       // Guardar tienda en el store
       setStore(result.data)
+      // Cambiar al carrito de esta tienda
+      setCurrentStore(result.data.slug)
       
       // Redirigir a la tienda
       toast.success(`Bienvenido a ${result.data.name}`)

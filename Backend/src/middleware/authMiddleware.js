@@ -68,7 +68,6 @@ const authMiddleware = async (req, res, next) => {
       } else {
         // Usuario NO existe (probablemente autenticado con Google)
         // Crear automáticamente en la tabla User
-        console.log('🆕 Creando usuario automáticamente:', data.user.email);
         
         // Obtener role del user_metadata si existe
         const metadataRole = data.user.user_metadata?.role || 'ADMIN';
@@ -89,7 +88,6 @@ const authMiddleware = async (req, res, next) => {
               name: `${userName}'s Store`,
               logo: null
             });
-            console.log('🏪 Tienda creada automáticamente para:', userName);
           } catch (storeError) {
             console.error('Error al crear tienda:', storeError.message);
           }

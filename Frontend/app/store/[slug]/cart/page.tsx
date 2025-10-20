@@ -15,26 +15,31 @@ export default function StoreCartPage() {
   const router = useRouter();
   const params = useParams();
   const slug = params.slug as string;
-  const { cartItems, updateQuantity } = useCartStore();
+  const { cartItems, updateQuantity, setCurrentStore } = useCartStore();
   const { store, setStore } = useScannedStoreStore();
 
-  // Cargar info de tienda si no está en el store
+  // Cargar info de tienda y cambiar carrito
   useEffect(() => {
-    if (!store && slug) {
-      const loadStore = async () => {
-        try {
+    const loadStore = async () => {
+      try {
+        // Cambiar al carrito de esta tienda
+        setCurrentStore(slug);
+        
+        // Cargar info si no está
+        if (!store || store.slug !== slug) {
           const response = await fetch(`http://localhost:5000/api/store/${slug}`);
           const result = await response.json();
           if (result.success) {
             setStore(result.data);
           }
-        } catch (error) {
-          console.error('Error:', error);
         }
-      };
-      loadStore();
-    }
-  }, [slug, store, setStore]);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
+    
+    loadStore();
+  }, [slug, store, setStore, setCurrentStore]);
 
   const {
     promoApplied,

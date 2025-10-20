@@ -137,10 +137,10 @@ const DashboardUser = () => {
               </div>
             ) : null}
             <div className="flex flex-col items-start justify-start">
-              <p className="text-sm text-black font-bold text-[21px]">
+              <p className="text-black font-bold text-[17px]">
                 {store?.name || 'Heinigers Hofladen'}
               </p>
-              <p className="text-sm text-gray-500 text-[14px]">
+              <p className="text-gray-500 text-[13px]">
                 {store ? `${products.length} Produkte verfügbar` : 'Grundhof 3, 8305 Dietlikon • ⭐ 4.8'}
               </p>
             </div>

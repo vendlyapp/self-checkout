@@ -131,7 +131,7 @@ export default function MyQRPage() {
           url: url
         })
       } catch (error) {
-        console.log('Share cancelled')
+        // Share cancelled
       }
     } else {
       copyStoreUrl()

@@ -5,28 +5,24 @@ import ProductsListComponent from '@/components/dashboard/products_list/Products
 import { useResponsive } from '@/hooks';
 
 /**
- * ProductsList Page - Página principal de la lista de productos
- *
- * Esta página usa el componente reutilizable ProductsListComponent
- * con isStandalone=true para mostrar la funcionalidad completa
- * con footer y scroll propio.
+ * ProductsList Page - Diseño optimizado para móvil y desktop
  */
 export default function ProductsList() {
   const { } = useResponsive();
 
   return (
     <div className="w-full">
-      {/* Mobile Layout */}
-      <div className="block lg:hidden">
+      {/* Mobile Layout - Diseño original con HeaderNav */}
+      <div className="min-h-screen pb-24">
         <ProductsListComponent
           isStandalone={true}
         />
       </div>
 
-      {/* Desktop Layout */}
+      {/* Desktop Layout - Diseño limpio */}
       <div className="hidden lg:block min-h-screen">
         <div className="max-w-[1600px] mx-auto px-8 py-8 space-y-6">
-          {/* Header Section - Más limpio y espacioso */}
+          {/* Header Section */}
           <div className="flex items-center justify-between gap-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Produktverwaltung</h1>
@@ -44,14 +40,15 @@ export default function ProductsList() {
             </div>
           </div>
 
-          {/* Products List - Sin contenedor blanco */}
+          {/* Products List */}
           <div className="pt-2">
             <ProductsListComponent
               isStandalone={false}
+              maxHeight="none"
             />
           </div>
         </div>
-      </div>
+      </div>    
     </div>
   );
 }

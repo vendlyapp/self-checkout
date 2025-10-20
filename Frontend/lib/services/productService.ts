@@ -141,7 +141,6 @@ const makeRequest = async <T>(
 ): Promise<ApiResponse<T>> => {
   try {
     const url = buildApiUrl(endpoint);
-    console.log('🌐 Llamada a API:', url);
     
     // Obtener token de Supabase
     const { supabase } = await import('@/lib/supabase/client');

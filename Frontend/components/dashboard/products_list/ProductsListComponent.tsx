@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   fetchProducts,
   updateCategoryCounts,
   Product,
+  productCategories,
 } from "./data/mockProducts";
 import { getIcon } from "./data/iconMap";
 import ProductCardList from "./ProductCardList";
@@ -21,13 +23,13 @@ interface ProductsListComponentProps {
   showAddButton?: boolean;
 }
 
-// Convertir categorías a formato FilterOption con contadores reales
-const productsListFilters = updateCategoryCounts().map((category) => {
+// Convertir categorías a formato FilterOption (contadores se actualizarán dinámicamente)
+const productsListFilters = productCategories.map((category) => {
   return {
     id: category.id,
     label: category.name,
     icon: getIcon(category.icon),
-    count: category.count,
+    count: 0, // Se actualizará dinámicamente
   };
 });
 
@@ -39,6 +41,9 @@ export default function ProductsListComponent({
   title = "Produkte",
   showAddButton = false,
 }: ProductsListComponentProps) {
+  const searchParams = useSearchParams();
+  const refreshParam = searchParams?.get('refresh');
+  
   // Estado local para cuando NO es standalone
   const [localSelectedFilters, setLocalSelectedFilters] = useState<string[]>(
     []
@@ -48,12 +53,13 @@ export default function ProductsListComponent({
     sortBy: "name" as const,
     categories: ["all"],
     status: "all" as const,
-    priceRange: { min: 0, max: 50 },
+    priceRange: { min: 0, max: 1000 },
   });
 
   // Estado compartido para productos y modal
   const [products, setProducts] = useState<Product[]>([]);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filters, setFilters] = useState(productsListFilters);
 
   const {
     filterState: contextFilterState,
@@ -182,7 +188,7 @@ export default function ProductsListComponent({
     }
 
     // Contar filtro de rango de precio (si no es el rango por defecto)
-    if (filterState.priceRange.min !== 0 || filterState.priceRange.max !== 50) {
+    if (filterState.priceRange.min !== 0 || filterState.priceRange.max !== 1000) {
       count += 1;
     }
 
@@ -204,13 +210,23 @@ export default function ProductsListComponent({
       );
       setProducts(filteredProducts);
 
+      // Actualizar contadores de filtros dinámicamente
+      const updatedFilters = productsListFilters.map((filter) => {
+        if (filter.id === 'all') {
+          return { ...filter, count: initialProducts.length };
+        }
+        const count = initialProducts.filter(p => p.categoryId === filter.id).length;
+        return { ...filter, count };
+      });
+      setFilters(updatedFilters);
+
       if (isStandalone) {
         setTotalProducts(initialProducts.length);
         setFilteredProducts(filteredProducts.length);
         setHasActiveFilters(activeFiltersCount > 0);
       }
     } catch (error) {
-      console.error("Error al cargar productos:", error);
+      // Error silencioso
     } finally {
       if (isStandalone) {
         setIsLoading(false);
@@ -329,7 +345,7 @@ export default function ProductsListComponent({
       sortBy: "name" as const,
       categories: ["all"],
       status: "all" as const,
-      priceRange: { min: 0, max: 50 },
+      priceRange: { min: 0, max: 1000 },
     };
 
     setFilterState(defaultFilters);
@@ -350,44 +366,42 @@ export default function ProductsListComponent({
     }
   };
 
-  // Cargar productos iniciales solo una vez al montar el componente
+  // Cargar productos iniciales y cuando cambia el refresh param
   useEffect(() => {
     loadInitialProducts();
-  }, [loadInitialProducts]);
+  }, [loadInitialProducts, refreshParam]);
 
-  // Si es standalone, usar el contenedor fijo (HeaderNav y filtros se renderizan desde AdminLayout)
+  // Si es standalone, usar el contenedor fijo (igual que charge)
   if (isStandalone) {
     return (
       <FixedHeaderContainer>
-        <div className={`${className}`}>
-          <div className="p-4">
-            {isLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500 mx-auto"></div>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Produkte werden geladen...
-                </p>
-              </div>
-            ) : products.length > 0 ? (
-              <div className="space-y-3">
-                {products.map((product) => (
-                  <ProductCardList
-                    key={product.id}
-                    product={product}
-                    onClick={onProductClick ? () => handleProductClick(product) : undefined}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">
-                  {searchQuery
-                    ? `Keine Produkte für "${searchQuery}" gefunden`
-                    : "Keine Produkte verfügbar"}
-                </p>
-              </div>
-            )}
-          </div>
+        <div className={`p-4 pb-32 lg:p-0 lg:pb-8 ${className}`}>
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-500 mx-auto"></div>
+              <p className="mt-4 text-base text-gray-500 font-medium">
+                Produkte werden geladen...
+              </p>
+            </div>
+          ) : products.length > 0 ? (
+            <div className="space-y-3">
+              {products.map((product) => (
+                <ProductCardList
+                  key={product.id}
+                  product={product}
+                  onClick={onProductClick ? () => handleProductClick(product) : undefined}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-base font-medium">
+                {searchQuery
+                  ? `Keine Produkte für "${searchQuery}" gefunden`
+                  : "Keine Produkte verfügbar"}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Modal de filtros */}
@@ -408,9 +422,9 @@ export default function ProductsListComponent({
       {/* Lista de productos con SCROLL PROPIO */}
       <div
         className={`${
-          isStandalone ? "" : `max-h-[${maxHeight}] overflow-y-auto`
+          !isStandalone && maxHeight !== "none" ? "overflow-y-auto" : ""
         }`}
-        style={!isStandalone ? { maxHeight } : {}}
+        style={!isStandalone && maxHeight !== "none" ? { maxHeight } : {}}
       >
         <div className="p-4">
           {isLoading ? (

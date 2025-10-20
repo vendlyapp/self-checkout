@@ -129,8 +129,6 @@ export default function Form({ isDesktop = false }: FormProps) {
         setCreatedProduct(frontendProduct);
         setShowSuccessModal(true);
       } catch (backendError) {
-        console.warn('Backend no disponible, creando producto localmente:', backendError);
-        
         // Fallback: crear producto localmente con datos mock
         const mockCreatedProduct: Product = {
           id: `mock-${Date.now()}`,
@@ -201,7 +199,8 @@ export default function Form({ isDesktop = false }: FormProps) {
   const handleModalClose = useCallback(() => {
     setShowSuccessModal(false);
     setCreatedProduct(null);
-    router.push("/products_list");
+    // Agregar timestamp para forzar refresh de la lista
+    router.push(`/products_list?refresh=${Date.now()}`);
   }, [router]);
 
   useEffect(() => {
