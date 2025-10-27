@@ -3,6 +3,7 @@
 import { supabase } from '@/lib/supabase/client'
 import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
+import { getAuthCallbackUrl } from '@/lib/utils/auth'
 
 export const GoogleLoginButton = () => {
   const [loading, setLoading] = useState(false)
@@ -14,7 +15,7 @@ export const GoogleLoginButton = () => {
       await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: getAuthCallbackUrl(),
         }
       })
     } catch (error) {
