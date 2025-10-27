@@ -12,7 +12,6 @@ const GreetingSection = ({
     isStoreOpen: globalStoreOpen, 
     toggleStore,
     isLoading,
-    error: storeError,
     fetchStoreStatus 
   } = useStoreState();
   const [currentTime, setCurrentTime] = useState<string>('');

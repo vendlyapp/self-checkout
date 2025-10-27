@@ -20,7 +20,6 @@ const UserLayout = ({ children }: UserLayoutProps) => {
   
   // Si la tienda está cerrada, ocultar navbar y footer
   const isStoreClosed = store?.isOpen === false;
-  const isStoreRoute = pathname?.startsWith('/store/');
 
   const containerBgClass = isScanRoute ? "bg-[#191F2D]" : "bg-background-cream";
   const headerBgClass = isScanRoute ? "bg-[#191F2D]" : "bg-white";
