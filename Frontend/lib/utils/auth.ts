@@ -10,10 +10,15 @@
 export const getSiteUrl = (): string => {
   // En el servidor (SSR), usar variable de entorno
   if (typeof window === 'undefined') {
+    // En producción (Vercel), usar variable de entorno o detectar automáticamente
+    if (process.env.VERCEL_URL) {
+      return `https://${process.env.VERCEL_URL}`;
+    }
     return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   }
 
   // En el cliente, preferir variable de entorno, pero usar window.location.origin como fallback
+  // IMPORTANTE: window.location.origin ya tiene el valor correcto (self-checkout-kappa.vercel.app)
   return process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
 };
 

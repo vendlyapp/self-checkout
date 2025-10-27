@@ -12,10 +12,17 @@ export const GoogleLoginButton = () => {
     setLoading(true)
     
     try {
+      // Obtener la URL de callback en el cliente para asegurar que sea dinámica
+      const callbackUrl = typeof window !== 'undefined' 
+        ? `${window.location.origin}/auth/callback`
+        : getAuthCallbackUrl();
+      
+      console.log('🔐 Starting OAuth with callback:', callbackUrl);
+      
       await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: getAuthCallbackUrl(),
+          redirectTo: callbackUrl,
         }
       })
     } catch (error) {
