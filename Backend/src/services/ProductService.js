@@ -1,5 +1,6 @@
 const { query } = require('../../lib/database');
 const qrCodeGenerator = require('../utils/qrCodeGenerator');
+const barcodeGenerator = require('../utils/barcodeGenerator');
 
 class ProductService {
 
@@ -92,15 +93,19 @@ class ProductService {
     const result = await query(insertQuery, values);
     const product = result.rows[0];
 
-    const qrCode = await qrCodeGenerator.generateQRCode(product.id, product.name);
+    // Generar QR code y código de barras
+    const [qrCode, barcodeImage] = await Promise.all([
+      qrCodeGenerator.generateQRCode(product.id, product.name),
+      barcodeGenerator.generateBarcode(product.id, product.name)
+    ]);
     
-    const updateQRQuery = 'UPDATE "Product" SET "qrCode" = $1 WHERE "id" = $2 RETURNING *';
-    const updatedResult = await query(updateQRQuery, [qrCode, product.id]);
-    const productWithQR = updatedResult.rows[0];
+    const updateCodesQuery = 'UPDATE "Product" SET "qrCode" = $1, "barcodeImage" = $2 WHERE "id" = $3 RETURNING *';
+    const updatedResult = await query(updateCodesQuery, [qrCode, barcodeImage, product.id]);
+    const productWithCodes = updatedResult.rows[0];
 
     return {
       success: true,
-      data: productWithQR,
+      data: productWithCodes,
       message: 'Producto creado exitosamente'
     };
   }

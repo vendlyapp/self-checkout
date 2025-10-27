@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { fetchProductById, deleteProduct } from '@/components/dashboard/products_list/data/mockProducts';
 import HeaderNav from '@/components/navigation/HeaderNav';
 import { Product } from '@/components/dashboard/products_list/data/mockProducts';
-import { Package, Edit, Trash2, Tag, AlertCircle, CheckCircle, Download, QrCode } from 'lucide-react';
+import { Package, Edit, Trash2, Tag, AlertCircle, CheckCircle, Download, QrCode, ScanLine } from 'lucide-react';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -79,6 +79,17 @@ export default function ViewProduct({ params }: PageProps) {
     const link = document.createElement('a');
     link.href = product.qrCode;
     link.download = `QR_${product.name.replace(/\s+/g, '_')}_${product.id}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDownloadBarcode = () => {
+    if (!product || !product.barcodeImage) return;
+    
+    const link = document.createElement('a');
+    link.href = product.barcodeImage;
+    link.download = `Barcode_${product.name.replace(/\s+/g, '_')}_${product.id}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -270,6 +281,34 @@ export default function ViewProduct({ params }: PageProps) {
               </div>
             )}
 
+            {product.barcodeImage && (
+              <div className="bg-white rounded-2xl p-5 border border-gray-200">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <ScanLine className="w-5 h-5 text-gray-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">Código de Barras</h3>
+                  </div>
+                  <button
+                    onClick={handleDownloadBarcode}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors text-sm font-medium"
+                  >
+                    <Download className="w-4 h-4" />
+                    Descargar
+                  </button>
+                </div>
+                <div className="flex flex-col items-center bg-gray-50 rounded-xl p-4">
+                  <img 
+                    src={product.barcodeImage} 
+                    alt={`Código de barras para ${product.name}`}
+                    className="w-full max-w-md h-auto rounded-lg shadow-sm bg-white p-4"
+                  />
+                  <p className="text-xs text-gray-500 mt-3 text-center">
+                    Escanea este código de barras para identificar el producto
+                  </p>
+                </div>
+              </div>
+            )}
+
             {product.notes && (
               <div className="bg-white rounded-2xl p-5 border border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Notizen</h3>
@@ -447,6 +486,36 @@ export default function ViewProduct({ params }: PageProps) {
                     />
                     <p className="text-sm text-gray-600 mt-4">
                       Escanea este código para identificar el producto
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {product.barcodeImage && (
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 mb-6 border border-gray-200">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <ScanLine className="w-6 h-6 text-brand-500" />
+                    <h3 className="text-lg font-semibold text-gray-900">Código de Barras del Producto</h3>
+                  </div>
+                  <button
+                    onClick={handleDownloadBarcode}
+                    className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors font-medium shadow-sm"
+                  >
+                    <Download className="w-4 h-4" />
+                    Descargar
+                  </button>
+                </div>
+                <div className="flex justify-center bg-white rounded-xl p-6 shadow-sm">
+                  <div className="text-center">
+                    <img 
+                      src={product.barcodeImage} 
+                      alt={`Código de barras para ${product.name}`}
+                      className="max-w-full h-auto mx-auto rounded-lg"
+                    />
+                    <p className="text-sm text-gray-600 mt-4">
+                      Escanea este código de barras para identificar el producto
                     </p>
                   </div>
                 </div>

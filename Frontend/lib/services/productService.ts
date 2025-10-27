@@ -19,6 +19,7 @@ export interface Product {
   barcode?: string;
   sku: string;
   qrCode?: string;
+  barcodeImage?: string;
   image?: string;
   images?: string[];
   isActive?: boolean;

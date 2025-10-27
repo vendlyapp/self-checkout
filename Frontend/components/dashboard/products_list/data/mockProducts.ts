@@ -12,6 +12,7 @@ export interface Product {
   barcode?: string
   sku: string
   qrCode?: string // Código QR generado automáticamente
+  barcodeImage?: string // Imagen del código de barras generado automáticamente
   tags: string[]
   isNew?: boolean
   isPopular?: boolean

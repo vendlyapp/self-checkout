@@ -1,4 +1,6 @@
 const { prisma } = require('../../lib/prisma_new');
+const qrCodeGenerator = require('../utils/qrCodeGenerator');
+const barcodeGenerator = require('../utils/barcodeGenerator');
 
 class ProductServiceNew {
 
@@ -96,9 +98,24 @@ class ProductServiceNew {
       data: dataToCreate
     });
 
+    // Generar QR code y código de barras
+    const [qrCode, barcodeImage] = await Promise.all([
+      qrCodeGenerator.generateQRCode(product.id, product.name),
+      barcodeGenerator.generateBarcode(product.id, product.name)
+    ]);
+
+    // Actualizar producto con QR code y código de barras
+    const updatedProduct = await prisma.product.update({
+      where: { id: product.id },
+      data: {
+        qrCode: qrCode,
+        barcodeImage: barcodeImage
+      }
+    });
+
     return {
       success: true,
-      data: product,
+      data: updatedProduct,
       message: 'Producto creado exitosamente'
     };
   }
