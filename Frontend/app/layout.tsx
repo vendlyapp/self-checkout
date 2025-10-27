@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
-import { AuthProvider } from "@/lib/auth/AuthContext";
+import { UserProvider } from "@/lib/contexts/UserContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -43,7 +43,7 @@ export default function RootLayout({
         <meta name="apple-touch-fullscreen" content="yes" />
       </head>
       <body className={`${inter.className} h-responsive antialiased tap-highlight-transparent`} suppressHydrationWarning>
-        <AuthProvider>
+        <UserProvider>
           {/* Container principal responsive */}
           <div className="h-responsive w-full relative bg-[#F2EDE8] overflow-hidden">
             {/* Contenedor interno responsive */}
@@ -63,7 +63,7 @@ export default function RootLayout({
               },
             }}
           />
-        </AuthProvider>
+        </UserProvider>
       </body>
     </html>
   );

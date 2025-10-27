@@ -94,6 +94,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         password
       });
 
+      if (data?.user && typeof window !== 'undefined') {
+        // Guardar role en localStorage si existe en metadata
+        const role = data.user.user_metadata?.role || 'ADMIN';
+        localStorage.setItem('userRole', role);
+      }
+
       return { data, error };
     } catch (error) {
       return { data: null, error: error as AuthError };
