@@ -128,8 +128,8 @@ const DashboardUser = () => {
         </div>
       </div>
 
-      {/* Contenedor de búsqueda y filtros */}
-      {store && (
+      {/* Contenedor de búsqueda y filtros - solo mostrar si la tienda está abierta */}
+      {store && store.isOpen !== false && (
         <div className="bg-background-cream">
           {/* Barra de búsqueda y botón QR */}
           <div className="p-4 flex gap-4 items-center justify-center bg-background-cream">
@@ -172,6 +172,34 @@ const DashboardUser = () => {
               <ScanBarcode className="w-5 h-5" />
               Jetzt scannen
             </button>
+          </div>
+        ) : store.isOpen === false ? (
+          // Tienda cerrada
+          <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-background-cream">
+            <div className="w-32 h-32 bg-orange-100 rounded-full flex items-center justify-center mb-6 animate-pulse">
+              <svg className="w-16 h-16 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">
+              Geschäft geschlossen
+            </h2>
+            <p className="text-gray-600 mb-2 text-lg max-w-md">
+              Entschuldigung, {store.name} ist zur Zeit geschlossen
+            </p>
+            <p className="text-gray-500 mb-8 text-sm max-w-md">
+              Bitte versuchen Sie es später erneut. Vielen Dank für Ihr Verständnis.
+            </p>
+            <div className="bg-gray-50 rounded-2xl p-6 max-w-md w-full">
+              <div className="flex items-center gap-3 text-gray-700">
+                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-sm">
+                  Wir sind derzeit nicht verfügbar
+                </span>
+              </div>
+            </div>
           </div>
         ) : products.length === 0 && !loading ? (
           // Tienda sin productos

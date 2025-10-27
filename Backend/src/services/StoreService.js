@@ -7,7 +7,7 @@ class StoreService {
    */
   async create(ownerId, storeData) {
     try {
-      const { name, logo } = storeData;
+      const { name, logo, isOpen } = storeData;
 
       if (!name || !name.trim()) {
         throw new Error('El nombre de la tienda es requerido');
@@ -40,8 +40,8 @@ class StoreService {
       // Crear tienda
       const insertQuery = `
         INSERT INTO "Store" (
-          "ownerId", "name", "slug", "logo", "isActive"
-        ) VALUES ($1, $2, $3, $4, $5)
+          "ownerId", "name", "slug", "logo", "isActive", "isOpen"
+        ) VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING *
       `;
 
@@ -50,7 +50,8 @@ class StoreService {
         name.trim(),
         slug,
         logo || null,
-        true
+        true,
+        isOpen !== undefined ? isOpen : true
       ]);
 
       const store = result.rows[0];
@@ -116,25 +117,72 @@ class StoreService {
   }
 
   /**
+   * Verificar si la tienda está abierta
+   */
+  async isStoreOpen(slug) {
+    try {
+      const result = await query(
+        'SELECT "isOpen" FROM "Store" WHERE "slug" = $1 AND "isActive" = true',
+        [slug]
+      );
+
+      if (result.rows.length === 0) {
+        return null;
+      }
+
+      return result.rows[0].isOpen;
+    } catch (error) {
+      console.error('Error checking if store is open:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Actualizar tienda
    */
   async update(ownerId, storeData) {
     try {
-      const { name, logo } = storeData;
+      const { name, logo, isOpen } = storeData;
+
+      // Construir query de actualización dinámicamente
+      const updateFields = [];
+      const values = [];
+      let paramCount = 0;
+
+      if (name !== undefined) {
+        paramCount++;
+        updateFields.push(`"name" = $${paramCount}`);
+        values.push(name);
+      }
+
+      if (logo !== undefined) {
+        paramCount++;
+        updateFields.push(`"logo" = $${paramCount}`);
+        values.push(logo);
+      }
+
+      if (isOpen !== undefined) {
+        paramCount++;
+        updateFields.push(`"isOpen" = $${paramCount}`);
+        values.push(isOpen);
+      }
+
+      if (updateFields.length === 0) {
+        throw new Error('No hay campos para actualizar');
+      }
+
+      // Agregar ownerId como último parámetro
+      paramCount++;
+      values.push(ownerId);
 
       const updateQuery = `
         UPDATE "Store" 
-        SET "name" = COALESCE($1, "name"),
-            "logo" = COALESCE($2, "logo")
-        WHERE "ownerId" = $3
+        SET ${updateFields.join(', ')}, "updatedAt" = CURRENT_TIMESTAMP
+        WHERE "ownerId" = $${paramCount}
         RETURNING *
       `;
 
-      const result = await query(updateQuery, [
-        name || null,
-        logo || null,
-        ownerId
-      ]);
+      const result = await query(updateQuery, values);
 
       if (result.rows.length === 0) {
         throw new Error('Tienda no encontrada');
@@ -146,6 +194,37 @@ class StoreService {
       };
     } catch (error) {
       console.error('Error updating store:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Actualiza el estado de apertura de la tienda
+   * @param {string} ownerId - ID del propietario
+   * @param {boolean} isOpen - Estado de apertura
+   */
+  async updateStoreStatus(ownerId, isOpen) {
+    try {
+      const updateQuery = `
+        UPDATE "Store" 
+        SET "isOpen" = $1, "updatedAt" = CURRENT_TIMESTAMP
+        WHERE "ownerId" = $2
+        RETURNING *
+      `;
+
+      const result = await query(updateQuery, [isOpen, ownerId]);
+
+      if (result.rows.length === 0) {
+        throw new Error('Tienda no encontrada');
+      }
+
+      return {
+        success: true,
+        data: result.rows[0],
+        message: isOpen ? 'Tienda abierta' : 'Tienda cerrada'
+      };
+    } catch (error) {
+      console.error('Error updating store status:', error);
       throw error;
     }
   }

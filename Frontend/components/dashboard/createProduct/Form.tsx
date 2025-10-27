@@ -2,6 +2,8 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
+import { CheckCircle } from "lucide-react";
 import MobileForm from "./MobileForm";
 import DesktopForm from "./DesktopForm";
 import { FormProps, CreatedProduct, ProductVariant, FormErrors } from "./types";
@@ -203,12 +205,87 @@ export default function Form({ isDesktop = false }: FormProps) {
     router.push(`/products_list?refresh=${Date.now()}`);
   }, [router]);
 
+  // Función para renderizar el modal fuera del árbol DOM normal
+  const renderSuccessModal = () => {
+    if (typeof window === 'undefined') return null;
+    
+    const modalContent = (
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center overflow-hidden">
+        {/* Backdrop con blur moderno - cubre toda la pantalla */}
+        <div className="absolute inset-0 w-screen h-screen bg-black/30 backdrop-blur-md"></div>
+        
+        {/* Modal moderno con animación */}
+        <div className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full mx-4 animate-in fade-in-0 zoom-in-95 duration-300">
+          {/* Gradiente superior */}
+          <div className="bg-gradient-to-br from-[#25D076] to-[#20BA68] rounded-t-3xl p-8 text-center">
+            <div className="w-20 h-20 bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <CheckCircle className="w-10 h-10 text-white" strokeWidth={3} />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-2">
+              ¡Éxito!
+            </h3>
+          </div>
+
+          {/* Contenido del modal */}
+          <div className="p-6">
+            <p className="text-gray-700 mb-6 text-center text-base">
+              Su producto <span className="font-semibold text-gray-900">&quot;{createdProduct?.name}&quot;</span> ha sido creado exitosamente
+            </p>
+
+            {/* Tarjeta de información */}
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 mb-6 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-600">ID del Producto:</span>
+                <span className="text-sm text-gray-900 font-mono font-semibold bg-white/70 px-3 py-1 rounded-lg">
+                  {createdProduct?.id}
+                </span>
+              </div>
+            </div>
+
+            {/* Botón principal */}
+            <button
+              onClick={handleModalClose}
+              className="w-full bg-gradient-to-r from-[#25D076] to-[#20BA68] text-white py-4 px-6 rounded-2xl font-semibold hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 text-base flex items-center justify-center gap-2"
+            >
+              <CheckCircle className="w-5 h-5" />
+              Ir al Catálogo
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+
+    return createPortal(modalContent, document.body);
+  };
+
   useEffect(() => {
     interface WindowWithSaveProduct extends Window {
       saveProduct?: () => Promise<void>;
     }
     (window as WindowWithSaveProduct).saveProduct = handleSave;
   }, [handleSave]);
+
+  // Prevenir scroll del body cuando el modal está abierto
+  useEffect(() => {
+    if (showSuccessModal) {
+      // Prevenir scroll
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+    } else {
+      // Restaurar scroll
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    }
+
+    // Cleanup
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    };
+  }, [showSuccessModal]);
   const sharedProps = {
     productName,
     setProductName,
@@ -239,8 +316,8 @@ export default function Form({ isDesktop = false }: FormProps) {
     setVatRate,
     errors,
     saveProgress,
-    showSuccessModal,
-    createdProduct,
+    showSuccessModal: false, // No mostrar modal en los componentes hijos
+    createdProduct: null,
     handleModalClose,
     validateField: handleValidateField,
     addVariant,
@@ -252,12 +329,17 @@ export default function Form({ isDesktop = false }: FormProps) {
   };
 
   return (
-    <div className="w-full">
-      {isDesktop ? (
-        <DesktopForm {...sharedProps} />
-      ) : (
-        <MobileForm {...sharedProps} />
-      )}
-    </div>
+    <>
+      <div className="w-full">
+        {isDesktop ? (
+          <DesktopForm {...sharedProps} />
+        ) : (
+          <MobileForm {...sharedProps} />
+        )}
+      </div>
+      
+      {/* Modal renderizado fuera del árbol DOM usando Portal */}
+      {showSuccessModal && renderSuccessModal()}
+    </>
   );
 }

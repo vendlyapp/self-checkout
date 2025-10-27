@@ -20,7 +20,16 @@ export default function StoreProductsPage() {
         const result = await response.json()
         
         if (result.success) {
-          setStore(result.data)
+          // Guardar información completa de la tienda incluyendo isOpen
+          const storeData = {
+            id: result.data.id,
+            name: result.data.name,
+            slug: result.data.slug,
+            logo: result.data.logo,
+            isOpen: result.data.isOpen, // Agregar estado isOpen
+            isActive: result.data.isActive, // También guardar isActive
+          }
+          setStore(storeData)
           setCurrentStore(slug) // Cambiar al carrito de esta tienda
         }
       } catch (error) {
