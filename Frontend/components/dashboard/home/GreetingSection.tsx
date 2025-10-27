@@ -8,9 +8,20 @@ import type { GreetingSectionProps } from '../types';
 const GreetingSection = ({
   onToggleStore
 }: GreetingSectionProps) => {
-  const { isStoreOpen: globalStoreOpen, toggleStore } = useStoreState();
+  const { 
+    isStoreOpen: globalStoreOpen, 
+    toggleStore,
+    isLoading,
+    error: storeError,
+    fetchStoreStatus 
+  } = useStoreState();
   const [currentTime, setCurrentTime] = useState<string>('');
   const [weather, setWeather] = useState<string>('');
+
+  // Fetch store status when component mounts
+  useEffect(() => {
+    fetchStoreStatus();
+  }, [fetchStoreStatus]);
 
   // Update time every second
   useEffect(() => {
@@ -62,14 +73,16 @@ const GreetingSection = ({
           {/* Store Status Toggle with text inside */}
           <div className="flex items-center gap-2 ml-4">
             <button
-              onClick={() => {
-                toggleStore();
-                onToggleStore(); // Mantener compatibilidad con props
+              onClick={async () => {
+                await toggleStore();
+                onToggleStore?.(); // Mantener compatibilidad con props
               }}
+              disabled={isLoading}
               className={`
                 relative inline-flex h-8 items-center rounded-full
                 transition-all duration-200 ease-in-out
                 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2
+                disabled:opacity-50 disabled:cursor-not-allowed
                 ${globalStoreOpen ? 'bg-brand-500' : 'bg-gray-300'}
               `}
               style={{
@@ -156,14 +169,16 @@ const GreetingSection = ({
             <div className="flex items-center gap-3">
               <span className="text-sm text-gray-600">Geschäft:</span>
               <button
-                onClick={() => {
-                  toggleStore();
-                  onToggleStore();
+                onClick={async () => {
+                  await toggleStore();
+                  onToggleStore?.();
                 }}
+                disabled={isLoading}
                 className={`
                   relative inline-flex h-8 items-center rounded-full
                   transition-all duration-200 ease-in-out
                   focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2
+                  disabled:opacity-50 disabled:cursor-not-allowed
                   ${globalStoreOpen ? 'bg-brand-500' : 'bg-gray-300'}
                 `}
                 style={{

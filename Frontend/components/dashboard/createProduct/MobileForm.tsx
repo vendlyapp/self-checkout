@@ -57,33 +57,45 @@ export default function MobileForm(props: SharedFormProps) {
     <div className="block mx-auto lg:m-10 ml-5 mr-5 bg-background-cream min-h-screen pt-4 pb-24">
       {/* Success Modal */}
       {showSuccessModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 text-center">
-            <div className="w-16 h-16 bg-[#25D076] rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-white" />
-            </div>
-
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Produkt erfolgreich erstellt!
-            </h3>
-
-            <p className="text-gray-600 mb-6">
-              Ihr Produkt &quot;{createdProduct?.name}&quot; wurde erfolgreich zum Katalog hinzugefügt.
-            </p>
-
-            <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Produkt-ID:</span>
-                <span className="text-sm text-gray-900 font-mono">{createdProduct?.id}</span>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden">
+          {/* Backdrop con blur moderno - cubre toda la pantalla */}
+          <div className="absolute inset-0 w-full h-full bg-black/30 backdrop-blur-md"></div>
+          
+          {/* Modal moderno con animación */}
+          <div className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full mx-4 animate-in fade-in-0 zoom-in-95 duration-300">
+            {/* Gradiente superior */}
+            <div className="bg-gradient-to-br from-[#25D076] to-[#20BA68] rounded-t-3xl p-8 text-center">
+              <div className="w-20 h-20 bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <CheckCircle className="w-10 h-10 text-white" strokeWidth={3} />
               </div>
+              <h3 className="text-2xl font-bold text-white mb-2">
+                ¡Éxito!
+              </h3>
             </div>
 
-            <div className="flex space-x-3">
+            {/* Contenido del modal */}
+            <div className="p-6">
+              <p className="text-gray-700 mb-6 text-center text-base">
+                Su producto <span className="font-semibold text-gray-900">&quot;{createdProduct?.name}&quot;</span> ha sido creado exitosamente
+              </p>
+
+              {/* Tarjeta de información */}
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 mb-6 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-600">ID del Producto:</span>
+                  <span className="text-sm text-gray-900 font-mono font-semibold bg-white/70 px-3 py-1 rounded-lg">
+                    {createdProduct?.id}
+                  </span>
+                </div>
+              </div>
+
+              {/* Botón principal */}
               <button
                 onClick={handleModalClose}
-                className="flex-1 bg-[#25D076] text-white py-3 px-4 rounded-lg font-medium hover:bg-[#25D076]/90 transition-colors"
+                className="w-full bg-gradient-to-r from-[#25D076] to-[#20BA68] text-white py-4 px-6 rounded-2xl font-semibold hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 text-base flex items-center justify-center gap-2"
               >
-                Zum Produktkatalog
+                <CheckCircle className="w-5 h-5" />
+                Ir al Catálogo
               </button>
             </div>
           </div>

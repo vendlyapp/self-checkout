@@ -57,33 +57,45 @@ export default function DesktopForm(props: SharedFormProps) {
     <div className="max-w-6xl mx-auto p-8">
       {/* Success Modal */}
       {showSuccessModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 text-center">
-            <div className="w-20 h-20 bg-[#25D076] rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="w-10 h-10 text-white" />
-            </div>
-
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">
-              Produkt erfolgreich erstellt!
-            </h3>
-
-            <p className="text-gray-600 mb-8 text-lg">
-              Ihr Produkt &quot;{createdProduct?.name}&quot; wurde erfolgreich zum Katalog hinzugefügt.
-            </p>
-
-            <div className="bg-gray-50 rounded-lg p-6 mb-8 text-left">
-              <div className="flex items-center justify-between">
-                <span className="text-base font-medium text-gray-700">Produkt-ID:</span>
-                <span className="text-base text-gray-900 font-mono">{createdProduct?.id}</span>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden">
+          {/* Backdrop con blur moderno - cubre toda la pantalla */}
+          <div className="absolute inset-0 w-full h-full bg-black/30 backdrop-blur-md"></div>
+          
+          {/* Modal moderno con animación */}
+          <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4 animate-in fade-in-0 zoom-in-95 duration-300">
+            {/* Gradiente superior */}
+            <div className="bg-gradient-to-br from-[#25D076] to-[#20BA68] rounded-t-3xl p-10 text-center">
+              <div className="w-24 h-24 bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center mx-auto mb-5 shadow-lg">
+                <CheckCircle className="w-12 h-12 text-white" strokeWidth={3} />
               </div>
+              <h3 className="text-3xl font-bold text-white mb-2">
+                ¡Éxito!
+              </h3>
             </div>
 
-            <div className="flex space-x-4">
+            {/* Contenido del modal */}
+            <div className="p-8">
+              <p className="text-gray-700 mb-8 text-center text-lg">
+                Su producto <span className="font-semibold text-gray-900">&quot;{createdProduct?.name}&quot;</span> ha sido creado exitosamente
+              </p>
+
+              {/* Tarjeta de información */}
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 mb-8 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-base font-medium text-gray-600">ID del Producto:</span>
+                  <span className="text-base text-gray-900 font-mono font-semibold bg-white/70 px-4 py-2 rounded-lg">
+                    {createdProduct?.id}
+                  </span>
+                </div>
+              </div>
+
+              {/* Botón principal */}
               <button
                 onClick={handleModalClose}
-                className="flex-1 bg-[#25D076] text-white py-4 px-6 rounded-lg font-medium hover:bg-[#25D076]/90 transition-colors text-lg"
+                className="w-full bg-gradient-to-r from-[#25D076] to-[#20BA68] text-white py-5 px-8 rounded-2xl font-semibold hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 text-lg flex items-center justify-center gap-2"
               >
-                Zum Produktkatalog
+                <CheckCircle className="w-6 h-6" />
+                Ir al Catálogo
               </button>
             </div>
           </div>

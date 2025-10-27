@@ -6,6 +6,8 @@ interface StoreInfo {
   name: string
   slug: string
   logo: string | null
+  isOpen?: boolean
+  isActive?: boolean
 }
 
 interface ScannedStoreState {
