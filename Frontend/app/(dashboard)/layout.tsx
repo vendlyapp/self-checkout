@@ -3,14 +3,14 @@
 
 import { ReactNode } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { AuthGuard } from "@/lib/guards/AuthGuard";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <ProtectedRoute requireAuth={true}>
+    <AuthGuard allowedRoles={['ADMIN', 'CUSTOMER']}>
       <AdminLayout>
         {children}
       </AdminLayout>
-    </ProtectedRoute>
+    </AuthGuard>
   );
 }

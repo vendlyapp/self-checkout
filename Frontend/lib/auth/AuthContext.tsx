@@ -94,6 +94,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         password
       });
 
+      if (data?.user && typeof window !== 'undefined') {
+        // Guardar role en localStorage si existe en metadata
+        const role = data.user.user_metadata?.role || 'ADMIN';
+        localStorage.setItem('userRole', role);
+      }
+
       return { data, error };
     } catch (error) {
       return { data: null, error: error as AuthError };
@@ -111,16 +117,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       // Limpiar localStorage y sessionStorage
       if (typeof window !== 'undefined') {
-        // Limpiar tokens de Supabase
+        // Limpiar tokens y datos específicos
         localStorage.removeItem('vendly-auth-token');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userEmail');
         sessionStorage.clear();
         
         // Limpiar cookies de Supabase si existen
         const cookies = document.cookie.split(';');
         cookies.forEach(cookie => {
           const [name] = cookie.split('=');
-          if (name.trim().startsWith('sb-')) {
-            document.cookie = `${name.trim()}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+          const trimmedName = name.trim();
+          if (trimmedName.startsWith('sb-') || trimmedName.startsWith('supabase.')) {
+            document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+            document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
           }
         });
       }

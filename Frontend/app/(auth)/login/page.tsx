@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/lib/auth/AuthContext';
+import { supabase } from '@/lib/supabase/client';
 import { LogIn, Mail, Lock, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -12,34 +12,127 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get('returnUrl') || '/dashboard';
-  const { signIn, isAuthenticated, loading: authLoading } = useAuth();
+  // Estado de autenticación local
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // Verificar si ya está autenticado
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+      setAuthLoading(false);
+    });
+  }, []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [checkingRole, setCheckingRole] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   // Redirigir si ya está logueado
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      router.push(returnUrl);
+      const userRole = localStorage.getItem('userRole') || 'ADMIN';
+      if (userRole === 'SUPER_ADMIN') {
+        router.push('/super-admin/dashboard');
+      } else {
+        router.push(returnUrl);
+      }
     }
   }, [isAuthenticated, authLoading, router, returnUrl]);
 
   // Mostrar loading mientras verifica autenticación
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-brand-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Wird geladen...</p>
+      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-brand-50 via-background-cream to-brand-100">
+        <div className="flex flex-col items-center justify-center space-y-6">
+          {/* Spinner minimalista y elegante */}
+          <div className="relative w-14 h-14">
+            {/* Glow suave */}
+            <div className="absolute inset-0 rounded-full bg-[#25d076] opacity-10 blur-2xl animate-pulse"></div>
+            
+            {/* Círculo exterior sutil */}
+            <div className="absolute inset-0 rounded-full border-[3px] border-gray-100"></div>
+            
+            {/* Círculo animado con gradiente verde elegante */}
+            <div 
+              className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-[#25d076] border-r-[#25d076] border-b-transparent animate-spin"
+              style={{ 
+                animation: 'spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+                filter: 'drop-shadow(0 0 8px rgba(37, 208, 118, 0.3))'
+              }}
+            ></div>
+            
+            {/* Punto central minimalista */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-[#25d076] rounded-full"></div>
+          </div>
+          
+          {/* Texto elegante */}
+          <div className="flex flex-col items-center space-y-3">
+            <p className="text-gray-600 font-light text-sm tracking-wide">Wird geladen...</p>
+            <div className="flex items-center justify-center gap-1.5">
+              <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0s', animationDuration: '1.4s' }}></div>
+              <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0.2s', animationDuration: '1.4s' }}></div>
+              <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0.4s', animationDuration: '1.4s' }}></div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   // No mostrar nada si ya está autenticado (evitar flash)
-  if (isAuthenticated) {
+  if (isAuthenticated && !checkingRole) {
     return null;
+  }
+
+  // Mostrar loader mientras se verifica el rol
+  if (checkingRole) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-brand-50 via-background-cream to-brand-100">
+        <div className="flex flex-col items-center justify-center space-y-8">
+          {/* Icono minimalista */}
+          <div className="w-12 h-12 bg-gradient-to-br from-[#25d076] to-[#22c57f] rounded-xl flex items-center justify-center shadow-md shadow-[#25d076]/20">
+            <LogIn className="w-6 h-6 text-white" strokeWidth={2} />
+          </div>
+          
+          {/* Spinner minimalista y elegante */}
+          <div className="relative w-14 h-14">
+            {/* Glow suave */}
+            <div className="absolute inset-0 rounded-full bg-[#25d076] opacity-10 blur-2xl animate-pulse"></div>
+            
+            {/* Círculo exterior sutil */}
+            <div className="absolute inset-0 rounded-full border-[3px] border-gray-100"></div>
+            
+            {/* Círculo animado con gradiente verde elegante */}
+            <div 
+              className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-[#25d076] border-r-[#25d076] border-b-transparent animate-spin"
+              style={{ 
+                animation: 'spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+                filter: 'drop-shadow(0 0 8px rgba(37, 208, 118, 0.3))'
+              }}
+            ></div>
+            
+            {/* Punto central minimalista */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-[#25d076] rounded-full"></div>
+          </div>
+          
+          {/* Texto elegante */}
+          <div className="flex flex-col items-center space-y-3">
+            <p className="text-gray-700 font-light text-base tracking-wide">Verificando tu rol...</p>
+            <p className="text-gray-500 font-light text-xs tracking-wide">
+              {userRole === 'SUPER_ADMIN' ? 'Accediendo como Super Admin' : 'Iniciando sesión'}
+            </p>
+            <div className="flex items-center justify-center gap-1.5 pt-1">
+              <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0s', animationDuration: '1.4s' }}></div>
+              <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0.2s', animationDuration: '1.4s' }}></div>
+              <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0.4s', animationDuration: '1.4s' }}></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,7 +141,10 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      const { data, error: signInError } = await signIn(email, password);
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
       if (signInError) {
         setError(signInError.message || 'Error al iniciar sesión');
@@ -57,10 +153,58 @@ function LoginForm() {
       }
 
       if (data?.user) {
-        toast.success('¡Bienvenido de nuevo!');
-        router.push(returnUrl);
+        setLoading(false);
+        setCheckingRole(true);
+        
+        // Obtener el rol del usuario
+        let detectedRole = 'ADMIN';
+        const token = data.session?.access_token;
+        
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/profile`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (response.ok) {
+            const profileData = await response.json();
+            detectedRole = profileData.data?.user?.role || profileData.data?.role || 'ADMIN';
+            console.log('✅ Rol obtenido desde API:', detectedRole);
+          } else {
+            console.warn('⚠️ No se pudo obtener el perfil, usando metadata');
+            detectedRole = data.user.user_metadata?.role || 'ADMIN';
+          }
+        } catch (err) {
+          console.error('Error obteniendo perfilnelles:', err);
+          detectedRole = data.user.user_metadata?.role || 'ADMIN';
+        }
+        
+        setUserRole(detectedRole);
+        
+        // Esperar al menos 1 segundo para mostrar el loader
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Guardar en localStorage
+        localStorage.setItem('userRole', detectedRole);
+        console.log('💾 Rol guardado en localStorage:', detectedRole);
+        
+        // Redireccionar según el rol
+        if (detectedRole === 'SUPER_ADMIN') {
+          console.log('🚀 Redirigiendo a SUPER_ADMIN dashboard');
+          toast.success('¡Bienvenido Super Admin!');
+          router.push('/super-admin/dashboard');
+        } else {
+          console.log('🚀 Redirigiendo a dashboard regular');
+          toast.success('¡Bienvenido de nuevo!');
+            router.push(returnUrl);
+        }
+      } else {
+        setError('Error al iniciar sesión');
+        toast.error('Error al iniciar sesión');
       }
-    } catch {
+    } catch (error) {
+      console.error('Error:', error);
       setError('Error inesperado al iniciar sesión');
       toast.error('Error inesperado');
     } finally {
@@ -229,8 +373,36 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 via-background-cream to-brand-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
+      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-brand-50 via-background-cream to-brand-100">
+        <div className="flex flex-col items-center justify-center space-y-6">
+          {/* Spinner minimalista y elegante */}
+          <div className="relative w-14 h-14">
+            {/* Glow suave */}
+            <div className="absolute inset-0 rounded-full bg-[#25d076] opacity-10 blur-2xl animate-pulse"></div>
+            
+            {/* Círculo exterior sutil */}
+            <div className="absolute inset-0 rounded-full border-[3px] border-gray-100"></div>
+            
+            {/* Círculo animado con gradiente verde elegante */}
+            <div 
+              className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-[#25d076] border-r-[#25d076] border-b-transparent animate-spin"
+              style={{ 
+                animation: 'spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+                filter: 'drop-shadow(0 0 8px rgba(37, 208, 118, 0.3))'
+              }}
+            ></div>
+            
+            {/* Punto central minimalista */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-[#25d076] rounded-full"></div>
+          </div>
+          
+          {/* Indicadores minimalistas */}
+          <div className="flex items-center justify-center gap-1.5">
+            <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0s', animationDuration: '1.4s' }}></div>
+            <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0.2s', animationDuration: '1.4s' }}></div>
+            <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0.4s', animationDuration: '1.4s' }}></div>
+          </div>
+        </div>
       </div>
     }>
       <LoginForm />

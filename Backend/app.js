@@ -13,6 +13,7 @@ const productsRoutes = require("./src/routes/productRoutes");
 const categoriesRoutes = require("./src/routes/categoryRoutes");
 const ordersRoutes = require("./src/routes/orderRoutes");
 const storeRoutes = require("./src/routes/storeRoutes");
+const superAdminRoutes = require("./src/routes/superAdminRoutes");
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use("/api/products", productsRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/orders", ordersRoutes);
 app.use("/api/store", storeRoutes);
+app.use("/api/super-admin", superAdminRoutes);
 
 /**
  * @swagger

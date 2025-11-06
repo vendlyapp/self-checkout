@@ -28,10 +28,6 @@ export {
 // Skeleton loaders (organized by sections)
 export * from './skeletons';
 
-// Legacy component (deprecated) - uses new analytics dashboard
-export { default as TIenda } from './sale/SalesMain';
-
-// Analytics types (avoiding conflicts)
 export type {
   AnalyticsData,
   TimePeriod,
@@ -43,5 +39,4 @@ export type {
   QuickAccessItem as AnalyticsQuickAccessItem
 } from './analytics';
 
-// Dashboard types
 export * from './types';
