@@ -32,20 +32,20 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
       
       if (response.success && response.data) {
         setStoreData(response.data);
-        setStoreName(response.data.name || store.name);
-        setStoreLogo(response.data.logo || store.logo || '');
+        setStoreName(response.data.name || store?.name || '');
+        setStoreLogo(response.data.logo || store?.logo || '');
       } else {
         // Fallback to passed store data
         setStoreData(store);
-        setStoreName(store.name);
-        setStoreLogo(store.logo || '');
+        setStoreName(store?.name || '');
+        setStoreLogo(store?.logo || '');
       }
     } catch (error) {
       console.error('Error loading store details:', error);
       // Fallback to passed store data
       setStoreData(store);
-      setStoreName(store.name);
-      setStoreLogo(store.logo || '');
+      setStoreName(store?.name || '');
+      setStoreLogo(store?.logo || '');
       toast.error('Error al cargar los detalles de la tienda');
     } finally {
       setLoading(false);
@@ -83,14 +83,14 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
     
     const link = document.createElement('a');
     link.href = storeData.qrCode;
-    link.download = `qr-${storeData.slug || store.slug}.png`;
+    link.download = `qr-${storeData.slug || store?.slug || 'store'}.png`;
     link.click();
     toast.success('QR descargado');
   };
 
   const getStoreUrl = () => {
     if (typeof window === 'undefined') return '';
-    return `${window.location.origin}/store/${storeData?.slug || store.slug}`;
+    return `${window.location.origin}/store/${storeData?.slug || store?.slug || ''}`;
   };
 
   const copyStoreUrl = () => {
@@ -105,8 +105,8 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
     if (navigator.share) {
       try {
         await navigator.share({
-          title: storeData?.name || store.name,
-          text: `Visita ${storeData?.name || store.name}`,
+          title: storeData?.name || store?.name || 'Store',
+          text: `Visita ${storeData?.name || store?.name || 'Store'}`,
           url: url
         });
       } catch {
@@ -130,6 +130,18 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
   }
 
   const displayStore = storeData || store;
+  
+  if (!displayStore) {
+    return (
+      <Card className="bg-card rounded-2xl border border-border/50">
+        <CardContent className="p-8">
+          <div className="flex items-center justify-center">
+            <p className="text-muted-foreground">No se encontró información de la tienda</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
