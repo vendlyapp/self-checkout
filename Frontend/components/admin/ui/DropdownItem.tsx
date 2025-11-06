@@ -17,7 +17,7 @@ export const DropdownItem: React.FC<DropdownItemProps> = ({
   href,
   tag = "div",
 }) => {
-  const baseClassName = `block ${className}`;
+  const baseClassName = `block cursor-pointer ${className}`;
 
   if (tag === "a" && href) {
     return (

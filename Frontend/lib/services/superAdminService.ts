@@ -29,6 +29,7 @@ export interface Store {
   name: string;
   slug: string;
   logo: string | null;
+  qrCode: string | null;
   isActive: boolean;
   isOpen: boolean;
   createdAt: string;
@@ -175,6 +176,17 @@ export class SuperAdminService {
   }
 
   /**
+   * Update store information
+   */
+  static async updateStore(storeId: string, storeData: { name?: string; slug?: string; logo?: string | null; isActive?: boolean; isOpen?: boolean }): Promise<ApiResponse<Store>> {
+    const url = `${API_CONFIG.BASE_URL}/api/super-admin/stores/${storeId}`;
+    return makeRequest<Store>(url, {
+      method: 'PUT',
+      body: JSON.stringify(storeData),
+    });
+  }
+
+  /**
    * Get all products grouped by store
    */
   static async getAllProducts(params?: {
@@ -191,5 +203,28 @@ export class SuperAdminService {
 
     const url = `${API_CONFIG.BASE_URL}/api/super-admin/products${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     return makeRequest<Product[]>(url);
+  }
+
+  /**
+   * Get store analytics data
+   */
+  static async getStoreAnalytics(storeId: string): Promise<ApiResponse<Record<string, unknown>>> {
+    const url = `${API_CONFIG.BASE_URL}/api/super-admin/stores/${storeId}/analytics`;
+    return makeRequest<Record<string, unknown>>(url);
+  }
+
+  /**
+   * Get store orders
+   */
+  static async getStoreOrders(storeId: string, params?: {
+    limit?: number;
+    offset?: number;
+  }): Promise<ApiResponse<unknown[]>> {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.offset) queryParams.append('offset', params.offset.toString());
+
+    const url = `${API_CONFIG.BASE_URL}/api/super-admin/stores/${storeId}/orders${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    return makeRequest<unknown[]>(url);
   }
 }

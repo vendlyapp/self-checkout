@@ -44,11 +44,12 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUserProfile = async (userId: string): Promise<void> => {
+  const fetchUserProfile = async (): Promise<void> => {
     try {
+      const session = await supabase.auth.getSession();
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/profile`, {
         headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          'Authorization': `Bearer ${session.data.session?.access_token}`
         }
       });
 
@@ -72,7 +73,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
 
   const refreshProfile = async (): Promise<void> => {
     if (user?.id) {
-      await fetchUserProfile(user.id);
+      await fetchUserProfile();
     }
   };
 
@@ -83,7 +84,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
         
         if (session?.user) {
           setUser(session.user);
-          await fetchUserProfile(session.user.id);
+          await fetchUserProfile();
         }
       } catch (error) {
         console.error('Error initializing user:', error);
@@ -98,7 +99,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       async (event, session) => {
         if (session?.user) {
           setUser(session.user);
-          await fetchUserProfile(session.user.id);
+          await fetchUserProfile();
         } else {
           setUser(null);
           setProfile(null);
@@ -114,17 +115,42 @@ export const UserProvider = ({ children }: UserProviderProps) => {
 
   const signOut = async () => {
     try {
+      // Cerrar sesión en Supabase
       await supabase.auth.signOut();
+      
+      // Limpiar estados
       setUser(null);
       setProfile(null);
       
-      // Clean localStorage
+      // Limpiar localStorage y sessionStorage
+      if (typeof window !== 'undefined') {
+        // Limpiar datos específicos
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('vendly-auth-token');
+        sessionStorage.clear();
+        
+        // Limpiar cookies de Supabase
+        const cookies = document.cookie.split(';');
+        cookies.forEach(cookie => {
+          const [name] = cookie.split('=');
+          const trimmedName = name.trim();
+          if (trimmedName.startsWith('sb-') || trimmedName.startsWith('supabase.')) {
+            document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+            document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error signing out:', error);
+      // Limpiar de todas formas
+      setUser(null);
+      setProfile(null);
       if (typeof window !== 'undefined') {
         localStorage.clear();
         sessionStorage.clear();
       }
-    } catch (error) {
-      console.error('Error signing out:', error);
     }
   };
 

@@ -138,11 +138,11 @@ const AppSidebar: React.FC = () => {
                 <span className="menu-item-text">{nav.name}</span>
               )}
               {(isExpanded || isHovered || isMobileOpen) && (
-                <ChevronDown
+                  <ChevronDown
                   className={`ml-auto w-5 h-5 transition-transform duration-200 ${
                     openSubmenu?.type === "main" &&
                     openSubmenu?.index === index
-                      ? "rotate-180 text-purple-600"
+                      ? "rotate-180 text-brand-600"
                       : ""
                   }`}
                 />
@@ -154,7 +154,7 @@ const AppSidebar: React.FC = () => {
                 href={nav.path}
                 className={`menu-item group ${
                   isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
-                }`}
+                } cursor-pointer`}
               >
                 <span
                   className={`${
@@ -193,7 +193,7 @@ const AppSidebar: React.FC = () => {
                         isActive(subItem.path)
                           ? "menu-dropdown-item-active"
                           : "menu-dropdown-item-inactive"
-                      }`}
+                      } cursor-pointer`}
                     >
                       {subItem.name}
                     </Link>
@@ -223,25 +223,18 @@ const AppSidebar: React.FC = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`py-8 flex ${
+        className={`py-6 flex ${
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
         }`}
       >
-        <Link href="/super-admin/dashboard">
-          {(isExpanded || isHovered || isMobileOpen) ? (
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                <Settings className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">Super Admin</h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Vendly Platform</p>
-              </div>
-            </div>
-          ) : (
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-              <Settings className="w-6 h-6 text-white" />
-            </div>
+        <Link href="/super-admin/dashboard" className="flex items-center cursor-pointer">
+          <div className="w-10 h-10 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center shadow-sm">
+            <Settings className="w-6 h-6 text-white" />
+          </div>
+          {(isExpanded || isHovered || isMobileOpen) && (
+            <span className="ml-3 text-sm font-semibold text-gray-900 dark:text-white">
+              Vendly
+            </span>
           )}
         </Link>
       </div>
@@ -249,19 +242,6 @@ const AppSidebar: React.FC = () => {
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
             <div>
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Menu"
-                ) : (
-                  <span className="w-4 h-4">...</span>
-                )}
-              </h2>
               {renderMenuItems()}
             </div>
           </div>

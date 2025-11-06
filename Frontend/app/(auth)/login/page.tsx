@@ -45,10 +45,38 @@ function LoginForm() {
   // Mostrar loading mientras verifica autenticación
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-brand-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Wird geladen...</p>
+      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-brand-50 via-background-cream to-brand-100">
+        <div className="flex flex-col items-center justify-center space-y-6">
+          {/* Spinner minimalista y elegante */}
+          <div className="relative w-14 h-14">
+            {/* Glow suave */}
+            <div className="absolute inset-0 rounded-full bg-[#25d076] opacity-10 blur-2xl animate-pulse"></div>
+            
+            {/* Círculo exterior sutil */}
+            <div className="absolute inset-0 rounded-full border-[3px] border-gray-100"></div>
+            
+            {/* Círculo animado con gradiente verde elegante */}
+            <div 
+              className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-[#25d076] border-r-[#25d076] border-b-transparent animate-spin"
+              style={{ 
+                animation: 'spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+                filter: 'drop-shadow(0 0 8px rgba(37, 208, 118, 0.3))'
+              }}
+            ></div>
+            
+            {/* Punto central minimalista */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-[#25d076] rounded-full"></div>
+          </div>
+          
+          {/* Texto elegante */}
+          <div className="flex flex-col items-center space-y-3">
+            <p className="text-gray-600 font-light text-sm tracking-wide">Wird geladen...</p>
+            <div className="flex items-center justify-center gap-1.5">
+              <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0s', animationDuration: '1.4s' }}></div>
+              <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0.2s', animationDuration: '1.4s' }}></div>
+              <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0.4s', animationDuration: '1.4s' }}></div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -62,16 +90,46 @@ function LoginForm() {
   // Mostrar loader mientras se verifica el rol
   if (checkingRole) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-brand-500 rounded-2xl flex items-center justify-center mb-4 mx-auto animate-pulse">
-            <LogIn className="w-8 h-8 text-white" strokeWidth={2.5} />
+      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-brand-50 via-background-cream to-brand-100">
+        <div className="flex flex-col items-center justify-center space-y-8">
+          {/* Icono minimalista */}
+          <div className="w-12 h-12 bg-gradient-to-br from-[#25d076] to-[#22c57f] rounded-xl flex items-center justify-center shadow-md shadow-[#25d076]/20">
+            <LogIn className="w-6 h-6 text-white" strokeWidth={2} />
           </div>
-          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-brand-600 mx-auto mb-4" />
-          <p className="text-gray-600 font-medium">Verificando tu rol...</p>
-          <p className="text-sm text-gray-500 mt-2">
-            {userRole === 'SUPER_ADMIN' ? 'Accediendo como Super Admin' : 'Iniciando sesión'}
-          </p>
+          
+          {/* Spinner minimalista y elegante */}
+          <div className="relative w-14 h-14">
+            {/* Glow suave */}
+            <div className="absolute inset-0 rounded-full bg-[#25d076] opacity-10 blur-2xl animate-pulse"></div>
+            
+            {/* Círculo exterior sutil */}
+            <div className="absolute inset-0 rounded-full border-[3px] border-gray-100"></div>
+            
+            {/* Círculo animado con gradiente verde elegante */}
+            <div 
+              className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-[#25d076] border-r-[#25d076] border-b-transparent animate-spin"
+              style={{ 
+                animation: 'spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+                filter: 'drop-shadow(0 0 8px rgba(37, 208, 118, 0.3))'
+              }}
+            ></div>
+            
+            {/* Punto central minimalista */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-[#25d076] rounded-full"></div>
+          </div>
+          
+          {/* Texto elegante */}
+          <div className="flex flex-col items-center space-y-3">
+            <p className="text-gray-700 font-light text-base tracking-wide">Verificando tu rol...</p>
+            <p className="text-gray-500 font-light text-xs tracking-wide">
+              {userRole === 'SUPER_ADMIN' ? 'Accediendo como Super Admin' : 'Iniciando sesión'}
+            </p>
+            <div className="flex items-center justify-center gap-1.5 pt-1">
+              <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0s', animationDuration: '1.4s' }}></div>
+              <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0.2s', animationDuration: '1.4s' }}></div>
+              <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0.4s', animationDuration: '1.4s' }}></div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -315,8 +373,36 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 via-background-cream to-brand-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
+      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-brand-50 via-background-cream to-brand-100">
+        <div className="flex flex-col items-center justify-center space-y-6">
+          {/* Spinner minimalista y elegante */}
+          <div className="relative w-14 h-14">
+            {/* Glow suave */}
+            <div className="absolute inset-0 rounded-full bg-[#25d076] opacity-10 blur-2xl animate-pulse"></div>
+            
+            {/* Círculo exterior sutil */}
+            <div className="absolute inset-0 rounded-full border-[3px] border-gray-100"></div>
+            
+            {/* Círculo animado con gradiente verde elegante */}
+            <div 
+              className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-[#25d076] border-r-[#25d076] border-b-transparent animate-spin"
+              style={{ 
+                animation: 'spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+                filter: 'drop-shadow(0 0 8px rgba(37, 208, 118, 0.3))'
+              }}
+            ></div>
+            
+            {/* Punto central minimalista */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-[#25d076] rounded-full"></div>
+          </div>
+          
+          {/* Indicadores minimalistas */}
+          <div className="flex items-center justify-center gap-1.5">
+            <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0s', animationDuration: '1.4s' }}></div>
+            <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0.2s', animationDuration: '1.4s' }}></div>
+            <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0.4s', animationDuration: '1.4s' }}></div>
+          </div>
+        </div>
       </div>
     }>
       <LoginForm />

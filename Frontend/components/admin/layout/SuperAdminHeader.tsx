@@ -2,17 +2,23 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSidebar } from "@/lib/contexts/SidebarContext";
 import { useRouter } from "next/navigation";
-import { LogOut, Bell, Search, Sun, Moon } from "lucide-react";
+import { LogOut, Bell, Search, Sun, Moon, Settings } from "lucide-react";
 import { Dropdown } from "../ui/Dropdown";
 import { DropdownItem } from "../ui/DropdownItem";
 import { useTheme } from "@/lib/contexts/ThemeContext";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { useUser } from "@/lib/contexts/UserContext";
+import { toast } from "sonner";
 
 const SuperAdminHeader: React.FC = () => {
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
+  const { signOut: signOutAuth } = useAuth();
+  const { signOut: signOutUser, profile } = useUser();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -38,28 +44,64 @@ const SuperAdminHeader: React.FC = () => {
   };
 
   const handleLogout = async () => {
+    if (isLoggingOut) return;
+    
+    setIsLoggingOut(true);
+    setIsUserMenuOpen(false);
+    
     try {
-      const { supabase } = await import('@/lib/supabase/client');
-      await supabase.auth.signOut();
+      await Promise.all([
+        signOutAuth(),
+        signOutUser()
+      ]);
+      
       localStorage.clear();
-      window.location.href = '/login';
+      sessionStorage.clear();
+      if (typeof document !== 'undefined') {
+        const cookies = document.cookie.split(';');
+        cookies.forEach(cookie => {
+          const [name] = cookie.split('=');
+          const trimmedName = name.trim();
+          if (trimmedName.startsWith('sb-') || trimmedName.startsWith('supabase.')) {
+            document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+            document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
+          }
+        });
+      }
+      
+      toast.success('Sesión cerrada correctamente');
+      
+      setTimeout(() => {
+        router.push('/login');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 100);
+      }, 300);
+      
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
+      toast.error('Error al cerrar sesión. Redirigiendo...');
+      
       localStorage.clear();
-      window.location.href = '/login';
+      sessionStorage.clear();
+      
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 500);
+    } finally {
+      setIsLoggingOut(false);
     }
-    setIsUserMenuOpen(false);
   };
 
-  const userName = typeof window !== 'undefined' ? localStorage.getItem('userName') || 'Admin' : 'Admin';
-  const userEmail = typeof window !== 'undefined' ? localStorage.getItem('userEmail') || 'admin@vendly.com' : 'admin@vendly.com';
+  const userName = profile?.name || (typeof window !== 'undefined' ? localStorage.getItem('userName') || 'Admin' : 'Admin');
+  const userEmail = profile?.email || (typeof window !== 'undefined' ? localStorage.getItem('userEmail') || 'admin@vendly.com' : 'admin@vendly.com');
 
   return (
     <header className="sticky top-0 flex w-full bg-white border-gray-200 z-99999 dark:border-gray-800 dark:bg-gray-900 lg:border-b">
       <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
         <div className="flex items-center justify-between w-full gap-2 px-3 py-3 border-b border-gray-200 dark:border-gray-800 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4">
           <button
-            className="items-center justify-center w-10 h-10 text-gray-500 border-gray-200 rounded-lg z-99999 dark:border-gray-800 lg:flex dark:text-gray-400 lg:h-11 lg:w-11 lg:border"
+            className="items-center justify-center w-10 h-10 text-gray-500 border-gray-200 rounded-lg z-99999 dark:border-gray-800 lg:flex dark:text-gray-400 lg:h-11 lg:w-11 lg:border cursor-pointer"
             onClick={handleToggle}
             aria-label="Toggle Sidebar"
           >
@@ -106,7 +148,7 @@ const SuperAdminHeader: React.FC = () => {
                   ref={inputRef}
                   type="text"
                   placeholder="Buscar o presiona Cmd+K..."
-                  className="h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pl-12 pr-14 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-purple-300 focus:outline-none focus:ring-3 focus:ring-purple-500/10 dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-purple-800 xl:w-[430px]"
+                  className="h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pl-12 pr-14 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 xl:w-[430px]"
                 />
                 <button
                   type="button"
@@ -123,7 +165,7 @@ const SuperAdminHeader: React.FC = () => {
           <div className="flex items-center gap-2 2xsm:gap-3">
             <button
               onClick={toggleTheme}
-              className="relative flex items-center justify-center text-gray-500 transition-colors bg-white border border-gray-200 rounded-full hover:text-gray-900 h-11 w-11 hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+              className="relative flex items-center justify-center text-gray-500 transition-colors bg-white border border-gray-200 rounded-full hover:text-gray-900 h-11 w-11 hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white cursor-pointer"
             >
               {theme === "dark" ? (
                 <Sun className="w-5 h-5" />
@@ -134,7 +176,7 @@ const SuperAdminHeader: React.FC = () => {
 
             <div className="relative">
               <button
-                className="relative dropdown-toggle flex items-center justify-center text-gray-500 transition-colors bg-white border border-gray-200 rounded-full hover:text-gray-700 h-11 w-11 hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+                className="relative dropdown-toggle flex items-center justify-center text-gray-500 transition-colors bg-white border border-gray-200 rounded-full hover:text-gray-700 h-11 w-11 hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white cursor-pointer"
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
               >
                 <Bell className="w-5 h-5" />
@@ -161,14 +203,14 @@ const SuperAdminHeader: React.FC = () => {
           <div className="relative">
             <button
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="flex items-center text-gray-700 dark:text-gray-400 dropdown-toggle"
+              className="flex items-center text-gray-700 dark:text-gray-400 dropdown-toggle cursor-pointer"
             >
-              <span className="mr-3 overflow-hidden rounded-full h-11 w-11 bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                <span className="text-purple-600 dark:text-purple-300 font-semibold text-lg">
+              <span className="mr-3 overflow-hidden rounded-full h-10 w-10 bg-brand-100 dark:bg-brand-900 flex items-center justify-center">
+                <span className="text-brand-600 dark:text-brand-300 font-semibold text-base">
                   {userName.charAt(0).toUpperCase()}
                 </span>
               </span>
-              <span className="block mr-1 font-medium text-sm">{userName}</span>
+              <span className="hidden sm:block mr-1 font-medium text-sm text-gray-700 dark:text-gray-300">{userName}</span>
               <svg
                 className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
                   isUserMenuOpen ? "rotate-180" : ""
@@ -216,10 +258,20 @@ const SuperAdminHeader: React.FC = () => {
               </ul>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-3 px-3 py-2 mt-3 font-medium text-red-600 rounded-lg text-sm hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                disabled={isLoggingOut}
+                className="flex items-center gap-3 px-3 py-2 mt-3 font-medium text-red-600 rounded-lg text-sm hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                <LogOut className="w-5 h-5" />
-                Cerrar Sesión
+                {isLoggingOut ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Cerrando sesión...</span>
+                  </>
+                ) : (
+                  <>
+                    <LogOut className="w-5 h-5" />
+                    <span>Cerrar Sesión</span>
+                  </>
+                )}
               </button>
             </Dropdown>
           </div>
