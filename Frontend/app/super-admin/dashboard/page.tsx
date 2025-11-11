@@ -47,6 +47,17 @@ const SuperAdminDashboard: React.FC = () => {
     });
   }, [statsLastFetch]);
 
+  const currentRevenue = Number(stats?.orders?.revenue ?? 0);
+  const targetRevenue = 50000;
+  const targetPercentage = useMemo(() => {
+    if (!targetRevenue) {
+      return 0;
+    }
+
+    return Math.min((currentRevenue / targetRevenue) * 100, 100);
+  }, [currentRevenue, targetRevenue]);
+  const growth = 23.1;
+
   if (statsLoading && !stats) {
     return (
       <AdminDataState
@@ -83,17 +94,6 @@ const SuperAdminDashboard: React.FC = () => {
       />
     );
   }
-
-  const currentRevenue = Number(stats.orders.revenue || 0);
-  const targetRevenue = 50000;
-  const targetPercentage = useMemo(() => {
-    if (!targetRevenue) {
-      return 0;
-    }
-
-    return Math.min((currentRevenue / targetRevenue) * 100, 100);
-  }, [currentRevenue, targetRevenue]);
-  const growth = 23.1;
 
   return (
     <div className="space-y-6 md:space-y-8">
