@@ -40,16 +40,36 @@ const SuperAdminAnalytics: React.FC = () => {
     stats,
     stores,
     products,
+    salesOverTime,
+    storePerformance,
+    topProducts,
+    activeOverview,
+    activeStores,
     statsLoading,
     storesLoading,
     usersLoading,
     productsLoading,
+    salesOverTimeLoading,
+    storePerformanceLoading,
+    topProductsLoading,
+    activeOverviewLoading,
+    activeStoresLoading,
     statsError,
+    salesOverTimeError,
+    storePerformanceError,
+    topProductsError,
+    activeOverviewError,
+    activeStoresError,
     refreshAll,
     fetchStats,
     fetchStores,
     fetchUsers,
     fetchProducts,
+    fetchSalesOverTime,
+    fetchStorePerformance,
+    fetchTopProducts,
+    fetchActiveOverview,
+    fetchActiveStores,
     statsLastFetch,
     storesLastFetch,
     productsLastFetch,
@@ -62,12 +82,41 @@ const SuperAdminAnalytics: React.FC = () => {
     fetchStores();
     fetchUsers();
     fetchProducts();
+    fetchSalesOverTime();
+    fetchStorePerformance();
+    fetchTopProducts();
+    fetchActiveOverview();
+    fetchActiveStores();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchStats, fetchStores, fetchUsers]);
+  }, [
+    fetchStats,
+    fetchStores,
+    fetchUsers,
+    fetchProducts,
+    fetchSalesOverTime,
+    fetchStorePerformance,
+    fetchTopProducts,
+    fetchActiveOverview,
+    fetchActiveStores,
+  ]);
 
-  const isRefreshing = statsLoading || storesLoading || usersLoading || productsLoading;
+  const isRefreshing =
+    statsLoading ||
+    storesLoading ||
+    usersLoading ||
+    productsLoading ||
+    salesOverTimeLoading ||
+    storePerformanceLoading ||
+    topProductsLoading ||
+    activeOverviewLoading ||
+    activeStoresLoading;
   const isInitialLoading =
-    isRefreshing && (!stats || !stores.length || !products.length);
+    isRefreshing &&
+    (!stats ||
+      !stores.length ||
+      !products.length ||
+      !storePerformance.length ||
+      !salesOverTime.length);
 
   const analyticsData = useMemo(() => {
     if (!stats || stores.length === 0) {
@@ -156,7 +205,7 @@ const SuperAdminAnalytics: React.FC = () => {
       0,
     );
 
-    const activeStores = analyticsData.salesByStore.filter((store) => store.isActive).length;
+    const activeStoreCount = analyticsData.salesByStore.filter((store) => store.isActive).length;
     const avgOrderValue =
       totalOrders > 0 ? analyticsData.totalRevenue / totalOrders : 0;
     const avgRevenuePerStore =
@@ -174,7 +223,7 @@ const SuperAdminAnalytics: React.FC = () => {
 
     return {
       totalOrders,
-      activeStores,
+      activeStoreCount,
       avgOrderValue,
       avgRevenuePerStore,
       userGrowthRate,
@@ -239,7 +288,7 @@ const SuperAdminAnalytics: React.FC = () => {
     );
   }
 
-  const { totalOrders, activeStores, avgOrderValue, avgRevenuePerStore, userGrowthRate } =
+  const { totalOrders, activeStoreCount, avgOrderValue, avgRevenuePerStore, userGrowthRate } =
     aggregation;
 
   const salesByStoreOptions: ApexOptions = useMemo(
@@ -543,7 +592,7 @@ const SuperAdminAnalytics: React.FC = () => {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })}`,
-      secondaryValue: `${activeStores} tiendas activas`,
+      secondaryValue: `${activeStoreCount} tiendas activas`,
       helperText: `${analyticsData.salesByStore.length.toLocaleString("de-CH")} tiendas totales`,
       tone: "warning" as const,
     },
