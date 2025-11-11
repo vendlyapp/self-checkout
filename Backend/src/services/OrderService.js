@@ -86,7 +86,7 @@ class OrderService {
 
     const result = await transaction(async (client) => {
       const orderQuery = `
-        INSERT INTO "Order" (userId, total)
+        INSERT INTO "Order" ("userId", "total")
         VALUES ($1, $2)
         RETURNING *
       `;
@@ -110,7 +110,7 @@ class OrderService {
         }
 
         const itemInsertQuery = `
-          INSERT INTO "OrderItem" (orderId, productId, quantity, price)
+          INSERT INTO "OrderItem" ("orderId", "productId", "quantity", "price")
           VALUES ($1, $2, $3, $4)
           RETURNING *
         `;
@@ -144,7 +144,7 @@ class OrderService {
     const selectQuery = `
       SELECT o.*, u.name as userName, u.email as userEmail
       FROM "Order" o
-      LEFT JOIN "User" u ON o.userId = u.id
+      LEFT JOIN "User" u ON o."userId" = u.id
       ORDER BY o."createdAt" DESC
       LIMIT $1 OFFSET $2
     `;
@@ -157,8 +157,8 @@ class OrderService {
       const itemsQuery = `
         SELECT oi.*, p.name as productName, p.sku as productSku
         FROM "OrderItem" oi
-        LEFT JOIN "Product" p ON oi.productId = p.id
-        WHERE oi.orderId = $1
+        LEFT JOIN "Product" p ON oi."productId" = p.id
+        WHERE oi."orderId" = $1
       `;
       const itemsResult = await query(itemsQuery, [order.id]);
       order.items = itemsResult.rows;
@@ -180,7 +180,7 @@ class OrderService {
     const selectQuery = `
       SELECT o.*, u.name as userName, u.email as userEmail
       FROM "Order" o
-      LEFT JOIN "User" u ON o.userId = u.id
+      LEFT JOIN "User" u ON o."userId" = u.id
       WHERE o.id = $1
     `;
 
@@ -196,8 +196,8 @@ class OrderService {
     const itemsQuery = `
       SELECT oi.*, p.name as productName, p.sku as productSku
       FROM "OrderItem" oi
-      LEFT JOIN "Product" p ON oi.productId = p.id
-      WHERE oi.orderId = $1
+      LEFT JOIN "Product" p ON oi."productId" = p.id
+      WHERE oi."orderId" = $1
     `;
     const itemsResult = await query(itemsQuery, [id]);
     order.items = itemsResult.rows;
@@ -213,7 +213,7 @@ class OrderService {
 
     const selectQuery = `
       SELECT * FROM "Order"
-      WHERE userId = $1
+      WHERE "userId" = $1
       ORDER BY "createdAt" DESC
       LIMIT $2 OFFSET $3
     `;
@@ -226,8 +226,8 @@ class OrderService {
       const itemsQuery = `
         SELECT oi.*, p.name as productName, p.sku as productSku
         FROM "OrderItem" oi
-        LEFT JOIN "Product" p ON oi.productId = p.id
-        WHERE oi.orderId = $1
+        LEFT JOIN "Product" p ON oi."productId" = p.id
+        WHERE oi."orderId" = $1
       `;
       const itemsResult = await query(itemsQuery, [order.id]);
       order.items = itemsResult.rows;
@@ -298,7 +298,7 @@ class OrderService {
     // Eliminar usando transacción
     await transaction(async (client) => {
       // Eliminar items primero
-      await client.query('DELETE FROM "OrderItem" WHERE orderId = $1', [id]);
+      await client.query('DELETE FROM "OrderItem" WHERE "orderId" = $1', [id]);
       // Eliminar orden
       await client.query('DELETE FROM "Order" WHERE id = $1', [id]);
     });
@@ -337,7 +337,7 @@ class OrderService {
     const selectQuery = `
       SELECT o.*, u.name as userName, u.email as userEmail
       FROM "Order" o
-      LEFT JOIN "User" u ON o.userId = u.id
+      LEFT JOIN "User" u ON o."userId" = u.id
       ORDER BY o."createdAt" DESC
       LIMIT $1
     `;
@@ -350,8 +350,8 @@ class OrderService {
       const itemsQuery = `
         SELECT oi.*, p.name as productName, p.sku as productSku
         FROM "OrderItem" oi
-        LEFT JOIN "Product" p ON oi.productId = p.id
-        WHERE oi.orderId = $1
+        LEFT JOIN "Product" p ON oi."productId" = p.id
+        WHERE oi."orderId" = $1
       `;
       const itemsResult = await query(itemsQuery, [order.id]);
       order.items = itemsResult.rows;
@@ -406,7 +406,7 @@ class OrderService {
     const result = await transaction(async (client) => {
       // Crear orden
       const orderQuery = `
-        INSERT INTO "Order" (userId, total)
+        INSERT INTO "Order" ("userId", "total")
         VALUES ($1, $2)
         RETURNING *
       `;
@@ -417,7 +417,7 @@ class OrderService {
       const orderItems = [];
       for (const item of itemsWithPrices) {
         const itemQuery = `
-          INSERT INTO "OrderItem" (orderId, productId, quantity, price)
+          INSERT INTO "OrderItem" ("orderId", "productId", "quantity", "price")
           VALUES ($1, $2, $3, $4)
           RETURNING *
         `;

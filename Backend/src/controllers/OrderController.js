@@ -1,4 +1,7 @@
+const { randomUUID } = require('crypto');
 const orderService = require('../services/OrderService');
+const storeService = require('../services/StoreService');
+const userService = require('../services/UserService');
 const { HTTP_STATUS } = require('../types');
 
 /**
@@ -7,6 +10,10 @@ const { HTTP_STATUS } = require('../types');
  * @class OrderController
  */
 class OrderController {
+  constructor() {
+    this.createOrderSimple = this.createOrderSimple.bind(this);
+  }
+
   /**
    * Obtiene todas las órdenes de un usuario específico
    * @route GET /api/orders/user/:userId
@@ -152,16 +159,50 @@ class OrderController {
    */
   async createOrderSimple(req, res) {
     try {
-      const { userId, items } = req.body;
+      const {
+        userId,
+        items,
+        storeSlug,
+        storeId,
+        customer,
+        paymentMethod,
+        total,
+        metadata,
+      } = req.body;
 
-      if (!userId || !items || !Array.isArray(items) || items.length === 0) {
+      if (!items || !Array.isArray(items) || items.length === 0) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          error: 'userId e items son requeridos'
+          error: 'La orden debe incluir items válidos',
         });
       }
 
-      const result = await orderService.create(userId, { items });
+      let resolvedUserId = userId;
+
+      if (!resolvedUserId) {
+        try {
+          resolvedUserId = await this.resolveGuestUserId({
+            storeSlug,
+            storeId,
+            customer,
+          });
+        } catch (guestError) {
+          return res.status(HTTP_STATUS.BAD_REQUEST).json({
+            success: false,
+            error: guestError.message,
+          });
+        }
+      }
+
+      const result = await orderService.create(resolvedUserId, {
+        items,
+        paymentMethod,
+        total,
+        metadata,
+        storeSlug,
+        storeId,
+        customer,
+      });
       res.status(HTTP_STATUS.CREATED).json(result);
     } catch (error) {
       const statusCode = error.message.includes('no encontrado') ||
@@ -174,6 +215,75 @@ class OrderController {
         error: error.message
       });
     }
+  }
+
+  async resolveGuestUserId(context = {}) {
+    const { storeSlug, storeId, customer } = context;
+
+    const normalizedEmail = customer?.email?.trim().toLowerCase();
+    const displayName = await this.buildGuestName(customer?.name, storeSlug, storeId);
+
+    if (normalizedEmail) {
+      try {
+        const existingUser = await userService.findByEmail(normalizedEmail);
+        if (existingUser?.data?.id) {
+          return existingUser.data.id;
+        }
+      } catch (error) {
+        if (!error.message?.toLowerCase().includes('no encontrado')) {
+          throw error;
+        }
+      }
+    }
+
+    const generatedEmail = normalizedEmail || this.generateGuestEmail(storeSlug, storeId);
+    const password = randomUUID();
+
+    const createdUser = await userService.create({
+      email: generatedEmail,
+      password,
+      name: displayName,
+      role: 'CUSTOMER',
+    });
+
+    return createdUser.data.id;
+  }
+
+  async buildGuestName(providedName, storeSlug, storeId) {
+    if (providedName && providedName.trim().length > 0) {
+      return providedName.trim();
+    }
+
+    const store = await this.findStore(storeSlug, storeId);
+    if (store?.name) {
+      return `Invitado ${store.name}`;
+    }
+
+    return 'Cliente invitado';
+  }
+
+  async findStore(storeSlug, storeId) {
+    if (storeId) {
+      const store = await storeService.getById(storeId);
+      if (store) {
+        return store;
+      }
+    }
+
+    if (storeSlug) {
+      const store = await storeService.getBySlug(storeSlug);
+      if (store) {
+        return store;
+      }
+    }
+
+    return null;
+  }
+
+  generateGuestEmail(storeSlug, storeId) {
+    const base = storeSlug || storeId || 'guest';
+    const suffix = `${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`;
+    return `guest+${base}-${suffix}@vendly.guest`;
   }
 
   /**

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const superAdminController = require('../controllers/SuperAdminController');
 const analyticsController = require('../controllers/AnalyticsController');
+const telemetryController = require('../controllers/TelemetryController');
 const { authMiddleware, requireRole } = require('../middleware/authMiddleware');
 
 /**
@@ -264,6 +265,46 @@ router.get('/analytics/store-performance', analyticsController.getStorePerforman
  *         description: Lista de productos destacados
  */
 router.get('/analytics/top-products', analyticsController.getTopProducts);
+
+/**
+ * @swagger
+ * /api/super-admin/analytics/active-overview:
+ *   get:
+ *     summary: Obtener resumen de usuarios activos
+ *     tags: [Super Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: interval
+ *         schema:
+ *           type: integer
+ *           default: 5
+ *     responses:
+ *       200:
+ *         description: Resumen por rol
+ */
+router.get('/analytics/active-overview', analyticsController.getActiveOverview);
+
+/**
+ * @swagger
+ * /api/super-admin/analytics/active-stores:
+ *   get:
+ *     summary: Obtener clientes activos por tienda
+ *     tags: [Super Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: interval
+ *         schema:
+ *           type: integer
+ *           default: 5
+ *     responses:
+ *       200:
+ *         description: Clientes activos agrupados por tienda
+ */
+router.get('/analytics/active-stores', analyticsController.getActiveCustomersByStore);
 
 module.exports = router;
 

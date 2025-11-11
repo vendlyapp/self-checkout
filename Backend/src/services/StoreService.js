@@ -117,6 +117,27 @@ class StoreService {
   }
 
   /**
+   * Obtener tienda por id
+   */
+  async getById(storeId) {
+    try {
+      const result = await query(
+        'SELECT * FROM "Store" WHERE "id" = $1',
+        [storeId]
+      );
+
+      if (result.rows.length === 0) {
+        return null;
+      }
+
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error getting store by id:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Verificar si la tienda está abierta
    */
   async isStoreOpen(slug) {

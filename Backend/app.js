@@ -14,6 +14,7 @@ const categoriesRoutes = require("./src/routes/categoryRoutes");
 const ordersRoutes = require("./src/routes/orderRoutes");
 const storeRoutes = require("./src/routes/storeRoutes");
 const superAdminRoutes = require("./src/routes/superAdminRoutes");
+const telemetryRoutes = require("./src/routes/telemetryRoutes");
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use("/api/categories", categoriesRoutes);
 app.use("/api/orders", ordersRoutes);
 app.use("/api/store", storeRoutes);
 app.use("/api/super-admin", superAdminRoutes);
+app.use("/api/telemetry", telemetryRoutes);
 
 /**
  * @swagger

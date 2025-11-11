@@ -1,6 +1,7 @@
-const { query } = require('../../lib/database');
+const { query, transaction } = require('../../lib/database');
 
 const ALLOWED_GRANULARITIES = new Set(['day', 'week', 'month']);
+const EXPIRATION_MINUTES = 10;
 
 class AnalyticsService {
   #resolveGranularity(granularity) {
@@ -122,6 +123,140 @@ class AnalyticsService {
       productName: row.productName,
       revenue: Number(row.revenue),
       unitsSold: Number(row.unitsSold),
+    }));
+  }
+
+  async registerHeartbeat({
+    userId = null,
+    storeId = null,
+    sessionId = null,
+    role,
+    ipAddress,
+    userAgent,
+  }) {
+    if (!role) {
+      throw new Error('El rol es obligatorio para registrar actividad');
+    }
+
+    const resolvedSessionId = sessionId || null;
+    const resolvedStoreId = storeId || null;
+
+    await transaction(async (client) => {
+      if (!resolvedSessionId && !userId) {
+        throw new Error('Se requiere userId o sessionId para rastrear actividad');
+      }
+
+      if (!userId) {
+        const sessionResult = await client.query(
+          `
+            INSERT INTO "ActiveSession" ("sessionId", "userId", "storeId", role, "ip", "userAgent", "lastSeen")
+            VALUES ($1, NULL, $2, $3, $4, $5, NOW())
+            ON CONFLICT ("sessionId")
+            DO UPDATE SET
+              "storeId" = COALESCE($2, "ActiveSession"."storeId"),
+              role = $3,
+              "ip" = $4,
+              "userAgent" = $5,
+              "lastSeen" = NOW(),
+              "updatedAt" = NOW()
+            RETURNING id
+          `,
+          [resolvedSessionId, resolvedStoreId, role, ipAddress, userAgent],
+        );
+
+        return sessionResult.rows[0];
+      }
+
+      const result = await client.query(
+        `
+          INSERT INTO "ActiveSession" ("userId", "storeId", "sessionId", role, "ip", "userAgent", "lastSeen")
+          VALUES ($1, $2, $3, $4, $5, $6, NOW())
+          ON CONFLICT ("userId", role)
+          DO UPDATE SET
+            "storeId" = COALESCE($2, "ActiveSession"."storeId"),
+            "sessionId" = COALESCE($3, "ActiveSession"."sessionId"),
+            "ip" = $5,
+            "userAgent" = $6,
+            "lastSeen" = NOW(),
+            "updatedAt" = NOW()
+          RETURNING id
+        `,
+        [userId, resolvedStoreId, resolvedSessionId, role, ipAddress, userAgent],
+      );
+
+      return result.rows[0];
+    });
+  }
+
+  async purgeExpiredSessions(thresholdMinutes = EXPIRATION_MINUTES) {
+    const minutes = Number.isFinite(Number(thresholdMinutes))
+      ? Math.max(1, Number(thresholdMinutes))
+      : EXPIRATION_MINUTES;
+
+    await query(
+      `
+        DELETE FROM "ActiveSession"
+        WHERE "lastSeen" < NOW() - ($1::int || ' minutes')::interval
+      `,
+      [minutes],
+    );
+  }
+
+  async getActiveOverview({ intervalMinutes = 5 } = {}) {
+    const minutes = Number.isFinite(Number(intervalMinutes)) ? Number(intervalMinutes) : 5;
+
+    const result = await query(
+      `
+        SELECT role, COUNT(*) as total
+        FROM "ActiveSession"
+        WHERE "lastSeen" >= NOW() - ($1::int || ' minutes')::interval
+        GROUP BY role
+      `,
+      [minutes],
+    );
+
+    const summary = {
+      total: 0,
+      roles: {
+        SUPER_ADMIN: 0,
+        ADMIN: 0,
+        CUSTOMER: 0,
+      },
+    };
+
+    for (const row of result.rows) {
+      const role = row.role;
+      const total = Number(row.total);
+      summary.roles[role] = total;
+      summary.total += total;
+    }
+
+    return summary;
+  }
+
+  async getActiveCustomersByStore({ intervalMinutes = 5 } = {}) {
+    const minutes = Number.isFinite(Number(intervalMinutes)) ? Number(intervalMinutes) : 5;
+
+    const result = await query(
+      `
+        SELECT
+          s.id AS "storeId",
+          s.name AS "storeName",
+          COUNT(*) AS "activeCustomers"
+        FROM "ActiveSession" a
+        INNER JOIN "Store" s ON s.id = a."storeId"
+        WHERE a.role = 'CUSTOMER'
+          AND a."lastSeen" >= NOW() - ($1::int || ' minutes')::interval
+        GROUP BY s.id, s.name
+        ORDER BY "activeCustomers" DESC
+      `,
+      [minutes],
+    );
+
+    return result.rows.map((row) => ({
+      storeId: row.storeId,
+      storeName: row.storeName,
+      activeCustomers: Number(row.activeCustomers),
     }));
   }
 }

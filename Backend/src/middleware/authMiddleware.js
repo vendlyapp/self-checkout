@@ -98,13 +98,29 @@ const authMiddleware = async (req, res, next) => {
     }
 
     // Agregar información del usuario al request
-    req.user = {
+    const userPayload = {
       userId: data.user.id,
       email: data.user.email,
       name: userName,
       role: userRole,
       emailConfirmed: data.user.email_confirmed_at ? true : false
     };
+
+    if (userRole === 'ADMIN') {
+      try {
+        const storeResult = await query(
+          'SELECT id FROM "Store" WHERE "ownerId" = $1 LIMIT 1',
+          [data.user.id]
+        );
+        if (storeResult.rows.length > 0) {
+          userPayload.storeId = storeResult.rows[0].id;
+        }
+      } catch (storeLookupError) {
+        console.error('Error obteniendo storeId:', storeLookupError.message);
+      }
+    }
+
+    req.user = userPayload;
 
     // Continuar con la siguiente función
     next();
@@ -194,13 +210,29 @@ const optionalAuth = async (req, res, next) => {
           console.error('Error al obtener/crear datos del usuario:', dbError.message);
         }
 
-        req.user = {
+        const userPayload = {
           userId: data.user.id,
           email: data.user.email,
           name: userName,
           role: userRole,
           emailConfirmed: data.user.email_confirmed_at ? true : false
         };
+
+        if (userRole === 'ADMIN') {
+          try {
+            const storeResult = await query(
+              'SELECT id FROM "Store" WHERE "ownerId" = $1 LIMIT 1',
+              [data.user.id]
+            );
+            if (storeResult.rows.length > 0) {
+              userPayload.storeId = storeResult.rows[0].id;
+            }
+          } catch (storeLookupError) {
+            console.error('Error obteniendo storeId:', storeLookupError.message);
+          }
+        }
+
+        req.user = userPayload;
       }
     }
 
