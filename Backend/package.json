@@ -18,7 +18,8 @@
     "utils:stats": "node scripts/utils.js stats",
     "utils:recent": "node scripts/utils.js recent",
     "utils:categories": "node scripts/utils.js categories",
-    "utils:health": "node scripts/utils.js health"
+    "utils:health": "node scripts/utils.js health",
+    "test:analytics": "node scripts/test_analytics_endpoints.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.75.0",

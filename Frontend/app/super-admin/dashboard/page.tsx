@@ -1,23 +1,29 @@
-'use client';
+"use client";
 
-import React, { useEffect } from 'react';
-import { RefreshCw } from 'lucide-react';
-import { useSuperAdminStore } from '@/lib/stores/superAdminStore';
-import { SuperAdminMetrics } from '@/components/admin/dashboard/SuperAdminMetrics';
-import SuperAdminSalesChart from '@/components/admin/dashboard/SuperAdminSalesChart';
-import SuperAdminStatisticsChart from '@/components/admin/dashboard/SuperAdminStatisticsChart';
-import SuperAdminRecentOrders from '@/components/admin/dashboard/SuperAdminRecentOrders';
-import SuperAdminTarget from '@/components/admin/dashboard/SuperAdminTarget';
-import SuperAdminQuickActions from '@/components/admin/dashboard/SuperAdminQuickActions';
-import SuperAdminPlatformOverview from '@/components/admin/dashboard/SuperAdminPlatformOverview';
+import React, { useEffect, useMemo } from "react";
+import { Clock3, RefreshCw } from "lucide-react";
+import { useSuperAdminStore } from "@/lib/stores/superAdminStore";
+import { SuperAdminMetrics } from "@/components/admin/dashboard/SuperAdminMetrics";
+import SuperAdminSalesChart from "@/components/admin/dashboard/SuperAdminSalesChart";
+import SuperAdminStatisticsChart from "@/components/admin/dashboard/SuperAdminStatisticsChart";
+import SuperAdminRecentOrders from "@/components/admin/dashboard/SuperAdminRecentOrders";
+import SuperAdminTarget from "@/components/admin/dashboard/SuperAdminTarget";
+import SuperAdminQuickActions from "@/components/admin/dashboard/SuperAdminQuickActions";
+import SuperAdminPlatformOverview from "@/components/admin/dashboard/SuperAdminPlatformOverview";
+import {
+  AdminDataState,
+  AdminPageHeader,
+} from "@/components/admin/common";
+import { cn } from "@/lib/utils";
 
-export default function SuperAdminDashboard() {
-  const { 
-    stats, 
-    statsLoading, 
-    statsError, 
-    fetchStats, 
-    refreshAll 
+const SuperAdminDashboard: React.FC = () => {
+  const {
+    stats,
+    statsLoading,
+    statsError,
+    fetchStats,
+    refreshAll,
+    statsLastFetch,
   } = useSuperAdminStore();
 
   useEffect(() => {
@@ -28,114 +34,142 @@ export default function SuperAdminDashboard() {
     refreshAll();
   };
 
-  // Solo mostrar loader si está cargando Y no hay datos
+  const lastUpdatedAt = useMemo(() => {
+    if (!statsLastFetch) {
+      return null;
+    }
+
+    return new Date(statsLastFetch).toLocaleString("es-ES", {
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }, [statsLastFetch]);
+
   if (statsLoading && !stats) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-brand-500 mx-auto" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando estadísticas...</p>
-        </div>
-      </div>
+      <AdminDataState
+        type="loading"
+        title="Cargando estadísticas"
+        description="Estamos preparando los datos del panel para ti."
+        className="min-h-[60vh]"
+      />
     );
   }
 
   if (statsError) {
     return (
-      <div className="p-8">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl dark:bg-red-500/15 dark:border-red-500/50 dark:text-red-400">
-          {statsError}
-        </div>
-      </div>
+      <AdminDataState
+        type="error"
+        title="No pudimos cargar las estadísticas"
+        description={statsError}
+        actionLabel="Reintentar"
+        onAction={() => fetchStats(true)}
+        className="min-h-[60vh]"
+      />
     );
   }
 
-  if (!stats) return null;
+  if (!stats) {
+    return (
+      <AdminDataState
+        type="empty"
+        title="Sin datos disponibles"
+        description="Aún no hay estadísticas para mostrar. Intenta actualizar nuevamente."
+        actionLabel="Actualizar"
+        onAction={() => fetchStats(true)}
+        className="min-h-[60vh]"
+      />
+    );
+  }
 
-  // Calcular datos para el target
   const currentRevenue = Number(stats.orders.revenue || 0);
-  const targetRevenue = 50000; // Meta mensual
-  const targetPercentage = Math.min((currentRevenue / targetRevenue) * 100, 100);
-  const growth = 23.1; // Porcentaje de crecimiento (puede venir de la API)
+  const targetRevenue = 50000;
+  const targetPercentage = useMemo(() => {
+    if (!targetRevenue) {
+      return 0;
+    }
+
+    return Math.min((currentRevenue / targetRevenue) * 100, 100);
+  }, [currentRevenue, targetRevenue]);
+  const growth = 23.1;
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      {/* ============================================ */}
-      {/* ACTIONS BAR - Minimalist */}
-      {/* ============================================ */}
-      <div className="flex justify-end">
-        <button
-          onClick={handleRefresh}
-          disabled={statsLoading}
-          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Actualizar datos"
-        >
-          <RefreshCw className={`w-4 h-4 ${statsLoading ? 'animate-spin' : ''}`} />
-        </button>
-      </div>
-
-      {/* ============================================ */}
-      {/* MÉTRICAS PRINCIPALES - 4 en una fila */}
-      {/* ============================================ */}
-      <div>
-        <SuperAdminMetrics stats={stats} />
-      </div>
-
-      {/* ============================================ */}
-      {/* ROW 1: Gráfico de Ventas + Objetivo Mensual */}
-      {/* ============================================ */}
-      <div className="grid grid-cols-12 gap-4 md:gap-6 items-stretch">
-        <div className="col-span-12 xl:col-span-7 flex">
-          <div className="w-full">
-            <SuperAdminSalesChart />
-          </div>
-        </div>
-
-        <div className="col-span-12 xl:col-span-5 flex">
-          <div className="w-full h-full">
-            <SuperAdminTarget
-              targetPercentage={targetPercentage}
-              currentRevenue={currentRevenue}
-              targetRevenue={targetRevenue}
-              growth={growth}
+    <div className="space-y-6 md:space-y-8">
+      <AdminPageHeader
+        title="Panel de Control"
+        description="Indicadores generales y rendimiento de la plataforma Vendly."
+        meta={
+          lastUpdatedAt ? (
+            <span className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 font-medium text-gray-600 dark:bg-gray-900/70 dark:text-gray-300">
+              <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>Actualizado {lastUpdatedAt}</span>
+            </span>
+          ) : null
+        }
+        actions={
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={statsLoading}
+            tabIndex={0}
+            aria-label="Actualizar datos del panel"
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                handleRefresh();
+              }
+            }}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-semibold text-gray-700 transition hover:border-brand-200 hover:text-brand-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-brand-500/40 dark:hover:text-white dark:focus-visible:ring-offset-gray-950"
+            title="Actualizar datos"
+          >
+            <RefreshCw
+              className={cn(
+                "h-4 w-4",
+                statsLoading ? "animate-spin" : undefined,
+              )}
             />
-          </div>
+            <span>Actualizar</span>
+          </button>
+        }
+      />
+
+      <SuperAdminMetrics stats={stats} />
+
+      <div className="grid grid-cols-12 gap-4 md:gap-6 xl:items-stretch">
+        <div className="col-span-12 xl:col-span-7">
+          <SuperAdminSalesChart />
+        </div>
+        <div className="col-span-12 xl:col-span-5">
+          <SuperAdminTarget
+            targetPercentage={targetPercentage}
+            currentRevenue={currentRevenue}
+            targetRevenue={targetRevenue}
+            growth={growth}
+          />
         </div>
       </div>
 
-      {/* ============================================ */}
-      {/* ROW 2: Estadísticas + Resumen de Plataforma */}
-      {/* ============================================ */}
-      <div className="grid grid-cols-12 gap-4 md:gap-6 items-stretch">
-        <div className="col-span-12 xl:col-span-8 flex">
-          <div className="w-full">
-            <SuperAdminStatisticsChart />
-          </div>
+      <div className="grid grid-cols-12 gap-4 md:gap-6 xl:items-stretch">
+        <div className="col-span-12 xl:col-span-8">
+          <SuperAdminStatisticsChart />
         </div>
-
-        <div className="col-span-12 xl:col-span-4 flex">
-          <div className="w-full h-full">
-            <SuperAdminPlatformOverview stats={stats} />
-          </div>
+        <div className="col-span-12 xl:col-span-4">
+          <SuperAdminPlatformOverview stats={stats} />
         </div>
       </div>
 
-      {/* ============================================ */}
-      {/* ROW 3: Acciones Rápidas + Órdenes Recientes */}
-      {/* ============================================ */}
-      <div className="grid grid-cols-12 gap-4 md:gap-6 items-stretch">
-        <div className="col-span-12 xl:col-span-5 flex">
-          <div className="w-full h-full">
-            <SuperAdminQuickActions />
-          </div>
+      <div className="grid grid-cols-12 gap-4 md:gap-6 xl:items-stretch">
+        <div className="col-span-12 xl:col-span-5">
+          <SuperAdminQuickActions />
         </div>
-
-        <div className="col-span-12 xl:col-span-7 flex">
-          <div className="w-full h-full">
-            <SuperAdminRecentOrders />
-          </div>
+        <div className="col-span-12 xl:col-span-7">
+          <SuperAdminRecentOrders />
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default SuperAdminDashboard;

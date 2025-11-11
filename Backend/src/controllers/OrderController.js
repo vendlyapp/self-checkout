@@ -111,6 +111,15 @@ class OrderController {
   async createOrder(req, res) {
     try {
       const { userId } = req.params;
+      const { items } = req.body || {};
+
+      if (!Array.isArray(items) || items.length === 0) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: 'La orden debe incluir al menos un item',
+        });
+      }
+
       const result = await orderService.create(userId, req.body);
       res.status(HTTP_STATUS.CREATED).json(result);
     } catch (error) {

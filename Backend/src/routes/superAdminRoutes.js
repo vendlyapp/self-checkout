@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const superAdminController = require('../controllers/SuperAdminController');
+const analyticsController = require('../controllers/AnalyticsController');
 const { authMiddleware, requireRole } = require('../middleware/authMiddleware');
 
 /**
@@ -168,6 +169,101 @@ router.get('/users', superAdminController.getAllUsers);
  *         description: Lista de productos
  */
 router.get('/products', superAdminController.getAllProducts);
+
+/**
+ * @swagger
+ * /api/super-admin/analytics/sales-over-time:
+ *   get:
+ *     summary: Obtener ventas agregadas por periodo
+ *     tags: [Super Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: from
+ *         description: Fecha de inicio (ISO8601)
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *       - in: query
+ *         name: to
+ *         description: Fecha de fin (ISO8601)
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *       - in: query
+ *         name: granularity
+ *         schema:
+ *           type: string
+ *           enum: [day, week, month]
+ *     responses:
+ *       200:
+ *         description: Serie temporal de ventas
+ */
+router.get('/analytics/sales-over-time', analyticsController.getSalesOverTime);
+
+/**
+ * @swagger
+ * /api/super-admin/analytics/store-performance:
+ *   get:
+ *     summary: Obtener rendimiento de tiendas
+ *     tags: [Super Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: from
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *       - in: query
+ *         name: to
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Lista de tiendas con métricas de ventas
+ */
+router.get('/analytics/store-performance', analyticsController.getStorePerformance);
+
+/**
+ * @swagger
+ * /api/super-admin/analytics/top-products:
+ *   get:
+ *     summary: Obtener productos destacados por ventas
+ *     tags: [Super Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: from
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *       - in: query
+ *         name: to
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: metric
+ *         schema:
+ *           type: string
+ *           enum: [revenue, units]
+ *     responses:
+ *       200:
+ *         description: Lista de productos destacados
+ */
+router.get('/analytics/top-products', analyticsController.getTopProducts);
 
 module.exports = router;
 
