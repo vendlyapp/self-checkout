@@ -77,10 +77,40 @@ async function makeRequest<T>(
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      let errorMessage = `HTTP error! status: ${response.status}`;
+
+      try {
+        const errorPayload = await response.json();
+
+        if (errorPayload) {
+          const descriptiveMessage =
+            (typeof errorPayload === 'object' && 'error' in errorPayload
+              ? errorPayload.error
+              : null) ??
+            (typeof errorPayload === 'string' ? errorPayload : JSON.stringify(errorPayload));
+
+          if (descriptiveMessage) {
+            errorMessage = descriptiveMessage;
+          }
+        }
+      } catch {
+        try {
+          const fallbackText = await response.text();
+
+          if (fallbackText) {
+            errorMessage = fallbackText;
+          }
+        } catch {
+          // sin-op, mantenemos el mensaje original
+        }
+      }
+
+      throw new Error(errorMessage);
     }
 
-    return response.json();
+    const json = await response.json();
+
+    return json;
   } catch (error) {
     console.error('Analytics API request failed:', error);
     throw error;
