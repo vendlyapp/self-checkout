@@ -1,5 +1,45 @@
 const { query, transaction } = require('../../lib/database');
 
+let activeSessionTableReady;
+
+const ensureActiveSessionTable = async () => {
+  if (!activeSessionTableReady) {
+    activeSessionTableReady = (async () => {
+      await query(`
+        CREATE TABLE IF NOT EXISTS "ActiveSession" (
+          id BIGSERIAL PRIMARY KEY,
+          "userId" UUID REFERENCES "User"(id) ON DELETE CASCADE,
+          "storeId" UUID REFERENCES "Store"(id) ON DELETE SET NULL,
+          "sessionId" TEXT,
+          role VARCHAR(32) NOT NULL,
+          "ip" TEXT,
+          "userAgent" TEXT,
+          "lastSeen" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `);
+
+      await query(`
+        CREATE UNIQUE INDEX IF NOT EXISTS "ActiveSession_sessionId_key"
+        ON "ActiveSession" ("sessionId")
+        WHERE "sessionId" IS NOT NULL
+      `);
+
+      await query(`
+        CREATE UNIQUE INDEX IF NOT EXISTS "ActiveSession_user_role_key"
+        ON "ActiveSession" ("userId", role)
+        WHERE "userId" IS NOT NULL
+      `);
+    })().catch((error) => {
+      activeSessionTableReady = undefined;
+      throw error;
+    });
+  }
+
+  await activeSessionTableReady;
+};
+
 const ALLOWED_GRANULARITIES = new Set(['day', 'week', 'month']);
 const EXPIRATION_MINUTES = 10;
 
@@ -134,6 +174,7 @@ class AnalyticsService {
     ipAddress,
     userAgent,
   }) {
+    await ensureActiveSessionTable();
     if (!role) {
       throw new Error('El rol es obligatorio para registrar actividad');
     }
@@ -189,6 +230,7 @@ class AnalyticsService {
   }
 
   async purgeExpiredSessions(thresholdMinutes = EXPIRATION_MINUTES) {
+    await ensureActiveSessionTable();
     const minutes = Number.isFinite(Number(thresholdMinutes))
       ? Math.max(1, Number(thresholdMinutes))
       : EXPIRATION_MINUTES;
@@ -203,6 +245,7 @@ class AnalyticsService {
   }
 
   async getActiveOverview({ intervalMinutes = 5 } = {}) {
+    await ensureActiveSessionTable();
     const minutes = Number.isFinite(Number(intervalMinutes)) ? Number(intervalMinutes) : 5;
 
     const result = await query(
@@ -235,6 +278,7 @@ class AnalyticsService {
   }
 
   async getActiveCustomersByStore({ intervalMinutes = 5 } = {}) {
+    await ensureActiveSessionTable();
     const minutes = Number.isFinite(Number(intervalMinutes)) ? Number(intervalMinutes) : 5;
 
     const result = await query(

@@ -251,6 +251,277 @@ const SuperAdminAnalytics: React.FC = () => {
     });
   }, [productsLastFetch, statsLastFetch, storesLastFetch]);
 
+  const safeSalesByStore = analyticsData?.salesByStore ?? [];
+  const safeRevenueDistribution = analyticsData?.revenueDistribution ?? [];
+  const safeUserGrowthData = analyticsData?.userGrowthData ?? [];
+  const safeTopCategories = analyticsData?.topCategories ?? [];
+  const safeMonthlySales = analyticsData?.monthlySales ?? [];
+  const safeTotalRevenue = analyticsData?.totalRevenue ?? 0;
+
+  const salesByStoreOptions: ApexOptions = useMemo(
+    () => ({
+      chart: {
+        fontFamily: "Outfit, sans-serif",
+        type: "bar",
+        height: 340,
+        toolbar: { show: false },
+      },
+      colors: ["#25d076"],
+      plotOptions: {
+        bar: {
+          horizontal: false,
+          columnWidth: "55%",
+          borderRadius: 8,
+          borderRadiusApplication: "end",
+        },
+      },
+      dataLabels: { enabled: false },
+      stroke: { show: true, width: 2, colors: ["transparent"] },
+      xaxis: {
+        categories: safeSalesByStore.slice(0, 10).map((store) => store.name),
+        labels: { style: { fontSize: "12px" } },
+      },
+      yaxis: {
+        title: { text: "CHF" },
+        labels: { formatter: (value) => `CHF ${value.toLocaleString()}` },
+      },
+      grid: { borderColor: "#e5e7eb" },
+      tooltip: {
+        y: {
+          formatter: (value) =>
+            `CHF ${value.toLocaleString("de-CH", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`,
+        },
+      },
+    }),
+    [safeSalesByStore],
+  );
+
+  const salesByStoreSeries = useMemo(
+    () => [
+      {
+        name: "Ingresos",
+        data: safeSalesByStore.slice(0, 10).map((store) => store.revenue),
+      },
+    ],
+    [safeSalesByStore],
+  );
+
+  const revenueDistributionOptions: ApexOptions = useMemo(
+    () => ({
+      chart: {
+        fontFamily: "Outfit, sans-serif",
+        type: "donut",
+        height: 320,
+      },
+      colors: [
+        "#25d076",
+        "#22c57f",
+        "#1fb366",
+        "#1aa059",
+        "#158d4d",
+        "#107a41",
+        "#0b6735",
+        "#065429",
+      ],
+      labels: safeRevenueDistribution.slice(0, 8).map((store) => store.name),
+      legend: {
+        position: "bottom",
+        fontSize: "12px",
+      },
+      plotOptions: {
+        pie: {
+          donut: {
+            size: "65%",
+            labels: {
+              show: true,
+              total: {
+                show: true,
+                label: "Total Revenue",
+                formatter: () =>
+                  `CHF ${safeTotalRevenue.toLocaleString("de-CH", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}`,
+              },
+            },
+          },
+        },
+      },
+      dataLabels: {
+        enabled: true,
+        formatter: (value: number) => `${value.toFixed(1)}%`,
+      },
+      tooltip: {
+        y: {
+          formatter: (value) =>
+            `CHF ${value.toLocaleString("de-CH", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`,
+        },
+      },
+    }),
+    [safeRevenueDistribution, safeTotalRevenue],
+  );
+
+  const revenueDistributionSeries = useMemo(
+    () => safeRevenueDistribution.slice(0, 8).map((store) => store.value),
+    [safeRevenueDistribution],
+  );
+
+  const userGrowthOptions: ApexOptions = useMemo(
+    () => ({
+      chart: {
+        fontFamily: "Outfit, sans-serif",
+        type: "line",
+        height: 320,
+        toolbar: { show: false },
+      },
+      colors: ["#25d076"],
+      stroke: { curve: "smooth", width: 3 },
+      markers: { size: 5, hover: { size: 7 } },
+      xaxis: {
+        categories: safeUserGrowthData.map((point) => point.month),
+        labels: { style: { fontSize: "12px" } },
+      },
+      yaxis: {
+        title: { text: "Usuarios" },
+        labels: { formatter: (value) => Math.floor(value).toString() },
+      },
+      grid: { borderColor: "#e5e7eb" },
+      tooltip: {
+        y: { formatter: (value) => `${Math.floor(value)} usuarios` },
+      },
+      fill: {
+        type: "gradient",
+        gradient: {
+          shadeIntensity: 1,
+          opacityFrom: 0.7,
+          opacityTo: 0.3,
+          stops: [0, 100],
+        },
+      },
+    }),
+    [safeUserGrowthData],
+  );
+
+  const userGrowthSeries = useMemo(
+    () => [
+      {
+        name: "Total Usuarios",
+        data: safeUserGrowthData.map((point) => point.users),
+      },
+    ],
+    [safeUserGrowthData],
+  );
+
+  const categoriesOptions: ApexOptions = useMemo(
+    () => ({
+      chart: {
+        fontFamily: "Outfit, sans-serif",
+        type: "bar",
+        height: 340,
+        toolbar: { show: false },
+      },
+      colors: ["#25d076"],
+      plotOptions: {
+        bar: {
+          horizontal: true,
+          columnWidth: "55%",
+          borderRadius: 8,
+        },
+      },
+      dataLabels: { enabled: true },
+      xaxis: {
+        categories: safeTopCategories.map((category) => category.name),
+        labels: { style: { fontSize: "12px" } },
+      },
+      tooltip: {
+        y: { formatter: (value) => `${value} productos` },
+      },
+      grid: { borderColor: "#e5e7eb" },
+    }),
+    [safeTopCategories],
+  );
+
+  const categoriesSeries = useMemo(
+    () => [
+      {
+        name: "Productos",
+        data: safeTopCategories.map((category) => category.count),
+      },
+    ],
+    [safeTopCategories],
+  );
+
+  const monthlySalesOptions: ApexOptions = useMemo(
+    () => ({
+      chart: {
+        fontFamily: "Outfit, sans-serif",
+        type: "area",
+        height: 340,
+        toolbar: { show: false },
+      },
+      colors: ["#25d076", "#22c57f"],
+      stroke: { curve: "smooth", width: 3 },
+      fill: {
+        type: "gradient",
+        gradient: {
+          shadeIntensity: 1,
+          opacityFrom: 0.7,
+          opacityTo: 0.3,
+        },
+      },
+      xaxis: {
+        categories: safeMonthlySales.map((point) => point.month),
+        labels: { style: { fontSize: "12px" } },
+      },
+      yaxis: {
+        title: { text: "CHF" },
+        labels: { formatter: (value) => `CHF ${value.toLocaleString()}` },
+      },
+      legend: { position: "top" },
+      grid: { borderColor: "#e5e7eb" },
+      tooltip: {
+        y: {
+          formatter: (value) =>
+            `CHF ${value.toLocaleString("de-CH", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`,
+        },
+      },
+    }),
+    [safeMonthlySales],
+  );
+
+  const monthlySalesSeries = useMemo(() => {
+    if (safeMonthlySales.length === 0) {
+      return [
+        { name: "Ventas", data: [] },
+        { name: "Promedio", data: [] },
+      ];
+    }
+
+    const average =
+      safeMonthlySales.reduce((sum, point) => sum + point.sales, 0) /
+      safeMonthlySales.length;
+
+    return [
+      {
+        name: "Ventas",
+        data: safeMonthlySales.map((point) => point.sales),
+      },
+      {
+        name: "Promedio",
+        data: safeMonthlySales.map(() => average),
+      },
+    ];
+  }, [safeMonthlySales]);
+
   if (isInitialLoading) {
     return (
       <AdminDataState
@@ -290,264 +561,6 @@ const SuperAdminAnalytics: React.FC = () => {
 
   const { totalOrders, activeStoreCount, avgOrderValue, avgRevenuePerStore, userGrowthRate } =
     aggregation;
-
-  const salesByStoreOptions: ApexOptions = useMemo(
-    () => ({
-      chart: {
-        fontFamily: "Outfit, sans-serif",
-        type: "bar",
-        height: 340,
-        toolbar: { show: false },
-      },
-      colors: ["#25d076"],
-      plotOptions: {
-        bar: {
-          horizontal: false,
-          columnWidth: "55%",
-          borderRadius: 8,
-          borderRadiusApplication: "end",
-        },
-      },
-      dataLabels: { enabled: false },
-      stroke: { show: true, width: 2, colors: ["transparent"] },
-      xaxis: {
-        categories: analyticsData.salesByStore.slice(0, 10).map((store) => store.name),
-        labels: { style: { fontSize: "12px" } },
-      },
-      yaxis: {
-        title: { text: "CHF" },
-        labels: { formatter: (value) => `CHF ${value.toLocaleString()}` },
-      },
-      grid: { borderColor: "#e5e7eb" },
-      tooltip: {
-        y: {
-          formatter: (value) =>
-            `CHF ${value.toLocaleString("de-CH", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}`,
-        },
-      },
-    }),
-    [analyticsData.salesByStore],
-  );
-
-  const salesByStoreSeries = useMemo(
-    () => [
-      {
-        name: "Ingresos",
-        data: analyticsData.salesByStore.slice(0, 10).map((store) => store.revenue),
-      },
-    ],
-    [analyticsData.salesByStore],
-  );
-
-  const revenueDistributionOptions: ApexOptions = useMemo(
-    () => ({
-      chart: {
-        fontFamily: "Outfit, sans-serif",
-        type: "donut",
-        height: 320,
-      },
-      colors: [
-        "#25d076",
-        "#22c57f",
-        "#1fb366",
-        "#1aa059",
-        "#158d4d",
-        "#107a41",
-        "#0b6735",
-        "#065429",
-      ],
-      labels: analyticsData.revenueDistribution.slice(0, 8).map((store) => store.name),
-      legend: {
-        position: "bottom",
-        fontSize: "12px",
-      },
-      plotOptions: {
-        pie: {
-          donut: {
-            size: "65%",
-            labels: {
-              show: true,
-              total: {
-                show: true,
-                label: "Total Revenue",
-                formatter: () =>
-                  `CHF ${analyticsData.totalRevenue.toLocaleString("de-CH", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}`,
-              },
-            },
-          },
-        },
-      },
-      dataLabels: {
-        enabled: true,
-        formatter: (value: number) => `${value.toFixed(1)}%`,
-      },
-      tooltip: {
-        y: {
-          formatter: (value) =>
-            `CHF ${value.toLocaleString("de-CH", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}`,
-        },
-      },
-    }),
-    [analyticsData.revenueDistribution, analyticsData.totalRevenue],
-  );
-
-  const revenueDistributionSeries = useMemo(
-    () => analyticsData.revenueDistribution.slice(0, 8).map((store) => store.value),
-    [analyticsData.revenueDistribution],
-  );
-
-  const userGrowthOptions: ApexOptions = useMemo(
-    () => ({
-      chart: {
-        fontFamily: "Outfit, sans-serif",
-        type: "line",
-        height: 320,
-        toolbar: { show: false },
-      },
-      colors: ["#25d076"],
-      stroke: { curve: "smooth", width: 3 },
-      markers: { size: 5, hover: { size: 7 } },
-      xaxis: {
-        categories: analyticsData.userGrowthData.map((point) => point.month),
-        labels: { style: { fontSize: "12px" } },
-      },
-      yaxis: {
-        title: { text: "Usuarios" },
-        labels: { formatter: (value) => Math.floor(value).toString() },
-      },
-      grid: { borderColor: "#e5e7eb" },
-      tooltip: {
-        y: { formatter: (value) => `${Math.floor(value)} usuarios` },
-      },
-      fill: {
-        type: "gradient",
-        gradient: {
-          shadeIntensity: 1,
-          opacityFrom: 0.7,
-          opacityTo: 0.3,
-          stops: [0, 100],
-        },
-      },
-    }),
-    [analyticsData.userGrowthData],
-  );
-
-  const userGrowthSeries = useMemo(
-    () => [
-      {
-        name: "Total Usuarios",
-        data: analyticsData.userGrowthData.map((point) => point.users),
-      },
-    ],
-    [analyticsData.userGrowthData],
-  );
-
-  const categoriesOptions: ApexOptions = useMemo(
-    () => ({
-      chart: {
-        fontFamily: "Outfit, sans-serif",
-        type: "bar",
-        height: 340,
-        toolbar: { show: false },
-      },
-      colors: ["#25d076"],
-      plotOptions: {
-        bar: {
-          horizontal: true,
-          columnWidth: "55%",
-          borderRadius: 8,
-        },
-      },
-      dataLabels: { enabled: true },
-      xaxis: {
-        categories: analyticsData.topCategories.map((category) => category.name),
-        labels: { style: { fontSize: "12px" } },
-      },
-      tooltip: {
-        y: { formatter: (value) => `${value} productos` },
-      },
-      grid: { borderColor: "#e5e7eb" },
-    }),
-    [analyticsData.topCategories],
-  );
-
-  const categoriesSeries = useMemo(
-    () => [
-      {
-        name: "Productos",
-        data: analyticsData.topCategories.map((category) => category.count),
-      },
-    ],
-    [analyticsData.topCategories],
-  );
-
-  const monthlySalesOptions: ApexOptions = useMemo(
-    () => ({
-      chart: {
-        fontFamily: "Outfit, sans-serif",
-        type: "area",
-        height: 340,
-        toolbar: { show: false },
-      },
-      colors: ["#25d076", "#22c57f"],
-      stroke: { curve: "smooth", width: 3 },
-      fill: {
-        type: "gradient",
-        gradient: {
-          shadeIntensity: 1,
-          opacityFrom: 0.7,
-          opacityTo: 0.3,
-        },
-      },
-      xaxis: {
-        categories: analyticsData.monthlySales.map((point) => point.month),
-        labels: { style: { fontSize: "12px" } },
-      },
-      yaxis: {
-        title: { text: "CHF" },
-        labels: { formatter: (value) => `CHF ${value.toLocaleString()}` },
-      },
-      legend: { position: "top" },
-      grid: { borderColor: "#e5e7eb" },
-      tooltip: {
-        y: {
-          formatter: (value) =>
-            `CHF ${value.toLocaleString("de-CH", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}`,
-        },
-      },
-    }),
-    [analyticsData.monthlySales],
-  );
-
-  const monthlySalesSeries = useMemo(() => {
-    const average =
-      analyticsData.monthlySales.reduce((sum, point) => sum + point.sales, 0) /
-      analyticsData.monthlySales.length;
-
-    return [
-      {
-        name: "Ventas",
-        data: analyticsData.monthlySales.map((point) => point.sales),
-      },
-      {
-        name: "Promedio",
-        data: analyticsData.monthlySales.map(() => average),
-      },
-    ];
-  }, [analyticsData.monthlySales]);
-
   const metricTone: "success" | "danger" = userGrowthRate >= 0 ? "success" : "danger";
   const MetricIcon = userGrowthRate >= 0 ? TrendingUp : TrendingDown;
 

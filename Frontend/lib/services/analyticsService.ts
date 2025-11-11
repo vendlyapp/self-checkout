@@ -67,15 +67,11 @@ async function makeRequest<T>(
     } = await supabase.auth.getSession();
     const token = session?.access_token;
 
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
     const response = await fetch(endpoint, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers,
       },
     });
