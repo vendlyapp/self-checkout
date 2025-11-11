@@ -8,8 +8,8 @@ const ensureActiveSessionTable = async () => {
       await query(`
         CREATE TABLE IF NOT EXISTS "ActiveSession" (
           id BIGSERIAL PRIMARY KEY,
-          "userId" UUID REFERENCES "User"(id) ON DELETE CASCADE,
-          "storeId" UUID REFERENCES "Store"(id) ON DELETE SET NULL,
+          "userId" UUID,
+          "storeId" UUID,
           "sessionId" TEXT,
           role VARCHAR(32) NOT NULL,
           "ip" TEXT,
@@ -18,6 +18,16 @@ const ensureActiveSessionTable = async () => {
           "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
           "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
+      `);
+
+      await query(`
+        CREATE INDEX IF NOT EXISTS "ActiveSession_userId_idx"
+        ON "ActiveSession" ("userId")
+      `);
+
+      await query(`
+        CREATE INDEX IF NOT EXISTS "ActiveSession_storeId_idx"
+        ON "ActiveSession" ("storeId")
       `);
 
       await query(`
