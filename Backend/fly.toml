@@ -1,7 +1,7 @@
 # Fly.io configuration for Vendly Checkout Backend
 # Generated for Node.js Express application
 
-app = "vendly-checkout-backend"
+app = "self-checkout"
 primary_region = "iad"  # Washington, D.C. - Change to your preferred region
 
 [build]

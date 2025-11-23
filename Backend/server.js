@@ -14,9 +14,9 @@ async function startServer() {
       process.exit(1);
     }
 
-    server.listen(port, () => {
+    server.listen(port, "0.0.0.0", () => {
       console.log(`Server running on port ${port}`);
-      console.log(`API Documentation: http://localhost:${port}/api-docs`);
+      console.log(`API Documentation: http://0.0.0.0:${port}/api-docs`);
     });
   } catch (error) {
     console.error("Server startup error:", error);
