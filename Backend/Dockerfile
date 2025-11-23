@@ -8,15 +8,10 @@ WORKDIR /app
 FROM base AS deps
 # Copy package files
 COPY package.json package-lock.json ./
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force
-
-# Build stage (if needed for TypeScript or build steps)
-FROM base AS builder
-COPY package.json package-lock.json ./
-RUN npm ci
-COPY . .
-# Add any build steps here if needed
+# Install production dependencies only
+RUN npm ci --only=production && \
+    npm cache clean --force && \
+    rm -rf /tmp/*
 
 # Production image
 FROM base AS runner
@@ -37,9 +32,12 @@ USER nodejs
 # Expose port (Fly.io will set PORT env var)
 EXPOSE 3000
 
-# Health check
+# Set environment to production
+ENV NODE_ENV=production
+
+# Health check (uses PORT env var if available, defaults to 3000)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+  CMD node -e "const port = process.env.PORT || 3000; require('http').get(`http://localhost:${port}/health`, (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))"
 
 # Start the application
 CMD ["node", "server.js"]

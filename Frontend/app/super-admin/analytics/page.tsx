@@ -42,9 +42,6 @@ const SuperAdminAnalytics: React.FC = () => {
     products,
     salesOverTime,
     storePerformance,
-    topProducts,
-    activeOverview,
-    activeStores,
     statsLoading,
     storesLoading,
     usersLoading,
@@ -55,11 +52,6 @@ const SuperAdminAnalytics: React.FC = () => {
     activeOverviewLoading,
     activeStoresLoading,
     statsError,
-    salesOverTimeError,
-    storePerformanceError,
-    topProductsError,
-    activeOverviewError,
-    activeStoresError,
     refreshAll,
     fetchStats,
     fetchStores,
@@ -251,12 +243,30 @@ const SuperAdminAnalytics: React.FC = () => {
     });
   }, [productsLastFetch, statsLastFetch, storesLastFetch]);
 
-  const safeSalesByStore = analyticsData?.salesByStore ?? [];
-  const safeRevenueDistribution = analyticsData?.revenueDistribution ?? [];
-  const safeUserGrowthData = analyticsData?.userGrowthData ?? [];
-  const safeTopCategories = analyticsData?.topCategories ?? [];
-  const safeMonthlySales = analyticsData?.monthlySales ?? [];
-  const safeTotalRevenue = analyticsData?.totalRevenue ?? 0;
+  const safeSalesByStore = useMemo(
+    () => analyticsData?.salesByStore ?? [],
+    [analyticsData]
+  );
+  const safeRevenueDistribution = useMemo(
+    () => analyticsData?.revenueDistribution ?? [],
+    [analyticsData]
+  );
+  const safeUserGrowthData = useMemo(
+    () => analyticsData?.userGrowthData ?? [],
+    [analyticsData]
+  );
+  const safeTopCategories = useMemo(
+    () => analyticsData?.topCategories ?? [],
+    [analyticsData]
+  );
+  const safeMonthlySales = useMemo(
+    () => analyticsData?.monthlySales ?? [],
+    [analyticsData]
+  );
+  const safeTotalRevenue = useMemo(
+    () => analyticsData?.totalRevenue ?? 0,
+    [analyticsData]
+  );
 
   const salesByStoreOptions: ApexOptions = useMemo(
     () => ({
