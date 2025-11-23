@@ -29,15 +29,26 @@ class SuperAdminService {
         u.id as "ownerId",
         u.name as "ownerName",
         u.email as "ownerEmail",
-        COUNT(DISTINCT p.id) as "productCount",
-        COUNT(DISTINCT o.id) as "orderCount",
-        COALESCE(SUM(o.total), 0) as "totalRevenue"
+        COALESCE(ps."productCount", 0) as "productCount",
+        COALESCE(os."orderCount", 0) as "orderCount",
+        COALESCE(os."totalRevenue", 0) as "totalRevenue"
       FROM "Store" s
         LEFT JOIN "User" u ON s."ownerId" = u.id
-        LEFT JOIN "Product" p ON p."ownerId" = u.id
-        LEFT JOIN "Order" o ON o."userId" = u.id
+        LEFT JOIN LATERAL (
+          SELECT COUNT(*) AS "productCount"
+          FROM "Product" p
+          WHERE p."ownerId" = s."ownerId"
+        ) ps ON TRUE
+        LEFT JOIN LATERAL (
+          SELECT
+            COUNT(DISTINCT o.id) AS "orderCount",
+            COALESCE(SUM(oi.quantity * oi.price), 0) AS "totalRevenue"
+          FROM "OrderItem" oi
+            INNER JOIN "Order" o ON o.id = oi."orderId"
+            INNER JOIN "Product" p2 ON p2.id = oi."productId"
+          WHERE p2."ownerId" = s."ownerId"
+        ) os ON TRUE
       ${whereClause}
-      GROUP BY s.id, s.name, s.slug, s.logo, s."isActive", s."isOpen", s."createdAt", u.id, u.name, u.email
       ORDER BY s."createdAt" DESC
       LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}
     `;
@@ -169,17 +180,28 @@ class SuperAdminService {
     const selectQuery = `
       SELECT 
         s.*,
-        u.name as "ownerName",
-        u.email as "ownerEmail",
-        COUNT(DISTINCT p.id) as "productCount",
-        COUNT(DISTINCT o.id) as "orderCount",
-        COALESCE(SUM(o.total), 0) as "totalRevenue"
+        u.name AS "ownerName",
+        u.email AS "ownerEmail",
+        COALESCE(ps."productCount", 0) AS "productCount",
+        COALESCE(os."orderCount", 0) AS "orderCount",
+        COALESCE(os."totalRevenue", 0) AS "totalRevenue"
       FROM "Store" s
         LEFT JOIN "User" u ON s."ownerId" = u.id
-        LEFT JOIN "Product" p ON p."ownerId" = u.id
-        LEFT JOIN "Order" o ON o."userId" = u.id
+        LEFT JOIN LATERAL (
+          SELECT COUNT(*) AS "productCount"
+          FROM "Product" p
+          WHERE p."ownerId" = s."ownerId"
+        ) ps ON TRUE
+        LEFT JOIN LATERAL (
+          SELECT
+            COUNT(DISTINCT o.id) AS "orderCount",
+            COALESCE(SUM(oi.quantity * oi.price), 0) AS "totalRevenue"
+          FROM "OrderItem" oi
+            INNER JOIN "Order" o ON o.id = oi."orderId"
+            INNER JOIN "Product" p2 ON p2.id = oi."productId"
+          WHERE p2."ownerId" = s."ownerId"
+        ) os ON TRUE
       WHERE s.id = $1
-      GROUP BY s.id, u.name, u.email
     `;
 
     const result = await query(selectQuery, [storeId]);

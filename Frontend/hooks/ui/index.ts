@@ -3,5 +3,6 @@
  * Hooks relacionados con interfaz de usuario, responsive design y scroll
  */
 
-export { useResponsive } from './useResponsive';
-export { useScrollReset, useScrollToTop } from './useScrollReset';
+export { useResponsive } from "./useResponsive";
+export { useScrollReset, useScrollToTop } from "./useScrollReset";
+export { default as useDebouncedValue } from "./useDebouncedValue";

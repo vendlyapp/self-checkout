@@ -233,7 +233,7 @@ const AppSidebar: React.FC = () => {
           </div>
           {(isExpanded || isHovered || isMobileOpen) && (
             <span className="ml-3 text-sm font-semibold text-gray-900 dark:text-white">
-              Vendly
+              Checkout
             </span>
           )}
         </Link>

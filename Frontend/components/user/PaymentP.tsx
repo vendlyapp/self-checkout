@@ -11,21 +11,23 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useCartStore } from "@/lib/stores/cartStore";
+import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ModernSpinner } from "@/components/ui";
 import { formatSwissPriceWithCHF } from "@/lib/utils";
 import { usePromoLogic } from "@/hooks";
+import { OrderService } from "@/lib/services/orderService";
 
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedMethod: string;
   totalAmount: number;
-  promoApplied?: boolean;
-  promoCode?: string;
-  discountAmount?: number;
-  onPaymentSuccess: () => void;
+  isProcessing: boolean;
+  paymentStep: "confirm" | "processing" | "success";
+  errorMessage?: string | null;
+  onConfirm: () => void;
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -33,70 +35,45 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   onClose,
   selectedMethod,
   totalAmount,
-  onPaymentSuccess,
+  isProcessing,
+  paymentStep,
+  errorMessage,
+  onConfirm,
 }) => {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentStep, setPaymentStep] = useState<
-    "confirm" | "processing" | "success"
-  >("confirm");
+  if (!isOpen) {
+    return null;
+  }
 
-  const getMethodInfo = (methodId: string) => {
+  const methodInfo = (() => {
     const methods = {
       twint: { name: "TWINT", icon: Smartphone, color: "#25D076" },
       card: { name: "Debit-, Kreditkarte", icon: CreditCard, color: "#6E7996" },
       postfinance: { name: "PostFinance", icon: QrCode, color: "#F2AD00" },
       cash: { name: "Bargeld", icon: Coins, color: "#766B6A" },
-    };
-    return methods[methodId as keyof typeof methods] || methods.card;
-  };
+    } as const;
 
-  const handleConfirmPayment = async () => {
-    setIsProcessing(true);
-    setPaymentStep("processing");
-
-    try {
-      // Simular procesamiento de pago
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      setPaymentStep("success");
-
-      // Esperar un momento para mostrar el éxito y luego proceder
-      setTimeout(() => {
-        onPaymentSuccess();
-        onClose();
-      }, 2000);
-    } catch {
-      alert("Zahlung fehlgeschlagen. Bitte versuchen Sie es erneut.");
-      setPaymentStep("confirm");
-      setIsProcessing(false);
-    }
-  };
-
-  if (!isOpen) return null;
-
-  const methodInfo = getMethodInfo(selectedMethod);
+    return methods[selectedMethod as keyof typeof methods] || methods.card;
+  })();
 
   return (
     <div className="fixed inset-0 bg-white/20 backdrop-blur-md flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-hidden shadow-2xl">
-        {/* Header del modal */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">
             Zahlung bestätigen
           </h2>
           <button
             onClick={onClose}
-            disabled={isProcessing}
+            disabled={isProcessing && paymentStep !== "success"}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Contenido del modal */}
         <div className="p-6">
           {paymentStep === "confirm" && (
             <>
-              {/* Información del método de pago */}
               <div className="flex items-center gap-4 mb-6 p-4 bg-gray-50 rounded-xl">
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center text-white"
@@ -114,7 +91,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 </div>
               </div>
 
-              {/* Resumen del pago */}
               <div className="bg-blue-50 p-4 rounded-xl mb-6">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-600">Gesamtbetrag:</span>
@@ -125,7 +101,16 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 <p className="text-sm text-gray-500">inkl. MwSt</p>
               </div>
 
-              {/* Botones de acción */}
+              {errorMessage && (
+                <div
+                  className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {errorMessage}
+                </div>
+              )}
+
               <div className="flex gap-3">
                 <button
                   onClick={onClose}
@@ -135,7 +120,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   Abbrechen
                 </button>
                 <button
-                  onClick={handleConfirmPayment}
+                  onClick={onConfirm}
                   disabled={isProcessing}
                   className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
                 >
@@ -180,9 +165,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 };
 
 export default function PaymentP() {
-  const { getTotalItems, getSubtotal, getTotalWithVAT, clearCart } = useCartStore();
+  const {
+    getTotalItems,
+    getSubtotal,
+    getTotalWithVAT,
+    getOrderItemsPayload,
+    clearCart,
+  } = useCartStore();
+  const { store } = useScannedStoreStore();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [paymentStep, setPaymentStep] = useState<"confirm" | "processing" | "success">("confirm");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
   const router = useRouter();
   const {
     promoApplied,
@@ -198,16 +193,90 @@ export default function PaymentP() {
   const totalItems = getTotalItems();
   const subtotal = getSubtotal();
   const totalWithVAT = getTotalWithVAT();
+  const totalAfterDiscount = Math.max(
+    totalWithVAT - (promoApplied ? discountAmount || 0 : 0),
+    0,
+  );
+  const payableTotal = Number(totalAfterDiscount.toFixed(2));
 
   const handlePaymentMethodSelect = (method: string) => {
     setSelectedPaymentMethod(method);
+    setPaymentStep("confirm");
+    setOrderError(null);
+    setIsProcessing(false);
     setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    if (isProcessing && paymentStep === "processing") {
+      return;
+    }
+
+    setIsModalOpen(false);
+    setPaymentStep("confirm");
+    setIsProcessing(false);
+    setOrderError(null);
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!selectedPaymentMethod || isProcessing) {
+      return;
+    }
+
+    const orderItems = getOrderItemsPayload();
+
+    if (orderItems.length === 0) {
+      setOrderError("Tu carrito está vacío.");
+      setPaymentStep("confirm");
+      return;
+    }
+
+    try {
+      setOrderError(null);
+      setIsProcessing(true);
+      setPaymentStep("processing");
+
+      await OrderService.createOrder({
+        items: orderItems,
+        paymentMethod: selectedPaymentMethod,
+        total: payableTotal,
+        storeId: store?.id,
+        storeSlug: store?.slug,
+        metadata: {
+          storeId: store?.id ?? null,
+          storeSlug: store?.slug ?? null,
+          storeName: store?.name ?? null,
+          promoApplied,
+          discountAmount: promoApplied ? discountAmount ?? 0 : 0,
+          totalBeforeVAT: Number(subtotal.toFixed(2)),
+          totalWithVAT: Number(totalWithVAT.toFixed(2)),
+        },
+      });
+
+      setPaymentStep("success");
+      setIsProcessing(false);
+
+      setTimeout(() => {
+        handlePaymentSuccess();
+      }, 1500);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No pudimos procesar tu pago. Intenta nuevamente.";
+      setOrderError(message);
+      setPaymentStep("confirm");
+      setIsProcessing(false);
+    }
   };
 
   const handlePaymentSuccess = () => {
     clearCart();
     setSelectedPaymentMethod("");
-    // Redirigir a /user después del pago exitoso
+    setIsModalOpen(false);
+    setPaymentStep("confirm");
+    setIsProcessing(false);
+    setOrderError(null);
     router.push("/user");
   };
 
@@ -264,10 +333,10 @@ export default function PaymentP() {
       {/* Header con información real del carrito */}
       <div className="flex flex-col gap-2 justify-center items-center bg-[#F9F6F4] w-full p-2 border-b border-[#E5E5E5]">
         <p className="text-xl pt-4 font-semibold text-[#373F49]">
-          Heinigers Hofladen
+          {store?.name ?? "Gastbestellung"}
         </p>
         <p className="text-2xl font-bold">
-          {formatSwissPriceWithCHF(totalWithVAT)}
+          {formatSwissPriceWithCHF(payableTotal)}
         </p>
         <p className="text-lg font-semibold text-[#373F49]">
           inkl. MwSt • {totalItems} {totalItems === 1 ? "Artikel" : "Artikel"}
@@ -404,13 +473,13 @@ export default function PaymentP() {
       {/* Modal de pago */}
       <PaymentModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleModalClose}
         selectedMethod={selectedPaymentMethod}
-        totalAmount={totalWithVAT}
-        promoApplied={promoApplied}
-        promoCode={localPromoCode}
-        discountAmount={discountAmount}
-        onPaymentSuccess={handlePaymentSuccess}
+        totalAmount={payableTotal}
+        isProcessing={isProcessing}
+        paymentStep={paymentStep}
+        errorMessage={orderError}
+        onConfirm={handleConfirmPayment}
       />
     </>
   );

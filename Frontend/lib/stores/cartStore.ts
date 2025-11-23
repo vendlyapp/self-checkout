@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { Product } from "@/components/dashboard/products_list/data/mockProducts";
+import type { OrderItemPayload } from "@/lib/services/orderService";
 
 export type CartItem = {
   product: Product;
@@ -30,6 +31,7 @@ interface CartState {
   getSubtotal: () => number;
   getTotalWithVAT: (vatRate?: number) => number;
   getTotalWithDiscount: () => number;
+  getOrderItemsPayload: () => OrderItemPayload[];
 }
 
 export const useCartStore = create<CartState>()(
@@ -154,6 +156,23 @@ export const useCartStore = create<CartState>()(
         const state = get();
         const subtotal = state.getSubtotal();
         return +(subtotal - state.discountAmount).toFixed(2);
+      },
+      getOrderItemsPayload: () => {
+        const state = get();
+        return state.cartItems
+          .map<OrderItemPayload | null>(({ product, quantity }) => {
+            const safeQuantity = Math.max(0, Math.floor(quantity));
+            if (!product?.id || safeQuantity <= 0) {
+              return null;
+            }
+
+            return {
+              productId: product.id,
+              quantity: safeQuantity,
+              price: typeof product.price === "number" ? Number(product.price) : undefined,
+            };
+          })
+          .filter((item): item is OrderItemPayload => item !== null);
       },
     }),
     {

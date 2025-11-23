@@ -32,7 +32,7 @@ const WelcomeAuth: React.FC = () => {
           </div>
           
           <h1 className="text-4xl font-bold text-gray-900 mb-3 tracking-tight">
-            Vendly
+            Checkout
           </h1>
           
           <p className="text-lg text-gray-600">

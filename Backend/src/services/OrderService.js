@@ -2,50 +2,126 @@ const { query, transaction } = require('../../lib/database');
 
 class OrderService {
 
-  async create(orderData) {
-    // Validaciones
-    if (!orderData.userId || !orderData.userId.trim()) {
+  async create(userId, orderPayload = {}) {
+    const sanitizedUserId = typeof userId === 'string' ? userId.trim() : '';
+    if (!sanitizedUserId) {
       throw new Error('El ID del usuario es requerido');
     }
 
-    if (!orderData.items || !Array.isArray(orderData.items) || orderData.items.length === 0) {
+    const itemsPayload = orderPayload.items;
+    if (!Array.isArray(itemsPayload) || itemsPayload.length === 0) {
       throw new Error('Los items de la orden son requeridos');
     }
 
-    // Calcular total
-    let total = 0;
-    for (const item of orderData.items) {
-      if (!item.productId || !item.quantity || !item.price) {
-        throw new Error('Cada item debe tener productId, quantity y price');
+    const normalizedItems = [];
+    const uniqueProductIds = new Set();
+
+    for (const rawItem of itemsPayload) {
+      const productId = typeof rawItem.productId === 'string' ? rawItem.productId.trim() : '';
+      const quantity = Number(rawItem.quantity);
+
+      if (!productId) {
+        throw new Error('Cada item debe incluir productId');
       }
-      total += parseFloat(item.price) * parseInt(item.quantity);
+
+      if (!Number.isFinite(quantity) || quantity <= 0) {
+        throw new Error('La cantidad de cada item debe ser un número mayor a cero');
+      }
+
+      uniqueProductIds.add(productId);
+      normalizedItems.push({
+        productId,
+        quantity,
+        price: rawItem.price !== undefined ? Number(rawItem.price) : null,
+      });
     }
 
-    // Crear orden usando transacción
+    const productsResult = await query(
+      `
+        SELECT id, price, stock
+        FROM "Product"
+        WHERE id = ANY($1)
+      `,
+      [[...uniqueProductIds]],
+    );
+
+    if (productsResult.rows.length !== uniqueProductIds.size) {
+      throw new Error('Uno o más productos de la orden no existen');
+    }
+
+    const productCatalog = new Map(
+      productsResult.rows.map((product) => [
+        product.id,
+        {
+          price: Number(product.price),
+          stock: Number(product.stock),
+        },
+      ]),
+    );
+
+    let total = 0;
+
+    for (const item of normalizedItems) {
+      const product = productCatalog.get(item.productId);
+      if (!product) {
+        throw new Error(`Producto ${item.productId} no encontrado`);
+      }
+
+      if (product.stock < item.quantity) {
+        throw new Error(`Stock insuficiente para el producto ${item.productId}`);
+      }
+
+      const resolvedPrice =
+        item.price !== null && Number.isFinite(item.price)
+          ? Number(item.price)
+          : product.price;
+
+      if (!Number.isFinite(resolvedPrice) || resolvedPrice < 0) {
+        throw new Error(`Precio inválido para el producto ${item.productId}`);
+      }
+
+      item.price = resolvedPrice;
+      total += resolvedPrice * item.quantity;
+    }
+
     const result = await transaction(async (client) => {
-      // Crear orden
       const orderQuery = `
-        INSERT INTO "Order" (userId, total)
+        INSERT INTO "Order" ("userId", "total")
         VALUES ($1, $2)
         RETURNING *
       `;
-      const orderResult = await client.query(orderQuery, [orderData.userId, total]);
+      const orderResult = await client.query(orderQuery, [sanitizedUserId, total]);
       const order = orderResult.rows[0];
 
-      // Crear items de la orden
       const orderItems = [];
-      for (const item of orderData.items) {
-        const itemQuery = `
-          INSERT INTO "OrderItem" (orderId, productId, quantity, price)
+
+      for (const item of normalizedItems) {
+        const updateStockQuery = `
+          UPDATE "Product"
+          SET stock = stock - $1, "updatedAt" = CURRENT_TIMESTAMP
+          WHERE id = $2 AND stock >= $1
+          RETURNING id
+        `;
+
+        const stockResult = await client.query(updateStockQuery, [item.quantity, item.productId]);
+
+        if (stockResult.rowCount === 0) {
+          throw new Error(`Stock insuficiente para el producto ${item.productId}`);
+        }
+
+        const itemInsertQuery = `
+          INSERT INTO "OrderItem" ("orderId", "productId", "quantity", "price")
           VALUES ($1, $2, $3, $4)
           RETURNING *
         `;
-        const itemResult = await client.query(itemQuery, [
+
+        const itemResult = await client.query(itemInsertQuery, [
           order.id,
           item.productId,
-          parseInt(item.quantity),
-          parseFloat(item.price)
+          item.quantity,
+          item.price,
         ]);
+
         orderItems.push(itemResult.rows[0]);
       }
 
@@ -56,9 +132,9 @@ class OrderService {
       success: true,
       data: {
         ...result.order,
-        items: result.items
+        items: result.items,
       },
-      message: 'Orden creada exitosamente'
+      message: 'Orden creada exitosamente',
     };
   }
 
@@ -68,7 +144,7 @@ class OrderService {
     const selectQuery = `
       SELECT o.*, u.name as userName, u.email as userEmail
       FROM "Order" o
-      LEFT JOIN "User" u ON o.userId = u.id
+      LEFT JOIN "User" u ON o."userId" = u.id
       ORDER BY o."createdAt" DESC
       LIMIT $1 OFFSET $2
     `;
@@ -81,8 +157,8 @@ class OrderService {
       const itemsQuery = `
         SELECT oi.*, p.name as productName, p.sku as productSku
         FROM "OrderItem" oi
-        LEFT JOIN "Product" p ON oi.productId = p.id
-        WHERE oi.orderId = $1
+        LEFT JOIN "Product" p ON oi."productId" = p.id
+        WHERE oi."orderId" = $1
       `;
       const itemsResult = await query(itemsQuery, [order.id]);
       order.items = itemsResult.rows;
@@ -104,7 +180,7 @@ class OrderService {
     const selectQuery = `
       SELECT o.*, u.name as userName, u.email as userEmail
       FROM "Order" o
-      LEFT JOIN "User" u ON o.userId = u.id
+      LEFT JOIN "User" u ON o."userId" = u.id
       WHERE o.id = $1
     `;
 
@@ -120,8 +196,8 @@ class OrderService {
     const itemsQuery = `
       SELECT oi.*, p.name as productName, p.sku as productSku
       FROM "OrderItem" oi
-      LEFT JOIN "Product" p ON oi.productId = p.id
-      WHERE oi.orderId = $1
+      LEFT JOIN "Product" p ON oi."productId" = p.id
+      WHERE oi."orderId" = $1
     `;
     const itemsResult = await query(itemsQuery, [id]);
     order.items = itemsResult.rows;
@@ -137,7 +213,7 @@ class OrderService {
 
     const selectQuery = `
       SELECT * FROM "Order"
-      WHERE userId = $1
+      WHERE "userId" = $1
       ORDER BY "createdAt" DESC
       LIMIT $2 OFFSET $3
     `;
@@ -150,8 +226,8 @@ class OrderService {
       const itemsQuery = `
         SELECT oi.*, p.name as productName, p.sku as productSku
         FROM "OrderItem" oi
-        LEFT JOIN "Product" p ON oi.productId = p.id
-        WHERE oi.orderId = $1
+        LEFT JOIN "Product" p ON oi."productId" = p.id
+        WHERE oi."orderId" = $1
       `;
       const itemsResult = await query(itemsQuery, [order.id]);
       order.items = itemsResult.rows;
@@ -222,7 +298,7 @@ class OrderService {
     // Eliminar usando transacción
     await transaction(async (client) => {
       // Eliminar items primero
-      await client.query('DELETE FROM "OrderItem" WHERE orderId = $1', [id]);
+      await client.query('DELETE FROM "OrderItem" WHERE "orderId" = $1', [id]);
       // Eliminar orden
       await client.query('DELETE FROM "Order" WHERE id = $1', [id]);
     });
@@ -261,7 +337,7 @@ class OrderService {
     const selectQuery = `
       SELECT o.*, u.name as userName, u.email as userEmail
       FROM "Order" o
-      LEFT JOIN "User" u ON o.userId = u.id
+      LEFT JOIN "User" u ON o."userId" = u.id
       ORDER BY o."createdAt" DESC
       LIMIT $1
     `;
@@ -274,8 +350,8 @@ class OrderService {
       const itemsQuery = `
         SELECT oi.*, p.name as productName, p.sku as productSku
         FROM "OrderItem" oi
-        LEFT JOIN "Product" p ON oi.productId = p.id
-        WHERE oi.orderId = $1
+        LEFT JOIN "Product" p ON oi."productId" = p.id
+        WHERE oi."orderId" = $1
       `;
       const itemsResult = await query(itemsQuery, [order.id]);
       order.items = itemsResult.rows;
@@ -330,7 +406,7 @@ class OrderService {
     const result = await transaction(async (client) => {
       // Crear orden
       const orderQuery = `
-        INSERT INTO "Order" (userId, total)
+        INSERT INTO "Order" ("userId", "total")
         VALUES ($1, $2)
         RETURNING *
       `;
@@ -341,7 +417,7 @@ class OrderService {
       const orderItems = [];
       for (const item of itemsWithPrices) {
         const itemQuery = `
-          INSERT INTO "OrderItem" (orderId, productId, quantity, price)
+          INSERT INTO "OrderItem" ("orderId", "productId", "quantity", "price")
           VALUES ($1, $2, $3, $4)
           RETURNING *
         `;
