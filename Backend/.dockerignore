@@ -1,0 +1,52 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+test
+tests
+*.test.js
+*.spec.js
+coverage
+
+# Build artifacts
+dist
+build
+.next
+out
+
+# Logs
+logs
+*.log
+
+# Scripts (optional - remove if you need them in production)
+scripts
+
+# Postman collections
+*.postman_collection.json
+

@@ -343,6 +343,7 @@ Backend/
 npm start              # Iniciar servidor en producción
 npm run dev            # Iniciar con nodemon (desarrollo)
 npm test               # Ejecutar tests
+npm run verify:production  # Verificar configuración para producción
 ```
 
 ---
@@ -478,10 +479,87 @@ lsof -ti:5000 | xargs kill -9
 - ✅ Middleware de protección
 - ✅ Validado y probado
 
-**Listo para:** Implementar frontend y conectar todo el sistema.
+**Listo para:** Desplegar en producción con Fly.io.
 
 ---
 
-**Fecha:** Octubre 2025  
+## 🚀 Despliegue en Producción (Fly.io)
+
+Este backend está configurado y listo para desplegar en Fly.io. Fly.io es nuestra plataforma recomendada para producción debido a su facilidad de uso, seguridad y excelente rendimiento global.
+
+### 🚀 Despliegue Rápido
+
+1. **Instalar flyctl**
+   ```bash
+   brew install flyctl  # macOS
+   # o visita: https://fly.io/docs/getting-started/installing-flyctl/
+   ```
+
+2. **Autenticarse en Fly.io**
+   ```bash
+   flyctl auth login
+   ```
+
+3. **Configurar variables de entorno**
+   ```bash
+   flyctl secrets set DATABASE_URL="tu-database-url"
+   flyctl secrets set SUPABASE_URL="tu-supabase-url"
+   # ... etc (ver sección Variables de Entorno)
+   ```
+
+4. **Desplegar**
+   ```bash
+   flyctl deploy
+   ```
+
+### 📖 Guía Completa
+
+Para una guía detallada paso a paso, consulta:
+- **[FLY_DEPLOY.md](./FLY_DEPLOY.md)** - Guía completa de despliegue
+
+### ✅ Checklist Pre-Deploy
+
+Antes de desplegar, ejecuta:
+
+```bash
+# Verificar configuración de producción
+npm run verify:production
+
+# Debería mostrar:
+# ✅ ¡Todo correcto! Listo para producción.
+```
+
+### 🔒 Seguridad en Producción
+
+Fly.io incluye automáticamente:
+- ✅ SSL/HTTPS con certificados automáticos
+- ✅ Variables de entorno encriptadas (secrets)
+- ✅ Network isolation
+- ✅ DDoS protection
+
+**Recomendaciones adicionales:**
+- Implementar rate limiting en la aplicación
+- Configurar CORS solo para tu dominio de producción
+- Usar Helmet.js para headers de seguridad
+
+### 📊 Monitoreo
+
+Fly.io proporciona:
+- Logs en tiempo real (`flyctl logs`)
+- Métricas de CPU/Memoria (`flyctl metrics`)
+- Health checks automáticos
+- Alertas configurables
+
+### 💰 Costos
+
+- **Plan gratuito:** 3 máquinas compartidas con 256MB RAM cada una
+- **Planes pagos:** Desde $1.94/mes por máquina
+
+Para más información: https://fly.io/docs/about/pricing/
+
+---
+
+**Fecha:** Noviembre 2025  
 **Versión:** 2.0.0  
-**Stack:** Node.js + Express + PostgreSQL + Supabase Auth
+**Stack:** Node.js + Express + PostgreSQL + Supabase Auth  
+**Plataforma de Producción:** Fly.io
