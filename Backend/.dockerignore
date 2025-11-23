@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Dependencies
 node_modules
 npm-debug.log
@@ -50,3 +51,11 @@ scripts
 # Postman collections
 *.postman_collection.json
 
+=======
+/.git
+/node_modules
+.dockerignore
+.env
+Dockerfile
+fly.toml
+>>>>>>> 6d65a51b528186dd0bb22c956632908daea81e04
