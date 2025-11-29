@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { LogOut, Loader2 } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 
 interface LogoutModalProps {
   isOpen: boolean;
