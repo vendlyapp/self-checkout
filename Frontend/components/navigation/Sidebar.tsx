@@ -11,6 +11,7 @@ import CartSummary from '@/components/cart/CartSummary';
 import { useCartStore } from '@/lib/stores/cartStore';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { toast } from 'sonner';
+import { clearAllSessionData } from '@/lib/utils/sessionUtils';
 
 interface NavItem {
   id: string;
@@ -334,12 +335,41 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
           <button
             onClick={async () => {
               try {
-                await signOut();
+                // Limpiar toda la sesión usando la utilidad centralizada
+                await clearAllSessionData();
+                
+                // También cerrar sesión en el contexto
+                try {
+                  await signOut();
+                } catch (contextError) {
+                  console.warn('Error en contexto de logout (puede ignorarse):', contextError);
+                }
+                
                 toast.success('Erfolgreich abgemeldet');
-                router.push('/');
-      } catch {
-        toast.error('Fehler beim Abmelden');
-      }
+                
+                // Redirigir al login
+                router.push('/login');
+                setTimeout(() => {
+                  window.location.href = '/login';
+                }, 100);
+              } catch (error) {
+                console.error('Error al cerrar sesión:', error);
+                toast.error('Fehler beim Abmelden');
+                
+                // Forzar limpieza y redirección
+                try {
+                  await clearAllSessionData();
+                } catch {
+                  if (typeof window !== 'undefined') {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                  }
+                }
+                
+                setTimeout(() => {
+                  window.location.href = '/login';
+                }, 300);
+              }
             }}
             className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors w-full text-left group"
           >

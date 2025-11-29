@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/lib/contexts/ThemeContext';
 import SuperAdminSidebar from '@/components/admin/layout/SuperAdminSidebar';
 import SuperAdminHeader from '@/components/admin/layout/SuperAdminHeader';
 import Backdrop from '@/components/admin/layout/Backdrop';
+import { useSessionTimeout } from '@/hooks/useSessionTimeout';
 
 interface Props {
   children: React.ReactNode;
@@ -15,6 +16,14 @@ interface Props {
 export default function SuperAdminLayout({ children }: Props) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
+
+  // Configurar timeout de sesión de 30 minutos
+  useSessionTimeout({
+    enabled: true,
+    onSessionExpired: () => {
+      console.log('Sesión expirada por inactividad (30 minutos)');
+    },
+  });
 
   useEffect(() => {
     // Verificar que el usuario tenga rol SUPER_ADMIN
