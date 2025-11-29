@@ -12,6 +12,7 @@ import { useCartStore } from '@/lib/stores/cartStore';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { toast } from 'sonner';
 import { clearAllSessionData } from '@/lib/utils/sessionUtils';
+import LogoutModal from '@/components/ui/LogoutModal';
 
 interface NavItem {
   id: string;
@@ -89,6 +90,7 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
   const { signOut, user } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [pressedItem, setPressedItem] = useState<string | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { cartItems, getTotalItems } = useCartStore();
   const totalItems = getTotalItems();
   const isEmpty = cartItems.length === 0;
@@ -149,10 +151,14 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
   }
 
   return (
-    <aside className={clsx(
-      "bg-white border-r border-gray-200 transition-all duration-300 flex flex-col",
-      isMobile ? "fixed inset-y-0 left-0 z-50 w-64" : "relative w-80"
-    )}>
+    <>
+      {/* Modal de logout elegante */}
+      <LogoutModal isOpen={isLoggingOut} />
+      
+      <aside className={clsx(
+        "bg-white border-r border-gray-200 transition-all duration-300 flex flex-col",
+        isMobile ? "fixed inset-y-0 left-0 z-50 w-64" : "relative w-80"
+      )}>
       {/* Header del Sidebar */}
       <div className="p-6 border-b h-[80px] border-gray-200">
         <Link href="/dashboard" className="flex items-center gap-3">
@@ -334,6 +340,10 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
           </Link>
           <button
             onClick={async () => {
+              if (isLoggingOut) return;
+              
+              setIsLoggingOut(true);
+              
               try {
                 // Limpiar toda la sesión usando la utilidad centralizada
                 await clearAllSessionData();
@@ -348,10 +358,12 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
                 toast.success('Erfolgreich abgemeldet');
                 
                 // Redirigir al login
-                router.push('/login');
                 setTimeout(() => {
-                  window.location.href = '/login';
-                }, 100);
+                  router.push('/login');
+                  setTimeout(() => {
+                    window.location.href = '/login';
+                  }, 100);
+                }, 300);
               } catch (error) {
                 console.error('Error al cerrar sesión:', error);
                 toast.error('Fehler beim Abmelden');
@@ -369,9 +381,12 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
                 setTimeout(() => {
                   window.location.href = '/login';
                 }, 300);
+              } finally {
+                setIsLoggingOut(false);
               }
             }}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors w-full text-left group"
+            disabled={isLoggingOut}
+            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors w-full text-left group disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <LogOut className="w-4 h-4 text-gray-500 group-hover:text-red-600 transition-colors" />
             <span className="text-sm text-gray-700 group-hover:text-red-600 transition-colors">Abmelden</span>
@@ -379,5 +394,6 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
         </div>
       </div>
     </aside>
+    </>
   );
 }

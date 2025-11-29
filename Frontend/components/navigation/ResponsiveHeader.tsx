@@ -11,6 +11,7 @@ import { useStoreState } from '@/lib/stores';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { toast } from 'sonner';
 import { clearAllSessionData } from '@/lib/utils/sessionUtils';
+import LogoutModal from '@/components/ui/LogoutModal';
 
 interface Notification {
   id: string;
@@ -58,6 +59,7 @@ export default function ResponsiveHeader({
   const { signOut } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [pressedButton, setPressedButton] = useState<string | null>(null);
 
   // Obtener estado de la tienda
@@ -99,6 +101,9 @@ export default function ResponsiveHeader({
 
   return (
     <>
+      {/* Modal de logout elegante */}
+      <LogoutModal isOpen={isLoggingOut} />
+      
       {/* Overlay para cerrar dropdowns */}
       {(showNotifications || showUserMenu) && (
         <div
@@ -207,8 +212,12 @@ export default function ResponsiveHeader({
                   pressedButton === 'logout' && "button-pressed"
                 )}
                 onClick={async (e) => {
+                  if (isLoggingOut) return;
+                  
                   handleButtonPress('logout');
                   handleValidInteraction(e);
+                  setIsLoggingOut(true);
+                  
                   try {
                     // Limpiar toda la sesión usando la utilidad centralizada
                     await clearAllSessionData();
@@ -223,10 +232,12 @@ export default function ResponsiveHeader({
                     toast.success('Erfolgreich abgemeldet');
                     
                     // Redirigir al login
-                    router.push('/login');
                     setTimeout(() => {
-                      window.location.href = '/login';
-                    }, 100);
+                      router.push('/login');
+                      setTimeout(() => {
+                        window.location.href = '/login';
+                      }, 100);
+                    }, 300);
                   } catch (error) {
                     console.error('Error al cerrar sesión:', error);
                     toast.error('Fehler beim Abmelden');
@@ -244,6 +255,8 @@ export default function ResponsiveHeader({
                     setTimeout(() => {
                       window.location.href = '/login';
                     }, 300);
+                  } finally {
+                    setIsLoggingOut(false);
                   }
                 }}
                 onTouchStart={() => handleButtonPress('logout')}
@@ -251,6 +264,7 @@ export default function ResponsiveHeader({
                   handleButtonPress('logout');
                   handleValidInteraction(e);
                 }}
+                disabled={isLoggingOut}
                 aria-label="Abmelden"
               >
                 <LogOut className="header-icon" />
@@ -343,11 +357,16 @@ export default function ResponsiveHeader({
               <button
                 className={clsx(
                   "p-2 rounded-lg hover:bg-red-50 transition-colors group",
-                  pressedButton === 'logout' && "scale-95"
+                  pressedButton === 'logout' && "scale-95",
+                  isLoggingOut && "opacity-50 cursor-not-allowed"
                 )}
                 onClick={async (e) => {
+                  if (isLoggingOut) return;
+                  
                   handleButtonPress('logout');
                   handleValidInteraction(e);
+                  setIsLoggingOut(true);
+                  
                   try {
                     // Limpiar toda la sesión usando la utilidad centralizada
                     await clearAllSessionData();
@@ -362,10 +381,12 @@ export default function ResponsiveHeader({
                     toast.success('Erfolgreich abgemeldet');
                     
                     // Redirigir al login
-                    router.push('/login');
                     setTimeout(() => {
-                      window.location.href = '/login';
-                    }, 100);
+                      router.push('/login');
+                      setTimeout(() => {
+                        window.location.href = '/login';
+                      }, 100);
+                    }, 300);
                   } catch (error) {
                     console.error('Error al cerrar sesión:', error);
                     toast.error('Fehler beim Abmelden');
@@ -383,6 +404,8 @@ export default function ResponsiveHeader({
                     setTimeout(() => {
                       window.location.href = '/login';
                     }, 300);
+                  } finally {
+                    setIsLoggingOut(false);
                   }
                 }}
                 onTouchStart={() => handleButtonPress('logout')}
@@ -390,6 +413,7 @@ export default function ResponsiveHeader({
                   handleButtonPress('logout');
                   handleValidInteraction(e);
                 }}
+                disabled={isLoggingOut}
                 aria-label="Abmelden"
               >
                 <LogOut className="w-5 h-5 text-gray-600 group-hover:text-red-600 transition-colors" />
