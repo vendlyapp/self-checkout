@@ -2,7 +2,7 @@
 # Generated for Node.js Express application
 
 app = "self-checkout"
-primary_region = "iad"  # Washington, D.C. - Change to your preferred region
+primary_region = "fra"  # Frankfurt, Germany
 
 [build]
   # Fly.io will automatically detect Dockerfile
