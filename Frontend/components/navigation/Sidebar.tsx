@@ -357,11 +357,11 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
                 
                 toast.success('Erfolgreich abgemeldet');
                 
-                // Redirigir al login
+                // Redirigir a la ruta raíz
                 setTimeout(() => {
-                  router.push('/login');
+                  router.push('/');
                   setTimeout(() => {
-                    window.location.href = '/login';
+                    window.location.href = '/';
                   }, 100);
                 }, 300);
               } catch (error) {
@@ -379,7 +379,7 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
                 }
                 
                 setTimeout(() => {
-                  window.location.href = '/login';
+                  window.location.href = '/';
                 }, 300);
               } finally {
                 setIsLoggingOut(false);

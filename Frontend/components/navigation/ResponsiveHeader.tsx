@@ -231,11 +231,11 @@ export default function ResponsiveHeader({
                     
                     toast.success('Erfolgreich abgemeldet');
                     
-                    // Redirigir al login
+                    // Redirigir a la ruta raíz
                     setTimeout(() => {
-                      router.push('/login');
+                      router.push('/');
                       setTimeout(() => {
-                        window.location.href = '/login';
+                        window.location.href = '/';
                       }, 100);
                     }, 300);
                   } catch (error) {
@@ -253,7 +253,7 @@ export default function ResponsiveHeader({
                     }
                     
                     setTimeout(() => {
-                      window.location.href = '/login';
+                      window.location.href = '/';
                     }, 300);
                   } finally {
                     setIsLoggingOut(false);
@@ -380,11 +380,11 @@ export default function ResponsiveHeader({
                     
                     toast.success('Erfolgreich abgemeldet');
                     
-                    // Redirigir al login
+                    // Redirigir a la ruta raíz
                     setTimeout(() => {
-                      router.push('/login');
+                      router.push('/');
                       setTimeout(() => {
-                        window.location.href = '/login';
+                        window.location.href = '/';
                       }, 100);
                     }, 300);
                   } catch (error) {
@@ -402,7 +402,7 @@ export default function ResponsiveHeader({
                     }
                     
                     setTimeout(() => {
-                      window.location.href = '/login';
+                      window.location.href = '/';
                     }, 300);
                   } finally {
                     setIsLoggingOut(false);
