@@ -9,6 +9,7 @@ import { useTheme } from "@/lib/contexts/ThemeContext";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useUser } from "@/lib/contexts/UserContext";
 import { toast } from "sonner";
+import { clearAllSessionData } from "@/lib/utils/sessionUtils";
 
 const SuperAdminHeader: React.FC = () => {
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
@@ -50,29 +51,26 @@ const SuperAdminHeader: React.FC = () => {
     setIsUserMenuOpen(false);
     
     try {
-      await Promise.all([
-        signOutAuth(),
-        signOutUser()
-      ]);
+      // Usar la utilidad centralizada para limpiar toda la sesión
+      await clearAllSessionData();
       
-      localStorage.clear();
-      sessionStorage.clear();
-      if (typeof document !== 'undefined') {
-        const cookies = document.cookie.split(';');
-        cookies.forEach(cookie => {
-          const [name] = cookie.split('=');
-          const trimmedName = name.trim();
-          if (trimmedName.startsWith('sb-') || trimmedName.startsWith('supabase.')) {
-            document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-            document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
-          }
-        });
+      // También cerrar sesión en los contextos (por si acaso)
+      try {
+        await Promise.all([
+          signOutAuth(),
+          signOutUser()
+        ]);
+      } catch (contextError) {
+        // Ignorar errores de contextos, ya que clearAllSessionData ya limpió todo
+        console.warn('Error en contextos de logout (puede ignorarse):', contextError);
       }
       
       toast.success('Sesión cerrada correctamente');
       
+      // Redirigir al login
       setTimeout(() => {
         router.push('/login');
+        // Forzar recarga para asegurar limpieza completa
         setTimeout(() => {
           window.location.href = '/login';
         }, 100);
@@ -82,9 +80,19 @@ const SuperAdminHeader: React.FC = () => {
       console.error('Error al cerrar sesión:', error);
       toast.error('Error al cerrar sesión. Redirigiendo...');
       
-      localStorage.clear();
-      sessionStorage.clear();
+      // Forzar limpieza básica en caso de error
+      try {
+        await clearAllSessionData();
+      } catch (clearError) {
+        console.error('Error al forzar limpieza:', clearError);
+        // Limpieza de emergencia
+        if (typeof window !== 'undefined') {
+          localStorage.clear();
+          sessionStorage.clear();
+        }
+      }
       
+      // Redirigir de todas formas
       setTimeout(() => {
         window.location.href = '/login';
       }, 500);

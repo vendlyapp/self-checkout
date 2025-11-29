@@ -10,6 +10,7 @@ import { lightFeedback } from '@/lib/utils/safeFeedback';
 import { useStoreState } from '@/lib/stores';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { toast } from 'sonner';
+import { clearAllSessionData } from '@/lib/utils/sessionUtils';
 
 interface Notification {
   id: string;
@@ -209,11 +210,40 @@ export default function ResponsiveHeader({
                   handleButtonPress('logout');
                   handleValidInteraction(e);
                   try {
-                    await signOut();
+                    // Limpiar toda la sesión usando la utilidad centralizada
+                    await clearAllSessionData();
+                    
+                    // También cerrar sesión en el contexto
+                    try {
+                      await signOut();
+                    } catch (contextError) {
+                      console.warn('Error en contexto de logout (puede ignorarse):', contextError);
+                    }
+                    
                     toast.success('Erfolgreich abgemeldet');
-                    router.push('/');
-                  } catch {
+                    
+                    // Redirigir al login
+                    router.push('/login');
+                    setTimeout(() => {
+                      window.location.href = '/login';
+                    }, 100);
+                  } catch (error) {
+                    console.error('Error al cerrar sesión:', error);
                     toast.error('Fehler beim Abmelden');
+                    
+                    // Forzar limpieza y redirección
+                    try {
+                      await clearAllSessionData();
+                    } catch {
+                      if (typeof window !== 'undefined') {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                      }
+                    }
+                    
+                    setTimeout(() => {
+                      window.location.href = '/login';
+                    }, 300);
                   }
                 }}
                 onTouchStart={() => handleButtonPress('logout')}
@@ -319,11 +349,40 @@ export default function ResponsiveHeader({
                   handleButtonPress('logout');
                   handleValidInteraction(e);
                   try {
-                    await signOut();
+                    // Limpiar toda la sesión usando la utilidad centralizada
+                    await clearAllSessionData();
+                    
+                    // También cerrar sesión en el contexto
+                    try {
+                      await signOut();
+                    } catch (contextError) {
+                      console.warn('Error en contexto de logout (puede ignorarse):', contextError);
+                    }
+                    
                     toast.success('Erfolgreich abgemeldet');
-                    router.push('/');
-                  } catch {
+                    
+                    // Redirigir al login
+                    router.push('/login');
+                    setTimeout(() => {
+                      window.location.href = '/login';
+                    }, 100);
+                  } catch (error) {
+                    console.error('Error al cerrar sesión:', error);
                     toast.error('Fehler beim Abmelden');
+                    
+                    // Forzar limpieza y redirección
+                    try {
+                      await clearAllSessionData();
+                    } catch {
+                      if (typeof window !== 'undefined') {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                      }
+                    }
+                    
+                    setTimeout(() => {
+                      window.location.href = '/login';
+                    }, 300);
                   }
                 }}
                 onTouchStart={() => handleButtonPress('logout')}
