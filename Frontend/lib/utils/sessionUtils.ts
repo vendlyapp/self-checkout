@@ -89,13 +89,12 @@ export const clearAllSessionData = async (): Promise<void> => {
     // 1. Notificar al backend del logout (opcional, no bloquea si falla)
     if (token && typeof window !== 'undefined') {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        await fetch(`${apiUrl}/api/auth/logout`, {
+        const { buildApiUrl, getAuthHeaders } = await import('@/lib/config/api');
+        const url = buildApiUrl('/api/auth/logout');
+        const headers = getAuthHeaders(token);
+        await fetch(url, {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+          headers,
         }).catch((error) => {
           // Ignorar errores de red, el logout del cliente es suficiente
           console.warn('Error al notificar logout al backend (puede ignorarse):', error);

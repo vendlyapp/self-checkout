@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import { useScannedStoreStore } from '@/lib/stores/scannedStoreStore'
 import { useCartStore } from '@/lib/stores/cartStore'
 import DashboardUser from '@/components/user/Dashboard'
+import { buildApiUrl } from '@/lib/config/api'
 
 export default function StoreProductsPage() {
   const params = useParams()
@@ -16,7 +17,8 @@ export default function StoreProductsPage() {
     // Cargar información de la tienda
     const loadStore = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/store/${slug}`)
+        const url = buildApiUrl(`/api/store/${slug}`);
+        const response = await fetch(url);
         const result = await response.json()
         
         if (result.success) {

@@ -10,6 +10,7 @@ import { ChevronRight, ShoppingCart, X } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { formatSwissPriceWithCHF } from "@/lib/utils";
 import { usePromoLogic } from "@/hooks";
+import { buildApiUrl } from "@/lib/config/api";
 
 export default function StoreCartPage() {
   const router = useRouter();
@@ -27,7 +28,8 @@ export default function StoreCartPage() {
         
         // Cargar info si no está
         if (!store || store.slug !== slug) {
-          const response = await fetch(`http://localhost:5000/api/store/${slug}`);
+          const url = buildApiUrl(`/api/store/${slug}`);
+          const response = await fetch(url);
           const result = await response.json();
           if (result.success) {
             setStore(result.data);

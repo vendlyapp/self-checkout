@@ -8,6 +8,7 @@ import { Product } from "@/components/dashboard/products_list/data/mockProducts"
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/lib/stores/cartStore";
+import { buildApiUrl } from "@/lib/config/api";
 import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
 import { Percent, Store } from "lucide-react";
 
@@ -39,7 +40,8 @@ const PromotionPage: React.FC = () => {
       }
 
       try {
-        const response = await fetch(`http://localhost:5000/api/store/${store.slug}/products`);
+        const url = buildApiUrl(`/api/store/${store.slug}/products`);
+        const response = await fetch(url);
         const result = await response.json();
         
         if (result.success && result.data) {

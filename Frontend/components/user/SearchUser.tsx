@@ -9,6 +9,7 @@ import { useCartStore } from "@/lib/stores/cartStore";
 import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
 import { Product } from "@/components/dashboard/products_list/data/mockProducts";
 import Image from "next/image";
+import { buildApiUrl } from "@/lib/config/api";
 
 export default function SearchUser() {
   const router = useRouter();
@@ -38,7 +39,8 @@ export default function SearchUser() {
       }
 
       try {
-        const response = await fetch(`http://localhost:5000/api/store/${store.slug}/products`);
+        const url = buildApiUrl(`/api/store/${store.slug}/products`);
+        const response = await fetch(url);
         const result = await response.json();
         
         if (result.success && result.data) {

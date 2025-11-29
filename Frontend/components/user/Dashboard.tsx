@@ -6,6 +6,7 @@ import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
 import { SearchInput } from "@/components/ui/search-input";
 import { ScanBarcode, Store as StoreIcon, ShoppingBag } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { buildApiUrl } from "@/lib/config/api";
 
 const DashboardUser = () => {
   const router = useRouter();
@@ -32,7 +33,8 @@ const DashboardUser = () => {
       }
 
       // Cargar productos de la tienda desde la API
-      const response = await fetch(`http://localhost:5000/api/store/${store.slug}/products`);
+      const url = buildApiUrl(`/api/store/${store.slug}/products`);
+      const response = await fetch(url);
       const result = await response.json();
       
       if (result.success && result.data) {

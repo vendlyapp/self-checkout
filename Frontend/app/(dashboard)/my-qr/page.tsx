@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { QrCode, Download, Edit2, Save, X, Loader2, Copy, Share2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { buildApiUrl, getAuthHeaders } from '@/lib/config/api'
 
 interface StoreData {
   id: string
@@ -41,11 +42,16 @@ export default function MyQRPage() {
         return
       }
 
-      const response = await fetch('http://localhost:5000/api/store/my-store', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
+      const url = buildApiUrl('/api/store/my-store')
+      const headers = getAuthHeaders(session.access_token)
+
+      const response = await fetch(url, {
+        headers
       })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
 
       const result = await response.json()
 
@@ -54,9 +60,10 @@ export default function MyQRPage() {
         setStoreName(result.data.name)
         setStoreLogo(result.data.logo || '')
       } else {
-        toast.error('Error al cargar tienda')
+        toast.error(result.error || 'Error al cargar tienda')
       }
-    } catch {
+    } catch (error) {
+      console.error('Error al cargar tienda:', error)
       toast.error('Error al cargar tienda')
     } finally {
       setLoading(false)
@@ -69,17 +76,26 @@ export default function MyQRPage() {
       const { supabase } = await import('@/lib/supabase/client')
       const { data: { session } } = await supabase.auth.getSession()
 
-      const response = await fetch('http://localhost:5000/api/store/my-store', {
+      if (!session?.access_token) {
+        toast.error('No estás autenticado')
+        return
+      }
+
+      const url = buildApiUrl('/api/store/my-store')
+      const headers = getAuthHeaders(session.access_token)
+
+      const response = await fetch(url, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`
-        },
+        headers,
         body: JSON.stringify({
           name: storeName,
           logo: storeLogo || null
         })
       })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
 
       const result = await response.json()
 
@@ -88,9 +104,10 @@ export default function MyQRPage() {
         setEditing(false)
         toast.success('Tienda actualizada')
       } else {
-        toast.error('Error al actualizar')
+        toast.error(result.error || 'Error al actualizar')
       }
-    } catch {
+    } catch (error) {
+      console.error('Error al actualizar tienda:', error)
       toast.error('Error al actualizar')
     } finally {
       setSaving(false)

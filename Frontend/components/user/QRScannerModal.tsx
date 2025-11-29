@@ -6,6 +6,7 @@ import { X, QrCode, Camera, Loader2 } from 'lucide-react'
 import { useScannedStoreStore } from '@/lib/stores/scannedStoreStore'
 import { useCartStore } from '@/lib/stores/cartStore'
 import { toast } from 'sonner'
+import { buildApiUrl } from '@/lib/config/api'
 
 interface QRScannerModalProps {
   isOpen: boolean
@@ -38,7 +39,8 @@ export const QRScannerModal = ({ isOpen, onClose }: QRScannerModalProps) => {
 
     try {
       // Verificar que la tienda existe
-      const response = await fetch(`http://localhost:5000/api/store/${storeSlug.trim()}`)
+      const url = buildApiUrl(`/api/store/${storeSlug.trim()}`);
+      const response = await fetch(url);
       const result = await response.json()
 
       if (!result.success) {

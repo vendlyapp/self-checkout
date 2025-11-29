@@ -25,6 +25,16 @@ export const API_CONFIG = {
     PRODUCT_STOCK: (id: string) => `/api/products/${id}/stock`,
     PRODUCT_STATS: '/api/products/stats',
     
+    // Store
+    STORE_MY_STORE: '/api/store/my-store',
+    STORE_BY_SLUG: (slug: string) => `/api/store/${slug}`,
+    STORE_PRODUCTS: (slug: string) => `/api/store/${slug}/products`,
+    STORE_STATUS: '/api/store/my-store/status',
+    
+    // Auth
+    AUTH_PROFILE: '/api/auth/profile',
+    AUTH_LOGOUT: '/api/auth/logout',
+    
     // Health
     HEALTH: '/health',
   },

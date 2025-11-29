@@ -161,10 +161,11 @@ function LoginForm() {
         const token = data.session?.access_token;
         
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/profile`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
+          const { buildApiUrl, getAuthHeaders } = await import('@/lib/config/api');
+          const url = buildApiUrl('/api/auth/profile');
+          const headers = getAuthHeaders(token);
+          const response = await fetch(url, {
+            headers
           });
           
           if (response.ok) {

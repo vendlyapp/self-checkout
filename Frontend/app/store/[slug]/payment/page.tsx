@@ -6,6 +6,7 @@ import { useScannedStoreStore } from '@/lib/stores/scannedStoreStore';
 import { useCartStore } from '@/lib/stores/cartStore';
 import HeaderNav from "@/components/navigation/HeaderNav";
 import PaymentP from '@/components/user/PaymentP';
+import { buildApiUrl } from '@/lib/config/api';
 
 export default function StorePaymentPage() {
   const params = useParams();
@@ -22,7 +23,8 @@ export default function StorePaymentPage() {
         
         // Cargar info si no está
         if (!store || store.slug !== slug) {
-          const response = await fetch(`http://localhost:5000/api/store/${slug}`);
+          const url = buildApiUrl(`/api/store/${slug}`);
+          const response = await fetch(url);
           const result = await response.json();
           if (result.success) {
             setStore(result.data);

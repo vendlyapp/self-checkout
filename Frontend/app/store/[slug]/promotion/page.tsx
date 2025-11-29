@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import PromotionPage from '@/app/user/promotion/page'
 import { useScannedStoreStore } from '@/lib/stores/scannedStoreStore'
+import { buildApiUrl } from '@/lib/config/api'
 
 export default function StorePromotionPage() {
   const params = useParams()
@@ -13,7 +14,8 @@ export default function StorePromotionPage() {
   useEffect(() => {
     const loadStore = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/store/${slug}`)
+        const url = buildApiUrl(`/api/store/${slug}`);
+        const response = await fetch(url);
         const result = await response.json()
         if (result.success) {
           setStore(result.data)
