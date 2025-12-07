@@ -214,6 +214,40 @@ class StoreController {
       });
     }
   }
+
+  /**
+   * Regenera el código QR de la tienda del usuario autenticado
+   * Útil cuando se necesita actualizar el QR code con la URL correcta
+   * @route POST /api/store/my-store/regenerate-qr
+   * @param {Object} req - Request object de Express
+   * @param {Object} req.user - Usuario autenticado (inyectado por middleware)
+   * @param {string} req.user.userId - ID del usuario autenticado
+   * @param {Object} res - Response object de Express
+   * @returns {Promise<void>} JSON con la tienda actualizada incluyendo el nuevo QR code
+   * @throws {401} Si el usuario no está autenticado
+   * @throws {404} Si la tienda no existe
+   * @throws {500} Si hay error en el servidor
+   */
+  async regenerateQRCode(req, res) {
+    try {
+      const ownerId = req.user?.userId;
+
+      if (!ownerId) {
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+          success: false,
+          error: 'Usuario no autenticado'
+        });
+      }
+
+      const result = await storeService.regenerateQRCode(ownerId);
+      res.status(HTTP_STATUS.OK).json(result);
+    } catch (error) {
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = new StoreController();

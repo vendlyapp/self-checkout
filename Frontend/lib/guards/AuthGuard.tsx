@@ -24,16 +24,23 @@ export const AuthGuard = ({ children, allowedRoles }: AuthGuardProps) => {
     }
 
     // Si hay roles permitidos, verificar que el usuario tenga uno
-    if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
-      // Redirigir según el rol del usuario
-      if (profile.role === 'SUPER_ADMIN') {
-        router.push('/super-admin/dashboard');
-      } else if (profile.role === 'ADMIN') {
-        router.push('/dashboard');
-      } else {
-        router.push('/');
+    // Solo verificar roles si el perfil está disponible
+    // Si el perfil no está disponible pero el usuario está autenticado,
+    // permitir acceso (el perfil se cargará en segundo plano)
+    if (allowedRoles && profile) {
+      if (!allowedRoles.includes(profile.role)) {
+        // Redirigir según el rol del usuario
+        if (profile.role === 'SUPER_ADMIN') {
+          router.push('/super-admin/dashboard');
+        } else if (profile.role === 'ADMIN') {
+          router.push('/dashboard');
+        } else {
+          router.push('/');
+        }
       }
     }
+    // Si no hay perfil pero el usuario está autenticado, permitir acceso
+    // El perfil se cargará en segundo plano
   }, [isAuthenticated, profile, loading, allowedRoles, router, pathname]);
 
   // Mostrar loading mientras verifica
@@ -81,7 +88,8 @@ export const AuthGuard = ({ children, allowedRoles }: AuthGuardProps) => {
     return null;
   }
 
-  // Si hay restricciones de rol y el usuario no tiene permiso, no mostrar contenido
+  // Si hay restricciones de rol y el perfil está disponible, verificar permisos
+  // Si el perfil no está disponible, permitir acceso (se cargará en segundo plano)
   if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
     return null;
   }

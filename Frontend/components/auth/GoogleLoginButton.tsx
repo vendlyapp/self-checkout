@@ -23,6 +23,15 @@ export const GoogleLoginButton = () => {
         provider: 'google',
         options: {
           redirectTo: callbackUrl,
+          // Forzar selección de cuenta siempre (no usar sesión guardada)
+          queryParams: {
+            prompt: 'select_account', // Forzar selección de cuenta (no usar approval_prompt junto con prompt)
+            access_type: 'offline',
+            // No incluir scopes previamente otorgados para forzar nueva selección
+            include_granted_scopes: 'false',
+          },
+          // No persistir la sesión automáticamente
+          skipBrowserRedirect: false,
         }
       })
     } catch (error) {

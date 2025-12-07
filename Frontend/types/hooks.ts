@@ -191,7 +191,7 @@ export interface ProductsAnalyticsData {
  */
 export interface UseProductsReturn {
   /** Datos de productos y analytics */
-  data: ProductsAnalyticsData;
+  data: ProductsAnalyticsData | null;
   /** Estado de carga */
   loading: boolean;
   /** Mensaje de error */

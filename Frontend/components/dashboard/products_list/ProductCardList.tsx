@@ -79,15 +79,22 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
           <h3 className="text-gray-900 text-[16px] font-semibold leading-tight mb-1 truncate">
             {product.name}
           </h3>
-          <div className="flex items-center gap-2">
-            {product.originalPrice ? (
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Mostrar precio de promoción si hay originalPrice o si el producto tiene promoción activa */}
+            {(product.originalPrice || product.isOnSale || product.isPromotional) && product.originalPrice ? (
               <>
-                <span className="text-red-600 font-bold text-[15px]">
+                <span className="text-[#FD3F37] font-bold text-[15px]">
                   {formatPrice(product.price)}
                 </span>
                 <span className="text-gray-400 text-[13px] line-through">
                   statt {formatPrice(product.originalPrice)}
                 </span>
+                {/* Badge de promoción */}
+                {(product.isOnSale || product.isPromotional) && (
+                  <span className="text-[10px] font-semibold text-white bg-[#FD3F37] px-2 py-0.5 rounded-full">
+                    {product.discountPercentage ? `-${product.discountPercentage}%` : 'Aktion'}
+                  </span>
+                )}
               </>
             ) : (
               <span className="text-gray-900 font-bold text-[15px]">

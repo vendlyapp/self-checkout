@@ -92,8 +92,12 @@ async function makeRequest<T>(
       throw new Error('No authentication token found');
     }
 
+    // Si ya hay un signal en options, usar ese (React Query lo proporciona)
+    const signal = options.signal;
+
     const response = await fetch(endpoint, {
       ...options,
+      signal,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -108,6 +112,17 @@ async function makeRequest<T>(
     const data = await response.json();
     return data;
   } catch (error) {
+    // No loggear cancelaciones de React Query
+    if (error instanceof Error && (
+      error.name === 'AbortError' || 
+      error.message.includes('aborted') || 
+      error.message.includes('cancelled')
+    )) {
+      // Silenciosamente lanzar error de cancelación (React Query lo manejará)
+      throw error;
+    }
+    
+    // Solo loggear errores reales
     console.error('API request failed:', error);
     throw error;
   }

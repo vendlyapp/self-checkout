@@ -32,7 +32,12 @@ export default function ProductsDashboard() {
     return <ProductsErrorState error={error} onRetry={refresh} />;
   }
 
-  // Calcular valores derivados
+  // Si no hay datos, mostrar skeleton
+  if (!data || !data.products || !data.categories) {
+    return <ProductsDashboardSkeletonLoader />;
+  }
+
+  // Calcular valores derivados con valores por defecto
   const activeProductsCount = getActiveProductsCount(data.products);
   const activeCategoriesCount = getActiveCategoriesCount(data.categories);
 

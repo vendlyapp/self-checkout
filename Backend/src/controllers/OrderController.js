@@ -297,7 +297,20 @@ class OrderController {
    */
   async getOrderStats(req, res) {
     try {
-      const result = await orderService.getStats();
+      const { date, ownerId } = req.query;
+      const options = {};
+      
+      // Si se proporciona fecha, filtrar por día
+      if (date) {
+        options.date = date;
+      }
+      
+      // Si se proporciona ownerId, filtrar por usuario/tienda
+      if (ownerId) {
+        options.ownerId = ownerId;
+      }
+      
+      const result = await orderService.getStats(options);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({

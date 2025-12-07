@@ -7,7 +7,7 @@ class StoreService {
    */
   async create(ownerId, storeData) {
     try {
-      const { name, logo, isOpen } = storeData;
+      const { name, logo, isOpen, address, phone, email, description } = storeData;
 
       if (!name || !name.trim()) {
         throw new Error('El nombre de la tienda es requerido');
@@ -38,10 +38,12 @@ class StoreService {
       }
 
       // Crear tienda
+      // Intentar insertar con campos adicionales si existen en la tabla
       const insertQuery = `
         INSERT INTO "Store" (
-          "ownerId", "name", "slug", "logo", "isActive", "isOpen"
-        ) VALUES ($1, $2, $3, $4, $5, $6)
+          "ownerId", "name", "slug", "logo", "isActive", "isOpen", 
+          "address", "phone", "email", "description"
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING *
       `;
 
@@ -51,14 +53,38 @@ class StoreService {
         slug,
         logo || null,
         true,
-        isOpen !== undefined ? isOpen : true
-      ]);
+        isOpen !== undefined ? isOpen : true,
+        storeData.address || null,
+        storeData.phone || null,
+        storeData.email || null,
+        storeData.description || null
+      ]).catch(async (error) => {
+        // Si falla por campos que no existen, intentar sin ellos
+        if (error.message.includes('column') && (error.message.includes('address') || error.message.includes('phone') || error.message.includes('email') || error.message.includes('description'))) {
+          console.warn('Algunos campos no existen en la tabla Store, creando sin ellos:', error.message);
+          const fallbackQuery = `
+            INSERT INTO "Store" (
+              "ownerId", "name", "slug", "logo", "isActive", "isOpen"
+            ) VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING *
+          `;
+          return await query(fallbackQuery, [
+            ownerId,
+            name.trim(),
+            slug,
+            logo || null,
+            true,
+            isOpen !== undefined ? isOpen : true
+          ]);
+        }
+        throw error;
+      });
 
       const store = result.rows[0];
 
-      // Generar QR code para la tienda
+      // Generar QR code para la tienda con la URL completa
       const qrUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/store/${slug}`;
-      const qrCode = await qrCodeGenerator.generateQRCode(store.id, qrUrl);
+      const qrCode = await qrCodeGenerator.generateQRCode(qrUrl, store.name);
 
       // Actualizar con QR
       const updateQuery = 'UPDATE "Store" SET "qrCode" = $1 WHERE "id" = $2 RETURNING *';
@@ -163,7 +189,7 @@ class StoreService {
    */
   async update(ownerId, storeData) {
     try {
-      const { name, logo, isOpen } = storeData;
+      const { name, logo, isOpen, address, phone, email, description } = storeData;
 
       // Construir query de actualización dinámicamente
       const updateFields = [];
@@ -188,6 +214,30 @@ class StoreService {
         values.push(isOpen);
       }
 
+      if (address !== undefined) {
+        paramCount++;
+        updateFields.push(`"address" = $${paramCount}`);
+        values.push(address);
+      }
+
+      if (phone !== undefined) {
+        paramCount++;
+        updateFields.push(`"phone" = $${paramCount}`);
+        values.push(phone);
+      }
+
+      if (email !== undefined) {
+        paramCount++;
+        updateFields.push(`"email" = $${paramCount}`);
+        values.push(email);
+      }
+
+      if (description !== undefined) {
+        paramCount++;
+        updateFields.push(`"description" = $${paramCount}`);
+        values.push(description);
+      }
+
       if (updateFields.length === 0) {
         throw new Error('No hay campos para actualizar');
       }
@@ -203,15 +253,77 @@ class StoreService {
         RETURNING *
       `;
 
-      const result = await query(updateQuery, values);
+      let result;
+      try {
+        result = await query(updateQuery, values);
+      } catch (error) {
+        // Si falla por campos que no existen, intentar actualizar solo los campos básicos
+        if (error.message.includes('column') && (error.message.includes('address') || error.message.includes('phone') || error.message.includes('email') || error.message.includes('description'))) {
+          console.warn('Algunos campos no existen en la tabla Store, actualizando solo campos básicos:', error.message);
+          const basicFields = [];
+          const basicValues = [];
+          let basicParamCount = 0;
+          
+          if (name !== undefined) {
+            basicParamCount++;
+            basicFields.push(`"name" = $${basicParamCount}`);
+            basicValues.push(name);
+          }
+          if (logo !== undefined) {
+            basicParamCount++;
+            basicFields.push(`"logo" = $${basicParamCount}`);
+            basicValues.push(logo);
+          }
+          if (isOpen !== undefined) {
+            basicParamCount++;
+            basicFields.push(`"isOpen" = $${basicParamCount}`);
+            basicValues.push(isOpen);
+          }
+          
+          if (basicFields.length === 0) {
+            throw new Error('No hay campos básicos para actualizar');
+          }
+          
+          basicParamCount++;
+          basicValues.push(ownerId);
+          
+          const basicQuery = `
+            UPDATE "Store" 
+            SET ${basicFields.join(', ')}, "updatedAt" = CURRENT_TIMESTAMP
+            WHERE "ownerId" = $${basicParamCount}
+            RETURNING *
+          `;
+          
+          result = await query(basicQuery, basicValues);
+        } else {
+          throw error;
+        }
+      }
 
       if (result.rows.length === 0) {
         throw new Error('Tienda no encontrada');
       }
 
+      const updatedStore = result.rows[0];
+
+      // Regenerar QR code si el slug cambió o si no existe
+      if (!updatedStore.qrCode || (name !== undefined && name !== updatedStore.name)) {
+        const qrUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/store/${updatedStore.slug}`;
+        const qrCode = await qrCodeGenerator.generateQRCode(qrUrl, updatedStore.name);
+        
+        // Actualizar QR code
+        const qrUpdateQuery = 'UPDATE "Store" SET "qrCode" = $1 WHERE "id" = $2 RETURNING *';
+        const qrResult = await query(qrUpdateQuery, [qrCode, updatedStore.id]);
+        
+        return {
+          success: true,
+          data: qrResult.rows[0]
+        };
+      }
+
       return {
         success: true,
-        data: result.rows[0]
+        data: updatedStore
       };
     } catch (error) {
       console.error('Error updating store:', error);
@@ -246,6 +358,42 @@ class StoreService {
       };
     } catch (error) {
       console.error('Error updating store status:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Regenera el código QR de la tienda
+   * @param {string} ownerId - ID del propietario
+   */
+  async regenerateQRCode(ownerId) {
+    try {
+      // Obtener la tienda
+      const store = await this.getByOwnerId(ownerId);
+
+      if (!store) {
+        throw new Error('Tienda no encontrada');
+      }
+
+      // Generar nuevo QR code con la URL completa
+      const qrUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/store/${store.slug}`;
+      const qrCode = await qrCodeGenerator.generateQRCode(qrUrl, store.name);
+
+      // Actualizar QR code en la base de datos
+      const updateQuery = 'UPDATE "Store" SET "qrCode" = $1, "updatedAt" = CURRENT_TIMESTAMP WHERE "id" = $2 RETURNING *';
+      const result = await query(updateQuery, [qrCode, store.id]);
+
+      if (result.rows.length === 0) {
+        throw new Error('Error al actualizar el QR code');
+      }
+
+      return {
+        success: true,
+        data: result.rows[0],
+        message: 'QR code regenerado exitosamente'
+      };
+    } catch (error) {
+      console.error('Error regenerating QR code:', error);
       throw error;
     }
   }

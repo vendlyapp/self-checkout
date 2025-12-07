@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth/AuthContext'
-import { QrCode, Download, Edit2, Save, X, Loader2, Copy, Share2 } from 'lucide-react'
+import { QrCode, Download, Edit2, Save, X, Loader2, Copy, Share2, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { buildApiUrl, getAuthHeaders } from '@/lib/config/api'
 
@@ -24,6 +24,7 @@ export default function MyQRPage() {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [regenerating, setRegenerating] = useState(false)
   const [storeName, setStoreName] = useState('')
   const [storeLogo, setStoreLogo] = useState('')
 
@@ -153,6 +154,45 @@ export default function MyQRPage() {
     }
   }
 
+  const handleRegenerateQR = async () => {
+    try {
+      setRegenerating(true)
+      const { supabase } = await import('@/lib/supabase/client')
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (!session?.access_token) {
+        toast.error('No estás autenticado')
+        return
+      }
+
+      const url = buildApiUrl('/api/store/my-store/regenerate-qr')
+      const headers = getAuthHeaders(session.access_token)
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+
+      if (result.success) {
+        setStore(result.data)
+        toast.success('QR-Code erfolgreich regeneriert')
+      } else {
+        toast.error(result.error || 'Fehler beim Regenerieren des QR-Codes')
+      }
+    } catch (error) {
+      console.error('Error al regenerar QR:', error)
+      toast.error('Fehler beim Regenerieren des QR-Codes')
+    } finally {
+      setRegenerating(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -219,6 +259,24 @@ export default function MyQRPage() {
                     Teilen
                   </button>
                 </div>
+
+                <button
+                  onClick={handleRegenerateQR}
+                  disabled={regenerating}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {regenerating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Wird regeneriert...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4" />
+                      QR-Code regenerieren
+                    </>
+                  )}
+                </button>
 
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                   <p className="text-sm text-blue-900 font-medium mb-2">
@@ -505,6 +563,24 @@ export default function MyQRPage() {
                     >
                       <Share2 className="w-5 h-5" />
                       Teilen
+                    </button>
+
+                    <button
+                      onClick={handleRegenerateQR}
+                      disabled={regenerating}
+                      className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {regenerating ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Wird regeneriert...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="w-5 h-5" />
+                          QR-Code regenerieren
+                        </>
+                      )}
                     </button>
 
                     <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">

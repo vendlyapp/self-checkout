@@ -149,8 +149,9 @@ const makeRequest = async <T>(
     const token = session?.access_token;
     
     // Crear AbortController para timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
+    // Si ya hay un signal en options, usar ese (React Query lo proporciona)
+    const controller = options.signal ? null : new AbortController();
+    const timeoutId = controller ? setTimeout(() => controller.abort(), 10000) : null;
     
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -166,13 +167,18 @@ const makeRequest = async <T>(
       Object.assign(headers, options.headers);
     }
     
+    // Usar el signal de options si existe (React Query), sino usar el del controller
+    const signal = options.signal || controller?.signal;
+    
     const response = await fetch(url, {
       headers,
-      signal: controller.signal,
+      signal,
       ...options,
     });
     
-    clearTimeout(timeoutId);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -249,15 +255,39 @@ const makeRequest = async <T>(
     
     return data;
   } catch (error) {
-    console.error('Error en la llamada al backend:', error);
-    
     // Manejar error de timeout específicamente
     if (error instanceof Error && error.name === 'AbortError') {
+      // Si el error no tiene mensaje, probablemente es una cancelación de React Query
+      if (!error.message || error.message === 'signal is aborted without reason' || error.message.includes('aborted')) {
+        // React Query canceló la petición, esto es normal - no loggear como error
+        // Silenciosamente retornar error de cancelación
+        return {
+          success: false,
+          error: 'Request cancelled',
+        };
+      }
+      // Solo loggear timeouts reales (no cancelaciones)
+      console.warn('Connection timeout:', error.message);
       return {
         success: false,
         error: 'Connection timeout - please try again',
       };
     }
+    
+    // Verificar que no sea un error de cancelación antes de loggear
+    if (error instanceof Error && (
+      error.message.includes('aborted') || 
+      error.message.includes('cancelled') ||
+      error.name === 'AbortError'
+    )) {
+      return {
+        success: false,
+        error: 'Request cancelled',
+      };
+    }
+    
+    // Solo loggear errores que no sean cancelaciones
+    console.error('Error en la llamada al backend:', error);
     
     return {
       success: false,
@@ -270,7 +300,10 @@ export class ProductService {
   /**
    * Obtener todos los productos
    */
-  static async getProducts(filters?: ProductFilters): Promise<ApiResponse<Product[]>> {
+  static async getProducts(
+    filters?: ProductFilters,
+    requestOptions?: { signal?: AbortSignal }
+  ): Promise<ApiResponse<Product[]>> {
     const params = new URLSearchParams();
     
     if (filters?.category) params.append('category', filters.category);
@@ -283,21 +316,21 @@ export class ProductService {
     const queryString = params.toString();
     const endpoint = queryString ? `${API_CONFIG.ENDPOINTS.PRODUCTS}?${queryString}` : API_CONFIG.ENDPOINTS.PRODUCTS;
     
-    return makeRequest<Product[]>(endpoint);
+    return makeRequest<Product[]>(endpoint, requestOptions);
   }
 
   /**
    * Obtener producto por ID
    */
-  static async getProductById(id: string): Promise<ApiResponse<Product>> {
-    return makeRequest<Product>(API_CONFIG.ENDPOINTS.PRODUCT_BY_ID(id));
+  static async getProductById(id: string, requestOptions?: { signal?: AbortSignal }): Promise<ApiResponse<Product>> {
+    return makeRequest<Product>(API_CONFIG.ENDPOINTS.PRODUCT_BY_ID(id), requestOptions);
   }
 
   /**
    * Obtener producto por código QR
    */
-  static async getProductByQR(qrCode: string): Promise<ApiResponse<Product>> {
-    return makeRequest<Product>(API_CONFIG.ENDPOINTS.PRODUCT_BY_QR(qrCode));
+  static async getProductByQR(qrCode: string, requestOptions?: { signal?: AbortSignal }): Promise<ApiResponse<Product>> {
+    return makeRequest<Product>(API_CONFIG.ENDPOINTS.PRODUCT_BY_QR(qrCode), requestOptions);
   }
 
   /**
@@ -342,7 +375,7 @@ export class ProductService {
   /**
    * Obtener estadísticas de productos
    */
-  static async getStats(): Promise<ApiResponse<{
+  static async getStats(requestOptions?: { signal?: AbortSignal }): Promise<ApiResponse<{
     total: number;
     active: number;
     inactive: number;
@@ -350,6 +383,6 @@ export class ProductService {
     totalStock: number;
     categories: { [key: string]: number };
   }>> {
-    return makeRequest(API_CONFIG.ENDPOINTS.PRODUCT_STATS);
+    return makeRequest(API_CONFIG.ENDPOINTS.PRODUCT_STATS, requestOptions);
   }
 }

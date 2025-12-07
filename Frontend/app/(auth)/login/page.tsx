@@ -17,12 +17,46 @@ function LoginForm() {
   const [authLoading, setAuthLoading] = useState(true);
 
   // Verificar si ya está autenticado
+  // Solo limpiar sesión si el usuario viene explícitamente a la página de login
+  // No limpiar si solo está refrescando la página mientras está autenticado
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(!!session);
-      setAuthLoading(false);
-    });
-  }, []);
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        // Si hay una sesión válida, redirigir al dashboard en lugar de limpiar
+        if (session && session.expires_at && session.expires_at * 1000 > Date.now()) {
+          // Sesión válida, redirigir según el rol
+          const userRole = localStorage.getItem('userRole') || 'ADMIN';
+          if (userRole === 'SUPER_ADMIN') {
+            router.push('/super-admin/dashboard');
+          } else {
+            router.push(returnUrl);
+          }
+          return;
+        }
+        
+        // Solo limpiar sesión si está expirada o no es válida
+        if (session && session.expires_at && session.expires_at * 1000 <= Date.now()) {
+          // Sesión expirada, limpiar
+          await supabase.auth.signOut();
+          if (typeof window !== 'undefined') {
+            localStorage.clear();
+            sessionStorage.clear();
+          }
+        }
+        
+        setIsAuthenticated(false);
+        setAuthLoading(false);
+      } catch (error) {
+        console.error('Error checking session:', error);
+        setIsAuthenticated(false);
+        setAuthLoading(false);
+      }
+    };
+    
+    checkSession();
+  }, [router, returnUrl]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);

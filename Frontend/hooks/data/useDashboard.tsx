@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Users, Flame, FileText, Tag, Calculator, ShoppingCart } from 'lucide-react';
 import type { SearchResult, DashboardData, UseDashboardReturn } from '@/types';
+import { useOrderStats, useRecentOrders } from '@/hooks/queries';
 
 /**
  * Hook principal para gestión del dashboard
@@ -75,30 +76,87 @@ const mockDashboardData: DashboardData = {
 };
 
 export const useDashboard = (): UseDashboardReturn => {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isStoreOpen, setIsStoreOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
-  // Simular carga de datos
-  const loadDashboardData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  // Obtener fecha de hoy en formato YYYY-MM-DD
+  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
 
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+  // Usar React Query para obtener estadísticas del día (con cache)
+  const { 
+    data: orderStats, 
+    isLoading: statsLoading, 
+    error: statsError 
+  } = useOrderStats(today);
 
-      setData(mockDashboardData);
-    } catch (err) {
-      setError('Fehler beim Laden der Dashboard-Daten');
-    } finally {
-      setLoading(false);
+  // Usar React Query para obtener órdenes recientes (con cache)
+  const { 
+    data: recentOrders, 
+    isLoading: ordersLoading, 
+    error: ordersError 
+  } = useRecentOrders(10);
+
+  // Calcular datos del dashboard desde las queries
+  const data = useMemo<DashboardData | null>(() => {
+    if (!orderStats && !recentOrders) {
+      return null;
     }
+
+    const goalAmount = 2000; // Meta diaria fija (puede venir de configuración)
+    const currentAmount = orderStats?.totalRevenue || 0;
+    const percentage = goalAmount > 0 
+      ? Math.min(100, Math.round((currentAmount / goalAmount) * 100))
+      : 0;
+
+    // Procesar órdenes recientes
+    const recentSales: DashboardData['recentSales'] = recentOrders?.map((order) => {
+      // Calcular tiempo transcurrido
+      const orderDate = new Date(order.createdAt);
+      const now = new Date();
+      const diffHours = Math.floor((now.getTime() - orderDate.getTime()) / (1000 * 60 * 60));
+      const timeAgo = diffHours > 0 ? `${diffHours}h` : 'Ahora';
+
+      // Asegurar que amount sea un número
+      const amount = typeof order.total === 'number' 
+        ? order.total 
+        : typeof order.total === 'string' 
+          ? parseFloat(order.total) || 0 
+          : 0;
+
+      return {
+        id: order.id,
+        name: order.userName || 'Cliente',
+        receipt: `Beleg #${String(order.id).slice(-4).toUpperCase()}`,
+        time: timeAgo,
+        amount,
+        paymentMethod: 'Karte', // Por ahora fijo, puede venir del backend
+        status: 'completed' as const,
+      };
+    }) || [];
+
+    return {
+      currentAmount,
+      goalAmount,
+      percentage,
+      quickAccessItems: mockDashboardData.quickAccessItems,
+      recentSales: recentSales.length > 0 ? recentSales : mockDashboardData.recentSales,
+    };
+  }, [orderStats, recentOrders]);
+
+  // Estados combinados
+  const loading = statsLoading || ordersLoading;
+  const error = statsError || ordersError 
+    ? (statsError?.message || ordersError?.message || 'Fehler beim Laden der Dashboard-Daten')
+    : null;
+
+  // Función para refrescar datos (invalidar cache de React Query)
+  const refreshData = useCallback(async () => {
+    // React Query maneja el refresh automáticamente
+    // Si necesitamos forzar refresh, podemos usar queryClient.invalidateQueries
+    // Por ahora, el cache se actualiza automáticamente según staleTime
   }, []);
 
   // Búsqueda simulada
@@ -130,7 +188,8 @@ export const useDashboard = (): UseDashboardReturn => {
 
       setSearchResults(mockResults);
     } catch (err) {
-      setError('Fehler bei der Suche');
+      console.error('Fehler bei der Suche:', err);
+      // El error se maneja silenciosamente para búsquedas
     } finally {
       setIsSearching(false);
     }
@@ -141,15 +200,6 @@ export const useDashboard = (): UseDashboardReturn => {
     setIsStoreOpen(prev => !prev);
   }, []);
 
-  // Refrescar datos
-  const refreshData = useCallback(async () => {
-    await loadDashboardData();
-  }, [loadDashboardData]);
-
-  // Cargar datos iniciales
-  useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
 
   return {
     data,

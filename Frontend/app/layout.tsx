@@ -4,6 +4,8 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { UserProvider } from "@/lib/contexts/UserContext";
 import { AuthProvider } from "@/lib/auth/AuthContext";
+import { QueryProvider } from "@/lib/providers/QueryProvider";
+import { SessionTimeoutManager } from "@/components/auth/SessionTimeoutManager";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -44,29 +46,32 @@ export default function RootLayout({
         <meta name="apple-touch-fullscreen" content="yes" />
       </head>
       <body className={`${inter.className} h-responsive antialiased tap-highlight-transparent`} suppressHydrationWarning>
-        <AuthProvider>
-          <UserProvider>
-            {/* Container principal responsive */}
-            <div className="h-responsive w-full relative bg-[#F2EDE8] overflow-hidden">
-              {/* Contenedor interno responsive */}
-              <div className="h-responsive w-full overflow-y-auto overflow-x-hidden no-scrollbar">
-                {children}
+        <QueryProvider>
+          <AuthProvider>
+            <UserProvider>
+              <SessionTimeoutManager />
+              {/* Container principal responsive */}
+              <div className="h-responsive w-full relative bg-[#F2EDE8] overflow-hidden">
+                {/* Contenedor interno responsive */}
+                <div className="h-responsive w-full overflow-y-auto overflow-x-hidden no-scrollbar">
+                  {children}
+                </div>
               </div>
-            </div>
 
-            {/* Toast notifications optimizadas para móvil */}
-            <Toaster
-              position="top-center"
-              toastOptions={{
-                style: {
-                  maxWidth: "380px",
-                  fontSize: "14px",
-                  marginTop: "env(safe-area-inset-top, 0px)",
-                },
-              }}
-            />
-          </UserProvider>
-        </AuthProvider>
+              {/* Toast notifications optimizadas para móvil */}
+              <Toaster
+                position="top-center"
+                toastOptions={{
+                  style: {
+                    maxWidth: "380px",
+                    fontSize: "14px",
+                    marginTop: "env(safe-area-inset-top, 0px)",
+                  },
+                }}
+              />
+            </UserProvider>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

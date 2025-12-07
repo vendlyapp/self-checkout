@@ -12,5 +12,11 @@ export * from './business';
 // Data Hooks - Dashboard, analytics, products
 export * from './data';
 
+// Query Hooks - React Query hooks with caching
+export * from './queries';
+
+// Mutation Hooks - React Query mutations for write operations
+export * from './mutations';
+
 // Core Hooks - Essential utilities
 export * from './core';

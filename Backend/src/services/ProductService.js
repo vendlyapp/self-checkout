@@ -41,53 +41,76 @@ class ProductService {
         "costPrice", "margin", "taxRate", "expiryDate", "location", "notes"
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19,
-        $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35,
-        $36, $37, $38, $39, $40
+        $20, $21, $22::jsonb, $23, $24, $25, $26, $27, $28, $29, $30,
+        $31, $32, $33, $34, $35, $36, $37, $38, $39, $40
       ) RETURNING *
     `;
 
+    // Calcular precios correctamente
+    const basePrice = parseFloat(productData.price);
+    const promoPrice = productData.promotionPrice ? parseFloat(productData.promotionPrice) : null;
+    const originalPrice = promoPrice ? basePrice : (productData.originalPrice ? parseFloat(productData.originalPrice) : null);
+    const finalPrice = promoPrice || basePrice;
+    
+    // Calcular descuento si hay promoción
+    const discountPercentage = promoPrice && basePrice > 0 ?
+      Math.round(((basePrice - promoPrice) / basePrice) * 100) : null;
+
+    // Preparar arrays y objetos para PostgreSQL
+    // tags es text[] - pasar como array de JavaScript (pg maneja arrays nativamente)
+    const tagsArray = Array.isArray(productData.tags) 
+      ? productData.tags.filter(tag => tag && typeof tag === 'string').map(tag => tag.trim())
+      : (productData.tags && typeof productData.tags === 'string' ? [productData.tags.trim()] : []);
+    
+    // images es text[] - pasar como array de JavaScript (pg maneja arrays nativamente)
+    const imagesArray = Array.isArray(productData.images)
+      ? productData.images.filter(img => img && typeof img === 'string').map(img => img.trim())
+      : (productData.images && typeof productData.images === 'string' ? [productData.images.trim()] : []);
+    
+    // dimensions es jsonb - convertir a JSON string
+    const dimensionsObj = productData.dimensions && typeof productData.dimensions === 'object' ? productData.dimensions : null;
+
     const values = [
-      ownerId, // NUEVO: Owner ID
-      productData.name.trim(),
-      productData.description.trim(),
-      parseFloat(productData.price),
-      productData.promotionPrice ? parseFloat(productData.price) : null,
-      productData.category.trim(),
-      productData.categoryId || productData.category.toLowerCase().replace(/\s+/g, '_'),
-      stock,
-      productData.initialStock ? parseInt(productData.initialStock) : stock,
-      productData.barcode?.trim() || null,
-      productData.sku?.trim() || `SKU-${Date.now()}`,
-      productData.qrCode?.trim() || null,
-      productData.tags || [],
-      Boolean(productData.isNew),
-      Boolean(productData.isPopular),
-      Boolean(productData.promotionPrice),
-      productData.isActive !== undefined ? Boolean(productData.isActive) : true,
-      productData.rating ? parseFloat(productData.rating) : null,
-      productData.reviews ? parseInt(productData.reviews) : null,
-      productData.weight ? parseFloat(productData.weight) : null,
-      Boolean(productData.hasWeight),
-      productData.dimensions || null,
-      productData.promotionPrice ?
-        Math.round(((parseFloat(productData.price) - parseFloat(productData.promotionPrice)) / parseFloat(productData.price)) * 100) : null,
-      productData.image?.trim() || null,
-      productData.images || [],
-      'CHF',
-      productData.promotionTitle?.trim() || null,
-      productData.promotionType || null,
-      productData.promotionStartAt ? new Date(productData.promotionStartAt) : null,
-      productData.promotionEndAt ? new Date(productData.promotionEndAt) : null,
-      productData.promotionBadge?.trim() || null,
-      productData.promotionActionLabel?.trim() || null,
-      productData.promotionPriority ? parseInt(productData.promotionPriority) : null,
-      productData.supplier?.trim() || null,
-      productData.costPrice ? parseFloat(productData.costPrice) : null,
-      productData.margin ? parseFloat(productData.margin) : null,
-      productData.taxRate ? parseFloat(productData.taxRate) : null,
-      productData.expiryDate ? new Date(productData.expiryDate) : null,
-      productData.location?.trim() || null,
-      productData.notes?.trim() || null
+      ownerId, // $1
+      productData.name.trim(), // $2
+      productData.description.trim(), // $3
+      finalPrice, // $4 - precio final (promocional si existe, sino base)
+      originalPrice, // $5 - precio original (base si hay promoción, sino null)
+      productData.category.trim(), // $6
+      productData.categoryId || productData.category.toLowerCase().replace(/\s+/g, '_'), // $7
+      stock, // $8
+      productData.initialStock ? parseInt(productData.initialStock) : stock, // $9
+      productData.barcode?.trim() || null, // $10
+      productData.sku?.trim() || `SKU-${Date.now()}`, // $11
+      productData.qrCode?.trim() || null, // $12
+      tagsArray, // $13 - text[] - pasar array directamente (pg lo maneja)
+      Boolean(productData.isNew), // $14
+      Boolean(productData.isPopular), // $15
+      Boolean(promoPrice), // $16 - isOnSale si hay precio promocional
+      productData.isActive !== undefined ? Boolean(productData.isActive) : true, // $17
+      productData.rating ? parseFloat(productData.rating) : null, // $18
+      productData.reviews ? parseInt(productData.reviews) : null, // $19
+      productData.weight ? parseFloat(productData.weight) : null, // $20
+      Boolean(productData.hasWeight), // $21
+      dimensionsObj ? JSON.stringify(dimensionsObj) : null, // $22 - jsonb - convertir objeto a JSON
+      discountPercentage, // $23
+      productData.image?.trim() || null, // $24
+      imagesArray, // $25 - text[] - pasar array directamente (pg lo maneja)
+      productData.currency || 'CHF', // $26
+      productData.promotionTitle?.trim() || null, // $27
+      productData.promotionType || null, // $28
+      productData.promotionStartAt ? new Date(productData.promotionStartAt).toISOString() : null, // $29
+      productData.promotionEndAt ? new Date(productData.promotionEndAt).toISOString() : null, // $30
+      productData.promotionBadge?.trim() || null, // $31
+      productData.promotionActionLabel?.trim() || null, // $32
+      productData.promotionPriority ? parseInt(productData.promotionPriority) : null, // $33
+      productData.supplier?.trim() || null, // $34
+      productData.costPrice ? parseFloat(productData.costPrice) : null, // $35
+      productData.margin ? parseFloat(productData.margin) : null, // $36
+      productData.taxRate ? parseFloat(productData.taxRate) : null, // $37
+      productData.expiryDate ? new Date(productData.expiryDate).toISOString() : null, // $38
+      productData.location?.trim() || null, // $39
+      productData.notes?.trim() || null // $40
     ];
 
     const result = await query(insertQuery, values);

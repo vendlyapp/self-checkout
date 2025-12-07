@@ -309,26 +309,54 @@ class OrderService {
     };
   }
 
-  async getStats() {
+  async getStats(options = {}) {
+    const { date = null, ownerId = null } = options;
+    
+    let whereClause = '';
+    const params = [];
+    let paramCount = 0;
+
+    // Filtrar por fecha si se proporciona (para obtener estadísticas del día)
+    if (date) {
+      paramCount++;
+      // Usar CAST para mejor compatibilidad con Supabase
+      whereClause = `WHERE "createdAt"::date = $${paramCount}::date`;
+      params.push(date);
+    }
+
+    // Filtrar por ownerId si se proporciona (para obtener estadísticas de una tienda específica)
+    if (ownerId) {
+      paramCount++;
+      if (whereClause) {
+        whereClause += ` AND "userId" = $${paramCount}`;
+      } else {
+        whereClause = `WHERE "userId" = $${paramCount}`;
+      }
+      params.push(ownerId);
+    }
+
     const statsQuery = `
       SELECT
         COUNT(*) as totalOrders,
         COALESCE(SUM(total), 0) as totalRevenue,
         COALESCE(AVG(total), 0) as averageOrderValue,
-        COUNT(*) FILTER (WHERE "createdAt" >= CURRENT_DATE - INTERVAL '30 days') as recentOrders
+        COUNT(*) FILTER (WHERE "createdAt" >= CURRENT_DATE - INTERVAL '30 days') as recentOrders,
+        COUNT(DISTINCT "userId") as uniqueCustomers
       FROM "Order"
+      ${whereClause}
     `;
 
-    const result = await query(statsQuery);
+    const result = await query(statsQuery, params);
     const stats = result.rows[0];
 
     return {
       success: true,
       data: {
-        totalOrders: parseInt(stats.totalorders),
-        totalRevenue: parseFloat(stats.totalrevenue),
-        averageOrderValue: parseFloat(stats.averageordervalue),
-        recentOrders: parseInt(stats.recentorders)
+        totalOrders: parseInt(stats.totalorders) || 0,
+        totalRevenue: parseFloat(stats.totalrevenue) || 0,
+        averageOrderValue: parseFloat(stats.averageordervalue) || 0,
+        recentOrders: parseInt(stats.recentorders) || 0,
+        uniqueCustomers: parseInt(stats.uniquecustomers) || 0
       }
     };
   }

@@ -7,7 +7,6 @@ import HeaderUser from "@/components/navigation/user/HeaderUser";
 import { usePathname } from "next/navigation";
 import { useScrollReset } from "@/hooks";
 import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
-import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 
 interface UserLayoutProps {
   children: ReactNode;
@@ -19,13 +18,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
   const { store } = useScannedStoreStore();
   const isScanRoute = pathname === "/user/scan";
   
-  // Configurar timeout de sesión de 30 minutos
-  useSessionTimeout({
-    enabled: true,
-    onSessionExpired: () => {
-      console.log('Sesión expirada por inactividad (30 minutos)');
-    },
-  });
+  // El timeout de sesión se maneja globalmente en SessionTimeoutManager
   
   // Si la tienda está cerrada, ocultar navbar y footer
   const isStoreClosed = store?.isOpen === false;

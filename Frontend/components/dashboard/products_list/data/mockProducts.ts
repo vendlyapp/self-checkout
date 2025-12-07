@@ -5,6 +5,7 @@ export interface Product {
   description: string
   price: number
   originalPrice?: number
+  promotionalPrice?: number // Precio promocional (si existe)
   category: string
   categoryId: string
   stock: number
@@ -17,6 +18,7 @@ export interface Product {
   isNew?: boolean
   isPopular?: boolean
   isOnSale?: boolean
+  isPromotional?: boolean // Indica si el producto tiene una promoción activa
   isActive?: boolean // Estado activo/inactivo
   rating?: number
   reviews?: number
@@ -38,6 +40,8 @@ export interface Product {
   promotionType?: 'percentage' | 'amount' | 'flash' | 'bogo' | 'bundle'
   promotionStartAt?: string
   promotionEndAt?: string
+  promotionalStartDate?: string // Fecha de inicio de promoción (alias)
+  promotionalEndDate?: string // Fecha de fin de promoción (alias)
   promotionBadge?: string
   promotionActionLabel?: string
   promotionPriority?: number
@@ -50,6 +54,16 @@ export interface Product {
   location?: string // Ubicación en tienda
   notes?: string // Notas adicionales
 }
+
+// Tipo para actualizar productos (similar a Product pero todos los campos opcionales)
+export type UpdateProductRequest = Partial<Product> & {
+  id?: string;
+};
+
+// Tipo para crear productos
+export type CreateProductRequest = Omit<Product, 'id' | 'createdAt' | 'updatedAt'> & {
+  id?: string;
+};
 
 export interface ProductCategory {
   id: string
@@ -671,11 +685,37 @@ const parseBoolean = (value: unknown): boolean => {
 };
 
 // Función helper para asegurar que los datos del backend tengan el formato correcto
-const normalizeProductData = (product: ApiProduct): Product => {
+export const normalizeProductData = (product: ApiProduct): Product => {
+  // Calcular precios de promoción
+  const basePrice = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
+  const promotionalPrice = product.promotionalPrice ? (typeof product.promotionalPrice === 'string' ? parseFloat(product.promotionalPrice) : product.promotionalPrice) : undefined;
+  const isPromotional = parseBoolean(product.isPromotional);
+  
+  // Si hay promoción activa, usar promotionalPrice como price y basePrice como originalPrice
+  let finalPrice = basePrice;
+  let finalOriginalPrice = product.originalPrice ? (typeof product.originalPrice === 'string' ? parseFloat(product.originalPrice) : product.originalPrice) : undefined;
+  
+  // Verificar si la promoción está activa (dentro del rango de fechas si existe)
+  const now = new Date();
+  const promotionStart = product.promotionalStartDate ? new Date(product.promotionalStartDate) : null;
+  const promotionEnd = product.promotionalEndDate ? new Date(product.promotionalEndDate) : null;
+  const isPromotionActive = isPromotional && 
+    (!promotionStart || now >= promotionStart) && 
+    (!promotionEnd || now <= promotionEnd);
+  
+  if (isPromotionActive && promotionalPrice !== undefined) {
+    // Promoción activa: el precio promocional es el precio actual, el precio base es el original
+    finalPrice = promotionalPrice;
+    finalOriginalPrice = basePrice;
+  } else if (isPromotionActive && !promotionalPrice && finalOriginalPrice) {
+    // Si hay originalPrice pero no promotionalPrice, mantener ambos
+    // El precio actual ya es el promocional
+  }
+  
   return {
     ...product,
-    price: typeof product.price === 'string' ? parseFloat(product.price) : product.price,
-    originalPrice: product.originalPrice ? (typeof product.originalPrice === 'string' ? parseFloat(product.originalPrice) : product.originalPrice) : undefined,
+    price: finalPrice,
+    originalPrice: finalOriginalPrice,
     stock: typeof product.stock === 'string' ? parseInt(product.stock) : product.stock,
     initialStock: product.initialStock ? (typeof product.initialStock === 'string' ? parseInt(product.initialStock) : product.initialStock) : undefined,
     rating: product.rating ? (typeof product.rating === 'string' ? parseFloat(product.rating) : product.rating) : undefined,
@@ -686,7 +726,8 @@ const normalizeProductData = (product: ApiProduct): Product => {
     isActive: parseBoolean(product.isActive),
     isNew: parseBoolean(product.isNew),
     isPopular: parseBoolean(product.isPopular),
-    isOnSale: parseBoolean(product.isOnSale),
+    isOnSale: parseBoolean(product.isOnSale) || isPromotionActive,
+    isPromotional: isPromotionActive,
     hasWeight: parseBoolean(product.hasWeight),
     // Asegurar que categoryId existe
     categoryId: product.categoryId || product.category?.toLowerCase().replace(/\s+/g, '-') || 'uncategorized',

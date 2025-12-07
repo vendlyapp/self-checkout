@@ -25,6 +25,11 @@ export const API_CONFIG = {
     PRODUCT_STOCK: (id: string) => `/api/products/${id}/stock`,
     PRODUCT_STATS: '/api/products/stats',
     
+    // Categorías
+    CATEGORIES: '/api/categories',
+    CATEGORY_BY_ID: (id: string) => `/api/categories/${id}`,
+    CATEGORY_STATS: '/api/categories/stats',
+    
     // Store
     STORE_MY_STORE: '/api/store/my-store',
     STORE_BY_SLUG: (slug: string) => `/api/store/${slug}`,
@@ -34,6 +39,12 @@ export const API_CONFIG = {
     // Auth
     AUTH_PROFILE: '/api/auth/profile',
     AUTH_LOGOUT: '/api/auth/logout',
+    
+    // Orders
+    ORDERS: '/api/orders',
+    ORDER_BY_ID: (id: string) => `/api/orders/${id}`,
+    ORDER_STATS: '/api/orders/stats',
+    ORDER_RECENT: '/api/orders/recent',
     
     // Health
     HEALTH: '/health',

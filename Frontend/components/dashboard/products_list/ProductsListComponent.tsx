@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import {
-  fetchProducts,
   Product,
   productCategories,
+  normalizeProductData,
 } from "./data/mockProducts";
+import { useProducts } from "@/hooks/queries";
 import { getIcon } from "./data/iconMap";
 import ProductCardList from "./ProductCardList";
 import FilterModal, { FilterState } from "./FilterModal";
@@ -190,15 +191,18 @@ export default function ProductsListComponent({
 
   const activeFiltersCount = getActiveFiltersCount();
 
-  const loadInitialProducts = useCallback(async () => {
-    if (isStandalone) {
-      setIsLoading(true);
-    }
+  // Usar React Query para obtener productos con cache
+  const { data: productsData, isLoading: productsLoading, error: productsError } = useProducts({
+    isActive: true,
+  });
 
-    try {
-      const initialProducts = await fetchProducts();
+  // Procesar productos cuando se cargan
+  useEffect(() => {
+    if (productsData) {
+      // Normalizar productos
+      const normalizedProducts = productsData.map(normalizeProductData);
       const filteredProducts = applyFiltersToProducts(
-        initialProducts,
+        normalizedProducts,
         filterState
       );
       setProducts(filteredProducts);
@@ -206,51 +210,39 @@ export default function ProductsListComponent({
       // Actualizar contadores de filtros dinámicamente
       const updatedFilters = productsListFilters.map((filter) => {
         if (filter.id === 'all') {
-          return { ...filter, count: initialProducts.length };
+          return { ...filter, count: normalizedProducts.length };
         }
-        const count = initialProducts.filter(p => p.categoryId === filter.id).length;
+        const count = normalizedProducts.filter(p => p.categoryId === filter.id).length;
         return { ...filter, count };
       });
       setFilters(updatedFilters);
 
       if (isStandalone) {
-        setTotalProducts(initialProducts.length);
+        setTotalProducts(normalizedProducts.length);
         setFilteredProducts(filteredProducts.length);
         setHasActiveFilters(activeFiltersCount > 0);
       }
-    } catch {
-      // Error silencioso
-    } finally {
-      if (isStandalone) {
-        setIsLoading(false);
-      }
     }
-  }, [
-    isStandalone,
-    setIsLoading,
-    setTotalProducts,
-    setFilteredProducts,
-    setHasActiveFilters,
-    filterState,
-    applyFiltersToProducts,
-    activeFiltersCount,
-  ]);
+  }, [productsData, filterState, isStandalone, setTotalProducts, setFilteredProducts, setHasActiveFilters, activeFiltersCount, applyFiltersToProducts, productsListFilters]);
+
+  // Sincronizar isLoading del contexto con React Query
+  useEffect(() => {
+    if (isStandalone) {
+      setIsLoading(productsLoading);
+    }
+  }, [productsLoading, isStandalone, setIsLoading]);
 
   const handleCloseFilterModal = () => {
     setIsFilterModalOpen(false);
   };
 
-  const handleApplyFilters = async (filters: FilterState) => {
+  const handleApplyFilters = useCallback((filters: FilterState) => {
     setFilterState(filters);
 
-    if (isStandalone) {
-      setIsLoading(true);
-    }
-
-    try {
-      // Cargar todos los productos y aplicar filtros
-      const allProducts = await fetchProducts();
-      const filteredProducts = applyFiltersToProducts(allProducts, filters);
+    // Usar los productos ya cargados de React Query (cache)
+    if (productsData) {
+      const normalizedProducts = productsData.map(normalizeProductData);
+      const filteredProducts = applyFiltersToProducts(normalizedProducts, filters);
       setProducts(filteredProducts);
 
       // Sincronizar filtros de categorías con selectedFilters
@@ -262,17 +254,11 @@ export default function ProductsListComponent({
       if (isStandalone) {
         setFilteredProducts(filteredProducts.length);
         setHasActiveFilters(getActiveFiltersCount() > 0);
-        setIsLoading(false);
-      }
-    } catch {
-      // Error al aplicar filtros
-      if (isStandalone) {
-        setIsLoading(false);
       }
     }
-  };
+  }, [productsData, applyFiltersToProducts, isStandalone, setFilteredProducts, setHasActiveFilters, setSelectedFilters, getActiveFiltersCount]);
 
-  const handleClearFilters = () => {
+  const handleClearFilters = useCallback(() => {
     const defaultFilters: FilterState = {
       sortBy: "name" as const,
       categories: ["all"],
@@ -284,13 +270,18 @@ export default function ProductsListComponent({
     setSelectedFilters([]);
     setSearchQuery("");
 
-    if (isStandalone) {
-      setIsLoading(true);
+    // Los productos ya están en cache de React Query, solo aplicar filtros
+    if (productsData) {
+      const normalizedProducts = productsData.map(normalizeProductData);
+      const filteredProducts = applyFiltersToProducts(normalizedProducts, defaultFilters);
+      setProducts(filteredProducts);
+      
+      if (isStandalone) {
+        setFilteredProducts(filteredProducts.length);
+        setHasActiveFilters(false);
+      }
     }
-
-    // Recargar productos sin filtros
-    loadInitialProducts();
-  };
+  }, [productsData, applyFiltersToProducts, isStandalone, setFilteredProducts, setHasActiveFilters, setSelectedFilters]);
 
   const handleProductClick = (product: Product) => {
     if (onProductClick) {
@@ -298,10 +289,8 @@ export default function ProductsListComponent({
     }
   };
 
-  // Cargar productos iniciales y cuando cambia el refresh param
-  useEffect(() => {
-    loadInitialProducts();
-  }, [loadInitialProducts, refreshParam]);
+  // Los productos se cargan automáticamente con React Query
+  // No necesitamos un useEffect separado
 
   // Si es standalone, usar el contenedor fijo (igual que charge)
   if (isStandalone) {

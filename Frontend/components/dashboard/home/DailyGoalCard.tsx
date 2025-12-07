@@ -50,8 +50,8 @@ const DailyGoalCard = ({
       {/* Layout responsive */}
       <div className="flex flex-row lg:flex-row items-center gap-4 lg:gap-6">
         {/* Gráfico circular - tamaño como en la imagen */}
-        <div className="relative w-20 h-20 lg:w-24 lg:h-24 flex-shrink-0">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="relative w-20 h-20 lg:w-24 lg:h-24 flex-shrink-0" style={{ minWidth: '80px', minHeight: '80px' }}>
+          <ResponsiveContainer width="100%" height="100%" minHeight={80}>
             <PieChart>
               <Pie
                 data={chartData}

@@ -1,13 +1,16 @@
 /**
  * Hook para manejar el timeout de sesión automático
- * Cierra la sesión después de 30 minutos de inactividad
+ * Cierra la sesión después de 10 minutos
+ * 
+ * @deprecated Este hook está siendo reemplazado por useSessionTimeout de hooks/auth/useSessionTimeout.ts
+ * Por favor usa el nuevo hook que limpia el cache de React Query automáticamente
  */
 
 import { useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { clearAllSessionData, updateLastActivityTime, isSessionExpired, getLastActivityTime } from '@/lib/utils/sessionUtils';
 
-const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutos en milisegundos
+const SESSION_TIMEOUT = 10 * 60 * 1000; // 10 minutos en milisegundos
 const CHECK_INTERVAL = 60 * 1000; // Verificar cada minuto
 
 interface UseSessionTimeoutOptions {

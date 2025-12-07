@@ -45,6 +45,7 @@ export default function MobileForm(props: SharedFormProps) {
     showSuccessModal,
     createdProduct,
     handleModalClose,
+    handleSave,
     validateField,
     addVariant,
     removeVariant,
@@ -575,7 +576,8 @@ export default function MobileForm(props: SharedFormProps) {
             ))}
           </select>
         </div>
-      </div>
+
+       </div>
     </div>
   );
 }

@@ -67,8 +67,13 @@ async function makeRequest<T>(
     } = await supabase.auth.getSession();
     const token = session?.access_token;
 
+    // Si ya hay un signal en options, usar ese (React Query lo proporciona)
+    // No crear un nuevo AbortController si React Query ya proporciona uno
+    const signal = options.signal;
+
     const response = await fetch(endpoint, {
       ...options,
+      signal,
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -112,6 +117,17 @@ async function makeRequest<T>(
 
     return json;
   } catch (error) {
+    // No loggear cancelaciones de React Query
+    if (error instanceof Error && (
+      error.name === 'AbortError' || 
+      error.message.includes('aborted') || 
+      error.message.includes('cancelled')
+    )) {
+      // Silenciosamente lanzar error de cancelación (React Query lo manejará)
+      throw error;
+    }
+    
+    // Solo loggear errores reales
     console.error('Analytics API request failed:', error);
     throw error;
   }

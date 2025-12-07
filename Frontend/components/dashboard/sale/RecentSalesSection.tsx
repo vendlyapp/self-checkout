@@ -25,7 +25,10 @@ const RecentSalesSection = ({ sales }: RecentSalesSectionProps) => (
         </div>
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <DollarSign className="w-4 h-4 text-brand-500" />
-          <span>Total: CHF {sales.reduce((sum, sale) => sum + sale.amount, 0).toFixed(2)}</span>
+          <span>Total: CHF {sales.reduce((sum, sale) => {
+            const amount = typeof sale.amount === 'number' ? sale.amount : parseFloat(String(sale.amount)) || 0;
+            return sum + amount;
+          }, 0).toFixed(2)}</span>
         </div>
       </div>
     </div>

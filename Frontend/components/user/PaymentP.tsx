@@ -17,7 +17,7 @@ import { useRouter } from "next/navigation";
 import { ModernSpinner } from "@/components/ui";
 import { formatSwissPriceWithCHF } from "@/lib/utils";
 import { usePromoLogic } from "@/hooks";
-import { OrderService } from "@/lib/services/orderService";
+import { useCreateOrder } from "@/hooks/mutations";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -176,9 +176,11 @@ export default function PaymentP() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [paymentStep, setPaymentStep] = useState<"confirm" | "processing" | "success">("confirm");
-  const [isProcessing, setIsProcessing] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
   const router = useRouter();
+  
+  // Usar mutation de React Query para crear órdenes
+  const createOrderMutation = useCreateOrder();
   const {
     promoApplied,
     discountAmount,
@@ -203,18 +205,16 @@ export default function PaymentP() {
     setSelectedPaymentMethod(method);
     setPaymentStep("confirm");
     setOrderError(null);
-    setIsProcessing(false);
     setIsModalOpen(true);
   };
 
   const handleModalClose = () => {
-    if (isProcessing && paymentStep === "processing") {
+    if (createOrderMutation.isPending && paymentStep === "processing") {
       return;
     }
 
     setIsModalOpen(false);
     setPaymentStep("confirm");
-    setIsProcessing(false);
     setOrderError(null);
   };
 
@@ -233,10 +233,10 @@ export default function PaymentP() {
 
     try {
       setOrderError(null);
-      setIsProcessing(true);
       setPaymentStep("processing");
 
-      await OrderService.createOrder({
+      // Usar mutation de React Query
+      await createOrderMutation.mutateAsync({
         items: orderItems,
         paymentMethod: selectedPaymentMethod,
         total: payableTotal,
@@ -254,7 +254,6 @@ export default function PaymentP() {
       });
 
       setPaymentStep("success");
-      setIsProcessing(false);
 
       setTimeout(() => {
         handlePaymentSuccess();
@@ -266,7 +265,6 @@ export default function PaymentP() {
           : "No pudimos procesar tu pago. Intenta nuevamente.";
       setOrderError(message);
       setPaymentStep("confirm");
-      setIsProcessing(false);
     }
   };
 
@@ -275,10 +273,12 @@ export default function PaymentP() {
     setSelectedPaymentMethod("");
     setIsModalOpen(false);
     setPaymentStep("confirm");
-    setIsProcessing(false);
     setOrderError(null);
     router.push("/user");
   };
+  
+  // isProcessing viene de la mutation
+  const isProcessing = createOrderMutation.isPending;
 
 
   const paymentMethods = [

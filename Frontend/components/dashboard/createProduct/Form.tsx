@@ -9,11 +9,12 @@ import DesktopForm from "./DesktopForm";
 import { FormProps, CreatedProduct, ProductVariant, FormErrors } from "./types";
 import { validateField, createProductObject } from "./validations";
 import { CATEGORIES, VAT_RATES, SAVE_PROGRESS_STEPS } from "./constants";
-import { ProductService } from "@/lib/services/productService";
+import { useCreateProduct } from "@/hooks/mutations";
 import { Product } from "@/components/dashboard/products_list/data/mockProducts";
 
 export default function Form({ isDesktop = false }: FormProps) {
   const router = useRouter();
+  const createProductMutation = useCreateProduct();
 
   // Form state - Campos básicos
   const [productName, setProductName] = useState("");
@@ -116,21 +117,18 @@ export default function Form({ isDesktop = false }: FormProps) {
       );
 
       try {
-        const response = await ProductService.createProduct(productData);
-        
-        if (!response.success) {
-          throw new Error(response.error || 'Error al crear el producto');
-        }
+        // Usar mutation de React Query
+        const createdProduct = await createProductMutation.mutateAsync(productData);
 
         // Convertir el producto de la API al tipo usado en el frontend
         const frontendProduct: Product = {
-          ...response.data!,
-          tags: response.data!.tags || [],
-          categoryId: response.data!.categoryId || 'uncategorized',
+          ...createdProduct,
+          tags: createdProduct.tags || [],
+          categoryId: createdProduct.categoryId || 'uncategorized',
         };
         setCreatedProduct(frontendProduct);
         setShowSuccessModal(true);
-      } catch {
+      } catch (apiError) {
         // Fallback: crear producto localmente con datos mock
         const mockCreatedProduct: Product = {
           id: `mock-${Date.now()}`,
@@ -160,11 +158,19 @@ export default function Form({ isDesktop = false }: FormProps) {
           ...(productData.promotionPriority && { promotionPriority: productData.promotionPriority }),
         };
         
-        setCreatedProduct(mockCreatedProduct);
-        setShowSuccessModal(true);
-        
-        // Mostrar mensaje informativo
-        alert('Producto creado localmente. El backend no está disponible, pero el producto se guardó en el frontend.');
+        // Solo usar fallback si es un error de red/timeout, no si es un error de validación
+        if (apiError instanceof Error && (
+          apiError.message.includes('timeout') || 
+          apiError.message.includes('Failed to fetch') ||
+          apiError.message.includes('Network')
+        )) {
+          setCreatedProduct(mockCreatedProduct);
+          setShowSuccessModal(true);
+          alert('Producto creado localmente. El backend no está disponible, pero el producto se guardó en el frontend.');
+        } else {
+          // Re-lanzar el error para que se maneje en el catch externo
+          throw apiError;
+        }
       }
     } catch (error) {
       console.error('Error creating product:', error);
@@ -319,6 +325,7 @@ export default function Form({ isDesktop = false }: FormProps) {
     showSuccessModal: false, // No mostrar modal en los componentes hijos
     createdProduct: null,
     handleModalClose,
+    handleSave,
     validateField: handleValidateField,
     addVariant,
     removeVariant,

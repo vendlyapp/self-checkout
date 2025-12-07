@@ -72,6 +72,7 @@ export interface SharedFormProps {
   showSuccessModal: boolean;
   createdProduct: CreatedProduct | null;
   handleModalClose: () => void;
+  handleSave: () => Promise<void>;
   validateField: (field: keyof FormErrors, value: string) => void;
 
   // Funciones de variantes

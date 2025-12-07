@@ -45,6 +45,7 @@ export default function DesktopForm(props: SharedFormProps) {
     showSuccessModal,
     createdProduct,
     handleModalClose,
+    handleSave,
     validateField,
     addVariant,
     removeVariant,
@@ -570,6 +571,27 @@ export default function DesktopForm(props: SharedFormProps) {
                 </select>
               </div>
             </div>
+          </div>
+
+          {/* Save Button - Desktop */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <button
+              onClick={handleSave}
+              disabled={saveProgress > 0}
+              className="w-full bg-gradient-to-r from-[#25D076] to-[#20BA68] text-white py-4 px-6 rounded-xl font-semibold hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 text-base flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              {saveProgress > 0 ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Speichert Produkt...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-5 h-5" />
+                  <span>Produkt speichern</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>

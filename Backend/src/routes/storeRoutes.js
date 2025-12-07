@@ -85,6 +85,51 @@ router.patch('/my-store/status', authMiddleware, storeController.updateStoreStat
 
 /**
  * @swagger
+ * /api/store/my-store/regenerate-qr:
+ *   post:
+ *     summary: Regenerar código QR de la tienda
+ *     description: Regenera el código QR de la tienda con la URL correcta. Útil cuando se necesita actualizar el QR code existente.
+ *     tags: [Store]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: QR code regenerado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Store'
+ *                     message:
+ *                       type: string
+ *                       example: "QR code regenerado exitosamente"
+ *       401:
+ *         description: Usuario no autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Tienda no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post('/my-store/regenerate-qr', authMiddleware, storeController.regenerateQRCode);
+
+/**
+ * @swagger
  * /api/store/{slug}:
  *   get:
  *     summary: Obtener tienda por slug (pública)

@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { UseProductsReturn, ProductActionsReturn, ProductsAnalyticsData } from '@/types';
-import { fetchProductsAnalytics, mockProductsAnalyticsData } from '@/components/dashboard/products/data';
+import { useState, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { ProductActionsReturn } from '@/types';
 import { useRouter } from 'next/navigation';
+import { useProductsAnalytics } from '@/hooks/queries/useProductsAnalytics';
+import type { UseProductsReturn } from '@/types';
 
 /**
  * Hook para gestión de productos y analytics
- * Maneja datos de productos, categorías y estadísticas
+ * Ahora usa React Query para cache y mejor manejo de estado
  *
  * @returns UseProductsReturn - Estado completo de productos
  *
@@ -21,39 +23,21 @@ import { useRouter } from 'next/navigation';
  * return <ProductsList data={data} />;
  * ```
  */
-// UseProductsReturn interface moved to @/types
-
 export const useProducts = (): UseProductsReturn => {
-  const [data, setData] = useState<ProductsAnalyticsData>(mockProductsAnalyticsData);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  
+  // Usar React Query para obtener analytics de productos
+  const { data, isLoading: loading, error, refetch } = useProductsAnalytics();
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const result = await fetchProductsAnalytics();
-      setData(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cargar datos de productos');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const refresh = useCallback(async () => {
-    await fetchData();
-  }, [fetchData]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  // Función para refrescar datos (invalidar cache)
+  const refresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['productsAnalytics'] });
+  };
 
   return {
-    data,
+    data: data ?? null,
     loading,
-    error,
+    error: error ? (error instanceof Error ? error.message : 'Error al cargar datos de productos') : null,
     refresh
   };
 };

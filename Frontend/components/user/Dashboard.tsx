@@ -38,13 +38,31 @@ const DashboardUser = () => {
       const result = await response.json();
       
       if (result.success && result.data) {
-        // Convertir a formato correcto
-        const productsWithNumbers = result.data.map((p: Partial<Product>) => ({
-          ...p,
-          price: typeof p.price === 'string' ? parseFloat(p.price) : p.price,
-          stock: typeof p.stock === 'string' ? parseInt(p.stock) : p.stock,
-          categoryId: p.categoryId || p.category?.toLowerCase().replace(/\s+/g, '_'),
-        }));
+        // Convertir a formato correcto y normalizar precios
+        const productsWithNumbers = result.data.map((p: Partial<Product>) => {
+          const basePrice = typeof p.price === 'string' ? parseFloat(p.price) : (p.price || 0);
+          const promoPrice = p.promotionalPrice ? (typeof p.promotionalPrice === 'string' ? parseFloat(p.promotionalPrice) : p.promotionalPrice) : null;
+          const isPromotional = p.isPromotional || (promoPrice !== null);
+          
+          // Si hay promoción activa, usar precio promocional como price y basePrice como originalPrice
+          let finalPrice = basePrice;
+          let originalPrice = p.originalPrice ? (typeof p.originalPrice === 'string' ? parseFloat(p.originalPrice) : p.originalPrice) : undefined;
+          
+          if (isPromotional && promoPrice !== null) {
+            finalPrice = promoPrice;
+            originalPrice = basePrice;
+          }
+          
+          return {
+            ...p,
+            price: isNaN(finalPrice) ? 0 : finalPrice,
+            originalPrice: originalPrice && !isNaN(originalPrice) ? originalPrice : undefined,
+            stock: typeof p.stock === 'string' ? parseInt(p.stock) : (p.stock || 0),
+            categoryId: p.categoryId || p.category?.toLowerCase().replace(/\s+/g, '_'),
+            isOnSale: isPromotional,
+            isPromotional: isPromotional,
+          };
+        });
         setProducts(productsWithNumbers);
         setAllProducts(productsWithNumbers);
       } else {
@@ -102,17 +120,6 @@ const DashboardUser = () => {
       <div className="bg-background-cream border-b border-white">
         <div className="flex items-center justify-between w-full px-4 py-3">
           <div className="flex items-center gap-3">
-            {store?.logo ? (
-              <img 
-                src={store.logo} 
-                alt={store.name} 
-                className="w-12 h-12 rounded-xl object-cover"
-              />
-            ) : store ? (
-              <div className="w-12 h-12 bg-brand-500 rounded-xl flex items-center justify-center">
-                <StoreIcon className="w-7 h-7 text-white" />
-              </div>
-            ) : null}
             <div className="flex flex-col items-start justify-start">
               <p className="text-black font-bold text-[17px]">
                 {store?.name || 'Heinigers Hofladen'}

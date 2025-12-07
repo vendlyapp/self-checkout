@@ -46,13 +46,30 @@ const PromotionPage: React.FC = () => {
         
         if (result.success && result.data) {
           // Convertir y filtrar solo productos con promoción
-          const allProducts = result.data.map((p: Partial<Product>) => ({
-            ...p,
-            price: typeof p.price === 'string' ? parseFloat(p.price) : p.price,
-            originalPrice: p.originalPrice ? (typeof p.originalPrice === 'string' ? parseFloat(p.originalPrice) : p.originalPrice) : undefined,
-            stock: typeof p.stock === 'string' ? parseInt(p.stock) : p.stock,
-            categoryId: p.categoryId || p.category?.toLowerCase().replace(/\s+/g, '_'),
-          }));
+          const allProducts = result.data.map((p: Partial<Product>) => {
+            const basePrice = typeof p.price === 'string' ? parseFloat(p.price) : (p.price || 0);
+            const promoPrice = p.promotionalPrice ? (typeof p.promotionalPrice === 'string' ? parseFloat(p.promotionalPrice) : p.promotionalPrice) : null;
+            const isPromotional = p.isPromotional || (promoPrice !== null);
+            
+            // Si hay promoción activa, usar precio promocional como price y basePrice como originalPrice
+            let finalPrice = basePrice;
+            let originalPrice = p.originalPrice ? (typeof p.originalPrice === 'string' ? parseFloat(p.originalPrice) : p.originalPrice) : undefined;
+            
+            if (isPromotional && promoPrice !== null) {
+              finalPrice = promoPrice;
+              originalPrice = basePrice;
+            }
+            
+            return {
+              ...p,
+              price: isNaN(finalPrice) ? 0 : finalPrice,
+              originalPrice: originalPrice && !isNaN(originalPrice) ? originalPrice : undefined,
+              stock: typeof p.stock === 'string' ? parseInt(p.stock) : (p.stock || 0),
+              categoryId: p.categoryId || p.category?.toLowerCase().replace(/\s+/g, '_'),
+              isOnSale: isPromotional,
+              isPromotional: isPromotional,
+            };
+          });
 
           // Filtrar solo productos en promoción
           const promotional = allProducts.filter((p: Product) => 

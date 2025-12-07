@@ -21,11 +21,14 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
     }
   }
 
-  const formatPrice = (price: number) => {
-    if (price % 1 === 0) {
-      return `${price}.-`
+  const formatPrice = (price: number | string | undefined | null) => {
+    // Convertir a número si es string o undefined
+    const numPrice = typeof price === 'string' ? parseFloat(price) : (price || 0);
+    if (isNaN(numPrice)) return '0.00';
+    if (numPrice % 1 === 0) {
+      return `${numPrice}.-`
     }
-    return `${price.toFixed(2)}`
+    return `${numPrice.toFixed(2)}`
   }
 
   return (
