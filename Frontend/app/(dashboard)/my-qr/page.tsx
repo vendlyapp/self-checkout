@@ -1,117 +1,37 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/lib/auth/AuthContext'
 import { QrCode, Download, Edit2, Save, X, Loader2, Copy, Share2, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
-import { buildApiUrl, getAuthHeaders } from '@/lib/config/api'
-
-interface StoreData {
-  id: string
-  ownerId: string
-  name: string
-  slug: string
-  logo: string | null
-  qrCode: string | null
-  isActive: boolean
-  createdAt: string
-  updatedAt: string
-}
+import { useMyStore } from '@/hooks/queries'
+import { useUpdateStore, useRegenerateQR } from '@/hooks/mutations'
 
 export default function MyQRPage() {
-  const { } = useAuth()
-  const [store, setStore] = useState<StoreData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { data: store, isLoading: loading, error } = useMyStore()
+  const updateStoreMutation = useUpdateStore()
+  const regenerateQRMutation = useRegenerateQR()
+  
   const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [regenerating, setRegenerating] = useState(false)
   const [storeName, setStoreName] = useState('')
   const [storeLogo, setStoreLogo] = useState('')
 
+  // Sincronizar estado local con datos del store cuando cambian
   useEffect(() => {
-    loadStore()
-  }, [])
-
-  const loadStore = async () => {
-    try {
-      setLoading(true)
-      const { supabase } = await import('@/lib/supabase/client')
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (!session?.access_token) {
-        toast.error('No estás autenticado')
-        return
-      }
-
-      const url = buildApiUrl('/api/store/my-store')
-      const headers = getAuthHeaders(session.access_token)
-
-      const response = await fetch(url, {
-        headers
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const result = await response.json()
-
-      if (result.success) {
-        setStore(result.data)
-        setStoreName(result.data.name)
-        setStoreLogo(result.data.logo || '')
-      } else {
-        toast.error(result.error || 'Error al cargar tienda')
-      }
-    } catch (error) {
-      console.error('Error al cargar tienda:', error)
-      toast.error('Error al cargar tienda')
-    } finally {
-      setLoading(false)
+    if (store) {
+      setStoreName(store.name)
+      setStoreLogo(store.logo || '')
     }
-  }
+  }, [store])
 
   const handleSave = async () => {
     try {
-      setSaving(true)
-      const { supabase } = await import('@/lib/supabase/client')
-      const { data: { session } } = await supabase.auth.getSession()
-
-      if (!session?.access_token) {
-        toast.error('No estás autenticado')
-        return
-      }
-
-      const url = buildApiUrl('/api/store/my-store')
-      const headers = getAuthHeaders(session.access_token)
-
-      const response = await fetch(url, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify({
-          name: storeName,
-          logo: storeLogo || null
-        })
+      await updateStoreMutation.mutateAsync({
+        name: storeName,
+        logo: storeLogo || null
       })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const result = await response.json()
-
-      if (result.success) {
-        setStore(result.data)
-        setEditing(false)
-        toast.success('Tienda actualizada')
-      } else {
-        toast.error(result.error || 'Error al actualizar')
-      }
+      setEditing(false)
     } catch (error) {
-      console.error('Error al actualizar tienda:', error)
-      toast.error('Error al actualizar')
-    } finally {
-      setSaving(false)
+      // Error ya manejado por la mutation
     }
   }
 
@@ -156,40 +76,9 @@ export default function MyQRPage() {
 
   const handleRegenerateQR = async () => {
     try {
-      setRegenerating(true)
-      const { supabase } = await import('@/lib/supabase/client')
-      const { data: { session } } = await supabase.auth.getSession()
-
-      if (!session?.access_token) {
-        toast.error('No estás autenticado')
-        return
-      }
-
-      const url = buildApiUrl('/api/store/my-store/regenerate-qr')
-      const headers = getAuthHeaders(session.access_token)
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const result = await response.json()
-
-      if (result.success) {
-        setStore(result.data)
-        toast.success('QR-Code erfolgreich regeneriert')
-      } else {
-        toast.error(result.error || 'Fehler beim Regenerieren des QR-Codes')
-      }
+      await regenerateQRMutation.mutateAsync()
     } catch (error) {
-      console.error('Error al regenerar QR:', error)
-      toast.error('Fehler beim Regenerieren des QR-Codes')
-    } finally {
-      setRegenerating(false)
+      // Error ya manejado por la mutation
     }
   }
 
@@ -201,11 +90,13 @@ export default function MyQRPage() {
     )
   }
 
-  if (!store) {
+  if (error || !store) {
     return (
       <div className="p-4 md:p-8">
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
-          <p className="text-yellow-800">No se encontró tu tienda</p>
+          <p className="text-yellow-800">
+            {error instanceof Error ? error.message : 'No se encontró tu tienda'}
+          </p>
         </div>
       </div>
     )
@@ -262,10 +153,10 @@ export default function MyQRPage() {
 
                 <button
                   onClick={handleRegenerateQR}
-                  disabled={regenerating}
+                  disabled={regenerateQRMutation.isPending}
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {regenerating ? (
+                  {regenerateQRMutation.isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Wird regeneriert...
@@ -380,10 +271,10 @@ export default function MyQRPage() {
                   </button>
                   <button
                     onClick={handleSave}
-                    disabled={saving}
+                    disabled={updateStoreMutation.isPending}
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-colors font-semibold disabled:opacity-50 text-sm"
                   >
-                    {saving ? (
+                    {updateStoreMutation.isPending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <Save className="w-4 h-4" />
@@ -451,10 +342,10 @@ export default function MyQRPage() {
                     </button>
                     <button
                       onClick={handleSave}
-                      disabled={saving}
+                      disabled={updateStoreMutation.isPending}
                       className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors disabled:opacity-50"
                     >
-                      {saving ? (
+                      {updateStoreMutation.isPending ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
                         <Save className="w-4 h-4" />
@@ -567,10 +458,10 @@ export default function MyQRPage() {
 
                     <button
                       onClick={handleRegenerateQR}
-                      disabled={regenerating}
+                      disabled={regenerateQRMutation.isPending}
                       className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {regenerating ? (
+                      {regenerateQRMutation.isPending ? (
                         <>
                           <Loader2 className="w-5 h-5 animate-spin" />
                           Wird regeneriert...

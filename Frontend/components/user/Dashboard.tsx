@@ -119,18 +119,23 @@ const DashboardUser = () => {
       {/* Header con información de la tienda */}
       <div className="bg-background-cream border-b border-white">
         <div className="flex items-center justify-between w-full px-4 py-3">
-          <div className="flex items-center gap-3">
-            <div className="flex flex-col items-start justify-start">
-              <p className="text-black font-bold text-[17px]">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="flex flex-col items-start justify-start flex-1 min-w-0">
+              <p className="text-black font-bold text-[17px] truncate w-full">
                 {store?.name || 'Heinigers Hofladen'}
               </p>
-              <p className="text-gray-500 text-[13px]">
+              {store?.address && (
+                <p className="text-gray-600 text-[12px] mt-0.5 truncate w-full">
+                  {store.address}
+                </p>
+              )}
+              <p className="text-gray-500 text-[13px] mt-0.5">
                 {store ? `${products.length} Produkte verfügbar` : 'Grundhof 3, 8305 Dietlikon • ⭐ 4.8'}
               </p>
             </div>
           </div>
-          <div className="flex items-center justify-end">
-            <button className="bg-white text-gray-500 px-4 rounded-md hover:bg-gray-50 transition-colors touch-target tap-highlight-transparent active:scale-95" style={{ minHeight: '35px' }}>
+          <div className="flex items-center justify-end flex-shrink-0 ml-2">
+            <button className="bg-white text-gray-500 px-4 rounded-md hover:bg-gray-50 transition-colors touch-target tap-highlight-transparent active:scale-95 whitespace-nowrap" style={{ minHeight: '35px' }}>
               Kontakt
             </button>
           </div>

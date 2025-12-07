@@ -21,7 +21,8 @@ export default function Form({ isDesktop = false }: FormProps) {
   const [productDescription, setProductDescription] = useState("");
   const [productPrice, setProductPrice] = useState("");
   const [productCategory, setProductCategory] = useState("");
-  const [productImages, setProductImages] = useState<string[]>([]);
+  const [productImages, setProductImages] = useState<string[]>([]); // Array de URLs base64 o URLs
+  const [imageFiles, setImageFiles] = useState<File[]>([]); // Archivos originales para referencia
   const [isActive, setIsActive] = useState(true);
   
   // Stock siempre es 999 (no se muestra en el formulario)
@@ -90,6 +91,48 @@ export default function Form({ isDesktop = false }: FormProps) {
     [variants.length]
   );
 
+  // Función para manejar subida de imágenes
+  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const maxImages = 3;
+    const remainingSlots = maxImages - productImages.length;
+    const filesToProcess = Array.from(files).slice(0, remainingSlots);
+
+    filesToProcess.forEach((file) => {
+      if (!file.type.startsWith('image/')) {
+        alert(`${file.name} no es una imagen válida`);
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`${file.name} es demasiado grande. Máximo 5MB`);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setProductImages((prev) => [...prev, base64String]);
+        setImageFiles((prev) => [...prev, file]);
+      };
+      reader.onerror = () => {
+        alert(`Error al leer ${file.name}`);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Limpiar el input para permitir seleccionar el mismo archivo nuevamente
+    e.target.value = '';
+  }, [productImages.length]);
+
+  // Función para eliminar imagen
+  const handleRemoveImage = useCallback((index: number) => {
+    setProductImages((prev) => prev.filter((_, i) => i !== index));
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
   const handleSave = useCallback(async () => {
     try {
       handleValidateField("productName", productName);
@@ -116,9 +159,15 @@ export default function Form({ isDesktop = false }: FormProps) {
         hasPromotion,
       );
 
+      // Agregar imágenes al objeto del producto
+      if (productImages.length > 0) {
+        productData.images = productImages;
+        productData.image = productImages[0]; // Primera imagen como imagen principal
+      }
+
       try {
         // Usar mutation de React Query
-        const createdProduct = await createProductMutation.mutateAsync(productData);
+        const createdProduct = await createProductMutation.mutateAsync(productData as any);
 
         // Convertir el producto de la API al tipo usado en el frontend
         const frontendProduct: Product = {
@@ -303,6 +352,8 @@ export default function Form({ isDesktop = false }: FormProps) {
     setProductCategory,
     productImages,
     setProductImages,
+    handleImageUpload,
+    handleRemoveImage,
     isActive,
     setIsActive,
     stock,

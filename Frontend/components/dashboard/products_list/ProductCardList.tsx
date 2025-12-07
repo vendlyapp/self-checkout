@@ -12,6 +12,7 @@ interface Product {
   category: string;
   categoryId: string;
   image?: string;
+  images?: string[];
   stock: number;
   barcode?: string;
   sku: string;
@@ -19,6 +20,7 @@ interface Product {
   isNew?: boolean;
   isPopular?: boolean;
   isOnSale?: boolean;
+  isPromotional?: boolean;
   rating?: number;
   reviews?: number;
   weight?: number;
@@ -71,8 +73,22 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
       aria-label={`Produkt anzeigen: ${product.name}`}
     >
       <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
-          <Package className="w-8 h-8 text-gray-600" />
+        <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center relative">
+          {product.image || (product.images && product.images.length > 0) ? (
+            <img
+              src={product.image || product.images?.[0]}
+              alt={product.name}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                if (fallback) fallback.classList.remove('hidden');
+              }}
+            />
+          ) : null}
+          <div className={`w-full h-full flex items-center justify-center ${(product.image || product.images?.[0]) ? 'hidden' : ''}`}>
+            <Package className="w-8 h-8 text-gray-600" />
+          </div>
         </div>
 
         <div className="flex-1 min-w-0">

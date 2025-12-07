@@ -26,6 +26,8 @@ export default function DesktopForm(props: SharedFormProps) {
     setProductCategory,
     productImages,
     setProductImages,
+    handleImageUpload,
+    handleRemoveImage,
     isActive,
     setIsActive,
     hasPromotion,
@@ -138,23 +140,32 @@ export default function DesktopForm(props: SharedFormProps) {
                 {productImages.map((image, index) => (
                   <div key={index} className="relative">
                     <div
-                      className="w-full h-32 object-cover rounded-lg border border-gray-200 bg-white flex items-center justify-center"
+                      className="w-full h-32 rounded-lg border border-gray-200 bg-white overflow-hidden"
                       style={{ aspectRatio: "1/1" }}
                     >
-                      <Camera className="w-8 h-8 text-gray-400" />
+                      {image ? (
+                        <img
+                          src={image}
+                          alt={`Product image ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <div className={`w-full h-full flex items-center justify-center ${image ? 'hidden' : ''}`}>
+                        <Camera className="w-8 h-8 text-gray-400" />
+                      </div>
                     </div>
                     <button
-                      onClick={() =>
-                        setProductImages(
-                          productImages.filter((_, i) => i !== index)
-                        )
-                      }
-                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                      onClick={() => handleRemoveImage(index)}
+                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors z-10"
                     >
                       <X className="w-4 h-4 text-white" />
                     </button>
                     {index === 0 && (
-                      <div className="absolute bottom-2 left-2 bg-brand-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                      <div className="absolute bottom-2 left-2 bg-brand-500 text-white px-2 py-1 rounded-full text-xs font-medium z-10">
                         Haupt
                       </div>
                     )}
@@ -168,32 +179,33 @@ export default function DesktopForm(props: SharedFormProps) {
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
                 <Camera className="w-8 h-8 text-gray-400 mx-auto mb-3" />
                 <div className="space-y-3">
-                  <button
-                    onClick={() =>
-                      setProductImages([...productImages, `photo_${Date.now()}`])
-                    }
-                    className="w-full bg-brand-500 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 py-3"
-                  >
+                  <label className="w-full bg-brand-500 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 py-3 cursor-pointer hover:bg-brand-600">
                     <Camera className="w-4 h-4" />
                     <span>Foto aufnehmen</span>
-                  </button>
-                  <button
-                    onClick={() =>
-                      setProductImages([
-                        ...productImages,
-                        `gallery_${Date.now()}`,
-                      ])
-                    }
-                    className="w-full bg-white text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 py-3 border border-gray-300"
-                  >
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </label>
+                  <label className="w-full bg-white text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 py-3 border border-gray-300 cursor-pointer hover:bg-gray-50">
                     <FolderOpen className="w-4 h-4" />
-                    <span>Galerie</span>
-                  </button>
+                    <span>Aus Galerie wählen</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
                 <div className="text-xs text-gray-500 mt-3">
                   {productImages.length === 0
                     ? "Erstes Bild wird als Hauptbild verwendet"
-                    : "Weitere Bilder hinzufügen"}
+                    : `Noch ${3 - productImages.length} Bild${3 - productImages.length > 1 ? 'er' : ''} möglich`}
                 </div>
               </div>
             )}

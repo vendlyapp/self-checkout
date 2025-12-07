@@ -14,3 +14,6 @@ export { useProductsAnalytics } from './useProductsAnalytics';
 // Order queries
 export { useOrderStats } from './useOrderStats';
 export { useRecentOrders } from './useRecentOrders';
+
+// Store queries
+export { useMyStore } from './useMyStore';

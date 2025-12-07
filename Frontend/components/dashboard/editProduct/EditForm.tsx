@@ -13,6 +13,7 @@ import { useUpdateProduct } from "@/hooks/mutations";
 import { useProductById } from "@/hooks/queries";
 import { Product } from "@/components/dashboard/products_list/data/mockProducts";
 import { normalizeProductData } from "@/components/dashboard/products_list/data/mockProducts";
+import type { UpdateProductRequest } from "@/lib/services/productService";
 
 interface EditFormProps {
   productId: string;
@@ -32,6 +33,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
   const [productPrice, setProductPrice] = useState("");
   const [productCategory, setProductCategory] = useState("");
   const [productImages, setProductImages] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [isActive, setIsActive] = useState(true);
   
   // Stock siempre es 999 (no se muestra en el formulario)
@@ -66,10 +68,10 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
       setProductPrice(product.price?.toString() || "");
       setProductCategory(product.category || "");
       setProductImages(product.images || product.image ? [product.image || product.images?.[0] || ""].filter(Boolean) : []);
-      setIsActive(product.isActive !== false);
+      setIsActive(product.isActive ?? true);
       
       // Configurar promoción si existe
-      const hasActivePromotion = product.isPromotional || product.isOnSale;
+      const hasActivePromotion = !!(product.isPromotional || product.isOnSale);
       setHasPromotion(hasActivePromotion);
       
       // Si hay promoción, el precio promocional es el precio actual y el originalPrice es el precio base
@@ -98,6 +100,48 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
       setVatRate("2.6"); // Valor por defecto
     }
   }, [existingProduct]);
+
+  // Función para manejar subida de imágenes
+  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const maxImages = 3;
+    const remainingSlots = maxImages - productImages.length;
+    const filesToProcess = Array.from(files).slice(0, remainingSlots);
+
+    filesToProcess.forEach((file) => {
+      if (!file.type.startsWith('image/')) {
+        alert(`${file.name} no es una imagen válida`);
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`${file.name} es demasiado grande. Máximo 5MB`);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setProductImages((prev) => [...prev, base64String]);
+        setImageFiles((prev) => [...prev, file]);
+      };
+      reader.onerror = () => {
+        alert(`Error al leer ${file.name}`);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Limpiar el input para permitir seleccionar el mismo archivo nuevamente
+    e.target.value = '';
+  }, [productImages.length]);
+
+  // Función para eliminar imagen
+  const handleRemoveImage = useCallback((index: number) => {
+    setProductImages((prev) => prev.filter((_, i) => i !== index));
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+  }, []);
 
   // Data from constants
   const categories = CATEGORIES;
@@ -278,6 +322,8 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
     setProductCategory,
     productImages,
     setProductImages,
+    handleImageUpload,
+    handleRemoveImage,
     isActive,
     setIsActive,
     stock,

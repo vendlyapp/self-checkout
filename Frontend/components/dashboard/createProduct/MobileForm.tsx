@@ -26,6 +26,8 @@ export default function MobileForm(props: SharedFormProps) {
     setProductCategory,
     productImages,
     setProductImages,
+    handleImageUpload,
+    handleRemoveImage,
     isActive,
     setIsActive,
     hasPromotion,
@@ -139,23 +141,32 @@ export default function MobileForm(props: SharedFormProps) {
                 {productImages.map((image, index) => (
                   <div key={index} className="relative">
                     <div
-                      className="w-[120px] h-[120px] object-cover rounded-lg border border-gray-200 bg-white flex items-center justify-center"
+                      className="w-[120px] h-[120px] rounded-lg border border-gray-200 bg-white overflow-hidden"
                       style={{ aspectRatio: "1/1" }}
                     >
-                      <Camera className="w-10 h-10 text-gray-400" />
+                      {image ? (
+                        <img
+                          src={image}
+                          alt={`Product image ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <div className={`w-full h-full flex items-center justify-center ${image ? 'hidden' : ''}`}>
+                        <Camera className="w-10 h-10 text-gray-400" />
+                      </div>
                     </div>
                     <button
-                      onClick={() =>
-                        setProductImages(
-                          productImages.filter((_, i) => i !== index)
-                        )
-                      }
-                      className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                      onClick={() => handleRemoveImage(index)}
+                      className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors z-10"
                     >
                       <X className="w-3 h-3 text-white" />
                     </button>
                     {index === 0 && (
-                      <div className="absolute bottom-1 left-1 bg-brand-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                      <div className="absolute bottom-1 left-1 bg-brand-500 text-white px-2 py-1 rounded-full text-xs font-medium z-10">
                         Haupt
                       </div>
                     )}
@@ -170,32 +181,33 @@ export default function MobileForm(props: SharedFormProps) {
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors bg-background-cream">
               <Camera className="w-6 h-6 text-gray-400 mx-auto mb-2" />
               <div className="space-y-2 flex flex-col items-center">
-                <button
-                  onClick={() =>
-                    setProductImages([...productImages, `photo_${Date.now()}`])
-                  }
-                  className="w-[283px] h-[46px] bg-brand-500 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-1"
-                >
+                <label className="w-[283px] h-[46px] bg-brand-500 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-1 cursor-pointer hover:bg-brand-600">
                   <Camera className="w-4 h-4" />
                   <span>Foto aufnehmen</span>
-                </button>
-                <button
-                  onClick={() =>
-                    setProductImages([
-                      ...productImages,
-                      `gallery_${Date.now()}`,
-                    ])
-                  }
-                  className="w-[283px] h-[46px] bg-white text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-1"
-                >
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </label>
+                <label className="w-[283px] h-[46px] bg-white text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-1 cursor-pointer border border-gray-300 hover:bg-gray-50">
                   <FolderOpen className="w-4 h-4" />
-                  <span>Galerie</span>
-                </button>
+                  <span>Aus Galerie wählen</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </label>
               </div>
               <div className="text-xs text-gray-500 mt-2">
                 {productImages.length === 0
                   ? "Erstes Bild wird als Hauptbild verwendet"
-                  : "Weitere Bilder hinzufügen"}
+                  : `Noch ${3 - productImages.length} Bild${3 - productImages.length > 1 ? 'er' : ''} möglich`}
               </div>
             </div>
           )}

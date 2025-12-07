@@ -6,6 +6,10 @@ interface StoreInfo {
   name: string
   slug: string
   logo: string | null
+  address?: string | null
+  phone?: string | null
+  email?: string | null
+  description?: string | null
   isOpen?: boolean
   isActive?: boolean
 }
