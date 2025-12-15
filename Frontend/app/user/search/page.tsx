@@ -15,5 +15,9 @@ export default function SearchPage() {
     }
   }, [store?.slug, router]);
 
-  return <SearchUser />;
+  return (
+    <div className="animate-page-enter gpu-accelerated">
+      <SearchUser />
+    </div>
+  );
 }

@@ -34,7 +34,7 @@ export default function ProductCard({ product, onAddToCart, initialQuantity = 0 
   return (
     <div className="bg-white rounded-[20px] lg:rounded-xl h-[130px] lg:h-[140px] p-4 lg:p-4 relative 
                     shadow-sm hover:shadow-md lg:border lg:border-gray-100 
-                    transition-all duration-200 hover:scale-[1.01] group">
+                    transition-interactive gpu-accelerated hover:scale-[1.01] active:scale-[0.98] group">
       {/* Badge de precio */}
       <div className="absolute top-3 right-3 lg:top-3 lg:right-3">
         {product.originalPrice ? (

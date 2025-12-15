@@ -50,37 +50,53 @@ export default function ProductsList({
   }
 
   return (
-    <div className={`p-4 pb-32 lg:p-0 lg:pb-8 ${className}`}>
+    <div className={`p-4 pb-32 lg:p-0 lg:pb-8 ${className} animate-fade-in-scale`}>
       {/* Mobile: Lista vertical */}
       <div className="lg:hidden space-y-2">
-        {products.map((product) => {
+        {products.map((product, index) => {
           const cartItem = cartItems.find(
             (item) => item.product.id === product.id
           );
           return (
-            <ProductCard
+            <div
               key={product.id}
-              product={product}
-              onAddToCart={onAddToCart}
-              initialQuantity={cartItem?.quantity || 0}
-            />
+              className="animate-slide-up-fade gpu-accelerated"
+              style={{
+                animationDelay: `${index * 0.05}s`,
+                animationFillMode: 'both'
+              }}
+            >
+              <ProductCard
+                product={product}
+                onAddToCart={onAddToCart}
+                initialQuantity={cartItem?.quantity || 0}
+              />
+            </div>
           );
         })}
       </div>
 
       {/* Desktop/Tablet: Grid compacto */}
       <div className="hidden lg:grid lg:grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-3">
-        {products.map((product) => {
+        {products.map((product, index) => {
           const cartItem = cartItems.find(
             (item) => item.product.id === product.id
           );
           return (
-            <ProductCard
+            <div
               key={product.id}
-              product={product}
-              onAddToCart={onAddToCart}
-              initialQuantity={cartItem?.quantity || 0}
-            />
+              className="animate-slide-up-fade gpu-accelerated"
+              style={{
+                animationDelay: `${index * 0.05}s`,
+                animationFillMode: 'both'
+              }}
+            >
+              <ProductCard
+                product={product}
+                onAddToCart={onAddToCart}
+                initialQuantity={cartItem?.quantity || 0}
+              />
+            </div>
           );
         })}
       </div>

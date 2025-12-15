@@ -89,11 +89,19 @@ export const buildApiUrl = (endpoint: string, params?: Record<string, string | n
 };
 
 // Función helper para obtener headers con autenticación
-export const getAuthHeaders = (token?: string): Record<string, string> => {
+export const getAuthHeaders = (token?: string, noCache: boolean = false): Record<string, string> => {
   const headers: Record<string, string> = { ...API_CONFIG.DEFAULT_HEADERS };
   
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  // Agregar headers de no-cache para peticiones de autenticación
+  if (noCache) {
+    headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0';
+    headers['Pragma'] = 'no-cache';
+    headers['Expires'] = '0';
+    headers['X-Requested-With'] = 'XMLHttpRequest';
   }
   
   return headers;

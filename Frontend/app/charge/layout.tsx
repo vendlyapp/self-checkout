@@ -11,6 +11,7 @@ import {
 } from "@/components/dashboard/products_list/data/mockProducts";
 import { getIcon } from "@/components/dashboard/products_list/data/iconMap";
 import { FilterModalProvider, ChargeProvider } from "./contexts";
+import { LoadingProductsModalProvider } from "@/lib/contexts/LoadingProductsModalContext";
 
 // Tipos internos
 interface ChargeContextType {
@@ -92,14 +93,18 @@ export default function ChargeLayout({ children }: ChargeLayoutProps) {
   };
 
   return (
-    <FilterModalProvider
-      value={{ isFilterModalOpen, setIsFilterModalOpen }}
-    >
-      <ChargeProvider value={chargeContextValue}>
-        <AdminLayout>
-          {children}
-        </AdminLayout>
-      </ChargeProvider>
-    </FilterModalProvider>
+    <LoadingProductsModalProvider>
+      <FilterModalProvider
+        value={{ isFilterModalOpen, setIsFilterModalOpen }}
+      >
+        <ChargeProvider value={chargeContextValue}>
+          <AdminLayout>
+            <div className="gpu-accelerated">
+              {children}
+            </div>
+          </AdminLayout>
+        </ChargeProvider>
+      </FilterModalProvider>
+    </LoadingProductsModalProvider>
   );
 }

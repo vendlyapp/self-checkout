@@ -210,15 +210,9 @@ export const fetchProductsAnalytics = async (): Promise<ProductsAnalyticsData> =
 
     // Calculate category data
     const totalCategories = categoriesStats?.total || allCategories.length || 0;
-    const newCategories = allCategories.filter((cat: { createdAt?: string }) => {
-      if (cat.createdAt) {
-        const createdDate = new Date(cat.createdAt);
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        return createdDate >= sevenDaysAgo;
-      }
-      return false;
-    }).length;
+    // Las categorías del endpoint no incluyen createdAt, así que no podemos calcular nuevas categorías
+    // Usamos 0 como valor por defecto
+    const newCategories = 0;
 
     // Generate category trend data
     const categoryTrendData: number[] = [];

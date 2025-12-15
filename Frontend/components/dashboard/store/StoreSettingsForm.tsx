@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Save, X, Loader2, Store, Image as ImageIcon, MapPin, Phone, Mail, FileText, Upload, Trash2 } from 'lucide-react'
+import { Save, X, Loader2, Store, Image as ImageIcon, MapPin, Phone, Mail, FileText, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { buildApiUrl, getAuthHeaders } from '@/lib/config/api'
 

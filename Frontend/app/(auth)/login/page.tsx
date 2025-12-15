@@ -16,12 +16,19 @@ function LoginForm() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Verificar si ya está autenticado
+  // Verificar si ya está autenticado y limpiar cache si es necesario
   // Solo limpiar sesión si el usuario viene explícitamente a la página de login
   // No limpiar si solo está refrescando la página mientras está autenticado
   useEffect(() => {
     const checkSession = async () => {
       try {
+        // Limpiar cache del router si viene de sesión expirada
+        const searchParams = new URLSearchParams(window.location.search);
+        if (searchParams.get('sessionExpired') === 'true') {
+          // Limpiar router cache
+          router.refresh();
+        }
+
         const { data: { session } } = await supabase.auth.getSession();
         
         // Si hay una sesión válida, redirigir al dashboard en lugar de limpiar
@@ -38,12 +45,9 @@ function LoginForm() {
         
         // Solo limpiar sesión si está expirada o no es válida
         if (session && session.expires_at && session.expires_at * 1000 <= Date.now()) {
-          // Sesión expirada, limpiar
-          await supabase.auth.signOut();
-          if (typeof window !== 'undefined') {
-            localStorage.clear();
-            sessionStorage.clear();
-          }
+          // Sesión expirada, limpiar completamente
+          const { clearAllSessionData } = await import('@/lib/utils/sessionUtils');
+          await clearAllSessionData();
         }
         
         setIsAuthenticated(false);

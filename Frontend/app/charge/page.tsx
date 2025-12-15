@@ -70,14 +70,16 @@ export default function Charge() {
   };
 
   return (
-    <>
+    <div className="animate-page-enter gpu-accelerated">
       {/* Mobile Layout */}
       <div className="block lg:hidden">
         <FixedHeaderContainer>
-          <DashBoardCharge
-            searchQuery={searchQuery}
-            selectedFilters={selectedFilters}
-          />
+          <div className="animate-slide-up-fade">
+            <DashBoardCharge
+              searchQuery={searchQuery}
+              selectedFilters={selectedFilters}
+            />
+          </div>
         </FixedHeaderContainer>
       </div>
 
@@ -85,12 +87,12 @@ export default function Charge() {
       <div className="hidden lg:block min-h-screen">
         <div className="max-w-[1600px] mx-auto px-8 py-8 space-y-8">
           {/* Header Section - Más limpio y espacioso */}
-          <div className="flex items-center justify-between gap-6">
+          <div className="flex items-center justify-between gap-6 animate-stagger-1">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Verkauf starten</h1>
-              <p className="text-gray-500 mt-2 text-base">Wählen Sie Produkte für den Verkauf aus</p>
+              <h1 className="text-3xl font-bold text-gray-900 tracking-tight transition-interactive">Verkauf starten</h1>
+              <p className="text-gray-500 mt-2 text-base transition-interactive">Wählen Sie Produkte für den Verkauf aus</p>
             </div>
-            <div className="w-full max-w-md">
+            <div className="w-full max-w-md animate-stagger-2">
               <input
                 type="text"
                 placeholder="Produkte durchsuchen..."
@@ -98,24 +100,24 @@ export default function Charge() {
                 onChange={(e) => onSearch(e.target.value)}
                 className="w-full px-5 py-3.5 bg-white border-2 border-gray-200 rounded-2xl 
                          focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent 
-                         transition-all duration-200 text-base placeholder:text-gray-400
-                         shadow-sm hover:border-gray-300"
+                         transition-interactive text-base placeholder:text-gray-400
+                         shadow-sm hover:border-gray-300 hover:shadow-md gpu-accelerated"
               />
             </div>
           </div>
 
           {/* Filters Section - Sin fondo blanco, más moderno */}
-          <div className="space-y-4">
+          <div className="space-y-4 animate-stagger-3">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold text-gray-700">Kategorien</h2>
+              <h2 className="text-lg font-semibold text-gray-700 transition-interactive">Kategorien</h2>
               {selectedFilters.length > 0 && (
-                <span className="px-3 py-1 bg-brand-500 text-white text-xs font-medium rounded-full">
+                <span className="px-3 py-1 bg-brand-500 text-white text-xs font-medium rounded-full animate-bounce-in">
                   {selectedFilters.length}
                 </span>
               )}
             </div>
             <div className="flex flex-wrap gap-2.5">
-              {chargeContext.chargeFilters.map((filter) => (
+              {chargeContext.chargeFilters.map((filter, index) => (
                 <button
                   key={filter.id}
                   onClick={() => onFilterChange(
@@ -124,16 +126,20 @@ export default function Charge() {
                       : [...selectedFilters, filter.id]
                   )}
                   className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl 
-                           transition-all duration-200 font-medium text-sm
+                           transition-interactive font-medium text-sm gpu-accelerated
                            ${
                     selectedFilters.includes(filter.id)
                       ? 'bg-brand-500 text-white shadow-md shadow-brand-500/30 scale-[1.02]'
-                      : 'bg-white text-gray-700 hover:bg-white hover:shadow-md hover:scale-[1.02] border border-gray-200'
+                      : 'bg-white text-gray-700 hover:bg-white hover:shadow-md hover:scale-[1.02] border border-gray-200 active:scale-95'
                   }`}
+                  style={{
+                    animationDelay: `${index * 0.03}s`,
+                    animationFillMode: 'both'
+                  }}
                 >
-                  <span className="text-lg">{filter.icon}</span>
+                  <span className="text-lg transition-interactive">{filter.icon}</span>
                   <span>{filter.label}</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold transition-interactive ${
                     selectedFilters.includes(filter.id)
                       ? 'bg-white/25 text-white'
                       : 'bg-gray-100 text-gray-600'
@@ -146,7 +152,7 @@ export default function Charge() {
           </div>
 
           {/* Products Section - Sin contenedor adicional */}
-          <div className="pt-4">
+          <div className="pt-4 animate-stagger-4">
             <DashBoardCharge
               searchQuery={searchQuery}
               selectedFilters={selectedFilters}
@@ -163,6 +169,6 @@ export default function Charge() {
         onClearFilters={handleClearFilters}
         currentFilters={currentFilterState}
       />
-    </>
+    </div>
   );
 }

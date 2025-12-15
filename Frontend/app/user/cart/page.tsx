@@ -42,45 +42,58 @@ export default function UserCartPage() {
   };
 
   return (
-    <>
-      <HeaderNav title="Warenkorb" />
+    <div className="animate-page-enter gpu-accelerated">
+      <div className="animate-slide-in-right">
+        <HeaderNav title="Warenkorb" />
+      </div>
       {/* Lista de productos */}
       <div className="flex-1 px-4 pt-4 pb-48 mt-4">
         {cartItems.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full mt-16">
-            <ShoppingCart className="w-20 h-20 text-[#766B6A] mb-4" />
-            <p className="text-2xl font-bold mb-2">Warenkorb ist leer</p>
-            <p className="text-gray-500 mb-4">
+          <div className="flex flex-col items-center justify-center h-full mt-16 animate-scale-in">
+            <ShoppingCart className="w-20 h-20 text-[#766B6A] mb-4 transition-interactive" />
+            <p className="text-2xl font-bold mb-2 transition-interactive">Warenkorb ist leer</p>
+            <p className="text-gray-500 mb-4 transition-interactive">
               Fügen Sie Produkte hinzu um zu beginnen
             </p>
             <button
-              className="bg-[#25D076] text-white px-4 py-2 font-semibold rounded-full mt-4 w-65 h-12 flex items-center justify-center gap-2"
+              className="bg-[#25D076] text-white px-4 py-2 font-semibold rounded-full mt-4 w-65 h-12 flex items-center justify-center gap-2
+                       transition-interactive gpu-accelerated hover:scale-105 active:scale-95"
               onClick={() => {
                 const target = store?.slug ? `/store/${store.slug}` : '/user';
                 router.push(target);
               }}
             >
               Produkte anzeigen{" "}
-              <ChevronRight className="w-5 h-5 text-white font-semibold" />
+              <ChevronRight className="w-5 h-5 text-white font-semibold transition-interactive" />
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
-            {cartItems.map(({ product, quantity }) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAddToCart={handleUpdateQuantity}
-                initialQuantity={quantity}
-              />
-            ))}
+          <>
+            <div className="space-y-4 animate-fade-in-scale">
+              {cartItems.map(({ product, quantity }, index) => (
+                <div
+                  key={product.id}
+                  className="animate-slide-up-fade gpu-accelerated"
+                  style={{
+                    animationDelay: `${index * 0.05}s`,
+                    animationFillMode: 'both'
+                  }}
+                >
+                  <ProductCard
+                    product={product}
+                    onAddToCart={handleUpdateQuantity}
+                    initialQuantity={quantity}
+                  />
+                </div>
+              ))}
+            </div>
 
             {/* Promo Code - Solo mostrar si hay items en el carrito */}
             {cartItems.length > 0 && (
-              <div className="mt-6 px-2 pl-4 pr-4 pb-24">
+              <div className="mt-6 px-2 pl-4 pr-4 pb-24 animate-slide-up-fade">
                 <label
                   htmlFor="promo"
-                  className="text-[#25D076] text-[15px] font-semibold"
+                  className="text-[#25D076] text-[15px] font-semibold transition-interactive"
                 >
                   Promo Code?
                 </label>
@@ -105,7 +118,8 @@ export default function UserCartPage() {
                       />
                       <button
                         onClick={handleApplyPromo}
-                        className="bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg px-4 py-2 text-[15px] transition-colors"
+                        className="bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg px-4 py-2 text-[15px] 
+                                 transition-interactive gpu-accelerated hover:scale-105 active:scale-95"
                         aria-label="Promo anwenden"
                       >
                         Anwenden
@@ -139,9 +153,9 @@ export default function UserCartPage() {
                 )}
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
-    </>
+    </div>
   );
 }

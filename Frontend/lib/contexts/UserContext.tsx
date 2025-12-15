@@ -56,14 +56,15 @@ export const UserProvider = ({ children }: UserProviderProps) => {
 
       const { buildApiUrl, getAuthHeaders } = await import('@/lib/config/api');
       const url = buildApiUrl('/api/auth/profile');
-      const headers = getAuthHeaders(session.data.session?.access_token);
+      const headers = getAuthHeaders(session.data.session?.access_token, true); // true = no-cache
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
       
       const response = await fetch(url, {
         headers,
-        signal: controller.signal
+        signal: controller.signal,
+        cache: 'no-store' as RequestCache,
       });
 
       clearTimeout(timeoutId);
@@ -112,22 +113,39 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   };
 
   useEffect(() => {
+    // Timeout de seguridad para evitar que se quede en loading indefinidamente
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.warn('[UserProvider] Timeout al inicializar, estableciendo loading a false');
+        setLoading(false);
+      }
+    }, 8000); // 8 segundos máximo (más tiempo porque también hace fetch del perfil)
+
     const initializeUser = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
           setUser(session.user);
-          await fetchUserProfile();
+          // No esperar indefinidamente el perfil, usar timeout
+          await Promise.race([
+            fetchUserProfile(),
+            new Promise((resolve) => setTimeout(resolve, 6000)) // 6 segundos máximo para perfil
+          ]);
         }
       } catch (error) {
         console.error('Error initializing user:', error);
       } finally {
+        clearTimeout(timeoutId);
         setLoading(false);
       }
     };
 
     initializeUser();
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -149,73 +167,28 @@ export const UserProvider = ({ children }: UserProviderProps) => {
 
   const signOut = async () => {
     try {
-      // Cerrar sesión en Supabase
-      await supabase.auth.signOut();
-      
-      // Limpiar estados
+      // Limpiar estados primero
       setUser(null);
       setProfile(null);
       
-      // Limpiar cache de React Query
-      if (typeof window !== 'undefined') {
-        const { useQueryClient } = await import('@tanstack/react-query');
-        // Nota: No podemos usar useQueryClient aquí porque es un hook
-        // El cache se limpiará desde el componente que use useSessionTimeout
-      }
-      
-      // Limpiar localStorage y sessionStorage
-      if (typeof window !== 'undefined') {
-        // Limpiar datos específicos
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('userName');
-        localStorage.removeItem('userEmail');
-        localStorage.removeItem('vendly-auth-token');
-        // Limpiar todo el localStorage para asegurar que no quede nada
-        localStorage.clear();
-        sessionStorage.clear();
-        
-        // Limpiar cookies de Supabase y Google OAuth
-        const cookies = document.cookie.split(';');
-        cookies.forEach(cookie => {
-          const [name] = cookie.split('=');
-          const trimmedName = name.trim();
-          // Limpiar cookies de Supabase
-          if (trimmedName.startsWith('sb-') || trimmedName.startsWith('supabase.')) {
-            document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-            document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
-          }
-          // Limpiar cookies de Google OAuth
-          if (trimmedName.includes('google') || trimmedName.includes('oauth') || trimmedName.includes('gid')) {
-            document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-            document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
-            document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
-            document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.google.com;`;
-            document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.googleapis.com;`;
-          }
-        });
-        
-        // Limpiar IndexedDB (donde Google puede guardar información)
-        try {
-          if ('indexedDB' in window) {
-            const databases = await indexedDB.databases();
-            databases.forEach(db => {
-              if (db.name && (db.name.includes('google') || db.name.includes('oauth'))) {
-                indexedDB.deleteDatabase(db.name);
-              }
-            });
-          }
-        } catch (e) {
-          console.warn('No se pudo limpiar IndexedDB:', e);
-        }
-      }
+      // Usar la función de limpieza completa
+      // Nota: No podemos pasar queryClient aquí porque es un hook, pero clearAllSessionData
+      // intentará limpiar React Query de forma global
+      const { clearAllSessionData } = await import('@/lib/utils/sessionUtils');
+      await clearAllSessionData();
     } catch (error) {
       console.error('Error signing out:', error);
       // Limpiar de todas formas
       setUser(null);
       setProfile(null);
-      if (typeof window !== 'undefined') {
-        localStorage.clear();
-        sessionStorage.clear();
+      try {
+        await supabase.auth.signOut();
+        if (typeof window !== 'undefined') {
+          localStorage.clear();
+          sessionStorage.clear();
+        }
+      } catch (e) {
+        console.error('Error en limpieza de emergencia:', e);
       }
     }
   };

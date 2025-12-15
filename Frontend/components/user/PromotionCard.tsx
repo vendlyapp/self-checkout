@@ -82,7 +82,9 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
     <div
       className={clsx(
         // Layout y estructura
-        "bg-white rounded-2xl p-4 flex flex-col items-center shrink-0",
+        "bg-white rounded-2xl p-4 flex flex-col items-center shrink-0 transition-interactive gpu-accelerated",
+        // Animaciones
+        "animate-scale-in hover:scale-105",
 
         className
       )}
@@ -199,7 +201,7 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
             // Tipografía
             "font-bold text-white text-sm",
             // Transiciones
-            "transition-all duration-200",
+            "transition-interactive gpu-accelerated",
             // Evitar interferencia con Swiper
             "relative z-10 pointer-events-auto",
             // Estados

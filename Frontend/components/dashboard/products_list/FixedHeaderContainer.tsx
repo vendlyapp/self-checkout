@@ -10,7 +10,7 @@ export default function FixedHeaderContainer({
   children,
 }: FixedHeaderContainerProps) {
   return (
-    <div className="flex-1 overflow-y-auto pt-[230px] pb-32">
+    <div className="flex-1 overflow-y-auto pt-[230px] pb-32 gpu-accelerated animate-fade-in-scale">
       {children}
     </div>
   );

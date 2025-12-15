@@ -19,5 +19,9 @@ import { HomeDashboard } from "@/components/dashboard";
  * - Arquitectura escalable para futuras funcionalidades
  */
 export default function DashboardPage() {
-  return <HomeDashboard />;
+  return (
+    <div className="animate-page-enter gpu-accelerated">
+      <HomeDashboard />
+    </div>
+  );
 }

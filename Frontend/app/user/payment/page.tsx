@@ -21,9 +21,13 @@ export default function UserPaymentPage() {
   }, [store?.slug, router]);
 
   return (
-    <>
-      <HeaderNav title="Bezahlung" />
-      <PaymentP />
-    </>
+    <div className="animate-page-enter gpu-accelerated">
+      <div className="animate-slide-in-right">
+        <HeaderNav title="Bezahlung" />
+      </div>
+      <div className="animate-slide-up-fade">
+        <PaymentP />
+      </div>
+    </div>
   );
 }

@@ -1,5 +1,5 @@
 import { FormErrors, ProductVariant } from './types';
-import { CreateProductRequest } from '@/lib/services/productService';
+import type { CreateProductRequest } from '@/lib/services/productService';
 export const validateField = (
   field: keyof FormErrors,
   value: string,
@@ -55,11 +55,22 @@ export const validateField = (
   return newErrors;
 };
 export const validateVariants = (variants: ProductVariant[]): boolean => {
-  return variants.every(variant =>
-    variant.name.trim() !== '' &&
-    variant.price !== '' &&
-    parseFloat(variant.price) > 0
-  );
+  if (!variants || variants.length === 0) {
+    return false;
+  }
+  
+  return variants.every(variant => {
+    // Validar nombre
+    const nameValid = variant.name && variant.name.trim() !== '';
+    
+    // Validar precio
+    const priceValid = variant.price && 
+                       variant.price.trim() !== '' && 
+                       !isNaN(parseFloat(variant.price)) &&
+                       parseFloat(variant.price) > 0;
+    
+    return nameValid && priceValid;
+  });
 };
 export const createProductObject = (
   productName: string,
@@ -69,6 +80,7 @@ export const createProductObject = (
   promotionPrice: string,
   hasVariants: boolean,
   hasPromotion: boolean,
+  categoryId?: string,
   notes?: string
 ) => {
   const baseProduct: CreateProductRequest = {
@@ -76,6 +88,7 @@ export const createProductObject = (
     description: productDescription,
     price: parseFloat(productPrice),
     category: productCategory,
+    categoryId: categoryId, // Usar ID si está disponible (opcional en el tipo real)
     stock: 999,
     isActive: true,
   };

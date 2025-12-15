@@ -24,7 +24,7 @@ const PromotionSlider: React.FC<PromotionSliderProps> = ({
   const safeItems = useMemo(() => items ?? [], [items]);
 
   return (
-    <div className={clsx("w-full", className)}>
+    <div className={clsx("w-full animate-fade-in-scale gpu-accelerated", className)}>
       <Swiper
         modules={[Autoplay, FreeMode]}
         spaceBetween={8}

@@ -51,6 +51,13 @@
   --transition-fast: 150ms ease-out;
   --transition-normal: 200ms ease-out;
   --transition-slow: 300ms ease-out;
+  --transition-page: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  /* Curvas de animación para PWA */
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-in-out-back: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Sombras */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -435,6 +442,130 @@
     50% {
       opacity: 0.8;
       transform: scale(1.2);
+    }
+  }
+
+  /* Animaciones para transiciones de página PWA */
+  @keyframes page-enter {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes page-exit {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-20px) scale(0.98);
+    }
+  }
+
+  @keyframes slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slide-in-left {
+    from {
+      opacity: 0;
+      transform: translateX(-100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes fade-in-scale {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes slide-up-fade {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes bounce-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.3);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+    70% {
+      transform: scale(0.9);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 
@@ -1495,15 +1626,116 @@
 /* Animaciones suaves para transiciones */
 @layer utilities {
   .transition-smooth {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s var(--ease-smooth);
   }
 
   .transition-fast {
-    transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s var(--ease-smooth);
   }
 
   .transition-slow {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s var(--ease-smooth);
+  }
+
+  .transition-page {
+    transition: all var(--transition-page);
+  }
+
+  /* Clases de animación para páginas */
+  .animate-page-enter {
+    animation: page-enter var(--transition-page) forwards;
+  }
+
+  .animate-page-exit {
+    animation: page-exit var(--transition-page) forwards;
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right var(--transition-page) forwards;
+  }
+
+  .animate-slide-in-left {
+    animation: slide-in-left var(--transition-page) forwards;
+  }
+
+  .animate-scale-in {
+    animation: scale-in var(--transition-normal) forwards;
+  }
+
+  .animate-fade-in-scale {
+    animation: fade-in-scale var(--transition-normal) forwards;
+  }
+
+  .animate-slide-up-fade {
+    animation: slide-up-fade var(--transition-slow) forwards;
+  }
+
+  .animate-bounce-in {
+    animation: bounce-in var(--transition-spring) forwards;
+  }
+
+  .animate-slide-down {
+    animation: slide-down var(--transition-normal) forwards;
+  }
+
+  /* Animaciones de entrada escalonada */
+  .animate-stagger-1 {
+    animation: slide-up-fade var(--transition-slow) forwards;
+    animation-delay: 0.05s;
+    opacity: 0;
+  }
+
+  .animate-stagger-2 {
+    animation: slide-up-fade var(--transition-slow) forwards;
+    animation-delay: 0.1s;
+    opacity: 0;
+  }
+
+  .animate-stagger-3 {
+    animation: slide-up-fade var(--transition-slow) forwards;
+    animation-delay: 0.15s;
+    opacity: 0;
+  }
+
+  .animate-stagger-4 {
+    animation: slide-up-fade var(--transition-slow) forwards;
+    animation-delay: 0.2s;
+    opacity: 0;
+  }
+
+  /* Efecto shimmer para loading */
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+    background: linear-gradient(
+      to right,
+      #f6f7f8 0%,
+      #edeef1 20%,
+      #f6f7f8 40%,
+      #f6f7f8 100%
+    );
+    background-size: 1000px 100%;
+  }
+
+  /* Float animation */
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  /* Transiciones suaves para elementos interactivos */
+  .transition-interactive {
+    transition: all var(--transition-normal) var(--ease-smooth);
+  }
+
+  .transition-interactive:hover {
+    transition: all var(--transition-fast) var(--ease-smooth);
+  }
+
+  /* Optimización para GPU */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+    perspective: 1000px;
   }
 }
 
@@ -1548,5 +1780,41 @@
 
   .menu-dropdown-item-inactive {
     @apply text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5;
+  }
+
+  /* QR Scanner Styles */
+  [id^="qr-reader"] {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  [id^="qr-reader"] video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+    border-radius: 1.5rem;
+  }
+
+  /* Estilos específicos para elementos generados por html5-qrcode */
+  [id*="qr-reader"] [id*="dashboard"] {
+    display: none !important;
+  }
+
+  [id*="qr-reader"] [id*="camera_selection"] {
+    display: none !important;
+  }
+
+  [id*="qr-reader"] [id*="status"] {
+    display: none !important;
+  }
+
+  [id*="qr-reader"] [id*="scan_region"] {
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  [id*="qr-reader"] [id*="scan_region"] video {
+    border-radius: 1.5rem;
   }
 }

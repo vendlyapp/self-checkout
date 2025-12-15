@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ProductService } from '@/lib/services/productService';
-import type { Product, CreateProductRequest, UpdateProductRequest } from '@/components/dashboard/products_list/data/mockProducts';
+import type { Product, CreateProductRequest, UpdateProductRequest } from '@/lib/services/productService';
 
 /**
  * Hook para crear producto (mutation)

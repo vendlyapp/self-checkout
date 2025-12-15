@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
 import {
   Product,
   productCategories,
@@ -39,9 +38,6 @@ export default function ProductsListComponent({
   className = "",
   maxHeight = "100vh",
 }: ProductsListComponentProps) {
-  const searchParams = useSearchParams();
-  const refreshParam = searchParams?.get('refresh');
-  
   // Estado local para cuando NO es standalone
   const [, setLocalSelectedFilters] = useState<string[]>(
     []
@@ -192,7 +188,7 @@ export default function ProductsListComponent({
   const activeFiltersCount = getActiveFiltersCount();
 
   // Usar React Query para obtener productos con cache
-  const { data: productsData, isLoading: productsLoading, error: productsError } = useProducts({
+  const { data: productsData, isLoading: productsLoading } = useProducts({
     isActive: true,
   });
 
@@ -223,7 +219,7 @@ export default function ProductsListComponent({
         setHasActiveFilters(activeFiltersCount > 0);
       }
     }
-  }, [productsData, filterState, isStandalone, setTotalProducts, setFilteredProducts, setHasActiveFilters, activeFiltersCount, applyFiltersToProducts, productsListFilters]);
+  }, [productsData, filterState, isStandalone, setTotalProducts, setFilteredProducts, setHasActiveFilters, activeFiltersCount, applyFiltersToProducts]);
 
   // Sincronizar isLoading del contexto con React Query
   useEffect(() => {
@@ -256,7 +252,7 @@ export default function ProductsListComponent({
         setHasActiveFilters(getActiveFiltersCount() > 0);
       }
     }
-  }, [productsData, applyFiltersToProducts, isStandalone, setFilteredProducts, setHasActiveFilters, setSelectedFilters, getActiveFiltersCount]);
+  }, [productsData, applyFiltersToProducts, isStandalone, setFilteredProducts, setHasActiveFilters, setSelectedFilters, getActiveFiltersCount, setFilterState]);
 
   const handleClearFilters = useCallback(() => {
     const defaultFilters: FilterState = {
@@ -281,7 +277,7 @@ export default function ProductsListComponent({
         setHasActiveFilters(false);
       }
     }
-  }, [productsData, applyFiltersToProducts, isStandalone, setFilteredProducts, setHasActiveFilters, setSelectedFilters]);
+  }, [productsData, applyFiltersToProducts, isStandalone, setFilteredProducts, setHasActiveFilters, setSelectedFilters, setFilterState, setSearchQuery]);
 
   const handleProductClick = (product: Product) => {
     if (onProductClick) {
@@ -305,13 +301,21 @@ export default function ProductsListComponent({
               </p>
             </div>
           ) : products.length > 0 ? (
-            <div className="space-y-3">
-              {products.map((product) => (
-                <ProductCardList
+            <div className="space-y-3 animate-fade-in-scale">
+              {products.map((product, index) => (
+                <div
                   key={product.id}
-                  product={product}
-                  onClick={onProductClick ? () => handleProductClick(product) : undefined}
-                />
+                  className="animate-slide-up-fade gpu-accelerated"
+                  style={{
+                    animationDelay: `${index * 0.05}s`,
+                    animationFillMode: 'both'
+                  }}
+                >
+                  <ProductCardList
+                    product={product}
+                    onClick={onProductClick ? () => handleProductClick(product) : undefined}
+                  />
+                </div>
               ))}
             </div>
           ) : (
@@ -356,13 +360,21 @@ export default function ProductsListComponent({
               </p>
             </div>
           ) : products.length > 0 ? (
-            <div className="space-y-3">
-              {products.map((product) => (
-                <ProductCardList
+            <div className="space-y-3 animate-fade-in-scale">
+              {products.map((product, index) => (
+                <div
                   key={product.id}
-                  product={product}
-                  onClick={onProductClick ? () => handleProductClick(product) : undefined}
-                />
+                  className="animate-slide-up-fade gpu-accelerated"
+                  style={{
+                    animationDelay: `${index * 0.05}s`,
+                    animationFillMode: 'both'
+                  }}
+                >
+                  <ProductCardList
+                    product={product}
+                    onClick={onProductClick ? () => handleProductClick(product) : undefined}
+                  />
+                </div>
               ))}
             </div>
           ) : (

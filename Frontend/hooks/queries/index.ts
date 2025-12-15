@@ -11,6 +11,10 @@ export { useProductById } from './useProductById';
 export { useProductByQR } from './useProductByQR';
 export { useProductsAnalytics } from './useProductsAnalytics';
 
+// Category queries
+export { useCategoryStats } from './useCategoryStats';
+export { useCategories } from './useCategories';
+
 // Order queries
 export { useOrderStats } from './useOrderStats';
 export { useRecentOrders } from './useRecentOrders';

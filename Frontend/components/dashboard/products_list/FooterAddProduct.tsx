@@ -10,6 +10,7 @@ type FooterAddProductProps = {
   isFormValid?: boolean;
   buttonText?: string;
   isAddProductPage?: boolean;
+  hasChanges?: boolean; // Para modo edición: true si hay cambios, false si no hay cambios
 };
 
 const FooterAddProduct: React.FC<FooterAddProductProps> = ({
@@ -17,6 +18,7 @@ const FooterAddProduct: React.FC<FooterAddProductProps> = ({
   isLoading = false,
   buttonText = "Neues Produkt",
   isAddProductPage = false,
+  hasChanges,
 }) => {
   // Estado para el efecto de presión
   const [pressed, setPressed] = useState(false);
@@ -66,7 +68,10 @@ const FooterAddProduct: React.FC<FooterAddProductProps> = ({
   }, [isAddProductPage]);
 
   // Determinar si el botón debe estar deshabilitado
-  const isDisabled = isLoading || (isAddProductPage && !formValid);
+  // En modo edición: siempre habilitado (el botón del formulario maneja la lógica de cambios)
+  // En modo creación: deshabilitar si el formulario no es válido
+  const isDisabled = isLoading || 
+    (isAddProductPage && hasChanges === undefined && !formValid); // Modo creación: deshabilitar si el formulario no es válido
 
   // Determinar el icono según el contexto
   const getIcon = () => {
@@ -87,7 +92,7 @@ const FooterAddProduct: React.FC<FooterAddProductProps> = ({
           className={`w-full font-semibold rounded-lg py-3 text-[18px] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all duration-150 ${
             pressed ? "scale-95" : ""
           } ${
-            isAddProductPage && !formValid
+            isDisabled
               ? "bg-gray-300 text-gray-500 cursor-not-allowed"
               : "bg-brand-500 hover:bg-brand-600 text-white"
           }`}

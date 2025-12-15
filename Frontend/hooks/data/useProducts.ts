@@ -75,8 +75,8 @@ export const useProductActions = (): ProductActionsReturn => {
   }, []);
 
   const handleCategories = useCallback(async () => {
-    // Future implementation: navigate to categories page or open modal
-  }, []);
+    router.push('/categories');
+  }, [router]);
 
   return {
     loading,

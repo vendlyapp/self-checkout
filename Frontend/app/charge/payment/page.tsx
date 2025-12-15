@@ -45,72 +45,69 @@ export default function PaymentPage() {
 
   return (
     <>
-      <div className="w-full">
+      <div className="w-full animate-page-enter gpu-accelerated">
         {/* Mobile Layout */}
         <div className="block lg:hidden">
           <div className="flex flex-col">
-            <HeaderNav
-              title="Bezahlung"
-              showAddButton={false}
-              closeDestination="/charge/cart"
-            />
+            <div className="animate-slide-in-right">
+              <HeaderNav
+                title="Bezahlung"
+                showAddButton={false}
+                closeDestination="/charge/cart"
+              />
+            </div>
 
             <main className="flex-1 flex flex-col items-center">
-              <div className="w-full max-w-md mx-auto ">
-                <div className="text-center p-4 bg-[#F9F6F4]">
-                  <div className="text-[18px] font-medium text-gray-700 mb-1">
+              <div className="w-full max-w-md mx-auto animate-slide-up-fade">
+                <div className="text-center p-4 bg-[#F9F6F4] rounded-xl animate-scale-in">
+                  <div className="text-[18px] font-medium text-gray-700 mb-1 transition-interactive">
                     Heiniger&apos;s Hofladen
                   </div>
                   {promoApplied && (
-                    <div className="text-[16px] text-gray-400  line-through mb-1">
+                    <div className="text-[16px] text-gray-400 line-through mb-1 transition-interactive">
                       CHF {subtotal.toFixed(2)}
                     </div>
                   )}
-                  <div className="text-[38px] font-bold text-gray-900 leading-tight">
+                  <div className="text-[38px] font-bold text-gray-900 leading-tight transition-interactive">
                     CHF {total.toFixed(2)}
                   </div>
                   {promoApplied && (
-                    <div className="text-[#3C7E44] text-[15px] font-semibold mb-1">
+                    <div className="text-[#3C7E44] text-[15px] font-semibold mb-1 animate-bounce-in">
                       10% Rabatt auf Bio-Produkte angewendet!
                     </div>
                   )}
-                  <div className="text-gray-500 text-[16px]">
+                  <div className="text-gray-500 text-[16px] transition-interactive">
                     inkl. MwSt • {totalItems} Artikel
                   </div>
                 </div>
-                <div className="py-6 mb-8 ml-8 mr-8">
-                  <div className="text-center text-[18px] font-semibold text-gray-800 mb-4">
+                <div className="py-6 mb-8 ml-8 mr-8 animate-stagger-1">
+                  <div className="text-center text-[18px] font-semibold text-gray-800 mb-4 transition-interactive">
                     Zahlungsart wählen:
                   </div>
                   <div className="flex flex-col gap-4">
-                    <button
-                      onClick={() => handlePaymentMethodSelect("twint")}
-                      className="w-full flex items-center justify-center gap-3 rounded-full bg-brand-500 hover:bg-brand-600 text-white font-bold text-[20px] py-4 shadow transition-colors"
-                      aria-label="TWINT"
-                    >
-                      <Smartphone className="w-6 h-6" /> TWINT
-                    </button>
-                    <button
-                      onClick={() => handlePaymentMethodSelect("card")}
-                      className="w-full flex items-center justify-center gap-3 rounded-full bg-[#7e8bb6] hover:bg-[#6b7aa3] text-white font-bold text-[20px] py-4 shadow transition-colors"
-                      aria-label="Zahlungslink"
-                    >
-                      <CreditCard className="w-6 h-6" /> Zahlungslink
-                    </button>
-                    <button
-                      onClick={() => handlePaymentMethodSelect("cash")}
-                      className="w-full flex items-center justify-center gap-3 rounded-full bg-[#7b7575] hover:bg-[#6a6565] text-white font-bold text-[20px] py-4 shadow transition-colors"
-                      aria-label="Bargeld"
-                    >
-                      <DollarSign className="w-6 h-6" /> Bargeld
-                    </button>
-                    <button
-                      onClick={() => handlePaymentMethodSelect("invoice")}
-                      className="w-full flex items-center justify-center gap-3 rounded-full bg-[#1d3b36] hover:bg-[#16302b] text-white font-bold text-[20px] py-4 shadow transition-colors"
-                      aria-label="Rechnung"
-                    >
-                      <FileText className="w-6 h-6" /> Rechnung
-                    </button>
+                    {[
+                      { method: "twint", icon: Smartphone, label: "TWINT", color: "bg-brand-500 hover:bg-brand-600" },
+                      { method: "card", icon: CreditCard, label: "Zahlungslink", color: "bg-[#7e8bb6] hover:bg-[#6b7aa3]" },
+                      { method: "cash", icon: DollarSign, label: "Bargeld", color: "bg-[#7b7575] hover:bg-[#6a6565]" },
+                      { method: "invoice", icon: FileText, label: "Rechnung", color: "bg-[#1d3b36] hover:bg-[#16302b]" }
+                    ].map((payment, index) => {
+                      const Icon = payment.icon;
+                      return (
+                        <button
+                          key={payment.method}
+                          onClick={() => handlePaymentMethodSelect(payment.method)}
+                          className={`w-full flex items-center justify-center gap-3 rounded-full ${payment.color} text-white font-bold text-[20px] py-4 shadow 
+                                   transition-interactive gpu-accelerated hover:scale-105 active:scale-95`}
+                          aria-label={payment.label}
+                          style={{
+                            animationDelay: `${index * 0.1}s`,
+                            animationFillMode: 'both'
+                          }}
+                        >
+                          <Icon className="w-6 h-6" /> {payment.label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
                 <div className="w-full max-w-md mx-auto mt-auto mb-2 bg-white  py-3 px-4 shadow border border-gray-100">
@@ -135,62 +132,58 @@ export default function PaymentPage() {
         <div className="hidden lg:block">
           <div className="p-6 space-y-6">
             {/* Header Section */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between animate-stagger-1">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Bezahlung</h1>
-                <p className="text-gray-600 mt-1">Wählen Sie Ihre bevorzugte Zahlungsmethode</p>
+                <h1 className="text-2xl font-bold text-gray-900 transition-interactive">Bezahlung</h1>
+                <p className="text-gray-600 mt-1 transition-interactive">Wählen Sie Ihre bevorzugte Zahlungsmethode</p>
               </div>
               <button
                 onClick={() => router.push("/charge/cart")}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 
+                         transition-interactive gpu-accelerated hover:bg-gray-100 rounded-lg active:scale-95"
               >
                 <span>← Zurück zum Warenkorb</span>
               </button>
             </div>
 
             {/* Payment Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-stagger-2">
               {/* Payment Methods */}
               <div className="lg:col-span-1">
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-6">Zahlungsart wählen</h2>
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 animate-fade-in-scale">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-6 transition-interactive">Zahlungsart wählen</h2>
                   <div className="grid grid-cols-1 gap-4">
-                    <button
-                      onClick={() => handlePaymentMethodSelect("twint")}
-                      className="w-full flex items-center justify-center gap-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-lg py-4 shadow transition-colors"
-                      aria-label="TWINT"
-                    >
-                      <Smartphone className="w-6 h-6" /> TWINT
-                    </button>
-                    <button
-                      onClick={() => handlePaymentMethodSelect("card")}
-                      className="w-full flex items-center justify-center gap-4 rounded-xl bg-[#7e8bb6] hover:bg-[#6b7aa3] text-white font-bold text-lg py-4 shadow transition-colors"
-                      aria-label="Zahlungslink"
-                    >
-                      <CreditCard className="w-6 h-6" /> Zahlungslink
-                    </button>
-                    <button
-                      onClick={() => handlePaymentMethodSelect("cash")}
-                      className="w-full flex items-center justify-center gap-4 rounded-xl bg-[#7b7575] hover:bg-[#6a6565] text-white font-bold text-lg py-4 shadow transition-colors"
-                      aria-label="Bargeld"
-                    >
-                      <DollarSign className="w-6 h-6" /> Bargeld
-                    </button>
-                    <button
-                      onClick={() => handlePaymentMethodSelect("invoice")}
-                      className="w-full flex items-center justify-center gap-4 rounded-xl bg-[#1d3b36] hover:bg-[#16302b] text-white font-bold text-lg py-4 shadow transition-colors"
-                      aria-label="Rechnung"
-                    >
-                      <FileText className="w-6 h-6" /> Rechnung
-                    </button>
+                    {[
+                      { method: "twint", icon: Smartphone, label: "TWINT", color: "bg-brand-500 hover:bg-brand-600" },
+                      { method: "card", icon: CreditCard, label: "Zahlungslink", color: "bg-[#7e8bb6] hover:bg-[#6b7aa3]" },
+                      { method: "cash", icon: DollarSign, label: "Bargeld", color: "bg-[#7b7575] hover:bg-[#6a6565]" },
+                      { method: "invoice", icon: FileText, label: "Rechnung", color: "bg-[#1d3b36] hover:bg-[#16302b]" }
+                    ].map((payment, index) => {
+                      const Icon = payment.icon;
+                      return (
+                        <button
+                          key={payment.method}
+                          onClick={() => handlePaymentMethodSelect(payment.method)}
+                          className={`w-full flex items-center justify-center gap-4 rounded-xl ${payment.color} text-white font-bold text-lg py-4 shadow 
+                                   transition-interactive gpu-accelerated hover:scale-105 active:scale-95`}
+                          aria-label={payment.label}
+                          style={{
+                            animationDelay: `${index * 0.1}s`,
+                            animationFillMode: 'both'
+                          }}
+                        >
+                          <Icon className="w-6 h-6" /> {payment.label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
 
               {/* Order Summary */}
               <div className="lg:col-span-1">
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 sticky top-6">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Bestellübersicht</h2>
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 sticky top-6 animate-stagger-3">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4 transition-interactive">Bestellübersicht</h2>
 
                   {/* Store Info */}
                   <div className="text-center p-4 bg-[#F9F6F4] rounded-xl mb-6">

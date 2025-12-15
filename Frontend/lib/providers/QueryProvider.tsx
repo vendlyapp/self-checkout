@@ -60,40 +60,6 @@ export const QueryProvider = ({ children }: QueryProviderProps) => {
             },
           },
         },
-        // Logger personalizado para no loggear cancelaciones
-        logger: {
-          log: (...args) => {
-            // Filtrar logs de cancelación
-            const message = String(args.join(' '));
-            if (!message.includes('AbortError') && 
-                !message.includes('CANCELLED') && 
-                !message.includes('aborted') &&
-                !message.includes('cancelled')) {
-              console.log(...args);
-            }
-          },
-          warn: (...args) => {
-            // Filtrar warnings de cancelación
-            const message = String(args.join(' '));
-            if (!message.includes('AbortError') && 
-                !message.includes('CANCELLED') && 
-                !message.includes('aborted') &&
-                !message.includes('cancelled')) {
-              console.warn(...args);
-            }
-          },
-          error: (...args) => {
-            // Filtrar errores de cancelación
-            const message = String(args.join(' '));
-            if (!message.includes('AbortError') && 
-                !message.includes('CANCELLED') && 
-                !message.includes('signal is aborted') &&
-                !message.includes('aborted without reason') &&
-                !message.includes('Request cancelled')) {
-              console.error(...args);
-            }
-          },
-        },
       })
   );
 

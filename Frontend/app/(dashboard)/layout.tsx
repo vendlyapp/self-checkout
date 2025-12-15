@@ -4,14 +4,19 @@
 import { ReactNode } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { AuthGuard } from "@/lib/guards/AuthGuard";
+import { LoadingProductsModalProvider } from "@/lib/contexts/LoadingProductsModalContext";
 // El timeout de sesión se maneja globalmente en SessionTimeoutManager
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <AuthGuard allowedRoles={['ADMIN', 'CUSTOMER']}>
-      <AdminLayout>
-        {children}
-      </AdminLayout>
+      <LoadingProductsModalProvider>
+        <AdminLayout>
+          <div className="gpu-accelerated">
+            {children}
+          </div>
+        </AdminLayout>
+      </LoadingProductsModalProvider>
     </AuthGuard>
   );
 }

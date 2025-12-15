@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { clsx } from 'clsx';
 import Sidebar from '@/components/navigation/Sidebar';
@@ -15,6 +15,8 @@ import HeaderNav from '@/components/navigation/HeaderNav';
 import Filter_Busqueda from '@/components/dashboard/products_list/Filter_Busqueda';
 import { useChargeContext } from '@/app/charge/contexts';
 import { useProductsList } from '@/components/dashboard/products_list/ProductsListContext';
+import LoadingProductsModal from '@/components/dashboard/home/LoadingProductsModal';
+import { useLoadingProductsModal } from '@/lib/contexts/LoadingProductsModalContext';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -41,6 +43,29 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   // Determinar si estamos EXACTAMENTE en /products_list (página principal)
   const isProductsListMainPage = pathname === '/products_list';
+  
+  // Determinar si estamos en modo edición (edit o view)
+  const isEditMode = pathname?.includes('/products_list/edit/') || pathname?.includes('/products_list/view/');
+  
+  // Detectar si hay cambios en el formulario de edición
+  const [hasFormChanges, setHasFormChanges] = useState(false);
+  
+  useEffect(() => {
+    if (isEditMode) {
+      const checkChanges = () => {
+        const hasChanges = (window as { __productFormHasChanges?: boolean }).__productFormHasChanges || false;
+        setHasFormChanges(hasChanges);
+      };
+      
+      // Verificar cambios periódicamente
+      const interval = setInterval(checkChanges, 500);
+      checkChanges(); // Verificar inmediatamente
+      
+      return () => clearInterval(interval);
+    } else {
+      setHasFormChanges(false);
+    }
+  }, [isEditMode, pathname]);
 
   // Determinar si estamos en la ruta de charge
   const isChargeRoute = pathname?.startsWith('/charge');
@@ -51,6 +76,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   // Obtener contextos
   const chargeContext = useChargeContext();
   const productsListContext = useProductsList();
+  const { isOpen: isProductsLoadingModalOpen, closeModal } = useLoadingProductsModal();
+
+  // Cerrar el modal de carga cuando cambie la ruta
+  useEffect(() => {
+    if (isProductsLoadingModalOpen) {
+      closeModal();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   // Determinar si mostrar el sidebar
   const shouldShowSidebar = isDesktop || isTablet;
@@ -74,12 +108,24 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   // Manejar el botón de agregar producto
   const handleAddProduct = () => {
-    if (pathname === "/products_list/add_product") {
+    if (isEditMode) {
+      // Si estamos en modo edición, buscar y hacer clic en el botón de guardar del formulario
+      // Buscar cualquier botón que contenga "speichern" o "Änderungen"
+      const buttons = document.querySelectorAll("button");
+      const saveBtn = Array.from(buttons).find((btn) => {
+        const text = btn.textContent?.toLowerCase() || "";
+        return (text.includes("speichern") || text.includes("änderungen")) && !btn.disabled;
+      });
+      if (saveBtn) {
+        (saveBtn as HTMLButtonElement).click();
+      }
+    } else if (pathname === "/products_list/add_product") {
       // Si estamos en la página de agregar producto, ejecutar la función de guardado
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (typeof window !== "undefined" && (window as any).saveProduct) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any).saveProduct();
+      if (typeof window !== "undefined") {
+        const windowWithSaveProduct = window as unknown as { saveProduct?: () => void };
+        if (windowWithSaveProduct.saveProduct) {
+          windowWithSaveProduct.saveProduct();
+        }
       }
     } else {
       // Si estamos en la lista, navegamos a agregar producto
@@ -89,7 +135,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   // Determinar el texto del botón según la ruta
   const isAddProductPage = pathname === "/products_list/add_product";
-  const buttonText = isAddProductPage ? "Produkt speichern" : "Neues Produkt";
+  const buttonText = isEditMode 
+    ? "Änderungen speichern" 
+    : (isAddProductPage ? "Produkt speichern" : "Neues Produkt");
 
   // Navegación inteligente para charge basada en la ruta actual
   const handleChargeContinue = () => {
@@ -121,16 +169,49 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   };
 
 
+  // Contenedor para modales globales (fuera de cualquier scroll)
+  const [modalContainer, setModalContainer] = useState<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    // Crear contenedor de modales si no existe
+    if (typeof window !== 'undefined' && !document.getElementById('global-modals-container')) {
+      const container = document.createElement('div');
+      container.id = 'global-modals-container';
+      container.style.position = 'fixed';
+      container.style.top = '0';
+      container.style.left = '0';
+      container.style.width = '100%';
+      container.style.height = '100%';
+      container.style.pointerEvents = 'none'; // El contenedor no intercepta eventos
+      container.style.zIndex = '99999';
+      container.style.overflow = 'hidden';
+      // Los modales dentro tendrán pointer-events: auto
+      document.body.appendChild(container);
+      setModalContainer(container);
+    } else if (typeof window !== 'undefined') {
+      const existingContainer = document.getElementById('global-modals-container');
+      if (existingContainer) {
+        setModalContainer(existingContainer as HTMLDivElement);
+      }
+    }
+  }, []);
+
   return (
-    <div className="flex h-responsive bg-background-cream">
-      {/* Sidebar */}
-      {shouldShowSidebar && (
-        <Sidebar
-          isCollapsed={isCollapsed}
-          onToggle={handleSidebarToggle}
-          isMobile={isMobile}
-        />
+    <>
+      {/* Modal de carga de productos - renderizado en el contenedor global */}
+      {modalContainer && (
+        <LoadingProductsModal isOpen={isProductsLoadingModalOpen} />
       )}
+      
+      <div className="flex h-responsive bg-background-cream">
+        {/* Sidebar */}
+        {shouldShowSidebar && (
+          <Sidebar
+            isCollapsed={isCollapsed}
+            onToggle={handleSidebarToggle}
+            isMobile={isMobile}
+          />
+        )}
 
       {/* Overlay para móvil */}
       {isMobile && sidebarOpen && (
@@ -223,7 +304,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <FooterAddProduct
             onAddProduct={handleAddProduct}
             buttonText={buttonText}
-            isAddProductPage={isAddProductPage}
+            isAddProductPage={isAddProductPage || isEditMode}
+            hasChanges={isEditMode ? hasFormChanges : undefined}
           />
         )}
 
@@ -259,5 +341,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         )}
       </div>
     </div>
+    </>
   );
 }

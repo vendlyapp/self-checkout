@@ -20,12 +20,15 @@ export default function UserCartSummary({ variant }: UserCartSummaryProps) {
     const totalItems = validCartItems.reduce((sum, item) => sum + item.quantity, 0);
     const totalPrice = validCartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
     return (
-      <div className="w-full max-w-[430px] mx-auto bg-brand-500 rounded-lg flex items-center justify-between px-4 py-3 mb-3 animate-fade-up safe-area-bottom overflow-hidden">
-        <span className="text-white font-semibold text-base mobile-base truncate mb-3">
+      <div className="w-full max-w-[430px] mx-auto bg-brand-500 rounded-lg flex items-center justify-between px-4 py-3 mb-3 
+                      animate-slide-up-fade safe-area-bottom overflow-hidden gpu-accelerated">
+        <span className="text-white font-semibold text-base mobile-base truncate mb-3 transition-interactive">
           {totalItems} Artikel &bull; CHF {totalPrice.toFixed(2)}
         </span>
         <button
-          className="bg-white text-[#6E7996] font-bold px-5 mb-3 py-2 rounded-lg text-base shadow-sm hover:bg-gray-50 transition-colors touch-target tap-highlight-transparent active:scale-95 flex-shrink-0"
+          className="bg-white text-[#6E7996] font-bold px-5 mb-3 py-2 rounded-lg text-base shadow-sm hover:bg-gray-50 
+                   transition-interactive gpu-accelerated touch-target tap-highlight-transparent active:scale-95 
+                   hover:scale-105 flex-shrink-0"
           onClick={() => router.push("/user/payment")}
           style={{ minHeight: "44px", minWidth: "100px" }}
           aria-label="Zur Bezahlung gehen"

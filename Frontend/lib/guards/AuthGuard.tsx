@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useUser } from '@/lib/contexts/UserContext';
 
@@ -13,8 +13,26 @@ export const AuthGuard = ({ children, allowedRoles }: AuthGuardProps) => {
   const { isAuthenticated, profile, loading } = useUser();
   const router = useRouter();
   const pathname = usePathname();
+  const [forceRender, setForceRender] = useState(false);
+
+  // Timeout de seguridad: después de 10 segundos, forzar render incluso si loading es true
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.warn('[AuthGuard] Timeout de seguridad: forzando render después de 10 segundos');
+        setForceRender(true);
+      }
+    }, 10000); // 10 segundos máximo
+
+    return () => clearTimeout(timeoutId);
+  }, [loading]);
 
   useEffect(() => {
+    // Si forceRender es true, permitir renderizar
+    if (forceRender) {
+      return;
+    }
+
     if (loading) return;
 
     // Si no está autenticado, redirigir a login
@@ -41,10 +59,10 @@ export const AuthGuard = ({ children, allowedRoles }: AuthGuardProps) => {
     }
     // Si no hay perfil pero el usuario está autenticado, permitir acceso
     // El perfil se cargará en segundo plano
-  }, [isAuthenticated, profile, loading, allowedRoles, router, pathname]);
+  }, [isAuthenticated, profile, loading, allowedRoles, router, pathname, forceRender]);
 
-  // Mostrar loading mientras verifica
-  if (loading) {
+  // Mostrar loading mientras verifica, pero solo si no se ha forzado el render
+  if (loading && !forceRender) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-brand-50 via-background-cream to-brand-100">
         <div className="flex flex-col items-center justify-center space-y-6">
@@ -83,8 +101,14 @@ export const AuthGuard = ({ children, allowedRoles }: AuthGuardProps) => {
     );
   }
 
-  // Si no está autenticado, no mostrar contenido
-  if (!isAuthenticated) {
+  // Si no está autenticado y no se ha forzado el render, no mostrar contenido
+  if (!isAuthenticated && !forceRender) {
+    return null;
+  }
+
+  // Si forceRender es true pero no hay autenticación, redirigir a login
+  if (forceRender && !isAuthenticated) {
+    router.push('/login?redirect=' + encodeURIComponent(pathname));
     return null;
   }
 
@@ -94,6 +118,7 @@ export const AuthGuard = ({ children, allowedRoles }: AuthGuardProps) => {
     return null;
   }
 
+  // Si forceRender es true, permitir acceso incluso sin perfil (se cargará en segundo plano)
   return <>{children}</>;
 };
 

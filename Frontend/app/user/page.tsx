@@ -11,13 +11,16 @@ export default function UserPage() {
 
   useEffect(() => {
     // Si hay una tienda escaneada, redirigir a /store/[slug]
-    if (store?.slug) {
-      router.replace(`/store/${store.slug}`);
+    if (store?.slug && typeof window !== 'undefined') {
+      const currentPath = window.location.pathname;
+      if (currentPath === '/user') {
+        router.replace(`/store/${store.slug}`);
+      }
     }
   }, [store?.slug, router]);
 
   return (
-    <div className="w-full h-full ios-scroll-fix">
+    <div className="w-full h-full ios-scroll-fix animate-page-enter gpu-accelerated">
       <DashboardUser />
     </div>
   );

@@ -100,6 +100,7 @@ export interface CreateProductRequest {
   location?: string;
   notes?: string;
   expiryDate?: string;
+  parentId?: string; // ID del producto padre (para variantes)
 }
 
 export interface UpdateProductRequest extends Partial<CreateProductRequest> {

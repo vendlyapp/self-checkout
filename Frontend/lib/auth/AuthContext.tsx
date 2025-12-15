@@ -34,11 +34,25 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Timeout de seguridad para evitar que se quede en loading indefinidamente
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.warn('[AuthProvider] Timeout al inicializar, estableciendo loading a false');
+        setLoading(false);
+      }
+    }, 5000); // 5 segundos máximo
+
     // Obtener sesión inicial
     const initializeAuth = async () => {
       try {
+        // Crear AbortController con timeout
+        const controller = new AbortController();
+        const abortTimeout = setTimeout(() => controller.abort(), 4000); // 4 segundos
+
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
         
+        clearTimeout(abortTimeout);
+
         if (error) {
           console.error('Error al obtener sesión:', error);
         }
@@ -48,11 +62,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       } catch (error) {
         console.error('Error al inicializar auth:', error);
       } finally {
+        clearTimeout(timeoutId);
         setLoading(false);
       }
     };
 
     initializeAuth();
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
 
     // Escuchar cambios en la autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -108,37 +127,31 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signOut = async () => {
     try {
-      // Limpiar sesión de Supabase
-      const { error } = await supabase.auth.signOut();
-      
-      // Limpiar estados locales
+      // Limpiar estados locales primero
       setUser(null);
       setSession(null);
       
-      // Limpiar localStorage y sessionStorage
-      if (typeof window !== 'undefined') {
-        // Limpiar tokens y datos específicos
-        localStorage.removeItem('vendly-auth-token');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('userName');
-        localStorage.removeItem('userEmail');
-        sessionStorage.clear();
-        
-        // Limpiar cookies de Supabase si existen
-        const cookies = document.cookie.split(';');
-        cookies.forEach(cookie => {
-          const [name] = cookie.split('=');
-          const trimmedName = name.trim();
-          if (trimmedName.startsWith('sb-') || trimmedName.startsWith('supabase.')) {
-            document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-            document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
-          }
-        });
-      }
+      // Usar la función de limpieza completa
+      // Nota: No podemos pasar queryClient aquí porque es un hook, pero clearAllSessionData
+      // intentará limpiar React Query de forma global
+      const { clearAllSessionData } = await import('@/lib/utils/sessionUtils');
+      await clearAllSessionData();
       
-      return { error };
+      return { error: null };
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
+      // Forzar limpieza básica en caso de error
+      try {
+        await supabase.auth.signOut();
+        setUser(null);
+        setSession(null);
+        if (typeof window !== 'undefined') {
+          localStorage.clear();
+          sessionStorage.clear();
+        }
+      } catch (e) {
+        console.error('Error en limpieza de emergencia:', e);
+      }
       return { error: error as AuthError };
     }
   };

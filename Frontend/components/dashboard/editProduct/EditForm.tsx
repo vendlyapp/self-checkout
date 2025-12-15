@@ -1,19 +1,17 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { createPortal } from "react-dom";
-import { CheckCircle } from "lucide-react";
 import MobileForm from "../createProduct/MobileForm";
 import DesktopForm from "../createProduct/DesktopForm";
-import { FormProps, CreatedProduct, ProductVariant, FormErrors } from "../createProduct/types";
+import { CreatedProduct, ProductVariant, FormErrors, Category } from "../createProduct/types";
 import { validateField, createProductObject } from "../createProduct/validations";
-import { CATEGORIES, VAT_RATES, SAVE_PROGRESS_STEPS } from "../createProduct/constants";
+import { VAT_RATES, SAVE_PROGRESS_STEPS } from "../createProduct/constants";
 import { useUpdateProduct } from "@/hooks/mutations";
 import { useProductById } from "@/hooks/queries";
-import { Product } from "@/components/dashboard/products_list/data/mockProducts";
+import { useCategories } from "@/hooks/queries/useCategories";
 import { normalizeProductData } from "@/components/dashboard/products_list/data/mockProducts";
-import type { UpdateProductRequest } from "@/lib/services/productService";
+import type { UpdateProductRequest, Product } from "@/lib/services/productService";
 
 interface EditFormProps {
   productId: string;
@@ -27,13 +25,16 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
   // Obtener producto existente
   const { data: existingProduct, isLoading: loadingProduct } = useProductById(productId);
   
+  // Obtener categorías reales del backend
+  const { data: backendCategories = [], isLoading: categoriesLoading } = useCategories();
+  
   // Form state - Campos básicos
   const [productName, setProductName] = useState("");
   const [productDescription, setProductDescription] = useState("");
   const [productPrice, setProductPrice] = useState("");
   const [productCategory, setProductCategory] = useState("");
+  const [productCategoryId, setProductCategoryId] = useState<string>(""); // ID de la categoría seleccionada
   const [productImages, setProductImages] = useState<string[]>([]);
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [isActive, setIsActive] = useState(true);
   
   // Stock siempre es 999 (no se muestra en el formulario)
@@ -57,16 +58,85 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
   const [saveProgress, setSaveProgress] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [updatedProduct, setUpdatedProduct] = useState<CreatedProduct | null>(null);
+  
+  // Estado para almacenar los datos originales del producto
+  const [originalProductData, setOriginalProductData] = useState<Product | null>(null);
+  
+  // Función para comparar datos actuales con originales
+  const hasChanges = useMemo(() => {
+    if (!originalProductData) return false;
+    
+    const product = normalizeProductData(existingProduct as Product);
+    const currentImages = productImages.length > 0 
+      ? productImages 
+      : (product.images || product.image ? [product.image || product.images?.[0] || ""].filter(Boolean) : []);
+    const originalImages = originalProductData.images || (originalProductData.image ? [originalProductData.image] : []);
+    
+    // Comparar imágenes (comparar URLs/base64)
+    const imagesChanged = JSON.stringify(currentImages) !== JSON.stringify(originalImages);
+    
+    return (
+      productName !== (originalProductData.name || "") ||
+      productDescription !== (originalProductData.description || "") ||
+      productPrice !== (originalProductData.price?.toString() || "") ||
+      productCategory !== (originalProductData.category || "") ||
+      isActive !== (originalProductData.isActive ?? true) ||
+      hasPromotion !== !!(originalProductData.isPromotional || originalProductData.isOnSale) ||
+      promotionPrice !== (originalProductData.promotionalPrice?.toString() || "") ||
+      imagesChanged
+    );
+  }, [
+    productName,
+    productDescription,
+    productPrice,
+    productCategory,
+    isActive,
+    hasPromotion,
+    promotionPrice,
+    productImages,
+    originalProductData,
+    existingProduct,
+  ]);
+  
+  // Exponer hasChanges al window para que AdminLayout pueda acceder
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const windowWithFormState = window as { __productFormHasChanges?: boolean; __productFormIsEditMode?: boolean };
+      windowWithFormState.__productFormHasChanges = hasChanges;
+      windowWithFormState.__productFormIsEditMode = true;
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        const windowWithFormState = window as { __productFormHasChanges?: boolean; __productFormIsEditMode?: boolean };
+        windowWithFormState.__productFormHasChanges = false;
+        windowWithFormState.__productFormIsEditMode = false;
+      }
+    };
+  }, [hasChanges]);
 
   // Cargar datos del producto cuando esté disponible
   useEffect(() => {
-    if (existingProduct) {
-      const product = normalizeProductData(existingProduct as any);
+    if (existingProduct && backendCategories.length > 0) {
+      const product = normalizeProductData(existingProduct as Product);
+      
+      // Guardar datos originales para comparación
+      if (!originalProductData) {
+        setOriginalProductData(product);
+      }
       
       setProductName(product.name || "");
       setProductDescription(product.description || "");
       setProductPrice(product.price?.toString() || "");
       setProductCategory(product.category || "");
+      
+      // Buscar el ID de la categoría
+      const categoryMatch = backendCategories.find(cat => cat.name === product.category);
+      if (categoryMatch) {
+        setProductCategoryId(categoryMatch.id);
+      } else if (product.categoryId) {
+        setProductCategoryId(product.categoryId);
+      }
+      
       setProductImages(product.images || product.image ? [product.image || product.images?.[0] || ""].filter(Boolean) : []);
       setIsActive(product.isActive ?? true);
       
@@ -82,16 +152,17 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
         // y promotionPrice como el precio promocional
       } else if (hasActivePromotion) {
         // Si hay promoción pero no originalPrice, usar promotionalPrice si existe
-        const promoPrice = (product as any).promotionalPrice;
+        const promoPrice = (product as Product & { promotionalPrice?: number }).promotionalPrice;
         if (promoPrice) {
           setPromotionPrice(promoPrice.toString());
         }
       }
       
       // Configurar fechas de promoción si existen
-      if ((product as any).promotionalStartDate) {
+      const productWithPromoDates = product as Product & { promotionalStartDate?: string; promotionalEndDate?: string };
+      if (productWithPromoDates.promotionalStartDate) {
         setPromotionDuration("custom");
-        setCustomEndDate((product as any).promotionalEndDate || "");
+        setCustomEndDate(productWithPromoDates.promotionalEndDate || "");
       }
       
       // Configurar variantes si existen (esto requeriría una estructura de variantes en el backend)
@@ -99,7 +170,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
       
       setVatRate("2.6"); // Valor por defecto
     }
-  }, [existingProduct]);
+  }, [existingProduct, backendCategories, originalProductData]);
 
   // Función para manejar subida de imágenes
   const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,7 +196,6 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
       reader.onloadend = () => {
         const base64String = reader.result as string;
         setProductImages((prev) => [...prev, base64String]);
-        setImageFiles((prev) => [...prev, file]);
       };
       reader.onerror = () => {
         alert(`Error al leer ${file.name}`);
@@ -140,11 +210,20 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
   // Función para eliminar imagen
   const handleRemoveImage = useCallback((index: number) => {
     setProductImages((prev) => prev.filter((_, i) => i !== index));
-    setImageFiles((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  // Data from constants
-  const categories = CATEGORIES;
+  // Transformar categorías del backend al formato esperado por el formulario
+  const categories: Category[] = useMemo(() => {
+    if (categoriesLoading) {
+      return [];
+    }
+    
+    return backendCategories.map(cat => ({
+      value: cat.name,
+      color: cat.color ? `bg-[${cat.color}] text-white` : "bg-gray-50 text-gray-700",
+    }));
+  }, [backendCategories, categoriesLoading]);
+
   const vatRates = VAT_RATES;
 
   // Validation wrapper
@@ -189,12 +268,44 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
 
   const handleSave = useCallback(async () => {
     try {
-      handleValidateField("productName", productName);
-      handleValidateField("productCategory", productCategory);
-
-      if (!hasVariants) handleValidateField("productPrice", productPrice);
-      if (hasPromotion) handleValidateField("promotionPrice", promotionPrice);
-      if (Object.keys(errors).length > 0) return;
+      // Validar campos y obtener nuevos errores
+      const newErrors: FormErrors = {};
+      
+      // Validar nombre
+      if (!productName.trim()) {
+        newErrors.productName = "Produktname ist erforderlich";
+      }
+      
+      // Validar categoría
+      if (!productCategory) {
+        newErrors.productCategory = "Kategorie wählen";
+      }
+      
+      // Validar precio si no hay variantes
+      if (!hasVariants) {
+        if (!productPrice || parseFloat(productPrice) <= 0) {
+          newErrors.productPrice = "Gültiger Preis erforderlich";
+        }
+      }
+      
+      // Validar precio promocional si hay promoción
+      if (hasPromotion) {
+        if (!promotionPrice || parseFloat(promotionPrice) <= 0) {
+          newErrors.promotionPrice = "Aktionspreis erforderlich";
+        } else if (!hasVariants && parseFloat(promotionPrice) >= parseFloat(productPrice)) {
+          newErrors.promotionPrice = "Aktionspreis muss kleiner sein";
+        }
+      }
+      
+      // Si hay errores, actualizar el estado y retornar
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        console.warn('[EditForm] Errores de validación:', newErrors);
+        return;
+      }
+      
+      // Limpiar errores si la validación pasa
+      setErrors({});
 
       for (let i = 0; i < SAVE_PROGRESS_STEPS.length; i++) {
         setSaveProgress(((i + 1) / SAVE_PROGRESS_STEPS.length) * 100);
@@ -211,13 +322,16 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
         promotionPrice,
         hasVariants,
         hasPromotion,
+        productCategoryId, // Pasar el ID de la categoría
       );
 
       // Agregar campos adicionales para actualización
-      const updateData = {
+      const updateData: UpdateProductRequest = {
         ...productData,
         isActive,
-        images: productImages,
+        images: productImages.length > 0 ? productImages : undefined,
+        image: productImages.length > 0 ? productImages[0] : undefined,
+        categoryId: productCategoryId || productData.categoryId, // Asegurar que categoryId se incluya
         // Si hay promoción, configurar campos de promoción
         ...(hasPromotion && {
           isPromotional: true,
@@ -242,21 +356,40 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
       };
 
       try {
+        // Log para debugging
+        console.log('[EditForm] Guardando producto:', {
+          id: productId,
+          updateData,
+          productCategoryId,
+        });
+
         // Usar mutation de React Query
         const updatedProduct = await updateProductMutation.mutateAsync({
           id: productId,
           data: updateData as UpdateProductRequest,
         });
 
+        console.log('[EditForm] Producto actualizado exitosamente:', updatedProduct);
+
+        // Actualizar los datos originales con los nuevos datos guardados
+        // para que hasChanges se resetee correctamente
+        const normalizedUpdated = normalizeProductData(updatedProduct as Product);
+        setOriginalProductData(normalizedUpdated);
+
         setUpdatedProduct(updatedProduct);
         setShowSuccessModal(true);
-      } catch (apiError) {
-        console.error('Error updating product:', apiError);
+      } catch (apiError: unknown) {
+        console.error('[EditForm] Error updating product:', apiError);
+        const errorObj = apiError as { message?: string; error?: string };
+        const errorMessage = errorObj?.message || errorObj?.error || 'Error al actualizar el producto';
+        alert(`Error: ${errorMessage}. Por favor, intenta nuevamente.`);
         throw apiError;
       }
-    } catch (error) {
-      console.error('Error updating product:', error);
-      alert('Error al actualizar el producto. Por favor, intenta nuevamente.');
+    } catch (error: unknown) {
+      console.error('[EditForm] Error en handleSave:', error);
+      const errorObj = error as { message?: string };
+      const errorMessage = errorObj?.message || 'Error al actualizar el producto';
+      alert(`Error: ${errorMessage}. Por favor, intenta nuevamente.`);
     }
   }, [
     productName,
@@ -266,21 +399,20 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
     promotionPrice,
     hasVariants,
     hasPromotion,
-    errors,
-    handleValidateField,
     productId,
     updateProductMutation,
     isActive,
     productImages,
     promotionDuration,
     customEndDate,
+    productCategoryId,
   ]);
 
   const handleModalClose = useCallback(() => {
     setShowSuccessModal(false);
     setUpdatedProduct(null);
-    // Agregar timestamp para forzar refresh de la lista
-    router.push(`/products_list?refresh=${Date.now()}`);
+    // Redirigir a la lista de productos
+    router.push('/products_list');
   }, [router]);
 
   if (loadingProduct) {
@@ -354,6 +486,9 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
     handleToggleVariants,
     categories,
     vatRates,
+    isEditMode: true,
+    existingProduct: existingProduct ? normalizeProductData(existingProduct as Product) : undefined,
+    hasChanges: hasChanges,
   };
 
   return isDesktop ? (

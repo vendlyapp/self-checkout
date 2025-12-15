@@ -1,12 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Package, Grid3X3, Plus, Percent } from "lucide-react";
 import StatCard from "./StatCard";
 import ActionButton from "./ActionButton";
 import NavigationItem from "./NavigationItem";
-import { useProducts, useProductActions } from "@/hooks";
+import { useProductsData, useProductActions } from "@/hooks";
+import { useProductStats } from "@/hooks/queries/useProductStats";
+import { useCategoryStats } from "@/hooks/queries/useCategoryStats";
 import { getActiveProductsCount, getActiveCategoriesCount } from "./data";
+import type { ProductsAnalyticsData } from "./types";
+import { useProductsAnalyticsStore } from "@/lib/stores/productsAnalyticsStore";
 import {
   ProductsDashboardSkeletonLoader,
   ProductsErrorState,
@@ -17,11 +21,60 @@ import { SearchInput } from "@/components/ui/search-input";
 export default function ProductsDashboard() {
   // Estados para búsqueda
   const [searchQuery, setSearchQuery] = useState<string>("");
+  // Estado para controlar si ya intentamos refrescar
+  const [hasTriedRefresh, setHasTriedRefresh] = useState(false);
 
   // Usando hooks para datos y acciones
-  const { data, loading, error, refresh } = useProducts();
+  const { data, loading, error, refresh } = useProductsData();
   const { handleNewProduct, handleProductList, handleCategories } =
     useProductActions();
+  
+  // Obtener estadísticas de productos (mismo hook que MainActionCards)
+  const { data: productStats } = useProductStats();
+  
+  // Obtener estadísticas de categorías (mismo endpoint que el backend)
+  const { data: categoryStats } = useCategoryStats();
+  
+  // Obtener datos del store como fallback inmediato
+  const { data: storeData, isStale } = useProductsAnalyticsStore();
+  
+  // Si hay datos en el store y no están viejos, usarlos mientras carga
+  const immediateData = storeData && !isStale() ? storeData : null;
+
+  // Debug logging
+  React.useEffect(() => {
+    if (loading) {
+      console.log('[ProductsDashboard] Loading products data...');
+    }
+    if (error) {
+      console.error('[ProductsDashboard] Error loading products:', error);
+    }
+    if (data) {
+      console.log('[ProductsDashboard] Products data loaded:', {
+        hasData: !!data,
+        hasProducts: !!data.products,
+        hasCategories: !!data.categories,
+        productsTotal: data.products?.total,
+        categoriesTotal: data.categories?.total,
+        dataStructure: JSON.stringify(data, null, 2),
+      });
+    } else {
+      console.warn('[ProductsDashboard] No data available');
+    }
+  }, [loading, error, data]);
+
+  // Intentar refrescar una vez si no hay datos
+  useEffect(() => {
+    if (!data || !data.products || !data.categories) {
+      if (!hasTriedRefresh) {
+        setHasTriedRefresh(true);
+        const timer = setTimeout(() => {
+          refresh();
+        }, 2000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [data, hasTriedRefresh, refresh]);
 
   // Manejo de estados de carga y error
   if (loading) {
@@ -32,15 +85,55 @@ export default function ProductsDashboard() {
     return <ProductsErrorState error={error} onRetry={refresh} />;
   }
 
-  // Si no hay datos, mostrar skeleton
-  if (!data || !data.products || !data.categories) {
+  // Usar datos del store si están disponibles y los datos de la query aún no están listos
+  const displayData = data || immediateData;
+
+  // Validar y usar datos reales
+  // Aceptar datos incluso si los totales son 0 (puede ser que no haya productos aún)
+  if (!displayData) {
+    // Si ya intentamos refrescar y aún no hay datos, mostrar skeleton
+    if (hasTriedRefresh) {
+      console.warn('[ProductsDashboard] No data after refresh attempt');
+      return <ProductsDashboardSkeletonLoader />;
+    }
+    // Si aún no hemos intentado refrescar, mostrar skeleton mientras intenta
     return <ProductsDashboardSkeletonLoader />;
   }
 
-  // Calcular valores derivados con valores por defecto
-  const activeProductsCount = getActiveProductsCount(data.products);
-  const activeCategoriesCount = getActiveCategoriesCount(data.categories);
+  // Asegurar que products y categories existan, incluso si son objetos con total: 0
+  // Usar el total de productStats si está disponible (mismo que MainActionCards)
+  const productsTotal = productStats?.total ?? displayData?.products?.total ?? 0;
+  
+  // Usar el total de categoryStats si está disponible (mismo endpoint del backend)
+  const categoriesTotal = categoryStats?.total ?? displayData?.categories?.total ?? 0;
+  
+  const finalData: ProductsAnalyticsData = {
+    products: {
+      total: productsTotal, // Usar el total de useProductStats (mismo que MainActionCards)
+      trend: displayData?.products?.trend || 'neutral',
+      trendData: displayData?.products?.trendData || [0, 0, 0, 0, 0, 0, productsTotal],
+      newProducts: displayData?.products?.newProducts || 0,
+    },
+    categories: {
+      total: categoriesTotal, // Usar el total de useCategoryStats (mismo endpoint del backend)
+      trend: displayData?.categories?.trend || 'neutral',
+      trendData: displayData?.categories?.trendData || [0, 0, 0, 0, 0, 0, categoriesTotal],
+      newCategories: displayData?.categories?.newCategories || 0,
+    },
+    lastUpdated: displayData?.lastUpdated || new Date().toISOString(),
+  };
 
+  console.log('[ProductsDashboard] Final data structure:', {
+    hasProducts: !!finalData.products,
+    hasCategories: !!finalData.categories,
+    productsTotal: finalData.products?.total,
+    categoriesTotal: finalData.categories?.total,
+  });
+
+  const activeProductsCount = getActiveProductsCount(finalData.products);
+  const activeCategoriesCount = getActiveCategoriesCount(finalData.categories);
+
+  // Renderizar con datos reales
   return (
     <div className="w-full">
       {/* ===== MOBILE LAYOUT ===== */}
@@ -60,22 +153,22 @@ export default function ProductsDashboard() {
             <StatCard
               icon={<Package className="w-5 h-5 text-white " />}
               title="Produkte"
-              value={data.products.total}
+              value={finalData.products.total}
               subtitle="Produkte"
-              trend={data.products.trend}
-              trendData={data.products.trendData}
-              badge={`${data.products.newProducts} Neu`}
+              trend={finalData.products.trend}
+              trendData={finalData.products.trendData}
+              badge={`${finalData.products.newProducts} Neu`}
               className="bg-background-cream"
             />
 
             <StatCard
               icon={<Grid3X3 className="w-5 h-5 text-white " />}
               title="Kategorien"
-              value={data.categories.total}
+              value={finalData.categories.total}
               subtitle="Kategorien"
-              trend={data.categories.trend}
-              trendData={data.categories.trendData}
-              badge={`${data.categories.newCategories} Neu`}
+              trend={finalData.categories.trend}
+              trendData={finalData.categories.trendData}
+              badge={`${finalData.categories.newCategories} Neu`}
               className="bg-background-cream"
             />
           </div>
@@ -113,8 +206,8 @@ export default function ProductsDashboard() {
               subtitle="erstellen & bearbeiten"
               badge={`${activeProductsCount} aktiv`}
               badgeVariant="success"
-              />
-            </div>
+            />
+          </div>
         </div>
       </div>
 
@@ -144,22 +237,22 @@ export default function ProductsDashboard() {
             <StatCard
               icon={<Package className="w-6 h-6 text-white" />}
               title="Produkte"
-              value={data.products.total}
+              value={finalData.products.total}
               subtitle="Gesamt Produkte"
-              trend={data.products.trend}
-              trendData={data.products.trendData}
-              badge={`${data.products.newProducts} Neu`}
+              trend={finalData.products.trend}
+              trendData={finalData.products.trendData}
+              badge={`${finalData.products.newProducts} Neu`}
               className="bg-white shadow-sm border border-gray-200"
             />
 
             <StatCard
               icon={<Grid3X3 className="w-6 h-6 text-white" />}
               title="Kategorien"
-              value={data.categories.total}
+              value={finalData.categories.total}
               subtitle="Gesamt Kategorien"
-              trend={data.categories.trend}
-              trendData={data.categories.trendData}
-              badge={`${data.categories.newCategories} Neu`}
+              trend={finalData.categories.trend}
+              trendData={finalData.categories.trendData}
+              badge={`${finalData.categories.newCategories} Neu`}
               className="bg-white shadow-sm border border-gray-200"
             />
 
@@ -174,7 +267,6 @@ export default function ProductsDashboard() {
                 subtitle="Artikel anlegen"
                 onClick={handleNewProduct}
                 variant="primary"
-
               />
             </div>
           </div>

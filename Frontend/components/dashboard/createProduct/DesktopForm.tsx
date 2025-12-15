@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   Camera,
   X,
@@ -11,6 +12,9 @@ import {
   Percent,
   FolderOpen,
   CheckCircle,
+  QrCode,
+  ScanLine,
+  Download,
 } from "lucide-react";
 import { SharedFormProps } from "./types";
 
@@ -25,7 +29,8 @@ export default function DesktopForm(props: SharedFormProps) {
     productCategory,
     setProductCategory,
     productImages,
-    setProductImages,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    setProductImages, // Not used directly (handled by handleImageUpload)
     handleImageUpload,
     handleRemoveImage,
     isActive,
@@ -56,16 +61,37 @@ export default function DesktopForm(props: SharedFormProps) {
     categories,
     vatRates,
   } = props;
-  return (
-    <div className="max-w-6xl mx-auto p-8">
-      {/* Success Modal */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden">
-          {/* Backdrop con blur moderno - cubre toda la pantalla */}
-          <div className="absolute inset-0 w-full h-full bg-black/30 backdrop-blur-md"></div>
-          
-          {/* Modal moderno con animación */}
-          <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4 animate-in fade-in-0 zoom-in-95 duration-300">
+  // Renderizar modales fuera del contenedor usando Portal
+  // Auto-cerrar modal después de 4 segundos
+  const autoCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (showSuccessModal) {
+      // Limpiar timeout anterior si existe
+      if (autoCloseTimeoutRef.current) {
+        clearTimeout(autoCloseTimeoutRef.current);
+      }
+      
+      // Configurar auto-cierre después de 4 segundos
+      autoCloseTimeoutRef.current = setTimeout(() => {
+        handleModalClose();
+      }, 4000);
+
+      return () => {
+        if (autoCloseTimeoutRef.current) {
+          clearTimeout(autoCloseTimeoutRef.current);
+        }
+      };
+    }
+  }, [showSuccessModal, handleModalClose]);
+
+  const successModalContent = showSuccessModal && (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden" style={{ pointerEvents: 'auto' }}>
+      {/* Backdrop con blur moderno - cubre toda la pantalla */}
+      <div className="absolute inset-0 w-full h-full bg-black/30 backdrop-blur-md"></div>
+      
+      {/* Modal moderno con animación */}
+      <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4 animate-in fade-in-0 zoom-in-95 duration-300" style={{ pointerEvents: 'auto' }}>
             {/* Gradiente superior */}
             <div className="bg-gradient-to-br from-[#25D076] to-[#20BA68] rounded-t-3xl p-10 text-center">
               <div className="w-24 h-24 bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center mx-auto mb-5 shadow-lg">
@@ -79,7 +105,14 @@ export default function DesktopForm(props: SharedFormProps) {
             {/* Contenido del modal */}
             <div className="p-8">
               <p className="text-gray-700 mb-8 text-center text-lg">
-                Su producto <span className="font-semibold text-gray-900">&quot;{createdProduct?.name}&quot;</span> ha sido creado exitosamente
+                {props.isEditMode ? (
+                  <>El producto <span className="font-semibold text-gray-900">&quot;{createdProduct?.name}&quot;</span> ha sido actualizado exitosamente</>
+                ) : (
+                  <>Su producto <span className="font-semibold text-gray-900">&quot;{createdProduct?.name}&quot;</span> ha sido creado exitosamente</>
+                )}
+              </p>
+              <p className="text-gray-500 text-sm text-center mb-6">
+                Redirigiendo automáticamente en 4 segundos...
               </p>
 
               {/* Tarjeta de información */}
@@ -95,33 +128,85 @@ export default function DesktopForm(props: SharedFormProps) {
               {/* Botón principal */}
               <button
                 onClick={handleModalClose}
-                className="w-full bg-gradient-to-r from-[#25D076] to-[#20BA68] text-white py-5 px-8 rounded-2xl font-semibold hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 text-lg flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-[#25D076] to-[#20BA68] text-white py-5 px-8 rounded-2xl font-semibold hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 text-lg flex items-center justify-center gap-2 cursor-pointer"
+                style={{ pointerEvents: 'auto' }}
               >
                 <CheckCircle className="w-6 h-6" />
-                Ir al Catálogo
+                {props.isEditMode ? 'Volver a la Lista' : 'Ir al Catálogo'}
               </button>
             </div>
           </div>
         </div>
-      )}
+      );
 
-      {/* Progress Bar */}
-      {saveProgress > 0 && (
-        <div className="bg-white border-b border-gray-200 p-4 mb-6">
-          <div className="flex items-center space-x-3 mb-3">
-            <Loader2 className="w-5 h-5 animate-spin text-[#25D076]" />
-            <span className="text-base text-gray-700">Speichert Produkt...</span>
+  const loadingModalContent = saveProgress > 0 && (
+    <div className="fixed inset-0 z-[9998] flex items-center justify-center overflow-hidden" style={{ pointerEvents: 'auto' }}>
+      {/* Backdrop con blur moderno */}
+      <div className="absolute inset-0 w-full h-full bg-black/40 backdrop-blur-md"></div>
+      
+      {/* Modal de carga moderno */}
+      <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4 animate-in fade-in-0 zoom-in-95 duration-300" style={{ pointerEvents: 'auto' }}>
+        {/* Gradiente superior */}
+        <div className="bg-gradient-to-br from-[#25D076] to-[#20BA68] rounded-t-3xl p-8 text-center">
+          <div className="w-20 h-20 bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <Loader2 className="w-10 h-10 text-white animate-spin" strokeWidth={2.5} />
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-3">
-            <div
-              className="bg-[#25D076] h-3 rounded-full transition-all duration-300"
-              style={{ width: `${saveProgress}%` }}
-            />
+          <h3 className="text-2xl font-bold text-white mb-1">
+            {props.isEditMode ? 'Guardando Cambios...' : 'Guardando Producto...'}
+          </h3>
+          <p className="text-white/90 text-sm">
+            {props.isEditMode ? 'Por favor espera mientras guardamos tus cambios' : 'Por favor espera mientras creamos tu producto'}
+          </p>
+        </div>
+
+        {/* Contenido del modal */}
+        <div className="p-8">
+          {/* Barra de progreso */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-gray-600">Progreso</span>
+              <span className="text-sm font-semibold text-brand-500">{Math.round(saveProgress)}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-[#25D076] to-[#20BA68] h-3 rounded-full transition-all duration-500 ease-out shadow-sm"
+                style={{ width: `${saveProgress}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Mensaje de estado */}
+          <div className="text-center">
+            <p className="text-gray-600 text-sm">
+              {saveProgress < 25 && 'Validando datos...'}
+              {saveProgress >= 25 && saveProgress < 50 && 'Subiendo imágenes...'}
+              {saveProgress >= 50 && saveProgress < 75 && 'Generando códigos...'}
+              {saveProgress >= 75 && saveProgress < 100 && 'Finalizando...'}
+              {saveProgress >= 100 && '¡Completado!'}
+            </p>
           </div>
         </div>
-      )}
+      </div>
+    </div>
+  );
 
-      {/* Form Content - Desktop Layout */}
+  // Obtener contenedor de modales global o usar body como fallback
+  const getModalContainer = () => {
+    if (typeof window === 'undefined') return null;
+    const globalContainer = document.getElementById('global-modals-container');
+    return globalContainer || document.body;
+  };
+
+  const modalContainer = getModalContainer();
+
+  return (
+    <>
+      {/* Renderizar modales fuera del contenedor usando Portal en el contenedor global */}
+      {modalContainer && showSuccessModal && createPortal(successModalContent, modalContainer)}
+      {modalContainer && saveProgress > 0 && createPortal(loadingModalContent, modalContainer)}
+
+      <div className="max-w-6xl mx-auto p-8">
+        {/* Form Content - Desktop Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left Column - Images and Basic Info */}
         <div className="space-y-6">
@@ -262,13 +347,16 @@ export default function DesktopForm(props: SharedFormProps) {
                   value={productCategory}
                   onChange={(e) => {
                     setProductCategory(e.target.value);
-                    validateField("productCategory", e.target.value);
+                    // validateField ya se llama dentro de handleCategoryChange
                   }}
                   className={`w-full h-12 p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-base transition-colors bg-white ${
                     errors.productCategory ? "border-red-500" : "border-gray-200"
                   }`}
+                  disabled={categories.length === 0}
                 >
-                  <option value="">Kategorie wählen...</option>
+                  <option value="">
+                    {categories.length === 0 ? "Keine Kategorien verfügbar" : "Kategorie wählen..."}
+                  </option>
                   {categories.map((category) => (
                     <option key={category.value} value={category.value}>
                       {category.value}
@@ -595,16 +683,161 @@ export default function DesktopForm(props: SharedFormProps) {
               {saveProgress > 0 ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Speichert Produkt...</span>
+                  <span>{props.isEditMode ? 'Speichert Änderungen...' : 'Speichert Produkt...'}</span>
                 </>
               ) : (
                 <>
                   <CheckCircle className="w-5 h-5" />
-                  <span>Produkt speichern</span>
+                  <span>{props.isEditMode ? 'Änderungen speichern' : 'Produkt speichern'}</span>
                 </>
               )}
             </button>
           </div>
+
+          {/* Información adicional del producto (QR, Barcode, etc.) - Solo en modo edición */}
+          {props.isEditMode && props.existingProduct && (
+            <ProductAdditionalInfo product={props.existingProduct} />
+          )}
+        </div>
+      </div>
+    </div>
+    </>
+  );
+}
+
+// Componente para mostrar información adicional del producto
+function ProductAdditionalInfo({ product }: { product: { 
+  id?: string;
+  name?: string;
+  qrCode?: string;
+  barcodeImage?: string;
+  barcode?: string;
+  sku?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  tags?: string[];
+} }) {
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('de-CH', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  const handleDownloadQR = () => {
+    if (!product?.qrCode) return;
+    const link = document.createElement('a');
+    link.href = product.qrCode;
+    link.download = `QR_${product.name?.replace(/\s+/g, '_')}_${product.id}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDownloadBarcode = () => {
+    if (!product?.barcodeImage) return;
+    const link = document.createElement('a');
+    link.href = product.barcodeImage;
+    link.download = `Barcode_${product.name?.replace(/\s+/g, '_')}_${product.id}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <div className="space-y-6 mt-6">
+      {/* QR Code */}
+      {product.qrCode && (
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <QrCode className="w-6 h-6 text-brand-500" />
+              <h3 className="text-lg font-semibold text-gray-900">Código QR</h3>
+            </div>
+            <button
+              onClick={handleDownloadQR}
+              className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors font-medium shadow-sm"
+            >
+              <Download className="w-4 h-4" />
+              Descargar
+            </button>
+          </div>
+          <div className="flex justify-center bg-gray-50 rounded-xl p-6">
+            <div className="text-center">
+              <img 
+                src={product.qrCode} 
+                alt={`QR Code para ${product.name}`}
+                className="w-64 h-64 mx-auto rounded-lg"
+              />
+              <p className="text-sm text-gray-600 mt-4">
+                Escanea este código para identificar el producto
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Barcode */}
+      {product.barcodeImage && (
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <ScanLine className="w-6 h-6 text-brand-500" />
+              <h3 className="text-lg font-semibold text-gray-900">Código de Barras</h3>
+            </div>
+            <button
+              onClick={handleDownloadBarcode}
+              className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors font-medium shadow-sm"
+            >
+              <Download className="w-4 h-4" />
+              Descargar
+            </button>
+          </div>
+          <div className="flex justify-center bg-gray-50 rounded-xl p-6">
+            <div className="text-center">
+              <img 
+                src={product.barcodeImage} 
+                alt={`Código de barras para ${product.name}`}
+                className="max-w-full h-auto mx-auto rounded-lg bg-white p-4"
+              />
+              <p className="text-sm text-gray-600 mt-4">
+                Escanea este código de barras para identificar el producto
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Información adicional */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Información del Producto</h3>
+        <div className="space-y-3">
+          {product.sku && (
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="text-sm font-medium text-gray-600">SKU</span>
+              <span className="text-gray-900 font-mono text-sm">{product.sku}</span>
+            </div>
+          )}
+          {product.barcode && (
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="text-sm font-medium text-gray-600">Código de Barras</span>
+              <span className="text-gray-900 font-mono text-sm">{product.barcode}</span>
+            </div>
+          )}
+          {product.createdAt && (
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="text-sm font-medium text-gray-600">Creado el</span>
+              <span className="text-gray-900 font-medium text-sm">{formatDate(product.createdAt)}</span>
+            </div>
+          )}
+          {product.updatedAt && (
+            <div className="flex justify-between items-center py-2">
+              <span className="text-sm font-medium text-gray-600">Última actualización</span>
+              <span className="text-gray-900 font-medium text-sm">{formatDate(product.updatedAt)}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

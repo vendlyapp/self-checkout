@@ -38,11 +38,11 @@ class ProductService {
         "weight", "hasWeight", "dimensions", "discountPercentage", "image", "images",
         "currency", "promotionTitle", "promotionType", "promotionStartAt", "promotionEndAt",
         "promotionBadge", "promotionActionLabel", "promotionPriority", "supplier",
-        "costPrice", "margin", "taxRate", "expiryDate", "location", "notes"
+        "costPrice", "margin", "taxRate", "expiryDate", "location", "notes", "parentId"
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19,
         $20, $21, $22::jsonb, $23, $24, $25, $26, $27, $28, $29, $30,
-        $31, $32, $33, $34, $35, $36, $37, $38, $39, $40
+        $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41
       ) RETURNING *
     `;
 
@@ -110,7 +110,8 @@ class ProductService {
       productData.taxRate ? parseFloat(productData.taxRate) : null, // $37
       productData.expiryDate ? new Date(productData.expiryDate).toISOString() : null, // $38
       productData.location?.trim() || null, // $39
-      productData.notes?.trim() || null // $40
+      productData.notes?.trim() || null, // $40
+      productData.parentId?.trim() || null // $41 - ID del producto padre (para variantes)
     ];
 
     const result = await query(insertQuery, values);

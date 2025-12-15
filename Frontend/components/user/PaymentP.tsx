@@ -56,8 +56,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   })();
 
   return (
-    <div className="fixed inset-0 bg-white/20 backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 bg-white/20 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in-scale">
+      <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-hidden shadow-2xl 
+                      animate-scale-in gpu-accelerated">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">
             Zahlung bestätigen
@@ -315,12 +316,12 @@ export default function PaymentP() {
   // Mostrar mensaje si el carrito está vacío
   if (totalItems === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] bg-[#F9F6F4]">
+      <div className="flex flex-col items-center justify-center min-h-[400px] bg-[#F9F6F4] animate-scale-in">
         <div className="text-center">
-          <p className="text-2xl font-semibold text-[#373F49] mb-4">
+          <p className="text-2xl font-semibold text-[#373F49] mb-4 transition-interactive">
             Ihr Warenkorb ist leer
           </p>
-          <p className="text-[#6E7996]">
+          <p className="text-[#6E7996] transition-interactive">
             Fügen Sie Produkte hinzu, um fortzufahren
           </p>
         </div>
@@ -329,20 +330,20 @@ export default function PaymentP() {
   }
 
   return (
-    <>
+    <div className="animate-page-enter gpu-accelerated">
       {/* Header con información real del carrito */}
-      <div className="flex flex-col gap-2 justify-center items-center bg-[#F9F6F4] w-full p-2 border-b border-[#E5E5E5]">
-        <p className="text-xl pt-4 font-semibold text-[#373F49]">
+      <div className="flex flex-col gap-2 justify-center items-center bg-[#F9F6F4] w-full p-2 border-b border-[#E5E5E5] animate-stagger-1">
+        <p className="text-xl pt-4 font-semibold text-[#373F49] transition-interactive">
           {store?.name ?? "Gastbestellung"}
         </p>
-        <p className="text-2xl font-bold">
+        <p className="text-2xl font-bold transition-interactive">
           {formatSwissPriceWithCHF(payableTotal)}
         </p>
-        <p className="text-lg font-semibold text-[#373F49]">
+        <p className="text-lg font-semibold text-[#373F49] transition-interactive">
           inkl. MwSt • {totalItems} {totalItems === 1 ? "Artikel" : "Artikel"}
         </p>
         {subtotal !== totalWithVAT && (
-          <p className="text-sm text-[#6E7996]">
+          <p className="text-sm text-[#6E7996] transition-interactive">
             Netto: {formatSwissPriceWithCHF(subtotal)} + MwSt (7.7%):{" "}
             {formatSwissPriceWithCHF(totalWithVAT - subtotal)}
           </p>
@@ -350,10 +351,10 @@ export default function PaymentP() {
       </div>
 
       {/* Código promocional */}
-      <div className="pt-4 pl-12">
+      <div className="pt-4 pl-12 animate-stagger-2">
         <label
           htmlFor="promo"
-          className="text-[#25D076] text-[15px] font-semibold cursor-pointer hover:underline"
+          className="text-[#25D076] text-[15px] font-semibold cursor-pointer hover:underline transition-interactive"
         >
           Promo Code?
         </label>
@@ -380,7 +381,9 @@ export default function PaymentP() {
               />
               <button
                 onClick={handleApplyPromo}
-                className="bg-brand-500 justify-center items-center flex hover:bg-brand-600 text-white font-semibold rounded-lg px-4 py-3  transition-colors touch-target tap-highlight-transparent active:scale-95"
+                className="bg-brand-500 justify-center items-center flex hover:bg-brand-600 text-white font-semibold rounded-lg px-4 py-3  
+                         transition-interactive gpu-accelerated touch-target tap-highlight-transparent 
+                         active:scale-95 hover:scale-105"
                 aria-label="Promo anwenden"
                 style={{ minHeight: "44px" }}
               >
@@ -424,35 +427,40 @@ export default function PaymentP() {
           Zahlungsmethode wählen:
         </p>
 
-        {paymentMethods.map((method) => {
-          const IconComponent = method.icon;
-          const isSelected = selectedPaymentMethod === method.id;
+        <div className="space-y-3">
+          {paymentMethods.map((method, index) => {
+            const IconComponent = method.icon;
+            const isSelected = selectedPaymentMethod === method.id;
 
-          return (
-            <button
-              key={method.id}
-              onClick={() => handlePaymentMethodSelect(method.id)}
-              className={`
-                ${method.bgColor} ${
-                method.textColor
-              } px-4 py-4 w-[345px] h-[50px] text-sm rounded-full
-                flex items-center gap-2 justify-center transition-all duration-200
-                ${isSelected ? "ring-4 ring-blue-300 ring-opacity-50" : ""}
-                hover:scale-105 active:scale-95 touch-target tap-highlight-transparent
-              `}
-              style={{ minHeight: "50px" }}
-              aria-label={`${method.name} auswählen`}
-            >
-              <IconComponent className="w-6 h-6" />
-              {method.name}
-              {isSelected && (
-                <div className="ml-auto">
-                  <Eclipse className="w-4 h-4 text-white" />
-                </div>
-              )}
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={method.id}
+                onClick={() => handlePaymentMethodSelect(method.id)}
+                className={`
+                  ${method.bgColor} ${method.textColor} px-4 py-4 w-[345px] h-[50px] text-sm rounded-full
+                  flex items-center gap-2 justify-center transition-interactive gpu-accelerated
+                  ${isSelected ? "ring-4 ring-blue-300 ring-opacity-50" : ""}
+                  hover:scale-105 active:scale-95 touch-target tap-highlight-transparent
+                  animate-slide-up-fade
+                `}
+                style={{ 
+                  minHeight: "50px",
+                  animationDelay: `${index * 0.1}s`,
+                  animationFillMode: 'both'
+                }}
+                aria-label={`${method.name} auswählen`}
+              >
+                <IconComponent className="w-6 h-6 transition-interactive" />
+                {method.name}
+                {isSelected && (
+                  <div className="ml-auto animate-bounce-in">
+                    <Eclipse className="w-4 h-4 text-white transition-interactive" />
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Footer de seguridad */}
@@ -481,6 +489,6 @@ export default function PaymentP() {
         errorMessage={orderError}
         onConfirm={handleConfirmPayment}
       />
-    </>
+    </div>
   );
 }

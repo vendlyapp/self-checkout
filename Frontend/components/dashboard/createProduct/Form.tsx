@@ -6,23 +6,29 @@ import { createPortal } from "react-dom";
 import { CheckCircle } from "lucide-react";
 import MobileForm from "./MobileForm";
 import DesktopForm from "./DesktopForm";
-import { FormProps, CreatedProduct, ProductVariant, FormErrors } from "./types";
-import { validateField, createProductObject } from "./validations";
-import { CATEGORIES, VAT_RATES, SAVE_PROGRESS_STEPS } from "./constants";
+import { FormProps, CreatedProduct, ProductVariant, FormErrors, Category } from "./types";
+import { validateField, createProductObject, validateVariants } from "./validations";
+import { VAT_RATES, SAVE_PROGRESS_STEPS } from "./constants";
 import { useCreateProduct } from "@/hooks/mutations";
-import { Product } from "@/components/dashboard/products_list/data/mockProducts";
+import { useCategories } from "@/hooks/queries/useCategories";
+import { useQueryClient } from "@tanstack/react-query";
+import type { CreateProductRequest } from "@/lib/services/productService";
 
 export default function Form({ isDesktop = false }: FormProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const createProductMutation = useCreateProduct();
+  
+  // Obtener categorías reales del backend
+  const { data: backendCategories = [], isLoading: categoriesLoading } = useCategories();
 
   // Form state - Campos básicos
   const [productName, setProductName] = useState("");
   const [productDescription, setProductDescription] = useState("");
   const [productPrice, setProductPrice] = useState("");
   const [productCategory, setProductCategory] = useState("");
+  const [productCategoryId, setProductCategoryId] = useState<string>(""); // ID de la categoría seleccionada
   const [productImages, setProductImages] = useState<string[]>([]); // Array de URLs base64 o URLs
-  const [imageFiles, setImageFiles] = useState<File[]>([]); // Archivos originales para referencia
   const [isActive, setIsActive] = useState(true);
   
   // Stock siempre es 999 (no se muestra en el formulario)
@@ -47,10 +53,6 @@ export default function Form({ isDesktop = false }: FormProps) {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [createdProduct, setCreatedProduct] = useState<CreatedProduct | null>(null);
 
-  // Data from constants
-  const categories = CATEGORIES;
-  const vatRates = VAT_RATES;
-
   // Validation wrapper
   const handleValidateField = useCallback(
     (field: keyof FormErrors, value: string) => {
@@ -59,6 +61,50 @@ export default function Form({ isDesktop = false }: FormProps) {
     },
     [errors, hasVariants, hasPromotion, productPrice]
   );
+
+  // Transformar categorías del backend al formato esperado por el formulario
+  const categories: Category[] = React.useMemo(() => {
+    if (categoriesLoading) {
+      // Si está cargando, retornar array vacío
+      return [];
+    }
+    
+    if (backendCategories.length === 0) {
+      // Si no hay categorías, retornar array vacío (el usuario debería crear categorías primero)
+      return [];
+    }
+    
+    return backendCategories.map((cat) => {
+      // Usar el color de la marca como fallback (bg-brand-50 text-brand-700)
+      // El color personalizado se puede usar más adelante si es necesario
+      const colorClass = cat.color 
+        ? `bg-brand-50 text-brand-700` // Por ahora usar el verde de la marca para todas
+        : "bg-brand-50 text-brand-700"; // Fallback al verde de la marca
+      
+      return {
+        value: cat.name,
+        color: colorClass,
+      };
+    });
+  }, [backendCategories, categoriesLoading]);
+
+  // Función para manejar el cambio de categoría y guardar el ID
+  const handleCategoryChange = useCallback((categoryName: string) => {
+    setProductCategory(categoryName);
+    
+    // Buscar el ID de la categoría seleccionada
+    const selectedCategory = backendCategories.find(cat => cat.name === categoryName);
+    if (selectedCategory) {
+      setProductCategoryId(selectedCategory.id);
+    } else {
+      setProductCategoryId("");
+    }
+    
+    // Validar el campo
+    handleValidateField("productCategory", categoryName);
+  }, [backendCategories, handleValidateField]);
+
+  const vatRates = VAT_RATES;
 
   const addVariant = useCallback(() => {
     setVariants([...variants, { name: "", price: "", promotionPrice: "" }]);
@@ -115,7 +161,6 @@ export default function Form({ isDesktop = false }: FormProps) {
       reader.onloadend = () => {
         const base64String = reader.result as string;
         setProductImages((prev) => [...prev, base64String]);
-        setImageFiles((prev) => [...prev, file]);
       };
       reader.onerror = () => {
         alert(`Error al leer ${file.name}`);
@@ -130,7 +175,6 @@ export default function Form({ isDesktop = false }: FormProps) {
   // Función para eliminar imagen
   const handleRemoveImage = useCallback((index: number) => {
     setProductImages((prev) => prev.filter((_, i) => i !== index));
-    setImageFiles((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
   const handleSave = useCallback(async () => {
@@ -140,6 +184,54 @@ export default function Form({ isDesktop = false }: FormProps) {
 
       if (!hasVariants) handleValidateField("productPrice", productPrice);
       if (hasPromotion) handleValidateField("promotionPrice", promotionPrice);
+      
+      // Validar variantes antes de continuar
+      if (hasVariants) {
+        if (variants.length === 0) {
+          alert('Debe agregar al menos una variante');
+          return;
+        }
+        
+        // Filtrar variantes vacías (que no tienen nombre ni precio)
+        const validVariants = variants.filter(v => 
+          v.name.trim() !== '' && v.price.trim() !== ''
+        );
+        
+        if (validVariants.length === 0) {
+          alert('Debe completar al menos una variante con nombre y precio');
+          return;
+        }
+        
+        // Validar que todas las variantes completadas sean válidas
+        if (!validateVariants(validVariants)) {
+          const invalidVariants = validVariants
+            .map((variant, index) => {
+              const nameValid = variant.name && variant.name.trim() !== '';
+              const priceValid = variant.price && 
+                               variant.price.trim() !== '' && 
+                               !isNaN(parseFloat(variant.price)) &&
+                               parseFloat(variant.price) > 0;
+              
+              if (!nameValid || !priceValid) {
+                return {
+                  index: index + 1,
+                  name: nameValid ? '✓' : '✗ Nombre requerido',
+                  price: priceValid ? '✓' : '✗ Precio requerido y mayor a 0'
+                };
+              }
+              return null;
+            })
+            .filter((v): v is { index: number; name: string; price: string } => v !== null);
+          
+          const errorMessage = invalidVariants.length > 0
+            ? `Variantes inválidas:\n${invalidVariants.map(v => `Variante ${v.index}: ${v.name}, ${v.price}`).join('\n')}`
+            : 'Todas las variantes deben tener nombre y precio válidos';
+          
+          alert(errorMessage);
+          return;
+        }
+      }
+      
       if (Object.keys(errors).length > 0) return;
 
       for (let i = 0; i < SAVE_PROGRESS_STEPS.length; i++) {
@@ -157,6 +249,7 @@ export default function Form({ isDesktop = false }: FormProps) {
         promotionPrice,
         hasVariants,
         hasPromotion,
+        productCategoryId, // Pasar el ID de la categoría
       );
 
       // Agregar imágenes al objeto del producto
@@ -166,60 +259,65 @@ export default function Form({ isDesktop = false }: FormProps) {
       }
 
       try {
-        // Usar mutation de React Query
-        const createdProduct = await createProductMutation.mutateAsync(productData as any);
+        let createdProduct;
+        
+        if (hasVariants && variants.length > 0) {
+          // Filtrar solo las variantes que tienen datos (ignorar las vacías)
+          const validVariants = variants.filter(v => 
+            v.name.trim() !== '' && v.price.trim() !== ''
+          );
+          
+          if (validVariants.length === 0) {
+            throw new Error('Debe completar al menos una variante con nombre y precio');
+          }
+          
+          // Validar que todas las variantes completadas sean válidas
+          if (!validateVariants(validVariants)) {
+            throw new Error('Todas las variantes deben tener nombre y precio válidos (precio > 0)');
+          }
+          
+          // Si tiene variantes, crear primero el producto padre
+          const parentProductData: CreateProductRequest = {
+            ...productData,
+            name: productName, // Nombre del producto padre (ej: "Coca Cola")
+            description: productDescription,
+            price: 0, // El producto padre no tiene precio, las variantes sí
+            categoryId: productData.categoryId || productCategoryId,
+          };
+          
+          // Crear producto padre
+          createdProduct = await createProductMutation.mutateAsync(parentProductData);
+          
+          // Crear cada variante válida como producto hijo
+          for (const variant of validVariants) {
+            const variantProductData: CreateProductRequest = {
+              ...productData,
+              name: variant.name.trim() ? `${productName} ${variant.name}` : productName, // Ej: "Coca Cola Lite"
+              description: productDescription,
+              price: parseFloat(variant.price),
+              parentId: createdProduct.id, // ID del producto padre
+              originalPrice: variant.promotionPrice ? parseFloat(variant.promotionPrice) : undefined,
+              categoryId: productData.categoryId || productCategoryId,
+            };
+            
+            // Crear variante usando la misma mutation
+            await createProductMutation.mutateAsync(variantProductData);
+          }
+          
+          // Invalidar cache de productos para refrescar la lista
+          queryClient.invalidateQueries({ queryKey: ['products'] });
+          queryClient.invalidateQueries({ queryKey: ['productStats'] });
+        } else {
+          // Si no tiene variantes, crear producto normal
+          createdProduct = await createProductMutation.mutateAsync(productData);
+        }
 
-        // Convertir el producto de la API al tipo usado en el frontend
-        const frontendProduct: Product = {
-          ...createdProduct,
-          tags: createdProduct.tags || [],
-          categoryId: createdProduct.categoryId || 'uncategorized',
-        };
-        setCreatedProduct(frontendProduct);
+        // El producto ya viene del tipo correcto de la API
+        setCreatedProduct(createdProduct);
         setShowSuccessModal(true);
       } catch (apiError) {
-        // Fallback: crear producto localmente con datos mock
-        const mockCreatedProduct: Product = {
-          id: `mock-${Date.now()}`,
-          name: productData.name,
-          description: productData.description,
-          price: productData.price,
-          category: productData.category,
-          categoryId: productData.categoryId || 'uncategorized',
-          stock: productData.stock,
-          sku: productData.sku || `MOCK-${Date.now()}`,
-          barcode: productData.barcode || `${Date.now()}`,
-          qrCode: `QR-MOCK-${Date.now()}`,
-          tags: [],
-          isActive: productData.isActive,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          // Agregar campos adicionales si existen
-          ...(productData.originalPrice && { originalPrice: productData.originalPrice }),
-          ...(productData.supplier && { supplier: productData.supplier }),
-          ...(productData.costPrice && { costPrice: productData.costPrice }),
-          ...(productData.location && { location: productData.location }),
-          ...(productData.expiryDate && { expiryDate: productData.expiryDate }),
-          ...(productData.promotionTitle && { promotionTitle: productData.promotionTitle }),
-          ...(productData.promotionType && { promotionType: productData.promotionType }),
-          ...(productData.promotionBadge && { promotionBadge: productData.promotionBadge }),
-          ...(productData.promotionActionLabel && { promotionActionLabel: productData.promotionActionLabel }),
-          ...(productData.promotionPriority && { promotionPriority: productData.promotionPriority }),
-        };
-        
-        // Solo usar fallback si es un error de red/timeout, no si es un error de validación
-        if (apiError instanceof Error && (
-          apiError.message.includes('timeout') || 
-          apiError.message.includes('Failed to fetch') ||
-          apiError.message.includes('Network')
-        )) {
-          setCreatedProduct(mockCreatedProduct);
-          setShowSuccessModal(true);
-          alert('Producto creado localmente. El backend no está disponible, pero el producto se guardó en el frontend.');
-        } else {
-          // Re-lanzar el error para que se maneje en el catch externo
-          throw apiError;
-        }
+        // Error al crear producto - re-lanzar para manejo en el catch externo
+        throw apiError;
       }
     } catch (error) {
       console.error('Error creating product:', error);
@@ -251,6 +349,11 @@ export default function Form({ isDesktop = false }: FormProps) {
     hasPromotion,
     errors,
     handleValidateField,
+    createProductMutation,
+    productCategoryId,
+    productImages,
+    queryClient,
+    variants,
   ]);
 
   const handleModalClose = useCallback(() => {
@@ -349,7 +452,7 @@ export default function Form({ isDesktop = false }: FormProps) {
     productPrice,
     setProductPrice,
     productCategory,
-    setProductCategory,
+    setProductCategory: handleCategoryChange,
     productImages,
     setProductImages,
     handleImageUpload,

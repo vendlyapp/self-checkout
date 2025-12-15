@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dkkvxzigqqvolbyeybgr.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_w5YLhoNEwZViKFH8HoiEOg_Hru9YwGv';
 
-// Configurar sesión de 10 minutos (600 segundos)
-const SESSION_DURATION = 10 * 60 * 1000; // 10 minutos en milisegundos
+// Configurar sesión de 15 minutos (900 segundos)
+const SESSION_DURATION = 15 * 60 * 1000; // 15 minutos en milisegundos
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

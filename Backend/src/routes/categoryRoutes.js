@@ -111,16 +111,11 @@ router.get('/:id', validateUUID('id'), categoryController.getCategoryById);
  *             type: object
  *             required:
  *               - name
- *               - icon
  *             properties:
  *               name:
  *                 type: string
  *                 description: Nombre de la categoría
  *                 example: "Panadería"
- *               icon:
- *                 type: string
- *                 description: Icono de la categoría
- *                 example: "Bread"
  *               count:
  *                 type: integer
  *                 description: Número de productos en la categoría
@@ -176,9 +171,6 @@ router.post('/', categoryController.createCategory);
  *               name:
  *                 type: string
  *                 description: Nombre de la categoría
- *               icon:
- *                 type: string
- *                 description: Icono de la categoría
  *               count:
  *                 type: integer
  *                 description: Número de productos en la categoría

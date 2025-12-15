@@ -126,14 +126,16 @@ export default function SearchUser() {
   }, [addToCart]);
 
   return (
-    <div className="flex flex-col">
-      <HeaderNav title="Suchen" />
+    <div className="flex flex-col animate-page-enter gpu-accelerated">
+      <div className="animate-slide-in-right">
+        <HeaderNav title="Suchen" />
+      </div>
 
       {/* Contenedor principal con padding fijo */}
-      <div className="flex-1 px-4  pb-32 mt-4 rounded-xl">
+      <div className="flex-1 px-4 pb-32 mt-4 rounded-xl">
         {/* Barra de búsqueda fija en la parte superior */}
         <div
-          className={`mb-6 pt-4 ${
+          className={`mb-6 pt-4 animate-slide-down ${
             searchTerm ? "sticky top-0 bg-background-cream pt-2 pb-2 z-20" : ""
           }`}
         >
@@ -142,27 +144,28 @@ export default function SearchUser() {
             value={searchTerm}
             onChange={handleInputChange}
             onSearch={handleSearch}
+            className="transition-interactive gpu-accelerated"
           />
         </div>
 
         {/* Contenido principal */}
         {!store ? (
           /* Sin tienda */
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <Store className="w-16 h-16 text-gray-300 mb-4" />
-            <p className="text-gray-600 font-medium">
+          <div className="flex flex-col items-center justify-center py-16 text-center animate-scale-in">
+            <Store className="w-16 h-16 text-gray-300 mb-4 transition-interactive" />
+            <p className="text-gray-600 font-medium transition-interactive">
               Kein Geschäft ausgewählt
             </p>
-            <p className="text-gray-400 text-sm mt-2">
+            <p className="text-gray-400 text-sm mt-2 transition-interactive">
               Scannen Sie einen QR-Code
             </p>
           </div>
         ) : !searchTerm ? (
           /* Estado inicial - Búsquedas populares */
-          <div className="safe-area-top">
-            <div className="flex items-center gap-2 mb-4">
-              <Image src="/Fire.svg" alt="Flame" width={30} height={30} />
-              <h2 className="text-lg font-semibold text-gray-800">
+          <div className="safe-area-top animate-fade-in-scale">
+            <div className="flex items-center gap-2 mb-4 animate-stagger-1">
+              <Image src="/Fire.svg" alt="Flame" width={30} height={30} className="transition-interactive" />
+              <h2 className="text-lg font-semibold text-gray-800 transition-interactive">
                 Meist gesucht:
               </h2>
             </div>
@@ -172,8 +175,15 @@ export default function SearchUser() {
                 <button
                   key={index}
                   onClick={() => handlePopularSearch(search)}
-                  className="bg-white rounded-lg px-4 py-3 text-left text-gray-700 font-medium shadow-sm border border-gray-100 hover:border-brand-200 hover:shadow-md transition-all duration-200 touch-target tap-highlight-transparent active:scale-95"
-                  style={{ minHeight: "48px" }}
+                  className="bg-white rounded-lg px-4 py-3 text-left text-gray-700 font-medium shadow-sm border border-gray-100 
+                           hover:border-brand-200 hover:shadow-md transition-interactive gpu-accelerated 
+                           touch-target tap-highlight-transparent active:scale-95 hover:scale-[1.02]
+                           animate-slide-up-fade"
+                  style={{ 
+                    minHeight: "48px",
+                    animationDelay: `${index * 0.05}s`,
+                    animationFillMode: 'both'
+                  }}
                   aria-label={`Nach ${search} suchen`}
                 >
                   {search}
@@ -183,50 +193,59 @@ export default function SearchUser() {
           </div>
         ) : (
           /* Estado de resultados de búsqueda */
-          <div className="safe-area-top bg-[#F9F6F4] pl-2 pr-2">
+          <div className="safe-area-top bg-[#F9F6F4] pl-2 pr-2 animate-fade-in-scale">
             {/* Header fijo para resultados */}
-            <div className="flex items-center justify-between mb-4 sticky top-[70px] pt-2 pb-2 z-10 bg-[#F9F6F4]">
-              <h2 className="text-lg font-semibold text-gray-800">
+            <div className="flex items-center justify-between mb-4 sticky top-[70px] pt-2 pb-2 z-10 bg-[#F9F6F4] animate-slide-down">
+              <h2 className="text-lg font-semibold text-gray-800 transition-interactive">
                 Schnell hinzufügen
               </h2>
               <button
                 onClick={handleClearSearch}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors touch-target tap-highlight-transparent active:scale-95"
+                className="p-2 rounded-full hover:bg-gray-100 transition-interactive gpu-accelerated 
+                         touch-target tap-highlight-transparent active:scale-95"
                 aria-label="Búsqueda löschen"
                 style={{ minHeight: "44px", minWidth: "44px" }}
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5 text-gray-500 transition-interactive" />
               </button>
             </div>
 
             {/* Contenedor scrollable para productos */}
             <div className="overflow-y-auto">
               {isSearching ? (
-                <div className="text-center py-8">
+                <div className="text-center py-8 animate-fade-in-scale">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500 mx-auto"></div>
-                  <p className="text-gray-500 mt-2">Suche läuft...</p>
+                  <p className="text-gray-500 mt-2 transition-interactive">Suche läuft...</p>
                 </div>
               ) : searchResults.length > 0 ? (
-                <div className="space-y-3">
-                  {searchResults.map((product) => {
+                <div className="space-y-3 animate-fade-in-scale">
+                  {searchResults.map((product, index) => {
                     const currentQuantity = getCurrentQuantity(product.id);
                     return (
-                      <ProductCard
+                      <div
                         key={product.id}
-                        product={product}
-                        onAddToCart={handleAddToCart}
-                        initialQuantity={currentQuantity}
-                      />
+                        className="animate-slide-up-fade gpu-accelerated"
+                        style={{
+                          animationDelay: `${index * 0.05}s`,
+                          animationFillMode: 'both'
+                        }}
+                      >
+                        <ProductCard
+                          product={product}
+                          onAddToCart={handleAddToCart}
+                          initialQuantity={currentQuantity}
+                        />
+                      </div>
                     );
                   })}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 text-lg">
+                <div className="text-center py-8 animate-scale-in">
+                  <Search className="w-12 h-12 text-gray-300 mx-auto mb-3 transition-interactive" />
+                  <p className="text-gray-500 text-lg transition-interactive">
                     Keine Produkte gefunden
                   </p>
-                  <p className="text-gray-400 text-sm mt-1">
+                  <p className="text-gray-400 text-sm mt-1 transition-interactive">
                     Versuche es mit einem anderen Suchbegriff
                   </p>
                 </div>

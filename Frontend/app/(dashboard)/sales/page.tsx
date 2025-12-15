@@ -3,7 +3,9 @@ import AnalyticsDashboard from "@/components/dashboard/analytics/AnalyticsDashbo
 
 export default function Sales() {
     return (
-      <AnalyticsDashboard />
+      <div className="animate-page-enter gpu-accelerated">
+        <AnalyticsDashboard />
+      </div>
     );
   }
   

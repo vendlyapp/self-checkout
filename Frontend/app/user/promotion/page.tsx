@@ -112,22 +112,24 @@ const PromotionPage: React.FC = () => {
   }
 
   return (
-    <>
-      <HeaderNav title="Aktionen" />
+    <div className="animate-page-enter gpu-accelerated">
+      <div className="animate-slide-in-right">
+        <HeaderNav title="Aktionen" />
+      </div>
       {products.length > 0 && (
-        <div className="w-full mt-4">
+        <div className="w-full mt-4 animate-stagger-1 animate-slide-up-fade">
           <SliderP products={products} />
         </div>
       )}
-      <div className="mb-24">
-        <h5 className="text-xl text-start ml-4 mt-4 font-semibold">Alle Aktionen</h5>
+      <div className="mb-24 animate-stagger-2">
+        <h5 className="text-xl text-start ml-4 mt-4 font-semibold transition-interactive">Alle Aktionen</h5>
         {!loading && products.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center px-4">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <Percent className="w-10 h-10 text-gray-400" />
+          <div className="flex flex-col items-center justify-center py-16 text-center px-4 animate-scale-in">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4 transition-interactive">
+              <Percent className="w-10 h-10 text-gray-400 transition-interactive" />
             </div>
-            <p className="text-gray-600 font-medium text-lg">Keine Aktionen verfügbar</p>
-            <p className="text-gray-400 text-sm mt-2 max-w-md">
+            <p className="text-gray-600 font-medium text-lg transition-interactive">Keine Aktionen verfügbar</p>
+            <p className="text-gray-400 text-sm mt-2 max-w-md transition-interactive">
               Derzeit gibt es keine Produkte im Angebot. Schauen Sie später wieder vorbei!
             </p>
           </div>
@@ -139,7 +141,7 @@ const PromotionPage: React.FC = () => {
           />
         )}
       </div>
-    </>
+    </div>
   );
 };
 

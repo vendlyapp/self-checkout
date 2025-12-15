@@ -66,19 +66,25 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
 
   return (
     <div 
-      className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-all duration-200"
+      className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer 
+                 transition-interactive gpu-accelerated group
+                 hover:shadow-lg hover:scale-[1.02] hover:border-brand-200
+                 active:scale-[0.98] active:shadow-md"
       onClick={handleProductClick}
       tabIndex={0}
       onKeyDown={handleKeyDown}
       aria-label={`Produkt anzeigen: ${product.name}`}
     >
       <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center relative">
+        <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center relative
+                        transition-interactive gpu-accelerated
+                        group-hover:scale-110">
           {product.image || (product.images && product.images.length > 0) ? (
             <img
               src={product.image || product.images?.[0]}
               alt={product.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-interactive gpu-accelerated
+                         group-hover:scale-110"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
                 const fallback = e.currentTarget.nextElementSibling as HTMLElement;
@@ -86,8 +92,8 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
               }}
             />
           ) : null}
-          <div className={`w-full h-full flex items-center justify-center ${(product.image || product.images?.[0]) ? 'hidden' : ''}`}>
-            <Package className="w-8 h-8 text-gray-600" />
+          <div className={`w-full h-full flex items-center justify-center transition-interactive ${(product.image || product.images?.[0]) ? 'hidden' : ''}`}>
+            <Package className="w-8 h-8 text-gray-600 transition-interactive" />
           </div>
         </div>
 
@@ -120,8 +126,8 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
           </div>
         </div>
 
-        <div className="flex-shrink-0">
-          <ChevronRight className="w-5 h-5 text-gray-400" />
+        <div className="flex-shrink-0 transition-interactive group-hover:translate-x-1">
+          <ChevronRight className="w-5 h-5 text-gray-400 transition-interactive" />
         </div>
       </div>
     </div>

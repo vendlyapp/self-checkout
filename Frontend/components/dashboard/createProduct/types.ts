@@ -23,8 +23,8 @@ export interface VatRate {
   color: string;
 }
 
-// Importar el tipo Product del mock para asegurar compatibilidad
-import { Product } from '@/components/dashboard/products_list/data/mockProducts';
+// Importar el tipo Product real de la base de datos
+import type { Product } from '@/lib/services/productService';
 
 // Usar el tipo Product directamente para CreatedProduct
 export type CreatedProduct = Product;
@@ -86,6 +86,11 @@ export interface SharedFormProps {
   // Datos estáticos
   categories: Category[];
   vatRates: VatRate[];
+  
+  // Modo edición
+  isEditMode?: boolean;
+  existingProduct?: Product; // Producto completo para mostrar información adicional
+  hasChanges?: boolean; // Si hay cambios en el formulario (solo en modo edición)
 }
 
 // Form Props

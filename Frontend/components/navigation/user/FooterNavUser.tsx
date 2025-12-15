@@ -156,7 +156,7 @@ export default function FooterNav() {
   const isPaymentRoute = pathname === "/user/payment" || pathname?.includes('/payment');
 
   return (
-    <nav className="bg-white rounded-t-xl shadow-t-xl shadow-black safe-area-bottom">
+    <nav className="bg-white rounded-t-xl shadow-t-xl shadow-black safe-area-bottom animate-slide-up-fade gpu-accelerated">
       {/* Resumen de carrito arriba solo cuando estoy en /user/cart - con contenedor limitado */}
       {isCartRoute && (
         <div className="w-full max-w-[430px] mx-auto">
@@ -175,7 +175,7 @@ export default function FooterNav() {
                 key={item.id}
                 href={item.href}
                 className={clsx(
-                  "relative inline-flex items-center justify-center w-16 h-16 transition-all duration-300 hover:scale-110 active:scale-95",
+                  "relative inline-flex items-center justify-center w-16 h-16 transition-interactive gpu-accelerated hover:scale-110 active:scale-95",
                   item.isPressed && "scale-90"
                 )}
                 onTouchStart={() => handlePress(item.id)}
@@ -242,7 +242,7 @@ export default function FooterNav() {
               key={item.id}
               href={item.href}
               className={clsx(
-                "nav-item",
+                "nav-item transition-interactive gpu-accelerated",
                 item.isActive && "nav-item-active",
                 item.isPressed && "scale-95 opacity-70"
               )}
@@ -257,7 +257,7 @@ export default function FooterNav() {
               <div className="relative">
                 <Icon
                   className={clsx(
-                    "nav-icon",
+                    "nav-icon transition-interactive",
                     item.isActive && "nav-icon-active",
                     item.isPressed && "scale-90"
                   )}
@@ -266,7 +266,7 @@ export default function FooterNav() {
                 {item.id === "cart" && cartItemCount > 0 && (
                   <span
                     className={clsx(
-                      "absolute -top-1.5 -right-2.5 min-w-5 h-5 px-1 rounded-full text-white text-[10px] leading-5 font-bold text-center",
+                      "absolute -top-1.5 -right-2.5 min-w-5 h-5 px-1 rounded-full text-white text-[10px] leading-5 font-bold text-center transition-interactive animate-bounce-in",
                       item.isActive ? "bg-red-500" : "bg-red-500/70"
                     )}
                     aria-label={`Artículos en carrito: ${cartItemCount}`}
@@ -278,7 +278,7 @@ export default function FooterNav() {
               </div>
               <span
                 className={clsx(
-                  "nav-label",
+                  "nav-label transition-interactive",
                   item.isActive && "nav-label-active"
                 )}
               >

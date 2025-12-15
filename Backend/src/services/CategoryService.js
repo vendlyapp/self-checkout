@@ -38,10 +38,6 @@ class CategoryService {
       throw new Error('El nombre de la categoría es requerido');
     }
 
-    if (!categoryData.icon || !categoryData.icon.trim()) {
-      throw new Error('El icono de la categoría es requerido');
-    }
-
     // Verificar nombre único
     const existingCategory = await query(
       'SELECT id FROM "ProductCategory" WHERE name = $1',
@@ -53,14 +49,13 @@ class CategoryService {
     }
 
     const insertQuery = `
-      INSERT INTO "ProductCategory" (name, icon, count, color)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO "ProductCategory" (name, count, color)
+      VALUES ($1, $2, $3)
       RETURNING *
     `;
 
     const result = await query(insertQuery, [
       categoryData.name.trim(),
-      categoryData.icon.trim(),
       parseInt(categoryData.count) || 0,
       categoryData.color?.trim() || null
     ]);
@@ -86,8 +81,8 @@ class CategoryService {
     const values = [];
     let paramCount = 0;
 
-    // Campos que se pueden actualizar
-    const updatableFields = ['name', 'icon', 'count', 'color'];
+    // Campos que se pueden actualizar (icon ya no es necesario)
+    const updatableFields = ['name', 'count', 'color'];
 
     for (const field of updatableFields) {
       if (categoryData[field] !== undefined) {

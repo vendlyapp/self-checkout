@@ -128,7 +128,7 @@ const options = {
         },
         ProductCategory: {
           type: 'object',
-          required: ['name', 'icon'],
+          required: ['name'],
           properties: {
             id: {
               type: 'string',
@@ -138,10 +138,6 @@ const options = {
             name: {
               type: 'string',
               description: 'Nombre de la categoría'
-            },
-            icon: {
-              type: 'string',
-              description: 'Icono de la categoría'
             },
             count: {
               type: 'integer',
