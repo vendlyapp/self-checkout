@@ -336,18 +336,13 @@ export default function PaymentP() {
         <p className="text-xl pt-4 font-semibold text-[#373F49] transition-interactive">
           {store?.name ?? "Gastbestellung"}
         </p>
-        <p className="text-2xl font-bold transition-interactive">
-          {formatSwissPriceWithCHF(payableTotal)}
+        <p className="text-5xl font-bold transition-interactive">
+          CHF {formatSwissPriceWithCHF(payableTotal)}
         </p>
         <p className="text-lg font-semibold text-[#373F49] transition-interactive">
           inkl. MwSt • {totalItems} {totalItems === 1 ? "Artikel" : "Artikel"}
         </p>
-        {subtotal !== totalWithVAT && (
-          <p className="text-sm text-[#6E7996] transition-interactive">
-            Netto: {formatSwissPriceWithCHF(subtotal)} + MwSt (7.7%):{" "}
-            {formatSwissPriceWithCHF(totalWithVAT - subtotal)}
-          </p>
-        )}
+        
       </div>
 
       {/* Código promocional */}

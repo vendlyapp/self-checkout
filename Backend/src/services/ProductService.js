@@ -13,9 +13,10 @@ class ProductService {
       throw new Error('El nombre del producto es requerido');
     }
 
-    if (!productData.description || !productData.description.trim()) {
-      throw new Error('La descripción del producto es requerida');
-    }
+    // Descripción es opcional, usar string vacío si no se proporciona
+    const description = productData.description && productData.description.trim() 
+      ? productData.description.trim() 
+      : '';
 
     const price = parseFloat(productData.price);
     if (isNaN(price) || price < 0) {
@@ -47,14 +48,19 @@ class ProductService {
     `;
 
     // Calcular precios correctamente
-    const basePrice = parseFloat(productData.price);
-    const promoPrice = productData.promotionPrice ? parseFloat(productData.promotionPrice) : null;
-    const originalPrice = promoPrice ? basePrice : (productData.originalPrice ? parseFloat(productData.originalPrice) : null);
-    const finalPrice = promoPrice || basePrice;
+    // El frontend envía: price (precio final/promocional) y originalPrice (precio original si hay promoción)
+    const finalPrice = parseFloat(productData.price);
+    const originalPriceValue = productData.originalPrice ? parseFloat(productData.originalPrice) : null;
+    
+    // Si hay originalPrice y es diferente de price, entonces hay una promoción
+    // originalPrice debe ser mayor que price para que sea una promoción válida
+    const hasPromotion = originalPriceValue && originalPriceValue > finalPrice;
+    const originalPrice = hasPromotion ? originalPriceValue : null;
     
     // Calcular descuento si hay promoción
-    const discountPercentage = promoPrice && basePrice > 0 ?
-      Math.round(((basePrice - promoPrice) / basePrice) * 100) : null;
+    const discountPercentage = hasPromotion && originalPriceValue > 0 ?
+      Math.round(((originalPriceValue - finalPrice) / originalPriceValue) * 100) : 
+      (productData.discountPercentage ? parseInt(productData.discountPercentage) : null);
 
     // Preparar arrays y objetos para PostgreSQL
     // tags es text[] - pasar como array de JavaScript (pg maneja arrays nativamente)
@@ -73,7 +79,7 @@ class ProductService {
     const values = [
       ownerId, // $1
       productData.name.trim(), // $2
-      productData.description.trim(), // $3
+      description, // $3
       finalPrice, // $4 - precio final (promocional si existe, sino base)
       originalPrice, // $5 - precio original (base si hay promoción, sino null)
       productData.category.trim(), // $6
@@ -86,7 +92,7 @@ class ProductService {
       tagsArray, // $13 - text[] - pasar array directamente (pg lo maneja)
       Boolean(productData.isNew), // $14
       Boolean(productData.isPopular), // $15
-      Boolean(promoPrice), // $16 - isOnSale si hay precio promocional
+      Boolean(hasPromotion || productData.isOnSale), // $16 - isOnSale si hay promoción o está marcado como en oferta
       productData.isActive !== undefined ? Boolean(productData.isActive) : true, // $17
       productData.rating ? parseFloat(productData.rating) : null, // $18
       productData.reviews ? parseInt(productData.reviews) : null, // $19

@@ -83,26 +83,27 @@ export const createProductObject = (
   categoryId?: string,
   notes?: string
 ) => {
+  const basePrice = parseFloat(productPrice);
+  const promoPrice = hasPromotion && promotionPrice ? parseFloat(promotionPrice) : null;
+  
   const baseProduct: CreateProductRequest = {
     name: productName,
     description: productDescription,
-    price: parseFloat(productPrice),
+    price: promoPrice || basePrice, // Precio final (promocional si existe, sino base)
+    originalPrice: promoPrice ? basePrice : undefined, // Precio original solo si hay promoción
     category: productCategory,
     categoryId: categoryId, // Usar ID si está disponible (opcional en el tipo real)
     stock: 999,
     isActive: true,
   };
 
-  if (hasPromotion && promotionPrice) {
-    baseProduct.originalPrice = parseFloat(promotionPrice);
-  }
-
   if (notes && notes.trim()) {
     baseProduct.notes = notes.trim();
   }
-  if (hasPromotion && promotionPrice) {
+  
+  if (hasPromotion && promotionPrice && promoPrice) {
     const discountPercentage = Math.round(
-      ((parseFloat(productPrice) - parseFloat(promotionPrice)) / parseFloat(productPrice)) * 100
+      ((basePrice - promoPrice) / basePrice) * 100
     );
     
     baseProduct.promotionTitle = "Aktion";

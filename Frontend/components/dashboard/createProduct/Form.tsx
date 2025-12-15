@@ -52,6 +52,7 @@ export default function Form({ isDesktop = false }: FormProps) {
   const [saveProgress, setSaveProgress] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [createdProduct, setCreatedProduct] = useState<CreatedProduct | null>(null);
+  const [createdProductsCount, setCreatedProductsCount] = useState(1);
 
   // Validation wrapper
   const handleValidateField = useCallback(
@@ -260,6 +261,7 @@ export default function Form({ isDesktop = false }: FormProps) {
 
       try {
         let createdProduct;
+        const createdProducts: CreatedProduct[] = [];
         
         if (hasVariants && variants.length > 0) {
           // Filtrar solo las variantes que tienen datos (ignorar las vacías)
@@ -276,33 +278,86 @@ export default function Form({ isDesktop = false }: FormProps) {
             throw new Error('Todas las variantes deben tener nombre y precio válidos (precio > 0)');
           }
           
-          // Si tiene variantes, crear primero el producto padre
-          const parentProductData: CreateProductRequest = {
-            ...productData,
-            name: productName, // Nombre del producto padre (ej: "Coca Cola")
-            description: productDescription,
-            price: 0, // El producto padre no tiene precio, las variantes sí
-            categoryId: productData.categoryId || productCategoryId,
-          };
-          
-          // Crear producto padre
-          createdProduct = await createProductMutation.mutateAsync(parentProductData);
-          
-          // Crear cada variante válida como producto hijo
-          for (const variant of validVariants) {
-            const variantProductData: CreateProductRequest = {
-              ...productData,
-              name: variant.name.trim() ? `${productName} ${variant.name}` : productName, // Ej: "Coca Cola Lite"
+          // Función auxiliar para crear objeto de producto con promoción
+          const createProductWithPromotion = (
+            name: string,
+            basePrice: number,
+            promoPrice?: string
+          ): CreateProductRequest => {
+            const product: CreateProductRequest = {
+              name,
               description: productDescription,
-              price: parseFloat(variant.price),
-              parentId: createdProduct.id, // ID del producto padre
-              originalPrice: variant.promotionPrice ? parseFloat(variant.promotionPrice) : undefined,
-              categoryId: productData.categoryId || productCategoryId,
+              price: promoPrice ? parseFloat(promoPrice) : basePrice,
+              originalPrice: promoPrice ? basePrice : undefined,
+              category: productCategory,
+              categoryId: productCategoryId,
+              stock: 999,
+              isActive: true,
             };
-            
-            // Crear variante usando la misma mutation
-            await createProductMutation.mutateAsync(variantProductData);
+
+            // Agregar imágenes si existen
+            if (productImages.length > 0) {
+              product.images = productImages;
+              product.image = productImages[0];
+            }
+
+            // Si hay precio promocional (ya sea global o de variante)
+            if (promoPrice) {
+              const discountPercentage = Math.round(
+                ((basePrice - parseFloat(promoPrice)) / basePrice) * 100
+              );
+              product.promotionTitle = "Aktion";
+              product.promotionType = "percentage";
+              product.promotionBadge = `-${discountPercentage}%`;
+              product.promotionActionLabel = "Jetzt hinzufügen";
+              product.promotionPriority = 10;
+            }
+
+            return product;
+          };
+
+          // Crear producto principal (usando el precio del campo productPrice)
+          const mainProductPrice = parseFloat(productPrice);
+          if (isNaN(mainProductPrice) || mainProductPrice <= 0) {
+            throw new Error('El precio principal debe ser válido y mayor a 0');
           }
+
+          const mainProductData = createProductWithPromotion(
+            productName,
+            mainProductPrice,
+            hasPromotion ? promotionPrice : undefined
+          );
+
+          // Crear producto principal
+          const mainProduct = await createProductMutation.mutateAsync(mainProductData);
+          createdProducts.push(mainProduct);
+          createdProduct = mainProduct; // Guardar el primero para el modal
+
+          // Crear cada variante como producto independiente
+          for (const variant of validVariants) {
+            const variantPrice = parseFloat(variant.price);
+            if (isNaN(variantPrice) || variantPrice <= 0) {
+              console.warn(`Variante "${variant.name}" tiene precio inválido, se omite`);
+              continue;
+            }
+
+            const variantName = variant.name.trim() 
+              ? `${productName} ${variant.name.trim()}` 
+              : productName;
+
+            const variantProductData = createProductWithPromotion(
+              variantName,
+              variantPrice,
+              variant.promotionPrice?.trim() || undefined
+            );
+
+            // Crear variante como producto independiente
+            const variantProduct = await createProductMutation.mutateAsync(variantProductData);
+            createdProducts.push(variantProduct);
+          }
+          
+          // Guardar el número de productos creados
+          setCreatedProductsCount(createdProducts.length);
           
           // Invalidar cache de productos para refrescar la lista
           queryClient.invalidateQueries({ queryKey: ['products'] });
@@ -310,6 +365,7 @@ export default function Form({ isDesktop = false }: FormProps) {
         } else {
           // Si no tiene variantes, crear producto normal
           createdProduct = await createProductMutation.mutateAsync(productData);
+          setCreatedProductsCount(1);
         }
 
         // El producto ya viene del tipo correcto de la API
@@ -359,6 +415,7 @@ export default function Form({ isDesktop = false }: FormProps) {
   const handleModalClose = useCallback(() => {
     setShowSuccessModal(false);
     setCreatedProduct(null);
+    setCreatedProductsCount(1);
     // Agregar timestamp para forzar refresh de la lista
     router.push(`/products_list?refresh=${Date.now()}`);
   }, [router]);
@@ -387,11 +444,31 @@ export default function Form({ isDesktop = false }: FormProps) {
           {/* Contenido del modal */}
           <div className="p-6">
             <p className="text-gray-700 mb-6 text-center text-base">
-              Su producto <span className="font-semibold text-gray-900">&quot;{createdProduct?.name}&quot;</span> ha sido creado exitosamente
+              {createdProductsCount > 1 ? (
+                <>
+                  Se han creado <span className="font-semibold text-gray-900">{createdProductsCount} productos</span> exitosamente
+                  <br />
+                  <span className="text-sm text-gray-600 mt-2 block">
+                    Producto principal: &quot;{createdProduct?.name}&quot;
+                  </span>
+                </>
+              ) : (
+                <>
+                  Su producto <span className="font-semibold text-gray-900">&quot;{createdProduct?.name}&quot;</span> ha sido creado exitosamente
+                </>
+              )}
             </p>
 
             {/* Tarjeta de información */}
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 mb-6 border border-gray-200">
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 mb-6 border border-gray-200 space-y-2">
+              {createdProductsCount > 1 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-600">Productos creados:</span>
+                  <span className="text-sm text-gray-900 font-semibold bg-white/70 px-3 py-1 rounded-lg">
+                    {createdProductsCount}
+                  </span>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-600">ID del Producto:</span>
                 <span className="text-sm text-gray-900 font-mono font-semibold bg-white/70 px-3 py-1 rounded-lg">
