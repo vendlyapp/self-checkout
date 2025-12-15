@@ -3,12 +3,12 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Loader2 } from "lucide-react";
 import MobileForm from "./MobileForm";
 import DesktopForm from "./DesktopForm";
 import { FormProps, CreatedProduct, ProductVariant, FormErrors, Category } from "./types";
 import { validateField, createProductObject, validateVariants } from "./validations";
-import { VAT_RATES, SAVE_PROGRESS_STEPS } from "./constants";
+import { VAT_RATES } from "./constants";
 import { useCreateProduct } from "@/hooks/mutations";
 import { useCategories } from "@/hooks/queries/useCategories";
 import { useQueryClient } from "@tanstack/react-query";
@@ -49,10 +49,10 @@ export default function Form({ isDesktop = false }: FormProps) {
 
   // Estado del formulario
   const [errors, setErrors] = useState<FormErrors>({});
-  const [saveProgress, setSaveProgress] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [createdProduct, setCreatedProduct] = useState<CreatedProduct | null>(null);
   const [createdProductsCount, setCreatedProductsCount] = useState(1);
+  const [isCreating, setIsCreating] = useState(false);
 
   // Validation wrapper
   const handleValidateField = useCallback(
@@ -235,12 +235,8 @@ export default function Form({ isDesktop = false }: FormProps) {
       
       if (Object.keys(errors).length > 0) return;
 
-      for (let i = 0; i < SAVE_PROGRESS_STEPS.length; i++) {
-        setSaveProgress(((i + 1) / SAVE_PROGRESS_STEPS.length) * 100);
-        await new Promise((resolve) => setTimeout(resolve, SAVE_PROGRESS_STEPS[i].duration));
-      }
-
-      setSaveProgress(0);
+      // Mostrar modal de carga
+      setIsCreating(true);
 
       const productData = createProductObject(
         productName,
@@ -368,14 +364,21 @@ export default function Form({ isDesktop = false }: FormProps) {
           setCreatedProductsCount(1);
         }
 
+        // Ocultar modal de carga antes de mostrar el modal de éxito
+        setIsCreating(false);
+
         // El producto ya viene del tipo correcto de la API
         setCreatedProduct(createdProduct);
         setShowSuccessModal(true);
       } catch (apiError) {
+        // Ocultar modal de carga en caso de error
+        setIsCreating(false);
         // Error al crear producto - re-lanzar para manejo en el catch externo
         throw apiError;
       }
     } catch (error) {
+      // Asegurar que el modal de carga se oculte en caso de error
+      setIsCreating(false);
       console.error('Error creating product:', error);
       
       // Mostrar error más específico al usuario
@@ -419,6 +422,40 @@ export default function Form({ isDesktop = false }: FormProps) {
     // Agregar timestamp para forzar refresh de la lista
     router.push(`/products_list?refresh=${Date.now()}`);
   }, [router]);
+
+  // Función para renderizar el modal de carga
+  const renderLoadingModal = () => {
+    if (typeof window === 'undefined' || !isCreating) return null;
+    
+    const modalContent = (
+      <div className="fixed inset-0 z-[99998] flex items-center justify-center overflow-hidden">
+        {/* Backdrop con blur moderno */}
+        <div className="absolute inset-0 w-screen h-screen bg-black/40 backdrop-blur-md"></div>
+        
+        {/* Modal de carga */}
+        <div className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full mx-4 animate-in fade-in-0 zoom-in-95 duration-300">
+          {/* Gradiente superior */}
+          <div className="bg-gradient-to-br from-[#25D076] to-[#20BA68] rounded-t-3xl p-8 text-center">
+            <div className="w-20 h-20 bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <Loader2 className="w-10 h-10 text-white animate-spin" strokeWidth={3} />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-2">
+              Creando productos
+            </h3>
+          </div>
+
+          {/* Contenido del modal */}
+          <div className="p-6">
+            <p className="text-gray-700 mb-4 text-center text-base">
+              Espere un momento mientras se crean sus productos...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+
+    return createPortal(modalContent, document.body);
+  };
 
   // Función para renderizar el modal fuera del árbol DOM normal
   const renderSuccessModal = () => {
@@ -500,9 +537,9 @@ export default function Form({ isDesktop = false }: FormProps) {
     (window as WindowWithSaveProduct).saveProduct = handleSave;
   }, [handleSave]);
 
-  // Prevenir scroll del body cuando el modal está abierto
+  // Prevenir scroll del body cuando algún modal está abierto
   useEffect(() => {
-    if (showSuccessModal) {
+    if (showSuccessModal || isCreating) {
       // Prevenir scroll
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
@@ -520,7 +557,7 @@ export default function Form({ isDesktop = false }: FormProps) {
       document.body.style.position = '';
       document.body.style.width = '';
     };
-  }, [showSuccessModal]);
+  }, [showSuccessModal, isCreating]);
   const sharedProps = {
     productName,
     setProductName,
@@ -552,7 +589,6 @@ export default function Form({ isDesktop = false }: FormProps) {
     vatRate,
     setVatRate,
     errors,
-    saveProgress,
     showSuccessModal: false, // No mostrar modal en los componentes hijos
     createdProduct: null,
     handleModalClose,
@@ -576,7 +612,10 @@ export default function Form({ isDesktop = false }: FormProps) {
         )}
       </div>
       
-      {/* Modal renderizado fuera del árbol DOM usando Portal */}
+      {/* Modal de carga renderizado fuera del árbol DOM usando Portal */}
+      {renderLoadingModal()}
+      
+      {/* Modal de éxito renderizado fuera del árbol DOM usando Portal */}
       {showSuccessModal && renderSuccessModal()}
     </>
   );

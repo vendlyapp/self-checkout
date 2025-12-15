@@ -48,7 +48,6 @@ export default function MobileForm(props: SharedFormProps) {
     vatRate,
     setVatRate,
     errors,
-    saveProgress,
     showSuccessModal,
     createdProduct,
     handleModalClose,
@@ -140,56 +139,6 @@ export default function MobileForm(props: SharedFormProps) {
         </div>
       );
 
-  const loadingModalContent = saveProgress > 0 && (
-    <div className="fixed inset-0 z-[9998] flex items-center justify-center overflow-hidden" style={{ pointerEvents: 'auto' }}>
-      {/* Backdrop con blur moderno */}
-      <div className="absolute inset-0 w-full h-full bg-black/40 backdrop-blur-md"></div>
-      
-      {/* Modal de carga moderno */}
-      <div className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full mx-4 animate-in fade-in-0 zoom-in-95 duration-300" style={{ pointerEvents: 'auto' }}>
-            {/* Gradiente superior */}
-            <div className="bg-gradient-to-br from-[#25D076] to-[#20BA68] rounded-t-3xl p-6 text-center">
-              <div className="w-16 h-16 bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
-                <Loader2 className="w-8 h-8 text-white animate-spin" strokeWidth={2.5} />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-1">
-                {props.isEditMode ? 'Guardando Cambios...' : 'Guardando Producto...'}
-              </h3>
-              <p className="text-white/90 text-xs">
-                {props.isEditMode ? 'Por favor espera' : 'Por favor espera'}
-              </p>
-            </div>
-
-            {/* Contenido del modal */}
-            <div className="p-6">
-              {/* Barra de progreso */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-gray-600">Progreso</span>
-                  <span className="text-xs font-semibold text-brand-500">{Math.round(saveProgress)}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                  <div
-                    className="bg-gradient-to-r from-[#25D076] to-[#20BA68] h-2.5 rounded-full transition-all duration-500 ease-out shadow-sm"
-                    style={{ width: `${saveProgress}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Mensaje de estado */}
-              <div className="text-center">
-                <p className="text-gray-600 text-xs">
-                  {saveProgress < 25 && 'Validando datos...'}
-                  {saveProgress >= 25 && saveProgress < 50 && 'Subiendo imágenes...'}
-                  {saveProgress >= 50 && saveProgress < 75 && 'Generando códigos...'}
-                  {saveProgress >= 75 && saveProgress < 100 && 'Finalizando...'}
-                  {saveProgress >= 100 && '¡Completado!'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
 
   // Obtener contenedor de modales global o usar body como fallback
   const getModalContainer = () => {
@@ -204,7 +153,6 @@ export default function MobileForm(props: SharedFormProps) {
     <>
       {/* Renderizar modales fuera del contenedor usando Portal en el contenedor global */}
       {modalContainer && showSuccessModal && createPortal(successModalContent, modalContainer)}
-      {modalContainer && saveProgress > 0 && createPortal(loadingModalContent, modalContainer)}
 
       <div className="block mx-auto lg:m-10 ml-5 mr-5 bg-background-cream min-h-screen pt-4 pb-24">
         {/* Content */}
@@ -683,20 +631,11 @@ export default function MobileForm(props: SharedFormProps) {
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 mt-5">
             <button
               onClick={handleSave}
-              disabled={saveProgress > 0}
-              className="w-full bg-gradient-to-r from-[#25D076] to-[#20BA68] text-white py-4 px-6 rounded-xl font-semibold hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 text-base flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              disabled={false}
+              className="w-full bg-gradient-to-r from-[#25D076] to-[#20BA68] text-white py-4 px-6 rounded-xl font-semibold hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 text-base flex items-center justify-center gap-2"
             >
-              {saveProgress > 0 ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Speichert Änderungen...</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="w-5 h-5" />
-                  <span>Änderungen speichern</span>
-                </>
-              )}
+              <CheckCircle className="w-5 h-5" />
+              <span>Änderungen speichern</span>
             </button>
           </div>
         )}

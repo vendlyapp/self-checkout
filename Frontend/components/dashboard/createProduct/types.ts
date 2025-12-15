@@ -70,7 +70,6 @@ export interface SharedFormProps {
 
   // Estado del formulario
   errors: FormErrors;
-  saveProgress: number;
   showSuccessModal: boolean;
   createdProduct: CreatedProduct | null;
   handleModalClose: () => void;

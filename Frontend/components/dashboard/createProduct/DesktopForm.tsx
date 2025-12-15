@@ -48,7 +48,6 @@ export default function DesktopForm(props: SharedFormProps) {
     vatRate,
     setVatRate,
     errors,
-    saveProgress,
     showSuccessModal,
     createdProduct,
     handleModalClose,
@@ -139,56 +138,6 @@ export default function DesktopForm(props: SharedFormProps) {
         </div>
       );
 
-  const loadingModalContent = saveProgress > 0 && (
-    <div className="fixed inset-0 z-[9998] flex items-center justify-center overflow-hidden" style={{ pointerEvents: 'auto' }}>
-      {/* Backdrop con blur moderno */}
-      <div className="absolute inset-0 w-full h-full bg-black/40 backdrop-blur-md"></div>
-      
-      {/* Modal de carga moderno */}
-      <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4 animate-in fade-in-0 zoom-in-95 duration-300" style={{ pointerEvents: 'auto' }}>
-        {/* Gradiente superior */}
-        <div className="bg-gradient-to-br from-[#25D076] to-[#20BA68] rounded-t-3xl p-8 text-center">
-          <div className="w-20 h-20 bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <Loader2 className="w-10 h-10 text-white animate-spin" strokeWidth={2.5} />
-          </div>
-          <h3 className="text-2xl font-bold text-white mb-1">
-            {props.isEditMode ? 'Guardando Cambios...' : 'Guardando Producto...'}
-          </h3>
-          <p className="text-white/90 text-sm">
-            {props.isEditMode ? 'Por favor espera mientras guardamos tus cambios' : 'Por favor espera mientras creamos tu producto'}
-          </p>
-        </div>
-
-        {/* Contenido del modal */}
-        <div className="p-8">
-          {/* Barra de progreso */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-gray-600">Progreso</span>
-              <span className="text-sm font-semibold text-brand-500">{Math.round(saveProgress)}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-              <div
-                className="bg-gradient-to-r from-[#25D076] to-[#20BA68] h-3 rounded-full transition-all duration-500 ease-out shadow-sm"
-                style={{ width: `${saveProgress}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Mensaje de estado */}
-          <div className="text-center">
-            <p className="text-gray-600 text-sm">
-              {saveProgress < 25 && 'Validando datos...'}
-              {saveProgress >= 25 && saveProgress < 50 && 'Subiendo imágenes...'}
-              {saveProgress >= 50 && saveProgress < 75 && 'Generando códigos...'}
-              {saveProgress >= 75 && saveProgress < 100 && 'Finalizando...'}
-              {saveProgress >= 100 && '¡Completado!'}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 
   // Obtener contenedor de modales global o usar body como fallback
   const getModalContainer = () => {
@@ -203,7 +152,6 @@ export default function DesktopForm(props: SharedFormProps) {
     <>
       {/* Renderizar modales fuera del contenedor usando Portal en el contenedor global */}
       {modalContainer && showSuccessModal && createPortal(successModalContent, modalContainer)}
-      {modalContainer && saveProgress > 0 && createPortal(loadingModalContent, modalContainer)}
 
       <div className="max-w-6xl mx-auto p-8">
         {/* Form Content - Desktop Layout */}
@@ -677,20 +625,11 @@ export default function DesktopForm(props: SharedFormProps) {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
             <button
               onClick={handleSave}
-              disabled={saveProgress > 0}
-              className="w-full bg-gradient-to-r from-[#25D076] to-[#20BA68] text-white py-4 px-6 rounded-xl font-semibold hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 text-base flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              disabled={false}
+              className="w-full bg-gradient-to-r from-[#25D076] to-[#20BA68] text-white py-4 px-6 rounded-xl font-semibold hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 text-base flex items-center justify-center gap-2"
             >
-              {saveProgress > 0 ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>{props.isEditMode ? 'Speichert Änderungen...' : 'Speichert Produkt...'}</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="w-5 h-5" />
-                  <span>{props.isEditMode ? 'Änderungen speichern' : 'Produkt speichern'}</span>
-                </>
-              )}
+              <CheckCircle className="w-5 h-5" />
+              <span>{props.isEditMode ? 'Änderungen speichern' : 'Produkt speichern'}</span>
             </button>
           </div>
 
