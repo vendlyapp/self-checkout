@@ -347,7 +347,10 @@ export default function Form({ isDesktop = false }: FormProps) {
               variant.promotionPrice?.trim() || undefined
             );
 
-            // Crear variante como producto independiente
+            // Agregar parentId para identificar que es una variante
+            variantProductData.parentId = mainProduct.id;
+
+            // Crear variante como producto hijo del producto principal
             const variantProduct = await createProductMutation.mutateAsync(variantProductData);
             createdProducts.push(variantProduct);
           }

@@ -10,6 +10,7 @@ import { VAT_RATES, SAVE_PROGRESS_STEPS } from "../createProduct/constants";
 import { useUpdateProduct } from "@/hooks/mutations";
 import { useProductById } from "@/hooks/queries";
 import { useCategories } from "@/hooks/queries/useCategories";
+import { useProducts } from "@/hooks/queries/useProducts";
 import { normalizeProductData } from "@/components/dashboard/products_list/data/mockProducts";
 import type { UpdateProductRequest, Product } from "@/lib/services/productService";
 
@@ -27,6 +28,9 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
   
   // Obtener categorías reales del backend
   const { data: backendCategories = [], isLoading: categoriesLoading } = useCategories();
+  
+  // Obtener todos los productos para buscar variantes
+  const { data: allProducts = [] } = useProducts({ isActive: true });
   
   // Form state - Campos básicos
   const [productName, setProductName] = useState("");
@@ -165,12 +169,61 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
         setCustomEndDate(productWithPromoDates.promotionalEndDate || "");
       }
       
-      // Configurar variantes si existen (esto requeriría una estructura de variantes en el backend)
-      // Por ahora, no hay variantes en el backend, así que esto queda vacío
+      // Buscar variantes del producto (productos con parentId igual al id del producto actual)
+      if (allProducts && allProducts.length > 0) {
+        const productVariants = allProducts
+          .filter((p: Product) => {
+            const normalizedP = normalizeProductData(p);
+            return (normalizedP as Product & { parentId?: string }).parentId === product.id;
+          })
+          .map((variant: Product) => {
+            const normalizedVariant = normalizeProductData(variant);
+            // Extraer el nombre de la variante (remover el nombre del producto padre si está incluido)
+            let variantName = normalizedVariant.name;
+            if (variantName && product.name && variantName.startsWith(product.name)) {
+              variantName = variantName.substring(product.name.length).trim();
+            }
+            
+            // Obtener precio base y precio promocional
+            // Si hay originalPrice, significa que hay promoción activa
+            // En ese caso, originalPrice es el precio base y price es el precio promocional
+            const basePrice = normalizedVariant.originalPrice || normalizedVariant.price;
+            const promoPrice = normalizedVariant.isPromotional && normalizedVariant.originalPrice 
+              ? normalizedVariant.price 
+              : undefined;
+            
+            return {
+              name: variantName || "",
+              price: basePrice?.toString() || "0",
+              promotionPrice: promoPrice ? promoPrice.toString() : "",
+            };
+          });
+        
+        // Si hay variantes, activar el toggle y cargar los datos
+        if (productVariants.length > 0) {
+          setHasVariants(true);
+          setVariants(productVariants);
+        } else {
+          setHasVariants(false);
+          setVariants([]);
+        }
+      } else {
+        // Si aún no hay productos cargados, verificar si el producto actual tiene parentId
+        // Si tiene parentId, significa que es una variante, no un producto padre
+        const normalizedProduct = normalizeProductData(existingProduct as Product);
+        const isVariant = !!(normalizedProduct as Product & { parentId?: string }).parentId;
+        
+        if (!isVariant) {
+          // Es un producto padre, pero aún no sabemos si tiene variantes
+          // Dejar hasVariants en false por ahora
+          setHasVariants(false);
+          setVariants([]);
+        }
+      }
       
       setVatRate("2.6"); // Valor por defecto
     }
-  }, [existingProduct, backendCategories, originalProductData]);
+  }, [existingProduct, backendCategories, originalProductData, allProducts]);
 
   // Función para manejar subida de imágenes
   const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {

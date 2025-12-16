@@ -192,34 +192,67 @@ export default function ProductsListComponent({
     isActive: true,
   });
 
+  // Función para agrupar productos padre-hijo
+  const groupProductsWithVariants = useCallback((products: Product[]): Product[] => {
+    // Separar productos padre (sin parentId) y variantes (con parentId)
+    const parentProducts: Product[] = [];
+    const variantsMap = new Map<string, Product[]>();
+
+    products.forEach(product => {
+      if (product.parentId) {
+        // Es una variante
+        if (!variantsMap.has(product.parentId)) {
+          variantsMap.set(product.parentId, []);
+        }
+        variantsMap.get(product.parentId)!.push(product);
+      } else {
+        // Es un producto padre
+        parentProducts.push(product);
+      }
+    });
+
+    // Agregar variantes a sus productos padre
+    return parentProducts.map(parent => {
+      const variants = variantsMap.get(parent.id) || [];
+      return {
+        ...parent,
+        variants: variants.length > 0 ? variants : undefined
+      };
+    });
+  }, []);
+
   // Procesar productos cuando se cargan
   useEffect(() => {
     if (productsData) {
       // Normalizar productos
       const normalizedProducts = productsData.map(normalizeProductData);
+      
+      // Agrupar productos con variantes (solo mostrar productos padre)
+      const groupedProducts = groupProductsWithVariants(normalizedProducts);
+      
       const filteredProducts = applyFiltersToProducts(
-        normalizedProducts,
+        groupedProducts,
         filterState
       );
       setProducts(filteredProducts);
 
-      // Actualizar contadores de filtros dinámicamente
+      // Actualizar contadores de filtros dinámicamente (contar solo productos padre)
       const updatedFilters = productsListFilters.map((filter) => {
         if (filter.id === 'all') {
-          return { ...filter, count: normalizedProducts.length };
+          return { ...filter, count: groupedProducts.length };
         }
-        const count = normalizedProducts.filter(p => p.categoryId === filter.id).length;
+        const count = groupedProducts.filter(p => p.categoryId === filter.id).length;
         return { ...filter, count };
       });
       setFilters(updatedFilters);
 
       if (isStandalone) {
-        setTotalProducts(normalizedProducts.length);
+        setTotalProducts(groupedProducts.length);
         setFilteredProducts(filteredProducts.length);
         setHasActiveFilters(activeFiltersCount > 0);
       }
     }
-  }, [productsData, filterState, isStandalone, setTotalProducts, setFilteredProducts, setHasActiveFilters, activeFiltersCount, applyFiltersToProducts]);
+  }, [productsData, filterState, isStandalone, setTotalProducts, setFilteredProducts, setHasActiveFilters, activeFiltersCount, applyFiltersToProducts, groupProductsWithVariants]);
 
   // Sincronizar isLoading del contexto con React Query
   useEffect(() => {
@@ -238,7 +271,8 @@ export default function ProductsListComponent({
     // Usar los productos ya cargados de React Query (cache)
     if (productsData) {
       const normalizedProducts = productsData.map(normalizeProductData);
-      const filteredProducts = applyFiltersToProducts(normalizedProducts, filters);
+      const groupedProducts = groupProductsWithVariants(normalizedProducts);
+      const filteredProducts = applyFiltersToProducts(groupedProducts, filters);
       setProducts(filteredProducts);
 
       // Sincronizar filtros de categorías con selectedFilters
@@ -252,7 +286,7 @@ export default function ProductsListComponent({
         setHasActiveFilters(getActiveFiltersCount() > 0);
       }
     }
-  }, [productsData, applyFiltersToProducts, isStandalone, setFilteredProducts, setHasActiveFilters, setSelectedFilters, getActiveFiltersCount, setFilterState]);
+  }, [productsData, applyFiltersToProducts, isStandalone, setFilteredProducts, setHasActiveFilters, setSelectedFilters, getActiveFiltersCount, setFilterState, groupProductsWithVariants]);
 
   const handleClearFilters = useCallback(() => {
     const defaultFilters: FilterState = {
@@ -269,7 +303,8 @@ export default function ProductsListComponent({
     // Los productos ya están en cache de React Query, solo aplicar filtros
     if (productsData) {
       const normalizedProducts = productsData.map(normalizeProductData);
-      const filteredProducts = applyFiltersToProducts(normalizedProducts, defaultFilters);
+      const groupedProducts = groupProductsWithVariants(normalizedProducts);
+      const filteredProducts = applyFiltersToProducts(groupedProducts, defaultFilters);
       setProducts(filteredProducts);
       
       if (isStandalone) {
@@ -277,7 +312,7 @@ export default function ProductsListComponent({
         setHasActiveFilters(false);
       }
     }
-  }, [productsData, applyFiltersToProducts, isStandalone, setFilteredProducts, setHasActiveFilters, setSelectedFilters, setFilterState, setSearchQuery]);
+  }, [productsData, applyFiltersToProducts, isStandalone, setFilteredProducts, setHasActiveFilters, setSelectedFilters, setFilterState, setSearchQuery, groupProductsWithVariants]);
 
   const handleProductClick = (product: Product) => {
     if (onProductClick) {

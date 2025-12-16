@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import ProductsList from "../dashboard/charge/ProductsList";
-import { Product } from "../dashboard/products_list/data/mockProducts";
+import { Product, normalizeProductData } from "../dashboard/products_list/data/mockProducts";
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
 import { SearchInput } from "@/components/ui/search-input";
@@ -20,6 +20,35 @@ const DashboardUser = () => {
   // Mensaje de estado
   const hasStore = !!store?.slug;
 
+  // Función para agrupar productos padre-hijo
+  const groupProductsWithVariants = useCallback((products: Product[]): Product[] => {
+    // Separar productos padre (sin parentId) y variantes (con parentId)
+    const parentProducts: Product[] = [];
+    const variantsMap = new Map<string, Product[]>();
+
+    products.forEach(product => {
+      if (product.parentId) {
+        // Es una variante
+        if (!variantsMap.has(product.parentId)) {
+          variantsMap.set(product.parentId, []);
+        }
+        variantsMap.get(product.parentId)!.push(product);
+      } else {
+        // Es un producto padre
+        parentProducts.push(product);
+      }
+    });
+
+    // Agregar variantes a sus productos padre
+    return parentProducts.map(parent => {
+      const variants = variantsMap.get(parent.id) || [];
+      return {
+        ...parent,
+        variants: variants.length > 0 ? variants : undefined
+      };
+    });
+  }, []);
+
   // Cargar productos iniciales
   const loadInitialProducts = useCallback(async () => {
     setLoading(true);
@@ -38,33 +67,14 @@ const DashboardUser = () => {
       const result = await response.json();
       
       if (result.success && result.data) {
-        // Convertir a formato correcto y normalizar precios
-        const productsWithNumbers = result.data.map((p: Partial<Product>) => {
-          const basePrice = typeof p.price === 'string' ? parseFloat(p.price) : (p.price || 0);
-          const promoPrice = p.promotionalPrice ? (typeof p.promotionalPrice === 'string' ? parseFloat(p.promotionalPrice) : p.promotionalPrice) : null;
-          const isPromotional = p.isPromotional || (promoPrice !== null);
-          
-          // Si hay promoción activa, usar precio promocional como price y basePrice como originalPrice
-          let finalPrice = basePrice;
-          let originalPrice = p.originalPrice ? (typeof p.originalPrice === 'string' ? parseFloat(p.originalPrice) : p.originalPrice) : undefined;
-          
-          if (isPromotional && promoPrice !== null) {
-            finalPrice = promoPrice;
-            originalPrice = basePrice;
-          }
-          
-          return {
-            ...p,
-            price: isNaN(finalPrice) ? 0 : finalPrice,
-            originalPrice: originalPrice && !isNaN(originalPrice) ? originalPrice : undefined,
-            stock: typeof p.stock === 'string' ? parseInt(p.stock) : (p.stock || 0),
-            categoryId: p.categoryId || p.category?.toLowerCase().replace(/\s+/g, '_'),
-            isOnSale: isPromotional,
-            isPromotional: isPromotional,
-          };
-        });
-        setProducts(productsWithNumbers);
-        setAllProducts(productsWithNumbers);
+        // Normalizar productos usando la función de normalización
+        const normalizedProducts = result.data.map((p: Partial<Product>) => normalizeProductData(p));
+        
+        // Agrupar productos con variantes (solo mostrar productos padre)
+        const groupedProducts = groupProductsWithVariants(normalizedProducts);
+        
+        setProducts(groupedProducts);
+        setAllProducts(groupedProducts);
       } else {
         setProducts([]);
         setAllProducts([]);
@@ -76,7 +86,7 @@ const DashboardUser = () => {
     } finally {
       setLoading(false);
     }
-  }, [store?.slug]);
+  }, [store?.slug, groupProductsWithVariants]);
 
   // Manejar búsqueda
   const handleSearch = (query: string) => {
@@ -88,12 +98,22 @@ const DashboardUser = () => {
 
     let filtered = [...allProducts];
 
-    // Filtrar por búsqueda
+    // Filtrar por búsqueda (buscar en nombre del producto padre y en variantes)
     if (query) {
-      filtered = filtered.filter((p: Product) => 
-        p.name.toLowerCase().includes(query.toLowerCase()) ||
-        p.description.toLowerCase().includes(query.toLowerCase())
-      );
+      const queryLower = query.toLowerCase();
+      filtered = filtered.filter((p: Product) => {
+        // Buscar en nombre del producto padre
+        const matchesParent = p.name.toLowerCase().includes(queryLower) ||
+          (p.description && p.description.toLowerCase().includes(queryLower));
+        
+        // Buscar en nombres de variantes
+        const matchesVariant = p.variants?.some(variant => 
+          variant.name.toLowerCase().includes(queryLower) ||
+          (variant.description && variant.description.toLowerCase().includes(queryLower))
+        );
+        
+        return matchesParent || matchesVariant;
+      });
     }
 
     setProducts(filtered);

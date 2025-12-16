@@ -7,7 +7,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import ProductCard from "@/components/dashboard/charge/ProductCard";
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
-import { Product } from "@/components/dashboard/products_list/data/mockProducts";
+import { Product, normalizeProductData } from "@/components/dashboard/products_list/data/mockProducts";
 import Image from "next/image";
 import { buildApiUrl } from "@/lib/config/api";
 
@@ -19,6 +19,35 @@ export default function SearchUser() {
   const [isSearching, setIsSearching] = useState(false);
   const { addToCart, cartItems } = useCartStore();
   const { store } = useScannedStoreStore();
+
+  // Función para agrupar productos padre-hijo
+  const groupProductsWithVariants = useCallback((products: Product[]): Product[] => {
+    // Separar productos padre (sin parentId) y variantes (con parentId)
+    const parentProducts: Product[] = [];
+    const variantsMap = new Map<string, Product[]>();
+
+    products.forEach(product => {
+      if (product.parentId) {
+        // Es una variante
+        if (!variantsMap.has(product.parentId)) {
+          variantsMap.set(product.parentId, []);
+        }
+        variantsMap.get(product.parentId)!.push(product);
+      } else {
+        // Es un producto padre
+        parentProducts.push(product);
+      }
+    });
+
+    // Agregar variantes a sus productos padre
+    return parentProducts.map(parent => {
+      const variants = variantsMap.get(parent.id) || [];
+      return {
+        ...parent,
+        variants: variants.length > 0 ? variants : undefined
+      };
+    });
+  }, []);
 
   // Redirigir a /store/[slug]/search si hay tienda
   useEffect(() => {
@@ -44,13 +73,13 @@ export default function SearchUser() {
         const result = await response.json();
         
         if (result.success && result.data) {
-          const products = result.data.map((p: Partial<Product>) => ({
-            ...p,
-            price: typeof p.price === 'string' ? parseFloat(p.price) : p.price,
-            stock: typeof p.stock === 'string' ? parseInt(p.stock) : p.stock,
-            categoryId: p.categoryId || p.category?.toLowerCase().replace(/\s+/g, '_'),
-          }));
-          setAllProducts(products);
+          // Normalizar productos usando la función de normalización
+          const normalizedProducts = result.data.map((p: Partial<Product>) => normalizeProductData(p));
+          
+          // Agrupar productos con variantes (solo mostrar productos padre)
+          const groupedProducts = groupProductsWithVariants(normalizedProducts);
+          
+          setAllProducts(groupedProducts);
         }
       } catch (error) {
         console.error('Error loading products:', error);
@@ -58,7 +87,7 @@ export default function SearchUser() {
     };
 
     loadProducts();
-  }, [store?.slug]);
+  }, [store?.slug, groupProductsWithVariants]);
 
   // Función para obtener la cantidad actual de un producto en el carrito
   const getCurrentQuantity = useCallback((productId: string) => {
@@ -90,13 +119,23 @@ export default function SearchUser() {
 
     setIsSearching(true);
 
-    // Buscar en productos reales
+    // Buscar en productos reales (incluyendo variantes)
     setTimeout(() => {
-      const results = allProducts.filter((product: Product) =>
-        product.name.toLowerCase().includes(query.toLowerCase()) ||
-        product.category.toLowerCase().includes(query.toLowerCase()) ||
-        (product.tags && product.tags.some((tag: string) => tag.toLowerCase().includes(query.toLowerCase())))
-      );
+      const queryLower = query.toLowerCase();
+      const results = allProducts.filter((product: Product) => {
+        // Buscar en nombre del producto padre
+        const matchesParent = product.name.toLowerCase().includes(queryLower) ||
+          product.category.toLowerCase().includes(queryLower) ||
+          (product.tags && product.tags.some((tag: string) => tag.toLowerCase().includes(queryLower)));
+        
+        // Buscar en nombres de variantes
+        const matchesVariant = product.variants?.some(variant => 
+          variant.name.toLowerCase().includes(queryLower) ||
+          (variant.description && variant.description.toLowerCase().includes(queryLower))
+        );
+        
+        return matchesParent || matchesVariant;
+      });
       setSearchResults(results);
       setIsSearching(false);
     }, 300);

@@ -53,6 +53,8 @@ export interface Product {
   expiryDate?: string // Fecha de vencimiento
   location?: string // Ubicación en tienda
   notes?: string // Notas adicionales
+  parentId?: string // ID del producto padre (para variantes)
+  variants?: Product[] // Variantes del producto (si es producto padre)
 }
 
 // Tipo para actualizar productos (similar a Product pero todos los campos opcionales)
@@ -744,6 +746,35 @@ export const normalizeProductData = (product: ApiProduct): Product => {
   };
 };
 
+// Función para agrupar productos padre-hijo
+const groupProductsWithVariants = (products: Product[]): Product[] => {
+  // Separar productos padre (sin parentId) y variantes (con parentId)
+  const parentProducts: Product[] = [];
+  const variantsMap = new Map<string, Product[]>();
+
+  products.forEach(product => {
+    if (product.parentId) {
+      // Es una variante
+      if (!variantsMap.has(product.parentId)) {
+        variantsMap.set(product.parentId, []);
+      }
+      variantsMap.get(product.parentId)!.push(product);
+    } else {
+      // Es un producto padre
+      parentProducts.push(product);
+    }
+  });
+
+  // Agregar variantes a sus productos padre
+  return parentProducts.map(parent => {
+    const variants = variantsMap.get(parent.id) || [];
+    return {
+      ...parent,
+      variants: variants.length > 0 ? variants : undefined
+    };
+  });
+};
+
 export const fetchProducts = async (filters?: {
   categoryId?: string
   searchTerm?: string
@@ -758,7 +789,11 @@ export const fetchProducts = async (filters?: {
     
     if (response.success && response.data) {
       const normalizedProducts = response.data.map(normalizeProductData);
-      let products = normalizedProducts;
+      
+      // Agrupar productos con variantes (solo mostrar productos padre)
+      const groupedProducts = groupProductsWithVariants(normalizedProducts);
+      
+      let products = groupedProducts;
       if (filters?.sortBy) {
         products = sortProducts(products, filters.sortBy);
       }
@@ -767,7 +802,9 @@ export const fetchProducts = async (filters?: {
       throw new Error(response.error || 'API response not successful');
     }
   } catch {
-    return getMockProductsWithFilters(filters);
+    const mockProductsFiltered = getMockProductsWithFilters(filters);
+    // También agrupar productos mock si hay variantes
+    return groupProductsWithVariants(mockProductsFiltered);
   }
 }
 
