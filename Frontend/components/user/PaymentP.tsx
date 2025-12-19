@@ -12,12 +12,13 @@ import {
 } from "lucide-react";
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ModernSpinner } from "@/components/ui";
 import { formatSwissPriceWithCHF } from "@/lib/utils";
 import { usePromoLogic } from "@/hooks";
 import { useCreateOrder } from "@/hooks/mutations";
+import { createPortal } from "react-dom";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -40,7 +41,21 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   errorMessage,
   onConfirm,
 }) => {
-  if (!isOpen) {
+  const [modalContainer, setModalContainer] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      let container = document.getElementById('global-modals-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'global-modals-container';
+        document.body.appendChild(container);
+      }
+      setModalContainer(container);
+    }
+  }, []);
+
+  if (!isOpen || !modalContainer) {
     return null;
   }
 
@@ -55,8 +70,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     return methods[selectedMethod as keyof typeof methods] || methods.card;
   })();
 
-  return (
-    <div className="fixed inset-0 bg-white/20 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in-scale">
+  const modalContent = (
+    <div className="fixed inset-0 bg-white/20 backdrop-blur-md flex items-center justify-center z-[9999] p-4 animate-fade-in-scale" style={{ pointerEvents: 'auto' }}>
       <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-hidden shadow-2xl 
                       animate-scale-in gpu-accelerated">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -163,6 +178,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, modalContainer);
 };
 
 export default function PaymentP() {
@@ -178,6 +195,7 @@ export default function PaymentP() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [paymentStep, setPaymentStep] = useState<"confirm" | "processing" | "success">("confirm");
   const [orderError, setOrderError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   
   // Usar mutation de React Query para crear órdenes
@@ -192,10 +210,23 @@ export default function PaymentP() {
     handleRemovePromo,
   } = usePromoLogic();
 
+  // Sincronizar estado del carrito solo en el cliente para evitar hydration mismatch
+  // Usar useRef para evitar re-renders innecesarios
+  const mountedRef = useRef(false);
+  
+  useEffect(() => {
+    // Solo establecer mounted una vez
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      setMounted(true);
+    }
+  }, []); // Sin dependencias para ejecutar solo una vez
+
   // Calcular totales reales del carrito usando las funciones del store
-  const totalItems = getTotalItems();
-  const subtotal = getSubtotal();
-  const totalWithVAT = getTotalWithVAT();
+  // Solo calcular después de montar para evitar hydration mismatch
+  const totalItems = mounted ? getTotalItems() : 0;
+  const subtotal = mounted ? getSubtotal() : 0;
+  const totalWithVAT = mounted ? getTotalWithVAT() : 0;
   const totalAfterDiscount = Math.max(
     totalWithVAT - (promoApplied ? discountAmount || 0 : 0),
     0,
@@ -313,10 +344,10 @@ export default function PaymentP() {
     },
   ];
 
-  // Mostrar mensaje si el carrito está vacío
-  if (totalItems === 0) {
+  // Mostrar mensaje si el carrito está vacío (solo después de montar para evitar hydration mismatch)
+  if (mounted && totalItems === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] bg-[#F9F6F4] animate-scale-in">
+      <div className="flex flex-col items-center justify-center min-h-[400px] bg-[#F9F6F4]">
         <div className="text-center">
           <p className="text-2xl font-semibold text-[#373F49] mb-4 transition-interactive">
             Ihr Warenkorb ist leer
@@ -329,10 +360,23 @@ export default function PaymentP() {
     );
   }
 
+  // Mostrar loading state durante la hidratación
+  if (!mounted) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] bg-[#F9F6F4]">
+        <div className="text-center">
+          <p className="text-xl font-semibold text-[#373F49] mb-4">
+            Wird geladen...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="animate-page-enter gpu-accelerated">
+    <div>
       {/* Header con información real del carrito */}
-      <div className="flex flex-col gap-2 justify-center items-center bg-[#F9F6F4] w-full p-2 border-b border-[#E5E5E5] animate-stagger-1">
+      <div className="flex flex-col gap-2 justify-center items-center bg-[#F9F6F4] w-full p-2 border-b border-[#E5E5E5]">
         <p className="text-xl pt-4 font-semibold text-[#373F49] transition-interactive">
           {store?.name ?? "Gastbestellung"}
         </p>

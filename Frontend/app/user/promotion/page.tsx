@@ -6,28 +6,16 @@ import type React from "react";
 import ProductsList from "@/components/dashboard/charge/ProductsList";
 import { Product } from "@/components/dashboard/products_list/data/mockProducts";
 import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { useCartStore } from "@/lib/stores/cartStore";
 import { buildApiUrl } from "@/lib/config/api";
 import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
 import { Percent, Store } from "lucide-react";
 
 const PromotionPage: React.FC = () => {
-  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCartStore();
   const { store } = useScannedStoreStore();
-
-  // Redirigir a /store/[slug]/promotion si hay tienda
-  useEffect(() => {
-    if (store?.slug && typeof window !== 'undefined') {
-      const currentPath = window.location.pathname;
-      if (currentPath === '/user/promotion') {
-        router.replace(`/store/${store.slug}/promotion`);
-      }
-    }
-  }, [store?.slug, router]);
 
   useEffect(() => {
     const loadPromotionalProducts = async () => {
@@ -112,8 +100,8 @@ const PromotionPage: React.FC = () => {
   }
 
   return (
-    <div className="animate-page-enter gpu-accelerated">
-      <div className="animate-slide-in-right">
+    <div>
+      <div>
         <HeaderNav title="Aktionen" />
       </div>
       {products.length > 0 && (

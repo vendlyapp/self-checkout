@@ -4,7 +4,8 @@ import ServiceCard from "@/components/dashboard/store/ServiceCard";
 import SystemSettingsList from "@/components/dashboard/store/SystemSettingsList";
 import ContactCard from "@/components/dashboard/store/ContactCard";
 import { SearchInput } from "@/components/ui/search-input";
-import { User, Percent, QrCode, CreditCard } from "lucide-react";
+import { User, Percent, QrCode, CreditCard, Store } from "lucide-react";
+import Link from "next/link";
 
 const services = [
   {
@@ -34,6 +35,8 @@ const StoreDashboard = () => (
     {/* ===== MOBILE LAYOUT ===== */}
     <div className="block lg:hidden">
       <div className="p-4 space-y-6">
+       
+
         {/* Header Card */}
         <StoreHeaderCard />
 
@@ -41,6 +44,26 @@ const StoreDashboard = () => (
         <div>
           <SearchInput placeholder="Einstellungen durchsuchen..." esHome={false} />
         </div>
+
+         {/* Mi Tienda Card */}
+         <Link href="/store/settings" className="block">
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-lg bg-brand-100 flex items-center justify-center flex-shrink-0">
+                <Store className="w-8 h-8 text-brand-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">Mi Tienda</h3>
+                <p className="text-sm text-gray-500">Personaliza la información de tu tienda</p>
+              </div>
+              <div className="flex-shrink-0">
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </Link>
 
         {/* Plan Card */}
         <PlanCard />
@@ -83,6 +106,26 @@ const StoreDashboard = () => (
             <SearchInput placeholder="Einstellungen durchsuchen..." esHome={false} />
           </div>
         </div>
+
+        {/* Mi Tienda Card */}
+        <Link href="/store/settings" className="block">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-20 h-20 rounded-lg bg-brand-100 flex items-center justify-center flex-shrink-0">
+                <Store className="w-10 h-10 text-brand-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-xl font-semibold text-gray-900 mb-1">Mi Tienda</h3>
+                <p className="text-base text-gray-500">Personaliza la información de tu tienda</p>
+              </div>
+              <div className="flex-shrink-0">
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </Link>
 
         {/* Top Row: Header Card & Plan Card */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

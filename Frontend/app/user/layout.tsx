@@ -1,7 +1,7 @@
 "use client";
 
 // app/user/layout.tsx
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useLayoutEffect, useRef } from "react";
 import FooterNavUser from "@/components/navigation/user/FooterNavUser";
 import HeaderUser from "@/components/navigation/user/HeaderUser";
 import { usePathname, useRouter } from "next/navigation";
@@ -18,23 +18,41 @@ const UserLayout = ({ children }: UserLayoutProps) => {
   const { scrollContainerRef } = useScrollReset();
   const { store } = useScannedStoreStore();
   const isScanRoute = pathname === "/user/scan";
+  const previousPathnameRef = useRef<string | null>(null);
   
   // Redirigir automáticamente a /store/[slug] si hay una tienda y no estamos en /user/scan
-  useEffect(() => {
-    if (store?.slug && pathname && !isScanRoute && typeof window !== 'undefined') {
-      // Mapear rutas de /user/* a /store/[slug]/*
-      const routeMap: Record<string, string> = {
-        '/user': `/store/${store.slug}`,
-        '/user/cart': `/store/${store.slug}/cart`,
-        '/user/payment': `/store/${store.slug}/payment`,
-        '/user/promotion': `/store/${store.slug}/promotion`,
-        '/user/search': `/store/${store.slug}/search`,
-      };
+  // Usar useLayoutEffect para ejecutar antes del renderizado, evitando montar componentes innecesarios
+  useLayoutEffect(() => {
+    // Solo ejecutar si tenemos store, pathname válido, no estamos en scan, y estamos en una ruta /user/*
+    if (!store?.slug || !pathname || isScanRoute || !pathname.startsWith('/user')) {
+      previousPathnameRef.current = null;
+      return;
+    }
 
-      const targetRoute = routeMap[pathname];
-      if (targetRoute && window.location.pathname === pathname) {
-        router.replace(targetRoute);
-      }
+    // Si el pathname no cambió, no hacer nada (evitar re-ejecuciones)
+    if (previousPathnameRef.current === pathname) {
+      return;
+    }
+
+    // Verificar que realmente estamos en la ruta /user/* (no ya redirigidos)
+    if (typeof window === 'undefined' || !window.location.pathname.startsWith('/user')) {
+      return;
+    }
+
+    // Mapear rutas de /user/* a /store/[slug]/*
+    const routeMap: Record<string, string> = {
+      '/user': `/store/${store.slug}`,
+      '/user/cart': `/store/${store.slug}/cart`,
+      '/user/payment': `/store/${store.slug}/payment`,
+      '/user/promotion': `/store/${store.slug}/promotion`,
+      '/user/search': `/store/${store.slug}/search`,
+    };
+
+    const targetRoute = routeMap[pathname];
+    if (targetRoute && window.location.pathname === pathname) {
+      previousPathnameRef.current = pathname;
+      // Usar replace para evitar agregar al historial
+      router.replace(targetRoute);
     }
   }, [store?.slug, pathname, isScanRoute, router]);
   

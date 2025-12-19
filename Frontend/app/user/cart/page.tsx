@@ -3,7 +3,7 @@
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
 import HeaderNav from "@/components/navigation/HeaderNav";
-import React, { useEffect } from "react";
+import React from "react";
 import ProductCard from "@/components/dashboard/charge/ProductCard";
 import { Product } from "@/components/dashboard/products_list/data/mockProducts";
 import { ChevronRight, ShoppingCart, X } from "lucide-react";
@@ -15,17 +15,6 @@ export default function UserCartPage() {
   const router = useRouter();
   const { cartItems, updateQuantity } = useCartStore();
   const { store } = useScannedStoreStore();
-
-  // Redirigir a /store/[slug]/cart si hay tienda
-  useEffect(() => {
-    if (store?.slug && typeof window !== 'undefined') {
-      const currentPath = window.location.pathname;
-      if (currentPath === '/user/cart') {
-        router.replace(`/store/${store.slug}/cart`);
-        return;
-      }
-    }
-  }, [store?.slug, router]);
 
   const {
     promoApplied,
@@ -42,8 +31,8 @@ export default function UserCartPage() {
   };
 
   return (
-    <div className="animate-page-enter gpu-accelerated">
-      <div className="animate-slide-in-right">
+    <div>
+      <div>
         <HeaderNav title="Warenkorb" />
       </div>
       {/* Lista de productos */}

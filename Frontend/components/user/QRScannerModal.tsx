@@ -7,6 +7,7 @@ import { useScannedStoreStore } from '@/lib/stores/scannedStoreStore'
 import { useCartStore } from '@/lib/stores/cartStore'
 import { toast } from 'sonner'
 import { buildApiUrl } from '@/lib/config/api'
+import { createPortal } from 'react-dom'
 
 interface QRScannerModalProps {
   isOpen: boolean
@@ -72,10 +73,24 @@ export const QRScannerModal = ({ isOpen, onClose }: QRScannerModalProps) => {
     }
   }
 
-  if (!isOpen) return null
+  const [modalContainer, setModalContainer] = useState<HTMLElement | null>(null);
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in-scale">
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      let container = document.getElementById('global-modals-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'global-modals-container';
+        document.body.appendChild(container);
+      }
+      setModalContainer(container);
+    }
+  }, []);
+
+  if (!isOpen || !modalContainer) return null;
+
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in-scale" style={{ pointerEvents: 'auto' }}>
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 animate-scale-in gpu-accelerated">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 animate-stagger-1">
@@ -184,6 +199,8 @@ export const QRScannerModal = ({ isOpen, onClose }: QRScannerModalProps) => {
         </div>
       </div>
     </div>
-  )
+  );
+
+  return createPortal(modalContent, modalContainer);
 }
 

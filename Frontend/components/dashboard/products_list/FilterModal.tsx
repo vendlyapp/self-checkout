@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { ProductCategory, updateCategoryCounts } from "./data/mockProducts";
+import { createPortal } from "react-dom";
 
 interface FilterModalProps {
   isOpen: boolean;
@@ -119,10 +120,24 @@ export default function FilterModal({
     onClearFilters();
   };
 
-  if (!isOpen) return null;
+  const [modalContainer, setModalContainer] = useState<HTMLElement | null>(null);
 
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-end justify-center sm:items-center animate-fade-in-scale">
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      let container = document.getElementById('global-modals-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'global-modals-container';
+        document.body.appendChild(container);
+      }
+      setModalContainer(container);
+    }
+  }, []);
+
+  if (!isOpen || !modalContainer) return null;
+
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-end justify-center sm:items-center animate-fade-in-scale" style={{ pointerEvents: 'auto' }}>
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-interactive animate-fade-in-scale"
@@ -265,4 +280,6 @@ export default function FilterModal({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, modalContainer);
 }

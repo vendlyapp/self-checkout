@@ -1,17 +1,32 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { LogOut } from 'lucide-react';
+import { createPortal } from 'react-dom';
 
 interface LogoutModalProps {
   isOpen: boolean;
 }
 
 const LogoutModal: React.FC<LogoutModalProps> = ({ isOpen }) => {
-  if (!isOpen) return null;
+  const [modalContainer, setModalContainer] = useState<HTMLElement | null>(null);
 
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      let container = document.getElementById('global-modals-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'global-modals-container';
+        document.body.appendChild(container);
+      }
+      setModalContainer(container);
+    }
+  }, []);
+
+  if (!isOpen || !modalContainer) return null;
+
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ pointerEvents: 'auto' }}>
       {/* Backdrop con blur elegante */}
       <div 
         className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in-0 duration-200"
@@ -70,6 +85,8 @@ const LogoutModal: React.FC<LogoutModalProps> = ({ isOpen }) => {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, modalContainer);
 };
 
 export default LogoutModal;

@@ -3,7 +3,7 @@ import SnanerDash from "@/components/user/SnanerDash";
 
 export default function ScanPage() {
   return (
-    <div className="animate-page-enter gpu-accelerated">
+    <div>
       <SnanerDash />
     </div>
   );

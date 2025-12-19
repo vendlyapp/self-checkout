@@ -61,13 +61,27 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     }
   };
 
-  // No renderizar nada si no está abierto
-  if (!isOpen) return null;
+  const [modalContainer, setModalContainer] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      let container = document.getElementById('global-modals-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'global-modals-container';
+        document.body.appendChild(container);
+      }
+      setModalContainer(container);
+    }
+  }, []);
+
+  // No renderizar nada si no está abierto o no hay contenedor
+  if (!isOpen || !modalContainer) return null;
 
   const methodInfo = getMethodInfo(selectedMethod);
 
-  return (
-    <div className="fixed inset-0 bg-white/20 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in-scale">
+  const modalContent = (
+    <div className="fixed inset-0 bg-white/20 backdrop-blur-md flex items-center justify-center z-[9999] p-4 animate-fade-in-scale" style={{ pointerEvents: 'auto' }}>
       <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-hidden shadow-2xl 
                       animate-scale-in gpu-accelerated">
         {/* Header del modal */}
@@ -213,6 +227,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, modalContainer);
 };
 
 export default PaymentModal;

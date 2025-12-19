@@ -28,11 +28,10 @@ export default function HeaderUser({ isDarkMode = false }: HeaderUserProps) {
 
   return (
     <>
-      <header className="dashboard-header h-[calc(85px+env(safe-area-inset-top))] w-full flex items-center justify-center pt-[env(safe-area-inset-top)] 
-                         animate-slide-down gpu-accelerated">
+      <header className="dashboard-header h-[calc(85px+env(safe-area-inset-top))] w-full flex items-center justify-center pt-[env(safe-area-inset-top)]">
         <div className={`dashboard-header-content ${headerBgClass} h-[85px] w-full flex border-b ${borderClass} items-center justify-center`}>
            {/* Logo de la tienda */}
-          <div className="flex items-center justify-center w-1/2 sm:pl-6 animate-stagger-1 px-2">
+          <div className="flex items-center justify-center w-1/2 sm:pl-6 px-2">
             {storeLogo ? (
               <div className="relative w-full max-w-[120px] sm:max-w-[160px] h-[60px] sm:h-[70px] p-2 overflow-hidden transition-interactive">
                 <img
@@ -51,7 +50,7 @@ export default function HeaderUser({ isDarkMode = false }: HeaderUserProps) {
               </div>
             )}
           </div>
-          <div className="flex items-center justify-center w-1/2 animate-stagger-2">
+          <div className="flex items-center justify-center w-1/2">
             <Link href="/dashboard" className="dashboard-logo touch-target tap-highlight-transparent transition-interactive gpu-accelerated active:scale-95">
               <Image
                 src={isDarkMode ? "/logo-b.svg" : "/logo.svg"}

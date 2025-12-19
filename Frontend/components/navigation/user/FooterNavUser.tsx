@@ -156,7 +156,7 @@ export default function FooterNav() {
   const isPaymentRoute = pathname === "/user/payment" || pathname?.includes('/payment');
 
   return (
-    <nav className="bg-white rounded-t-xl shadow-t-xl shadow-black safe-area-bottom animate-slide-up-fade gpu-accelerated">
+    <nav className="bg-white rounded-t-xl shadow-t-xl shadow-black safe-area-bottom">
       {/* Resumen de carrito arriba solo cuando estoy en /user/cart - con contenedor limitado */}
       {isCartRoute && (
         <div className="w-full max-w-[430px] mx-auto">
