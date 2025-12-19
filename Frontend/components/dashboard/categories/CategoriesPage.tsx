@@ -1,23 +1,52 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Grid3X3, Edit, Trash2 } from "lucide-react";
 import { useDeleteCategory } from "@/hooks/mutations";
 import { useCategories } from "@/hooks/queries/useCategories";
 import type { Category } from "@/lib/services/categoryService";
 import CategoryForm from "./CategoryForm";
 import DeleteCategoryModal from "./DeleteCategoryModal";
+import CategoryCard from "./CategoryCard";
+import CategoryFilters, { CategoryFilterStatus } from "./CategoryFilters";
+import FooterAddCategory from "./FooterAddCategory";
+import { SearchInput } from "@/components/ui/search-input";
+import FixedHeaderContainer from "@/components/dashboard/products_list/FixedHeaderContainer";
+import { Plus } from "lucide-react";
 
 export default function CategoriesPage() {
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<CategoryFilterStatus>("all");
   const deleteCategoryMutation = useDeleteCategory();
 
   // Obtener todas las categorías
   const { data: categories = [], isLoading, error } = useCategories();
+
+  // Filtrar categorías según búsqueda y estado
+  const filteredCategories = useMemo(() => {
+    let filtered = [...categories];
+
+    // Filtrar por búsqueda
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((category) =>
+        category.name.toLowerCase().includes(query)
+      );
+    }
+
+    // Filtrar por estado
+    if (filterStatus === "active") {
+      filtered = filtered.filter((category) => (category.count || 0) > 0);
+    } else if (filterStatus === "inactive") {
+      filtered = filtered.filter((category) => (category.count || 0) === 0);
+    }
+
+    return filtered;
+  }, [categories, searchQuery, filterStatus]);
 
   const handleCreate = () => {
     setEditingCategory(null);
@@ -54,12 +83,18 @@ export default function CategoriesPage() {
     setEditingCategory(null);
   };
 
+  const handleToggleVisibility = (category: Category) => {
+    // Por ahora, solo editamos la categoría
+    // En el futuro, podríamos agregar un campo isActive
+    handleEdit(category);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando categorías...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Kategorien werden geladen...</p>
         </div>
       </div>
     );
@@ -69,12 +104,12 @@ export default function CategoriesPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-red-600">Error al cargar categorías</p>
+          <p className="text-red-600">Fehler beim Laden der Kategorien</p>
           <button
             onClick={() => router.refresh()}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+            className="mt-4 px-4 py-2 bg-brand-500 text-white rounded-lg"
           >
-            Reintentar
+            Erneut versuchen
           </button>
         </div>
       </div>
@@ -82,77 +117,95 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="w-full min-h-screen p-4 lg:p-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Kategorien</h1>
-          <p className="text-gray-600 mt-1">Verwalten Sie Ihre Produktkategorien</p>
+    <div className="w-full min-h-screen bg-background-cream">
+      {/* HeaderNav fijo */}
+      <div className="fixed top-[80px] left-0 right-0 flex justify-between items-center p-4 bg-white border-b border-gray-200 z-40 safe-area-top pt-[calc(1rem+env(safe-area-inset-top))] 
+                      animate-slide-down gpu-accelerated">
+        <div className="flex items-center gap-2 justify-between w-full pt-[10px] px-4 touch-target">
+          <button
+            className="flex items-center gap-2 cursor-pointer transition-interactive gpu-accelerated active:scale-95"
+            onClick={() => router.back()}
+            aria-label="Zurück"
+            tabIndex={0}
+          >
+            <span className="text-[18px] font-semibold transition-interactive">Alle Kategorien</span>
+          </button>
+          <div className="flex items-center gap-2">
+            <button
+              className="flex items-center gap-2 cursor-pointer bg-brand-600 rounded-full p-2 
+                       transition-interactive gpu-accelerated hover:scale-105 active:scale-95"
+              onClick={handleCreate}
+              aria-label="Neue Kategorie hinzufügen"
+              tabIndex={0}
+            >
+              <Plus className="w-6 h-6 text-white transition-interactive" />
+            </button>
+          </div>
         </div>
-        <button
-          onClick={handleCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors shadow-sm hover:shadow-md"
-        >
-          <Plus className="w-5 h-5" />
-          Neue Kategorie
-        </button>
       </div>
 
-      {/* Categories Grid */}
-      {categories.length === 0 ? (
-        <div className="text-center py-12">
-          <Grid3X3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 mb-4">No hay categorías creadas</p>
-          <button
-            onClick={handleCreate}
-            className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors shadow-sm hover:shadow-md"
-          >
-            Erste Kategorie erstellen
-          </button>
+      {/* Barra de búsqueda fija */}
+      <div className="fixed top-[140px] left-0 right-0 p-4 flex gap-4 items-center justify-center bg-background-cream border-b border-gray-100 z-40 
+                      animate-slide-down gpu-accelerated">
+        <div className="animate-stagger-1 w-full max-w-md">
+          <SearchInput
+            placeholder="Kategorie suchen…"
+            className="w-full h-[54px] transition-interactive gpu-accelerated"
+            value={searchQuery}
+            onChange={setSearchQuery}
+          />
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {categories.map((category) => (
-            <div
-              key={category.id}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                    {category.name}
-                  </h3>
-                  {category.color && (
-                    <div
-                      className="w-6 h-6 rounded-full border border-gray-300"
-                      style={{ backgroundColor: category.color }}
-                    />
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(category)}
-                    className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                    title="Bearbeiten"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(category)}
-                    className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                    title="Löschen"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              <div className="text-sm text-gray-500">
-                {category.count || 0} Produkte
-              </div>
+      </div>
+
+      {/* Filtros fijos */}
+      <CategoryFilters
+        categories={categories}
+        selectedStatus={filterStatus}
+        onStatusChange={setFilterStatus}
+      />
+
+      {/* Contenedor con scroll */}
+      <FixedHeaderContainer>
+        <div className="p-4 pb-32 lg:p-0 lg:pb-8">
+          {filteredCategories.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-base font-medium">
+                {searchQuery
+                  ? `Keine Kategorien für "${searchQuery}" gefunden`
+                  : "Keine Kategorien verfügbar"}
+              </p>
             </div>
-          ))}
+          ) : (
+            <div className="space-y-3 animate-fade-in-scale">
+              {filteredCategories.map((category, index) => (
+                <div
+                  key={category.id}
+                  className="animate-slide-up-fade gpu-accelerated"
+                  style={{
+                    animationDelay: `${index * 0.05}s`,
+                    animationFillMode: 'both'
+                  }}
+                >
+                  <CategoryCard
+                    category={category}
+                    onEdit={handleEdit}
+                    onToggleVisibility={handleToggleVisibility}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </FixedHeaderContainer>
+
+      {/* Botón fijo para crear categoría */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-background-cream border-t border-gray-200 safe-area-bottom">
+        <FooterAddCategory
+          onAddCategory={handleCreate}
+          isLoading={false}
+          buttonText="Neue Kategorie erstellen"
+        />
+      </div>
 
       {/* Form Modal */}
       {showForm && (

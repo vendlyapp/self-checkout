@@ -49,15 +49,17 @@ class CategoryService {
     }
 
     const insertQuery = `
-      INSERT INTO "ProductCategory" (name, count, color)
-      VALUES ($1, $2, $3)
+      INSERT INTO "ProductCategory" (name, count, color, icon, "isActive")
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING *
     `;
 
     const result = await query(insertQuery, [
       categoryData.name.trim(),
       parseInt(categoryData.count) || 0,
-      categoryData.color?.trim() || null
+      categoryData.color?.trim() || null,
+      categoryData.icon?.trim() || null,
+      categoryData.isActive !== undefined ? categoryData.isActive : true
     ]);
 
     const category = result.rows[0];
@@ -81,8 +83,8 @@ class CategoryService {
     const values = [];
     let paramCount = 0;
 
-    // Campos que se pueden actualizar (icon ya no es necesario)
-    const updatableFields = ['name', 'count', 'color'];
+    // Campos que se pueden actualizar
+    const updatableFields = ['name', 'count', 'color', 'icon', 'isActive'];
 
     for (const field of updatableFields) {
       if (categoryData[field] !== undefined) {
@@ -93,6 +95,8 @@ class CategoryService {
         let value = categoryData[field];
         if (field === 'count') {
           value = parseInt(value);
+        } else if (field === 'isActive') {
+          value = Boolean(value);
         } else if (typeof value === 'string') {
           value = value.trim();
         }

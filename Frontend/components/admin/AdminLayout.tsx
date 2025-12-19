@@ -9,6 +9,7 @@ import ResponsiveFooterNav from '@/components/navigation/ResponsiveFooterNav';
 import { useResponsive, useScrollReset } from '@/hooks';
 import { useCartStore } from '@/lib/stores/cartStore';
 import FooterAddProduct from '@/components/dashboard/products_list/FooterAddProduct';
+import FooterAddCategory from '@/components/dashboard/categories/FooterAddCategory';
 import CartSummary from '@/components/dashboard/charge/CartSummary';
 import FooterContinue from '@/components/dashboard/charge/FooterContinue';
 import HeaderNav from '@/components/navigation/HeaderNav';
@@ -43,6 +44,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   // Determinar si estamos EXACTAMENTE en /products_list (página principal)
   const isProductsListMainPage = pathname === '/products_list';
+  
+  // Determinar si estamos en la ruta de categorías
+  const isCategoriesRoute = pathname?.startsWith('/categories');
+  
+  // Determinar si estamos EXACTAMENTE en /categories (página principal)
+  const isCategoriesMainPage = pathname === '/categories';
+  
+  // Determinar si estamos en la página de agregar categoría
+  const isAddCategoryPage = pathname === '/categories/add';
+  
+  // Determinar si estamos editando una categoría (hay query param id)
+  const isEditingCategory = isAddCategoryPage && typeof window !== 'undefined' && window.location.search.includes('id=');
   
   // Determinar si estamos en modo edición (edit o view)
   const isEditMode = pathname?.includes('/products_list/edit/') || pathname?.includes('/products_list/view/');
@@ -138,6 +151,45 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const buttonText = isEditMode 
     ? "Änderungen speichern" 
     : (isAddProductPage ? "Produkt speichern" : "Neues Produkt");
+  
+  // Manejar el botón de guardar categoría
+  const handleSaveCategory = () => {
+    if (isAddCategoryPage) {
+      // Buscar el formulario y hacer submit
+      const form = document.getElementById('category-form') as HTMLFormElement;
+      if (form) {
+        // Crear y disparar evento de submit
+        const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+        form.dispatchEvent(submitEvent);
+      }
+    }
+  };
+
+  // Detectar si el formulario de categoría es válido y si hay cambios
+  const [isCategoryFormValid, setIsCategoryFormValid] = useState(false);
+  const [hasCategoryChanges, setHasCategoryChanges] = useState(false);
+  
+  useEffect(() => {
+    if (isAddCategoryPage) {
+      const checkFormValidity = () => {
+        if (typeof window !== 'undefined') {
+          const windowWithValid = window as unknown as { 
+            __categoryFormIsValid?: boolean;
+            __categoryFormHasChanges?: boolean;
+          };
+          setIsCategoryFormValid(windowWithValid.__categoryFormIsValid || false);
+          setHasCategoryChanges(windowWithValid.__categoryFormHasChanges || false);
+        }
+      };
+
+      checkFormValidity();
+      const interval = setInterval(checkFormValidity, 500);
+      return () => clearInterval(interval);
+    } else {
+      setIsCategoryFormValid(false);
+      setHasCategoryChanges(false);
+    }
+  }, [isAddCategoryPage, pathname]);
 
   // Navegación inteligente para charge basada en la ruta actual
   const handleChargeContinue = () => {
@@ -294,8 +346,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </div>
         </main>
 
-        {/* Footer móvil - Solo en móvil y NO en rutas de charge */}
-        {isMobile && !isProductsListRoute && !isChargeRoute && (
+        {/* Footer móvil - Solo en móvil y NO en rutas de charge, products_list o categories */}
+        {isMobile && !isProductsListRoute && !isChargeRoute && !isCategoriesRoute && !isAddCategoryPage && (
           <ResponsiveFooterNav />
         )}
 
@@ -306,6 +358,33 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             buttonText={buttonText}
             isAddProductPage={isAddProductPage || isEditMode}
             hasChanges={isEditMode ? hasFormChanges : undefined}
+          />
+        )}
+
+        {/* FooterAddCategory - Solo en móvil y en la ruta de categorías */}
+        {isMobile && isCategoriesMainPage && (
+          <FooterAddCategory
+            onAddCategory={() => {
+              // Disparar evento personalizado para navegar a crear categoría
+              window.dispatchEvent(new CustomEvent('openCategoryForm'));
+            }}
+            buttonText="Neue Kategorie erstellen"
+          />
+        )}
+
+        {/* FooterAddCategory para guardar - Solo en móvil y en la página de agregar categoría */}
+        {isMobile && isAddCategoryPage && (
+          <FooterAddCategory
+            onAddCategory={handleSaveCategory}
+            isLoading={typeof window !== 'undefined' ? ((window as any).__categoryFormIsSubmitting || false) : false}
+            buttonText={
+              isEditingCategory 
+                ? "Änderungen speichern"
+                : "Kategorie speichern"
+            }
+            isFormValid={isCategoryFormValid}
+            isAddCategoryPage={true}
+            hasChanges={hasCategoryChanges}
           />
         )}
 

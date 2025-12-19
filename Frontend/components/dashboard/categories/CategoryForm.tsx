@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { X, Save } from "lucide-react";
 import { useCreateCategory, useUpdateCategory } from "@/hooks/mutations";
 import type { Category, CreateCategoryRequest, UpdateCategoryRequest } from "@/lib/services/categoryService";
+import { getIcon, iconMap } from "../products_list/data/iconMap";
 
 interface CategoryFormProps {
   category?: Category | null;
@@ -11,9 +12,12 @@ interface CategoryFormProps {
   onSuccess: () => void;
 }
 
+const availableIcons = Object.keys(iconMap);
+
 export default function CategoryForm({ category, onClose, onSuccess }: CategoryFormProps) {
   const [name, setName] = useState("");
   const [color, setColor] = useState("#25d076"); // brand-500 color
+  const [icon, setIcon] = useState("Tag"); // Icono por defecto
   const [errors, setErrors] = useState<{ name?: string }>({});
 
   const createCategoryMutation = useCreateCategory();
@@ -23,6 +27,7 @@ export default function CategoryForm({ category, onClose, onSuccess }: CategoryF
     if (category) {
       setName(category.name || "");
       setColor(category.color || "#25d076"); // brand-500 color
+      setIcon(category.icon || "Tag"); // Icono por defecto
     }
   }, [category]);
 
@@ -50,6 +55,7 @@ export default function CategoryForm({ category, onClose, onSuccess }: CategoryF
         const updateData: UpdateCategoryRequest = {
           name: name.trim(),
           color: color.trim() || undefined,
+          icon: icon || undefined,
         };
         await updateCategoryMutation.mutateAsync({
           id: category.id,
@@ -60,6 +66,7 @@ export default function CategoryForm({ category, onClose, onSuccess }: CategoryF
         const createData: CreateCategoryRequest = {
           name: name.trim(),
           color: color.trim() || undefined,
+          icon: icon || undefined,
         };
         await createCategoryMutation.mutateAsync(createData);
       }
@@ -113,6 +120,42 @@ export default function CategoryForm({ category, onClose, onSuccess }: CategoryF
             />
             {errors.name && (
               <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+            )}
+          </div>
+
+          {/* Icon Field */}
+          <div>
+            <label htmlFor="icon" className="block text-sm font-medium text-gray-700 mb-2">
+              Icon (optional)
+            </label>
+            <div className="grid grid-cols-4 gap-2 p-3 border border-gray-300 rounded-lg max-h-48 overflow-y-auto">
+              {availableIcons.map((iconName) => (
+                <button
+                  key={iconName}
+                  type="button"
+                  onClick={() => setIcon(iconName)}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    icon === iconName
+                      ? "border-brand-500 bg-brand-50"
+                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                  }`}
+                  disabled={isLoading}
+                  aria-label={`Icon ${iconName} auswählen`}
+                >
+                  <div className="flex items-center justify-center">
+                    {getIcon(iconName)}
+                  </div>
+                </button>
+              ))}
+            </div>
+            {icon && (
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-sm text-gray-600">Ausgewählt:</span>
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  {getIcon(icon)}
+                </div>
+                <span className="text-sm font-medium text-gray-900">{icon}</span>
+              </div>
             )}
           </div>
 

@@ -10,6 +10,8 @@ export interface Category {
   name: string;
   count?: number;
   color?: string;
+  icon?: string;
+  isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -17,11 +19,15 @@ export interface Category {
 export interface CreateCategoryRequest {
   name: string;
   color?: string;
+  icon?: string;
+  isActive?: boolean;
 }
 
 export interface UpdateCategoryRequest {
   name?: string;
   color?: string;
+  icon?: string;
+  isActive?: boolean;
 }
 
 export interface ApiResponse<T> {
