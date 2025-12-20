@@ -57,6 +57,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   // Determinar si estamos editando una categoría (hay query param id)
   const isEditingCategory = isAddCategoryPage && typeof window !== 'undefined' && window.location.search.includes('id=');
   
+  // Determinar si estamos en la ruta de discounts
+  const isDiscountsRoute = pathname?.startsWith('/store/discounts');
+  
   // Determinar si estamos en modo edición (edit o view)
   const isEditMode = pathname?.includes('/products_list/edit/') || pathname?.includes('/products_list/view/');
   
@@ -99,8 +102,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  // Determinar si mostrar el sidebar
-  const shouldShowSidebar = isDesktop || isTablet;
+  // Determinar si mostrar el sidebar (ocultar en discounts)
+  const shouldShowSidebar = (isDesktop || isTablet) && !isDiscountsRoute;
 
   // No mostrar CartSummary móvil aquí, se maneja en el sidebar
   const shouldShowCartSummary = false;
@@ -278,10 +281,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         "flex flex-col flex-1 overflow-hidden transition-all duration-300",
         isMobile ? "ml-0" : ""
       )}>
-        {/* Header */}
+        {/* Header - Siempre visible (incluye logo) */}
         <ResponsiveHeader
           onMenuToggle={handleSidebarToggle}
-          showMenuButton={isMobile}
+          showMenuButton={isMobile && !isDiscountsRoute}
           isMobile={isMobile}
           isTablet={isTablet}
           isDesktop={isDesktop}
@@ -346,8 +349,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </div>
         </main>
 
-        {/* Footer móvil - Solo en móvil y NO en rutas de charge, products_list o categories */}
-        {isMobile && !isProductsListRoute && !isChargeRoute && !isCategoriesRoute && !isAddCategoryPage && (
+        {/* Footer móvil - Solo en móvil y NO en rutas de charge, products_list, categories o discounts */}
+        {isMobile && !isProductsListRoute && !isChargeRoute && !isCategoriesRoute && !isAddCategoryPage && !isDiscountsRoute && (
           <ResponsiveFooterNav />
         )}
 

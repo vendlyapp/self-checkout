@@ -15,6 +15,7 @@ const ordersRoutes = require("./src/routes/orderRoutes");
 const storeRoutes = require("./src/routes/storeRoutes");
 const superAdminRoutes = require("./src/routes/superAdminRoutes");
 const telemetryRoutes = require("./src/routes/telemetryRoutes");
+const discountCodeRoutes = require("./src/routes/discountCodeRoutes");
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use("/api/orders", ordersRoutes);
 app.use("/api/store", storeRoutes);
 app.use("/api/super-admin", superAdminRoutes);
 app.use("/api/telemetry", telemetryRoutes);
+app.use("/api/discount-codes", discountCodeRoutes);
 
 /**
  * @swagger

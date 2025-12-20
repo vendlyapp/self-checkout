@@ -2,17 +2,28 @@
 
 import { ArrowRight } from 'lucide-react';
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 type ServiceCardProps = {
   icon: React.ReactNode;
   title: string;
   subtitle: string;
+  href?: string;
 };
 
-const ServiceCard = ({ icon, title, subtitle }: ServiceCardProps) => {
+const ServiceCard = ({ icon, title, subtitle, href }: ServiceCardProps) => {
   const [pressed, setPressed] = useState(false);
+  const router = useRouter();
+
+  const handleClick = () => {
+    if (href) {
+      router.push(href);
+    }
+  };
+
   return (
     <button
+      onClick={handleClick}
       className={`group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md p-4 lg:p-5 flex flex-col items-start justify-between min-h-[110px] lg:min-h-[120px] focus-visible:ring-2 focus-visible:ring-brand-500 transition-all duration-200 ${pressed ? 'scale-95' : ''}`}
       tabIndex={0}
       aria-label={title}
