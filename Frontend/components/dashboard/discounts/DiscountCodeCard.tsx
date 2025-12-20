@@ -31,11 +31,12 @@ export default function DiscountCodeCard({
   const getDiscountText = () => {
     if (code.discount_type === 'percentage') {
       // Mostrar porcentaje sin decimales
-      const percentage = Math.round(code.discount_value)
+      const percentage = Math.round(Number(code.discount_value))
       return `${percentage}% Rabatt`
     }
     // Para montos fijos, mostrar con 2 decimales
-    return `CHF ${code.discount_value.toFixed(2)} Rabatt`
+    const fixedAmount = Number(code.discount_value)
+    return `CHF ${fixedAmount.toFixed(2)} Rabatt`
   }
 
   return (
