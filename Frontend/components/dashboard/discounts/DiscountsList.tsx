@@ -18,6 +18,7 @@ export default function DiscountsList() {
   const [editingCode, setEditingCode] = useState<DiscountCode | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [modalContainer, setModalContainer] = useState<HTMLElement | null>(null)
+  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all')
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -93,6 +94,18 @@ export default function DiscountsList() {
     return { total, active, inactive }
   }, [stats, discountCodes])
 
+  // Filtrar códigos según el filtro activo
+  const filteredCodes = useMemo(() => {
+    if (activeFilter === 'all') {
+      return discountCodes
+    }
+    return discountCodes.filter((code) => code.status === activeFilter)
+  }, [discountCodes, activeFilter])
+
+  const handleFilterChange = (filter: 'all' | 'active' | 'inactive') => {
+    setActiveFilter(filter)
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -104,27 +117,42 @@ export default function DiscountsList() {
   return (
     <>
       <div className="space-y-6">
-        {/* Statistics Cards */}
-        <DiscountStatsCards stats={displayStats} />
+        {/* Statistics Cards - Ahora son filtros */}
+        <DiscountStatsCards 
+          stats={displayStats} 
+          activeFilter={activeFilter}
+          onFilterChange={handleFilterChange}
+        />
 
         {/* Codes List */}
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
-              Alle Codes ({displayStats.total})
+              {activeFilter === 'all' && `Alle Codes (${filteredCodes.length})`}
+              {activeFilter === 'active' && `Aktive Codes (${filteredCodes.length})`}
+              {activeFilter === 'inactive' && `Inaktive Codes (${filteredCodes.length})`}
             </h2>
             <button className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
               Archiv
             </button>
           </div>
 
-          {discountCodes.length === 0 ? (
+          {filteredCodes.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">No hay códigos de descuento creados aún</p>
+              <p className="text-gray-500">
+                {discountCodes.length === 0 
+                  ? 'No hay códigos de descuento creados aún'
+                  : activeFilter === 'active'
+                  ? 'No hay códigos activos'
+                  : activeFilter === 'inactive'
+                  ? 'No hay códigos inactivos'
+                  : 'No hay códigos de descuento'
+                }
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
-              {discountCodes.map((code) => (
+              {filteredCodes.map((code) => (
                 <DiscountCodeCard
                   key={code.id}
                   code={code}
