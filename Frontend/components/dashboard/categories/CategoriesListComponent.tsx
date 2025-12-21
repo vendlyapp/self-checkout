@@ -9,7 +9,6 @@ import DeleteCategoryModal from "./DeleteCategoryModal";
 import ToggleCategoryModal from "./ToggleCategoryModal";
 import CategoryCard from "./CategoryCard";
 import CategoryFilters, { CategoryFilterStatus } from "./CategoryFilters";
-import HeaderNav from "@/components/navigation/HeaderNav";
 import { SearchInput } from "@/components/ui/search-input";
 import FixedHeaderContainer from "@/components/dashboard/products_list/FixedHeaderContainer";
 import { Plus } from "lucide-react";
@@ -81,10 +80,6 @@ export default function CategoriesListComponent({
   const handleEdit = (category: Category) => {
     // Navegar a la página de edición con el ID de la categoría
     router.push(`/categories/add?id=${category.id}`);
-  };
-
-  const handleDeleteClick = (category: Category) => {
-    setDeletingCategory(category);
   };
 
   const handleDeleteConfirm = async () => {

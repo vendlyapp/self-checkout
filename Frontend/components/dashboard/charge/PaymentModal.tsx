@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, CheckCircle } from "lucide-react";
 import { ModernSpinner } from "@/components/ui";
 import { formatSwissPriceWithCHF } from "@/lib/utils";

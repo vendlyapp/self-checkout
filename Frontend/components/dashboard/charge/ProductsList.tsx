@@ -2,7 +2,6 @@
 
 import React from "react";
 import ProductCard from "./ProductCard";
-import { useCartStore } from "@/lib/stores/cartStore";
 import { Product } from "../products_list/data/mockProducts";
 
 interface ProductsListProps {
@@ -20,8 +19,6 @@ export default function ProductsList({
   searchQuery = "",
   className = "",
 }: ProductsListProps) {
-  const { cartItems } = useCartStore();
-
   if (loading) {
     return (
       <div className={`p-4 pb-32 lg:p-0 lg:pb-0 ${className}`}>
@@ -54,9 +51,6 @@ export default function ProductsList({
       {/* Mobile: Lista vertical */}
       <div className="lg:hidden space-y-2">
         {products.map((product, index) => {
-          const cartItem = cartItems.find(
-            (item) => item.product.id === product.id
-          );
           return (
             <div
               key={product.id}
@@ -69,7 +63,6 @@ export default function ProductsList({
               <ProductCard
                 product={product}
                 onAddToCart={onAddToCart}
-                initialQuantity={cartItem?.quantity || 0}
               />
             </div>
           );
@@ -79,9 +72,6 @@ export default function ProductsList({
       {/* Desktop/Tablet: Grid compacto */}
       <div className="hidden lg:grid lg:grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-3">
         {products.map((product, index) => {
-          const cartItem = cartItems.find(
-            (item) => item.product.id === product.id
-          );
           return (
             <div
               key={product.id}
@@ -94,7 +84,6 @@ export default function ProductsList({
               <ProductCard
                 product={product}
                 onAddToCart={onAddToCart}
-                initialQuantity={cartItem?.quantity || 0}
               />
             </div>
           );

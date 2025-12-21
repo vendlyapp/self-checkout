@@ -59,7 +59,7 @@ export default function UserCartPage() {
         ) : (
           <>
             <div className="space-y-4 animate-fade-in-scale">
-              {cartItems.map(({ product, quantity }, index) => (
+              {cartItems.map(({ product }, index) => (
                 <div
                   key={product.id}
                   className="animate-slide-up-fade gpu-accelerated"
@@ -71,7 +71,6 @@ export default function UserCartPage() {
                   <ProductCard
                     product={product}
                     onAddToCart={handleUpdateQuantity}
-                    initialQuantity={quantity}
                   />
                 </div>
               ))}

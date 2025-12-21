@@ -9,10 +9,9 @@ import { useCartStore } from '@/lib/stores/cartStore';
 interface ProductCardProps {
   product: Product
   onAddToCart: (product: Product, quantity: number) => void
-  initialQuantity?: number
 }
 
-export default function ProductCard({ product, onAddToCart, initialQuantity = 0 }: ProductCardProps) {
+export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
   const { cartItems } = useCartStore()
   const [showVariantOptions, setShowVariantOptions] = useState(false)
   // Por defecto, null = producto padre seleccionado

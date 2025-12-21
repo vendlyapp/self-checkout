@@ -7,7 +7,6 @@ import {
   X,
   Plus,
   AlertCircle,
-  Loader2,
   Package,
   Percent,
   FolderOpen,

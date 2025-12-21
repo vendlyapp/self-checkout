@@ -52,7 +52,7 @@ export default function CartPage() {
                   </button>
                 </div>
               ) : (
-                cartItems.map(({ product, quantity }, index) => (
+                cartItems.map(({ product }, index) => (
                   <div 
                     className="space-y-2 pl-4 pr-4 animate-slide-up-fade gpu-accelerated" 
                     key={product.id}
@@ -64,7 +64,6 @@ export default function CartPage() {
                     <ProductCard
                       key={product.id}
                       product={product}
-                      initialQuantity={quantity}
                       onAddToCart={(_product, newQuantity) =>
                         handleQuantityChange(product.id, newQuantity)
                       }
@@ -183,7 +182,7 @@ export default function CartPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {cartItems.map(({ product, quantity }, index) => (
+                    {cartItems.map(({ product }, index) => (
                       <div 
                         key={product.id}
                         className="animate-slide-up-fade gpu-accelerated"
@@ -194,7 +193,6 @@ export default function CartPage() {
                       >
                         <ProductCard
                           product={product}
-                          initialQuantity={quantity}
                           onAddToCart={(_product, newQuantity) =>
                             handleQuantityChange(product.id, newQuantity)
                           }

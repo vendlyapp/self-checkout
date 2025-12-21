@@ -58,10 +58,6 @@ export default function CategoriesPage() {
     setShowForm(true);
   };
 
-  const handleDeleteClick = (category: Category) => {
-    setDeletingCategory(category);
-  };
-
   const handleDeleteConfirm = async () => {
     if (!deletingCategory) return;
 

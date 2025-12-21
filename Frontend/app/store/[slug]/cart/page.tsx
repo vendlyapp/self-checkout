@@ -79,12 +79,11 @@ export default function StoreCartPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {cartItems.map(({ product, quantity }) => (
+            {cartItems.map(({ product }) => (
               <ProductCard
                 key={product.id}
                 product={product}
                 onAddToCart={handleUpdateQuantity}
-                initialQuantity={quantity}
               />
             ))}
 

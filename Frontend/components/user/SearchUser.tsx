@@ -17,7 +17,7 @@ export default function SearchUser() {
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const { addToCart, cartItems } = useCartStore();
+  const { addToCart } = useCartStore();
   const { store } = useScannedStoreStore();
 
   // Función para agrupar productos padre-hijo
@@ -74,7 +74,7 @@ export default function SearchUser() {
         
         if (result.success && result.data) {
           // Normalizar productos usando la función de normalización
-          const normalizedProducts = result.data.map((p: Partial<Product>) => normalizeProductData(p));
+          const normalizedProducts = result.data.map((p: unknown) => normalizeProductData(p as Product));
           
           // Agrupar productos con variantes (solo mostrar productos padre)
           const groupedProducts = groupProductsWithVariants(normalizedProducts);
@@ -88,12 +88,6 @@ export default function SearchUser() {
 
     loadProducts();
   }, [store?.slug, groupProductsWithVariants]);
-
-  // Función para obtener la cantidad actual de un producto en el carrito
-  const getCurrentQuantity = useCallback((productId: string) => {
-    const cartItem = cartItems.find((item) => item.product.id === productId);
-    return cartItem ? cartItem.quantity : 0;
-  }, [cartItems]);
 
   // Búsquedas populares
   const popularSearches = [
@@ -259,7 +253,6 @@ export default function SearchUser() {
               ) : searchResults.length > 0 ? (
                 <div className="space-y-3 animate-fade-in-scale">
                   {searchResults.map((product, index) => {
-                    const currentQuantity = getCurrentQuantity(product.id);
                     return (
                       <div
                         key={product.id}
@@ -272,7 +265,6 @@ export default function SearchUser() {
                         <ProductCard
                           product={product}
                           onAddToCart={handleAddToCart}
-                          initialQuantity={currentQuantity}
                         />
                       </div>
                     );

@@ -1,13 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import HeaderNav from '@/components/navigation/HeaderNav';
 import CategoryFormPage from '@/components/dashboard/categories/CategoryFormPage';
 import { useResponsive } from '@/hooks';
 import { useCategories } from '@/hooks/queries/useCategories';
 
-export default function AddCategory() {
+function AddCategoryContent() {
   const { } = useResponsive();
   const searchParams = useSearchParams();
   const categoryId = searchParams.get('id');
@@ -55,6 +55,18 @@ export default function AddCategory() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AddCategory() {
+  return (
+    <Suspense fallback={
+      <div className="w-full h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-500"></div>
+      </div>
+    }>
+      <AddCategoryContent />
+    </Suspense>
   );
 }
 

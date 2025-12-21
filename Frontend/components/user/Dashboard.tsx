@@ -68,7 +68,7 @@ const DashboardUser = () => {
       
       if (result.success && result.data) {
         // Normalizar productos usando la función de normalización
-        const normalizedProducts = result.data.map((p: Partial<Product>) => normalizeProductData(p));
+        const normalizedProducts = result.data.map((p: unknown) => normalizeProductData(p as Product));
         
         // Agrupar productos con variantes (solo mostrar productos padre)
         const groupedProducts = groupProductsWithVariants(normalizedProducts);

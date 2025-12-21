@@ -19,6 +19,15 @@ import { useProductsList } from '@/components/dashboard/products_list/ProductsLi
 import LoadingProductsModal from '@/components/dashboard/home/LoadingProductsModal';
 import { useLoadingProductsModal } from '@/lib/contexts/LoadingProductsModalContext';
 
+// Extender Window interface para propiedades personalizadas
+declare global {
+  interface Window {
+    __categoryFormIsValid?: boolean;
+    __categoryFormIsSubmitting?: boolean;
+    __categoryFormHasChanges?: boolean;
+  }
+}
+
 interface AdminLayoutProps {
   children: ReactNode;
 }
@@ -176,12 +185,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     if (isAddCategoryPage) {
       const checkFormValidity = () => {
         if (typeof window !== 'undefined') {
-          const windowWithValid = window as unknown as { 
-            __categoryFormIsValid?: boolean;
-            __categoryFormHasChanges?: boolean;
-          };
-          setIsCategoryFormValid(windowWithValid.__categoryFormIsValid || false);
-          setHasCategoryChanges(windowWithValid.__categoryFormHasChanges || false);
+          setIsCategoryFormValid(window.__categoryFormIsValid || false);
+          setHasCategoryChanges(window.__categoryFormHasChanges || false);
         }
       };
 
@@ -379,7 +384,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {isMobile && isAddCategoryPage && (
           <FooterAddCategory
             onAddCategory={handleSaveCategory}
-            isLoading={typeof window !== 'undefined' ? ((window as any).__categoryFormIsSubmitting || false) : false}
+            isLoading={typeof window !== 'undefined' ? (window.__categoryFormIsSubmitting || false) : false}
             buttonText={
               isEditingCategory 
                 ? "Änderungen speichern"

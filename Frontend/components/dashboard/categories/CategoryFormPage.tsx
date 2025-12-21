@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Palette, X, CheckCircle, Loader2 } from "lucide-react";
+import { Plus, X, CheckCircle, Loader2 } from "lucide-react";
 import { useCreateCategory, useUpdateCategory } from "@/hooks/mutations";
 import { useQueryClient } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
@@ -12,6 +12,15 @@ import { getIcon, iconMap } from "../products_list/data/iconMap";
 interface CategoryFormPageProps {
   isDesktop?: boolean;
   category?: Category | null; // Para modo edición
+}
+
+// Extender Window interface para propiedades personalizadas
+declare global {
+  interface Window {
+    __categoryFormIsValid?: boolean;
+    __categoryFormIsSubmitting?: boolean;
+    __categoryFormHasChanges?: boolean;
+  }
 }
 
 const availableIcons = Object.keys(iconMap);
@@ -206,15 +215,15 @@ export default function CategoryFormPage({
   // Exponer función de submit y estado de validación para que AdminLayout pueda acceder
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      (window as any).__categoryFormIsValid = category ? hasChanges && isFormValid : isFormValid;
-      (window as any).__categoryFormIsSubmitting = isSubmitting;
-      (window as any).__categoryFormHasChanges = category ? hasChanges : false;
+      window.__categoryFormIsValid = category ? hasChanges && isFormValid : isFormValid;
+      window.__categoryFormIsSubmitting = isSubmitting;
+      window.__categoryFormHasChanges = category ? hasChanges : false;
     }
     return () => {
       if (typeof window !== 'undefined') {
-        delete (window as any).__categoryFormIsValid;
-        delete (window as any).__categoryFormIsSubmitting;
-        delete (window as any).__categoryFormHasChanges;
+        delete window.__categoryFormIsValid;
+        delete window.__categoryFormIsSubmitting;
+        delete window.__categoryFormHasChanges;
       }
     };
   }, [isFormValid, isSubmitting, hasChanges, category]);

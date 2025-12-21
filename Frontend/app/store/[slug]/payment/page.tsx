@@ -13,7 +13,6 @@ export default function StorePaymentPage() {
   const slug = params.slug as string;
   const { store, setStore } = useScannedStoreStore();
   const { setCurrentStore } = useCartStore();
-  const hasLoadedRef = useRef(false);
   const previousSlugRef = useRef<string | null>(null);
 
   // Cargar información de la tienda solo una vez cuando el slug cambia
@@ -67,7 +66,7 @@ export default function StorePaymentPage() {
     return () => {
       isMounted = false;
     };
-  }, [slug, store?.slug, setStore, setCurrentStore]); // Incluir store.slug para verificar si cambió
+  }, [slug, store?.slug, setStore, setCurrentStore]);
 
   return (
     <>

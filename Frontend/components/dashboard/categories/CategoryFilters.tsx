@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { FilterSlider, FilterOption } from '@/components/Sliders/SliderFIlter'
 
 export type CategoryFilterStatus = 'all' | 'active' | 'inactive'
