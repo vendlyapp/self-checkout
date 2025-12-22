@@ -4,12 +4,10 @@ import { useState } from 'react'
 import PaymentMethodCard from './PaymentMethodCard'
 import PaymentMethodSettings from './PaymentMethodSettings'
 import DeactivatePaymentMethodModal from './DeactivatePaymentMethodModal'
+import ConfigurePaymentMethodModal, { PaymentMethodConfig } from './ConfigurePaymentMethodModal'
 import { 
-  CreditCard, 
   QrCode, 
-  Coins,
-  Smartphone,
-  ShoppingBag
+  Coins
 } from 'lucide-react'
 
 export interface PaymentMethod {
@@ -29,6 +27,15 @@ const PaymentMethodsPage = () => {
     method: null,
   })
   const [isDeactivating, setIsDeactivating] = useState(false)
+
+  const [configureModal, setConfigureModal] = useState<{
+    isOpen: boolean
+    method: PaymentMethod | null
+  }>({
+    isOpen: false,
+    method: null,
+  })
+  const [isConfiguring, setIsConfiguring] = useState(false)
 
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([
     {
@@ -153,6 +160,39 @@ const PaymentMethodsPage = () => {
     setDeactivateModal({ isOpen: false, method: null })
   }
 
+  const handleConfigure = (method: PaymentMethod) => {
+    setConfigureModal({ isOpen: true, method })
+  }
+
+  const handleSaveConfiguration = async (config: PaymentMethodConfig) => {
+    if (!configureModal.method) return
+
+    setIsConfiguring(true)
+    
+    // Simular delay de API
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    // Aquí puedes usar la configuración para guardar en el backend
+    // Por ahora solo marcamos como configurado
+    console.log('Guardando configuración:', config)
+
+    // Actualizar el método como configurado
+    setPaymentMethods(prev =>
+      prev.map(method =>
+        method.id === configureModal.method!.id
+          ? { ...method, isConfigured: true }
+          : method
+      )
+    )
+
+    setIsConfiguring(false)
+    setConfigureModal({ isOpen: false, method: null })
+  }
+
+  const handleCancelConfiguration = () => {
+    setConfigureModal({ isOpen: false, method: null })
+  }
+
   const activeMethods = paymentMethods.filter(method => method.isActive)
   const inactiveMethods = paymentMethods.filter(method => !method.isActive)
 
@@ -209,17 +249,29 @@ const PaymentMethodsPage = () => {
 
         {/* Zahlungsarten Einstellungen Section */}
         <div className="animate-slide-down">
-          <PaymentMethodSettings paymentMethods={paymentMethods} />
+          <PaymentMethodSettings 
+            paymentMethods={paymentMethods} 
+            onConfigure={handleConfigure}
+          />
         </div>
       </div>
 
-      {/* Modal de confirmación */}
+      {/* Modal de confirmación de desactivación */}
       <DeactivatePaymentMethodModal
         isOpen={deactivateModal.isOpen}
         method={deactivateModal.method}
         onConfirm={handleConfirmDeactivate}
         onCancel={handleCancelDeactivate}
         isLoading={isDeactivating}
+      />
+
+      {/* Modal de configuración */}
+      <ConfigurePaymentMethodModal
+        isOpen={configureModal.isOpen}
+        method={configureModal.method}
+        onSave={handleSaveConfiguration}
+        onCancel={handleCancelConfiguration}
+        isLoading={isConfiguring}
       />
     </>
   )
