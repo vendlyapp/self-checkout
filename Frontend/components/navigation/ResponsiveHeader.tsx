@@ -160,6 +160,7 @@ export default function ResponsiveHeader({
                 width={100}
                 height={100}
                 priority
+                style={{ width: 'auto', height: 'auto' }}
               />
             </Link>
 
@@ -301,6 +302,7 @@ export default function ResponsiveHeader({
                   width={32}
                   height={32}
                   priority
+                  style={{ width: 'auto', height: 'auto' }}
                 />
                 <div className="flex flex-col">
                   <span className="font-semibold text-gray-900 text-base">

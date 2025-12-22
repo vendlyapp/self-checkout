@@ -16,9 +16,12 @@ const pool = new Pool({
   // Reducir conexiones máximas para Supabase (especialmente si usa pooler)
   max: process.env.NODE_ENV === 'production' ? 10 : 5, // Menos conexiones para evitar límites
   idleTimeoutMillis: 20000, // Reducir tiempo idle para liberar conexiones más rápido
-  connectionTimeoutMillis: 10000,
+  connectionTimeoutMillis: 30000, // Aumentado a 30 segundos para evitar timeouts intermitentes
   // Configuraciones adicionales para mejor manejo de errores
   allowExitOnIdle: false,
+  // Keep-alive para mantener conexiones vivas
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000,
   // NOTA: No modificamos la configuración de tipos aquí
   // El manejo de prepared statements se hace en la función query() usando pg-format
 });
@@ -68,18 +71,54 @@ if (!poolErrorHandlerRegistered) {
   });
 }
 
-// Función para probar la conexión
-async function testConnection() {
-  try {
-    const client = await pool.connect();
-    const result = await client.query('SELECT NOW()');
-    client.release();
-    console.log('✅ Conexión a Supabase establecida:', result.rows[0].now);
-    return true;
-  } catch (error) {
-    console.error('❌ Error de conexión:', error.message);
-    return false;
+// Función para probar la conexión con reintentos
+async function testConnection(maxRetries = 3, retryDelay = 2000) {
+  let lastError;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      if (attempt > 0) {
+        console.log(`🔄 Reintentando conexión (intento ${attempt + 1}/${maxRetries + 1})...`);
+        // Backoff exponencial: 2s, 4s, 8s
+        await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
+      }
+      
+      const client = await pool.connect();
+      const result = await client.query('SELECT NOW()');
+      client.release();
+      console.log('✅ Conexión a Supabase establecida:', result.rows[0].now);
+      return true;
+    } catch (error) {
+      lastError = error;
+      const errorMsg = error.message || 'Error desconocido';
+      const errorCode = error.code || 'N/A';
+      
+      if (attempt < maxRetries) {
+        console.warn(`⚠️ Error de conexión (intento ${attempt + 1}/${maxRetries + 1}):`, errorMsg);
+        console.warn(`   Código: ${errorCode}`);
+        console.warn(`   Reintentando en ${retryDelay * (attempt + 1)}ms...`);
+      } else {
+        console.error('❌ Error de conexión después de todos los reintentos:', errorMsg);
+        console.error('   Código:', errorCode);
+        
+        // Mensajes de ayuda según el tipo de error
+        if (errorCode === 'ETIMEDOUT' || errorMsg.includes('timeout')) {
+          console.error('\n💡 Posibles soluciones:');
+          console.error('   1. Verifica que tu proyecto de Supabase esté activo');
+          console.error('   2. Verifica tu conexión a internet');
+          console.error('   3. Si usas pooler (puerto 6543), intenta cambiar a conexión directa (puerto 5432)');
+          console.error('   4. Verifica que no haya problemas de firewall/proxy');
+        } else if (errorCode === 'XX000' || errorCode === '57P01') {
+          console.error('\n💡 Posibles soluciones:');
+          console.error('   1. Supabase puede estar limitando conexiones');
+          console.error('   2. Verifica que no haya múltiples instancias del servidor corriendo');
+          console.error('   3. Reduce el número de conexiones máximas en el pool');
+        }
+      }
+    }
   }
+  
+  return false;
 }
 
 // Función para ejecutar consultas con manejo robusto de errores y reintentos
@@ -173,9 +212,18 @@ async function query(text, params = [], retries = 1) {
       }
       
       // Si es un error de conexión y tenemos reintentos, esperar un poco y reintentar
-      if ((error.code === 'XX000' || error.code === '57P01' || error.code === 'ECONNREFUSED') && attempt < retries) {
-        console.warn(`⚠️ Error de conexión (intento ${attempt + 1}/${retries + 1}), reintentando en 500ms...`);
-        await new Promise(resolve => setTimeout(resolve, 500)); // Esperar 500ms antes de reintentar
+      const isConnectionError = error.code === 'XX000' || 
+                                error.code === '57P01' || 
+                                error.code === 'ECONNREFUSED' ||
+                                error.code === 'ETIMEDOUT' ||
+                                error.message?.includes('timeout') ||
+                                error.message?.includes('Connection terminated');
+      
+      if (isConnectionError && attempt < retries) {
+        // Backoff exponencial: 500ms, 1000ms, 2000ms
+        const delay = 500 * Math.pow(2, attempt);
+        console.warn(`⚠️ Error de conexión (intento ${attempt + 1}/${retries + 1}), reintentando en ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
         continue; // Reintentar
       }
       

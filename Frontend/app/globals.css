@@ -512,6 +512,15 @@
     }
   }
 
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
   @keyframes shimmer {
     0% {
       background-position: -1000px 0;
@@ -1664,6 +1673,10 @@
 
   .animate-fade-in-scale {
     animation: fade-in-scale var(--transition-normal) forwards;
+  }
+
+  .animate-fade-in {
+    animation: fade-in var(--transition-normal) forwards;
   }
 
   .animate-slide-up-fade {

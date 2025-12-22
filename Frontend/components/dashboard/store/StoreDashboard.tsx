@@ -30,7 +30,7 @@ const services = [
     icon: <CreditCard className="w-6 h-6" />,
     title: "Zahlungsarten",
     subtitle: "verwalten",
-    href: "#",
+    href: "/store/payment-methods",
   },
 ];
 

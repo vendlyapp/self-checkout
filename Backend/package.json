@@ -17,6 +17,8 @@
     "verify:production": "node scripts/verify_production.js",
     "db:setup": "node scripts/setup_database.js",
     "db:check": "node scripts/setup_database.js --check",
+    "db:test": "node scripts/check-connection.js",
+    "db:diagnose": "node scripts/diagnose-db-connection.js",
     "db:migrate": "node scripts/run_migration.js",
     "db:seed": "node scripts/seed_realistic_products.js",
     "db:clean": "node scripts/clean_database.js",

@@ -59,6 +59,7 @@ export default function HeaderUser({ isDarkMode = false }: HeaderUserProps) {
                 height={50}
                 priority
                 className="transition-interactive"
+                style={{ width: 'auto', height: 'auto' }}
               />
             </Link>
           </div>

@@ -168,6 +168,7 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
             width={40}
             height={40}
             priority
+            style={{ width: 'auto', height: 'auto' }}
           />
           <div>
             <span className="font-bold text-gray-900 text-lg">Self-Checkout</span>

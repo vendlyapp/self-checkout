@@ -139,7 +139,21 @@ const makeRequest = async <T>(
       };
     }
     
-    console.error('Error en la llamada al backend:', error);
+    // Solo loggear errores de conexión si no son cancelaciones
+    if (error instanceof Error) {
+      // Verificar si es un error de conexión (backend no disponible)
+      if (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION_REFUSED') || error.message.includes('NetworkError')) {
+        // No loggear en producción para evitar spam en consola
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Backend no disponible. Asegúrate de que el servidor esté corriendo en el puerto 5000.');
+        }
+        return {
+          success: false,
+          error: 'Backend no disponible',
+        };
+      }
+      console.error('Error en la llamada al backend:', error);
+    }
     
     return {
       success: false,

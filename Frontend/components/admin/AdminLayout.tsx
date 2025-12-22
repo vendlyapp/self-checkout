@@ -69,6 +69,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   // Determinar si estamos en la ruta de discounts
   const isDiscountsRoute = pathname?.startsWith('/store/discounts');
   
+  // Determinar si estamos en la ruta de payment-methods
+  const isPaymentMethodsRoute = pathname?.startsWith('/store/payment-methods');
+  
+  // Rutas que ocultan el navbar/sidebar
+  const isStoreSubRoute = isDiscountsRoute || isPaymentMethodsRoute;
+  
   // Determinar si estamos en modo edición (edit o view)
   const isEditMode = pathname?.includes('/products_list/edit/') || pathname?.includes('/products_list/view/');
   
@@ -111,8 +117,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  // Determinar si mostrar el sidebar (ocultar en discounts)
-  const shouldShowSidebar = (isDesktop || isTablet) && !isDiscountsRoute;
+  // Determinar si mostrar el sidebar (ocultar en discounts y payment-methods)
+  const shouldShowSidebar = (isDesktop || isTablet) && !isStoreSubRoute;
 
   // No mostrar CartSummary móvil aquí, se maneja en el sidebar
   const shouldShowCartSummary = false;
@@ -289,7 +295,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {/* Header - Siempre visible (incluye logo) */}
         <ResponsiveHeader
           onMenuToggle={handleSidebarToggle}
-          showMenuButton={isMobile && !isDiscountsRoute}
+          showMenuButton={isMobile && !isStoreSubRoute}
           isMobile={isMobile}
           isTablet={isTablet}
           isDesktop={isDesktop}
@@ -354,8 +360,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </div>
         </main>
 
-        {/* Footer móvil - Solo en móvil y NO en rutas de charge, products_list, categories o discounts */}
-        {isMobile && !isProductsListRoute && !isChargeRoute && !isCategoriesRoute && !isAddCategoryPage && !isDiscountsRoute && (
+        {/* Footer móvil - Solo en móvil y NO en rutas de charge, products_list, categories, discounts o payment-methods */}
+        {isMobile && !isProductsListRoute && !isChargeRoute && !isCategoriesRoute && !isAddCategoryPage && !isStoreSubRoute && (
           <ResponsiveFooterNav />
         )}
 

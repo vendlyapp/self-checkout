@@ -75,7 +75,16 @@ export type ApiConfig = typeof API_CONFIG;
 
 // Función helper para construir URLs completas
 export const buildApiUrl = (endpoint: string, params?: Record<string, string | number>): string => {
-  let url = `${API_CONFIG.BASE_URL}${endpoint}`;
+  // Asegurar que BASE_URL tenga protocolo
+  let baseUrl = API_CONFIG.BASE_URL;
+  if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+    baseUrl = `http://${baseUrl}`;
+  }
+  
+  // Asegurar que endpoint comience con /
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  
+  let url = `${baseUrl}${normalizedEndpoint}`;
   
   if (params) {
     const searchParams = new URLSearchParams();
