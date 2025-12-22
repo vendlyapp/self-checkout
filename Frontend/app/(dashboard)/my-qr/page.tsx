@@ -15,6 +15,12 @@ export default function MyQRPage() {
   const [storeName, setStoreName] = useState('')
   const [storeLogo, setStoreLogo] = useState('')
 
+  // Función para truncar texto largo
+  const truncateText = (text: string, maxLength: number = 50) => {
+    if (!text || text.length <= maxLength) return text
+    return text.substring(0, maxLength) + '...'
+  }
+
   // Sincronizar estado local con datos del store cuando cambian
   useEffect(() => {
     if (store) {
@@ -225,9 +231,11 @@ export default function MyQRPage() {
                   URL
                 </label>
                 <div className="flex items-center gap-2">
-                  <p className="text-xs text-gray-600 font-mono bg-gray-50 px-3 py-2 rounded-lg flex-1 break-all">
-                    {store.slug}
-                  </p>
+                  <div className="flex-1 min-w-0 overflow-hidden">
+                    <p className="text-xs text-gray-600 font-mono bg-gray-50 px-3 py-2 rounded-lg truncate" title={getStoreUrl()}>
+                      {truncateText(getStoreUrl(), 40)}
+                    </p>
+                  </div>
                   <button
                     onClick={copyStoreUrl}
                     className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
@@ -251,8 +259,8 @@ export default function MyQRPage() {
                     className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm"
                   />
                 ) : (
-                  <p className="text-sm text-gray-600">
-                    {store.logo || 'Kein Logo'}
+                  <p className="text-sm text-gray-600 truncate">
+                    {truncateText(store.logo || 'Kein Logo', 50)}
                   </p>
                 )}
               </div>
@@ -289,8 +297,8 @@ export default function MyQRPage() {
           {/* Link público */}
           <div className="bg-white rounded-2xl shadow-lg p-6 animate-stagger-4 animate-fade-in-scale">
             <h2 className="text-lg font-bold text-gray-900 mb-4 transition-interactive">Öffentlicher Link</h2>
-            <div className="bg-gray-50 rounded-xl p-3 font-mono text-xs break-all mb-3" suppressHydrationWarning>
-              {getStoreUrl()}
+            <div className="bg-gray-50 rounded-xl p-3 font-mono text-xs truncate mb-3" title={getStoreUrl()} suppressHydrationWarning>
+              {truncateText(getStoreUrl(), 50)}
             </div>
             <p className="text-xs text-gray-500">
               Kunden können diesen Link besuchen
@@ -378,12 +386,14 @@ export default function MyQRPage() {
                     Slug (URL)
                   </label>
                   <div className="flex items-center gap-2">
-                    <p className="text-gray-600 font-mono bg-gray-50 px-4 py-2 rounded-lg flex-1 text-sm">
-                      {store.slug}
-                    </p>
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <p className="text-gray-600 font-mono bg-gray-50 px-4 py-2 rounded-lg text-sm truncate" title={getStoreUrl()}>
+                        {truncateText(getStoreUrl(), 50)}
+                      </p>
+                    </div>
                     <button
                       onClick={copyStoreUrl}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
                       title="URL kopieren"
                     >
                       <Copy className="w-5 h-5 text-gray-600" />
@@ -404,8 +414,8 @@ export default function MyQRPage() {
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                     />
                   ) : (
-                    <p className="text-gray-600">
-                      {store.logo || 'Kein Logo'}
+                    <p className="text-gray-600 truncate" title={store.logo || 'Kein Logo'}>
+                      {truncateText(store.logo || 'Kein Logo', 60)}
                     </p>
                   )}
                 </div>
@@ -507,8 +517,8 @@ export default function MyQRPage() {
                 Kopieren
               </button>
             </div>
-            <div className="bg-gray-50 rounded-xl p-4 font-mono text-sm break-all" suppressHydrationWarning>
-              {getStoreUrl()}
+            <div className="bg-gray-50 rounded-xl p-4 font-mono text-sm truncate" title={getStoreUrl()} suppressHydrationWarning>
+              {truncateText(getStoreUrl(), 60)}
             </div>
             <p className="text-sm text-gray-500 mt-3">
               Kunden können diesen Link besuchen, um Ihre Produkte anzuzeigen
