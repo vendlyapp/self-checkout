@@ -496,7 +496,9 @@ export default function MobileForm(props: SharedFormProps) {
                       />
                       {variants.length > 1 && (
                         <button
-                          onClick={() => removeVariant(index)}
+                          onClick={async () => {
+                            await removeVariant(index);
+                          }}
                           className="w-8 h-8 bg-[#FD3F37] text-white rounded-full flex items-center justify-center hover:bg-[#FD3F37]/80 transition-colors"
                         >
                           <X className="w-5 h-5" />

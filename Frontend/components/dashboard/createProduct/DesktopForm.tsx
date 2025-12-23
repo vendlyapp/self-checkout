@@ -487,7 +487,9 @@ export default function DesktopForm(props: SharedFormProps) {
                         />
                         {variants.length > 1 && (
                           <button
-                            onClick={() => removeVariant(index)}
+                            onClick={async () => {
+                              await removeVariant(index);
+                            }}
                             className="w-10 h-10 bg-[#FD3F37] text-white rounded-full flex items-center justify-center hover:bg-[#FD3F37]/80 transition-colors"
                           >
                             <X className="w-5 h-5" />

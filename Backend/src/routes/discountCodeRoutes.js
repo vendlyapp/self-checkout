@@ -41,6 +41,23 @@ router.get('/stats', discountCodeController.getStats);
 
 /**
  * @swagger
+ * /api/discount-codes/archived:
+ *   get:
+ *     summary: Obtener todos los códigos archivados
+ *     description: Retorna todos los códigos de descuento archivados del usuario autenticado
+ *     tags: [DiscountCodes]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Códigos archivados obtenidos exitosamente
+ *       401:
+ *         description: No autenticado
+ */
+router.get('/archived', discountCodeController.getArchivedDiscountCodes);
+
+/**
+ * @swagger
  * /api/discount-codes/validate/{code}:
  *   get:
  *     summary: Validar un código de descuento

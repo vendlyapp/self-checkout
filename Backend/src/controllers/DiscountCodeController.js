@@ -191,15 +191,15 @@ class DiscountCodeController {
   }
 
   /**
-   * Elimina un código de descuento
+   * Archiva un código de descuento (en lugar de eliminarlo)
    * @route DELETE /api/discount-codes/:id
    * @param {Object} req - Request object de Express
    * @param {Object} req.params - Parámetros de ruta
-   * @param {string} req.params.id - ID del código a eliminar
+   * @param {string} req.params.id - ID del código a archivar
    * @param {Object} req.user - Usuario autenticado
    * @param {string} req.user.id - ID del usuario
    * @param {Object} res - Response object de Express
-   * @returns {Promise<void>} JSON confirmando la eliminación
+   * @returns {Promise<void>} JSON confirmando el archivado
    */
   async deleteDiscountCode(req, res) {
     try {
@@ -213,7 +213,7 @@ class DiscountCodeController {
         });
       }
 
-      const result = await discountCodeService.delete(id, ownerId);
+      const result = await discountCodeService.archive(id, ownerId);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       const statusCode = error.message.includes('no encontrado')
@@ -221,6 +221,35 @@ class DiscountCodeController {
         : HTTP_STATUS.INTERNAL_SERVER_ERROR;
 
       res.status(statusCode).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Obtiene todos los códigos archivados del usuario
+   * @route GET /api/discount-codes/archived
+   * @param {Object} req - Request object de Express
+   * @param {Object} req.user - Usuario autenticado
+   * @param {string} req.user.id - ID del usuario
+   * @param {Object} res - Response object de Express
+   * @returns {Promise<void>} JSON con lista de códigos archivados
+   */
+  async getArchivedDiscountCodes(req, res) {
+    try {
+      const ownerId = req.user?.userId || req.user?.id;
+      if (!ownerId) {
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+          success: false,
+          error: 'Usuario no autenticado'
+        });
+      }
+
+      const result = await discountCodeService.findArchived(ownerId);
+      res.status(HTTP_STATUS.OK).json(result);
+    } catch (error) {
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         error: error.message
       });

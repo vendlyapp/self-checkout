@@ -87,7 +87,8 @@ export default function SearchUser() {
     };
 
     loadProducts();
-  }, [store?.slug, groupProductsWithVariants]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store?.slug]); // Solo ejecutar cuando cambie la tienda
 
   // Búsquedas populares
   const popularSearches = [

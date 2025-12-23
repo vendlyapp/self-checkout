@@ -4,9 +4,14 @@ class DiscountCodeService {
   /**
    * Calcula el estado de un código basado en fechas y redemptions
    * @param {Object} code - Código de descuento
-   * @returns {string} - 'active' o 'inactive'
+   * @returns {string} - 'active', 'inactive' o 'archived'
    */
   calculateStatus(code) {
+    // Si está archivado, retornar archived
+    if (code.archived) {
+      return 'archived';
+    }
+    
     const now = new Date();
     const validFrom = new Date(code.valid_from);
     const validUntil = code.valid_until ? new Date(code.valid_until) : null;
@@ -35,11 +40,12 @@ class DiscountCodeService {
   }
 
   /**
-   * Obtiene todos los códigos de descuento de un usuario
+   * Obtiene todos los códigos de descuento de un usuario (excluyendo archivados)
    * @param {string} ownerId - ID del propietario
+   * @param {boolean} includeArchived - Si incluir archivados
    * @returns {Promise<Object>}
    */
-  async findAll(ownerId) {
+  async findAll(ownerId, includeArchived = false) {
     const selectQuery = `
       SELECT 
         id,
@@ -51,10 +57,49 @@ class DiscountCodeService {
         valid_from,
         valid_until,
         is_active,
+        archived,
         created_at,
         updated_at
       FROM "DiscountCode"
-      WHERE owner_id = $1
+      WHERE owner_id = $1 ${includeArchived ? '' : 'AND archived = false'}
+      ORDER BY created_at DESC
+    `;
+
+    const result = await query(selectQuery, [ownerId]);
+    const codes = result.rows.map(code => ({
+      ...code,
+      status: this.calculateStatus(code)
+    }));
+
+    return {
+      success: true,
+      data: codes,
+      count: codes.length
+    };
+  }
+
+  /**
+   * Obtiene todos los códigos archivados de un usuario
+   * @param {string} ownerId - ID del propietario
+   * @returns {Promise<Object>}
+   */
+  async findArchived(ownerId) {
+    const selectQuery = `
+      SELECT 
+        id,
+        code,
+        discount_type,
+        discount_value,
+        max_redemptions,
+        current_redemptions,
+        valid_from,
+        valid_until,
+        is_active,
+        archived,
+        created_at,
+        updated_at
+      FROM "DiscountCode"
+      WHERE owner_id = $1 AND archived = true
       ORDER BY created_at DESC
     `;
 
@@ -79,7 +124,20 @@ class DiscountCodeService {
    */
   async findById(id, ownerId) {
     const selectQuery = `
-      SELECT * FROM "DiscountCode"
+      SELECT 
+        id,
+        code,
+        discount_type,
+        discount_value,
+        max_redemptions,
+        current_redemptions,
+        valid_from,
+        valid_until,
+        is_active,
+        archived,
+        created_at,
+        updated_at
+      FROM "DiscountCode"
       WHERE id = $1 AND owner_id = $2
     `;
     
@@ -106,8 +164,21 @@ class DiscountCodeService {
    */
   async findByCode(code) {
     const selectQuery = `
-      SELECT * FROM "DiscountCode"
-      WHERE code = $1
+      SELECT 
+        id,
+        code,
+        discount_type,
+        discount_value,
+        max_redemptions,
+        current_redemptions,
+        valid_from,
+        valid_until,
+        is_active,
+        archived,
+        created_at,
+        updated_at
+      FROM "DiscountCode"
+      WHERE code = $1 AND archived = false
     `;
     
     const result = await query(selectQuery, [code.toUpperCase()]);
@@ -346,7 +417,38 @@ class DiscountCodeService {
   }
 
   /**
-   * Elimina un código de descuento
+   * Archiva un código de descuento (en lugar de eliminarlo)
+   * @param {string} id - ID del código
+   * @param {string} ownerId - ID del propietario
+   * @returns {Promise<Object>}
+   */
+  async archive(id, ownerId) {
+    const archiveQuery = `
+      UPDATE "DiscountCode"
+      SET archived = true, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1 AND owner_id = $2
+      RETURNING *
+    `;
+
+    const result = await query(archiveQuery, [id, ownerId]);
+
+    if (result.rows.length === 0) {
+      throw new Error('Código de descuento no encontrado');
+    }
+
+    const archivedCode = result.rows[0];
+    return {
+      success: true,
+      data: {
+        ...archivedCode,
+        status: this.calculateStatus(archivedCode)
+      },
+      message: 'Código de descuento archivado exitosamente'
+    };
+  }
+
+  /**
+   * Elimina un código de descuento (solo para casos especiales)
    * @param {string} id - ID del código
    * @param {string} ownerId - ID del propietario
    * @returns {Promise<Object>}
@@ -404,15 +506,16 @@ class DiscountCodeService {
   async getStats(ownerId) {
     const statsQuery = `
       SELECT 
-        COUNT(*) as total,
-        COUNT(*) FILTER (WHERE is_active = true AND 
+        COUNT(*) FILTER (WHERE archived = false) as total,
+        COUNT(*) FILTER (WHERE archived = false AND is_active = true AND 
                          valid_from <= CURRENT_TIMESTAMP AND
                          (valid_until IS NULL OR valid_until >= CURRENT_TIMESTAMP) AND
                          current_redemptions < max_redemptions) as active,
-        COUNT(*) FILTER (WHERE is_active = false OR
+        COUNT(*) FILTER (WHERE archived = false AND (is_active = false OR
                          valid_from > CURRENT_TIMESTAMP OR
                          (valid_until IS NOT NULL AND valid_until < CURRENT_TIMESTAMP) OR
-                         current_redemptions >= max_redemptions) as inactive
+                         current_redemptions >= max_redemptions)) as inactive,
+        COUNT(*) FILTER (WHERE archived = true) as archived
       FROM "DiscountCode"
       WHERE owner_id = $1
     `;
@@ -425,7 +528,8 @@ class DiscountCodeService {
       data: {
         total: parseInt(stats.total) || 0,
         active: parseInt(stats.active) || 0,
-        inactive: parseInt(stats.inactive) || 0
+        inactive: parseInt(stats.inactive) || 0,
+        archived: parseInt(stats.archived) || 0
       }
     };
   }

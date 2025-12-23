@@ -66,18 +66,32 @@ export const useUpdateDiscountCode = () => {
   });
 };
 
-export const useDeleteDiscountCode = () => {
+export const useArchiveDiscountCode = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => discountCodeService.delete(id),
+    mutationFn: (id: string) => discountCodeService.archive(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['discountCodes'] });
+      queryClient.invalidateQueries({ queryKey: ['archivedDiscountCodes'] });
       queryClient.invalidateQueries({ queryKey: ['discountCodeStats'] });
-      toast.success('Código de descuento eliminado exitosamente');
+      toast.success('Código de descuento archivado exitosamente');
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Error al eliminar el código de descuento');
+      toast.error(error.message || 'Error al archivar el código de descuento');
+    },
+  });
+};
+
+// Mantener useDeleteDiscountCode para compatibilidad (pero ahora archiva)
+export const useDeleteDiscountCode = useArchiveDiscountCode;
+
+export const useArchivedDiscountCodes = () => {
+  return useQuery({
+    queryKey: ['archivedDiscountCodes'],
+    queryFn: async () => {
+      const codes = await discountCodeService.getArchived();
+      return codes;
     },
   });
 };

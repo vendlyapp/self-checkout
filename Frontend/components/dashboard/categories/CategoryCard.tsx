@@ -37,19 +37,22 @@ export default function CategoryCard({
 
   return (
     <div 
-      className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 
-                 transition-interactive gpu-accelerated group
-                 hover:shadow-lg hover:scale-[1.02] hover:border-brand-200"
+      className={`rounded-xl p-4 shadow-sm border transition-interactive gpu-accelerated group
+                 ${isActive 
+                   ? 'bg-white border-gray-100 hover:shadow-lg hover:scale-[1.02] hover:border-brand-200' 
+                   : 'bg-gray-50 border-gray-200 opacity-60'
+                 }`}
     >
       <div className="flex items-center gap-4">
         {/* Icono de la categoría */}
-        <div className="w-16 h-16 rounded-lg flex-shrink-0 bg-gray-100 flex items-center justify-center relative
+        <div className={`w-16 h-16 rounded-lg flex-shrink-0 flex items-center justify-center relative
                         transition-interactive gpu-accelerated
-                        group-hover:scale-110"
-             style={category.color ? { backgroundColor: category.color + '20' } : {}}
+                        ${isActive ? 'group-hover:scale-110 bg-gray-100' : 'bg-gray-200'}`}
+             style={isActive && category.color ? { backgroundColor: category.color + '20' } : {}}
         >
-          <div className="flex items-center justify-center text-gray-600 transition-interactive [&>svg]:w-8 [&>svg]:h-8"
-               style={category.color ? { color: category.color } : {}}
+          <div className={`flex items-center justify-center transition-interactive [&>svg]:w-8 [&>svg]:h-8
+                          ${isActive ? 'text-gray-600' : 'text-gray-400'}`}
+               style={isActive && category.color ? { color: category.color } : {}}
           >
             {categoryIcon}
           </div>
@@ -57,11 +60,12 @@ export default function CategoryCard({
 
         {/* Información de la categoría */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-gray-900 text-[16px] font-semibold leading-tight mb-1 truncate">
+          <h3 className={`text-[16px] font-semibold leading-tight mb-1 truncate
+                         ${isActive ? 'text-gray-900' : 'text-gray-500'}`}>
             {category.name}
           </h3>
           
-          <div className="text-sm text-gray-500">
+          <div className={`text-sm ${isActive ? 'text-gray-500' : 'text-gray-400'}`}>
             {category.count || 0} {category.count === 1 ? 'Produkt' : 'Produkte'}
           </div>
         </div>

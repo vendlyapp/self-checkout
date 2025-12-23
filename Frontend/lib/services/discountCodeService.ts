@@ -10,7 +10,8 @@ export interface DiscountCode {
   valid_from: string;
   valid_until: string | null;
   is_active: boolean;
-  status: 'active' | 'inactive';
+  archived?: boolean;
+  status: 'active' | 'inactive' | 'archived';
   created_at: string;
   updated_at: string;
 }
@@ -39,6 +40,7 @@ export interface DiscountCodeStats {
   total: number;
   active: number;
   inactive: number;
+  archived?: number;
 }
 
 const getAuthHeaders = async () => {
@@ -164,7 +166,26 @@ export const discountCodeService = {
   },
 
   /**
-   * Elimina un código de descuento
+   * Archiva un código de descuento (en lugar de eliminarlo)
+   */
+  async archive(id: string): Promise<DiscountCode> {
+    const headers = await getAuthHeaders();
+    const response = await fetch(buildApiUrl(`/api/discount-codes/${id}`), {
+      method: 'DELETE',
+      headers,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Error al archivar el código de descuento');
+    }
+
+    const result = await response.json();
+    return result.data;
+  },
+
+  /**
+   * Elimina un código de descuento (solo para casos especiales)
    */
   async delete(id: string): Promise<void> {
     const headers = await getAuthHeaders();
@@ -176,6 +197,30 @@ export const discountCodeService = {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Error al eliminar el código de descuento');
+    }
+  },
+
+  /**
+   * Obtiene todos los códigos archivados
+   */
+  async getArchived(): Promise<DiscountCode[]> {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(buildApiUrl('/api/discount-codes/archived'), {
+        method: 'GET',
+        headers,
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || `Error al obtener códigos archivados: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return result.data || [];
+    } catch (error) {
+      console.error('Error en getArchived discount codes:', error);
+      throw error;
     }
   },
 

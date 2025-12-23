@@ -86,7 +86,7 @@ const DashboardUser = () => {
     } finally {
       setLoading(false);
     }
-  }, [store?.slug, groupProductsWithVariants]);
+  }, [store?.slug]); // Removido groupProductsWithVariants de las dependencias
 
   // Manejar búsqueda
   const handleSearch = (query: string) => {
@@ -129,10 +129,11 @@ const DashboardUser = () => {
     router.push('/user/scan');
   };
 
-  // Cargar productos al montar el componente
+  // Cargar productos al montar el componente o cuando cambie la tienda
   useEffect(() => {
     loadInitialProducts();
-  }, [loadInitialProducts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store?.slug]); // Solo ejecutar cuando cambie la tienda
 
   return (
     <div className="flex flex-col h-full bg-background-cream">

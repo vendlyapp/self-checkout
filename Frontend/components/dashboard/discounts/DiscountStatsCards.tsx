@@ -5,6 +5,7 @@ interface DiscountStatsCardsProps {
     total: number
     active: number
     inactive: number
+    archived?: number
   }
   activeFilter: 'all' | 'active' | 'inactive'
   onFilterChange: (filter: 'all' | 'active' | 'inactive') => void

@@ -4,21 +4,23 @@ import { useState, useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import DiscountStatsCards from './DiscountStatsCards'
 import DiscountCodeCard from './DiscountCodeCard'
-import { useDiscountCodes, useDiscountCodeStats, useDeleteDiscountCode, useUpdateDiscountCode } from '@/hooks/queries/useDiscountCodes'
+import { useDiscountCodes, useDiscountCodeStats, useArchiveDiscountCode, useUpdateDiscountCode, useArchivedDiscountCodes } from '@/hooks/queries/useDiscountCodes'
 import { DiscountCode } from './types'
 import DeleteDiscountCodeModal from './DeleteDiscountCodeModal'
 import CreateDiscountModal, { DiscountFormData } from './CreateDiscountModal'
 
 export default function DiscountsList() {
   const { data: discountCodes = [], isLoading } = useDiscountCodes()
+  const { data: archivedCodes = [], isLoading: isLoadingArchived } = useArchivedDiscountCodes()
   const { data: stats } = useDiscountCodeStats()
-  const deleteMutation = useDeleteDiscountCode()
+  const archiveMutation = useArchiveDiscountCode()
   const updateMutation = useUpdateDiscountCode()
-  const [deletingCode, setDeletingCode] = useState<DiscountCode | null>(null)
+  const [archivingCode, setArchivingCode] = useState<DiscountCode | null>(null)
   const [editingCode, setEditingCode] = useState<DiscountCode | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [modalContainer, setModalContainer] = useState<HTMLElement | null>(null)
-  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive' | 'archived'>('all')
+  const [previousFilter, setPreviousFilter] = useState<'all' | 'active' | 'inactive'>('all')
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -68,45 +70,59 @@ export default function DiscountsList() {
     console.log('Create from list:', data)
   }
 
-  const handleDelete = (code: DiscountCode) => {
-    setDeletingCode(code)
+  const handleArchive = (code: DiscountCode) => {
+    setArchivingCode(code)
   }
 
-  const handleConfirmDelete = () => {
-    if (deletingCode) {
-      deleteMutation.mutate(deletingCode.id)
-      setDeletingCode(null)
+  const handleConfirmArchive = () => {
+    if (archivingCode) {
+      archiveMutation.mutate(archivingCode.id)
+      setArchivingCode(null)
     }
   }
 
-  const handleCancelDelete = () => {
-    setDeletingCode(null)
+  const handleCancelArchive = () => {
+    setArchivingCode(null)
   }
+
 
   const displayStats = useMemo(() => {
     if (stats) {
-      return stats
+      return {
+        total: stats.total,
+        active: stats.active,
+        inactive: stats.inactive,
+        archived: stats.archived || 0
+      }
     }
-    // Fallback si no hay stats
-    const total = discountCodes.length
-    const active = discountCodes.filter((code) => code.status === 'active').length
-    const inactive = discountCodes.filter((code) => code.status === 'inactive').length
-    return { total, active, inactive }
+    // Fallback si no hay stats (excluyendo archivados)
+    const nonArchivedCodes = discountCodes.filter((code) => code.status !== 'archived' && !code.archived)
+    const total = nonArchivedCodes.length
+    const active = nonArchivedCodes.filter((code) => code.status === 'active').length
+    const inactive = nonArchivedCodes.filter((code) => code.status === 'inactive').length
+    return { total, active, inactive, archived: 0 }
   }, [stats, discountCodes])
 
   // Filtrar códigos según el filtro activo
   const filteredCodes = useMemo(() => {
-    if (activeFilter === 'all') {
-      return discountCodes
+    if (activeFilter === 'archived') {
+      return archivedCodes
     }
-    return discountCodes.filter((code) => code.status === activeFilter)
-  }, [discountCodes, activeFilter])
+    
+    // Para otros filtros, excluir archivados
+    const nonArchivedCodes = discountCodes.filter((code) => code.status !== 'archived' && !code.archived)
+    
+    if (activeFilter === 'all') {
+      return nonArchivedCodes
+    }
+    return nonArchivedCodes.filter((code) => code.status === activeFilter)
+  }, [discountCodes, archivedCodes, activeFilter])
 
-  const handleFilterChange = (filter: 'all' | 'active' | 'inactive') => {
+  const handleFilterChange = (filter: 'all' | 'active' | 'inactive' | 'archived') => {
     setActiveFilter(filter)
   }
 
-  if (isLoading) {
+  if (isLoading || isLoadingArchived) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#25D076]"></div>
@@ -120,8 +136,10 @@ export default function DiscountsList() {
         {/* Statistics Cards - Ahora son filtros */}
         <DiscountStatsCards 
           stats={displayStats} 
-          activeFilter={activeFilter}
-          onFilterChange={handleFilterChange}
+          activeFilter={activeFilter === 'archived' ? 'all' : activeFilter}
+          onFilterChange={(filter) => {
+            setActiveFilter(filter)
+          }}
         />
 
         {/* Codes List */}
@@ -131,8 +149,23 @@ export default function DiscountsList() {
               {activeFilter === 'all' && `Alle Codes (${filteredCodes.length})`}
               {activeFilter === 'active' && `Aktive Codes (${filteredCodes.length})`}
               {activeFilter === 'inactive' && `Inaktive Codes (${filteredCodes.length})`}
+              {activeFilter === 'archived' && `Archivierte Codes (${filteredCodes.length})`}
             </h2>
-            <button className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+            <button
+              onClick={() => {
+                if (activeFilter === 'archived') {
+                  setActiveFilter(previousFilter)
+                } else {
+                  setPreviousFilter(activeFilter)
+                  setActiveFilter('archived')
+                }
+              }}
+              className={`text-sm font-medium transition-colors ${
+                activeFilter === 'archived'
+                  ? 'text-orange-600 hover:text-orange-700 font-semibold'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
               Archiv
             </button>
           </div>
@@ -140,7 +173,9 @@ export default function DiscountsList() {
           {filteredCodes.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500">
-                {discountCodes.length === 0 
+                {activeFilter === 'archived'
+                  ? 'Keine archivierten Codes vorhanden'
+                  : discountCodes.length === 0 
                   ? 'No hay códigos de descuento creados aún'
                   : activeFilter === 'active'
                   ? 'No hay códigos activos'
@@ -157,7 +192,7 @@ export default function DiscountsList() {
                   key={code.id}
                   code={code}
                   onEdit={() => handleEdit(code)}
-                  onDelete={() => handleDelete(code)}
+                  onDelete={() => handleArchive(code)}
                 />
               ))}
             </div>
@@ -165,13 +200,13 @@ export default function DiscountsList() {
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
-      {modalContainer && deletingCode && createPortal(
+      {/* Archive Confirmation Modal */}
+      {modalContainer && archivingCode && createPortal(
         <DeleteDiscountCodeModal
-          code={deletingCode}
-          onConfirm={handleConfirmDelete}
-          onCancel={handleCancelDelete}
-          isDeleting={deleteMutation.isPending}
+          code={archivingCode}
+          onConfirm={handleConfirmArchive}
+          onCancel={handleCancelArchive}
+          isDeleting={archiveMutation.isPending}
         />,
         modalContainer
       )}
@@ -190,4 +225,5 @@ export default function DiscountsList() {
     </>
   )
 }
+
 

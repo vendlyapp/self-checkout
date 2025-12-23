@@ -312,25 +312,33 @@ export default function Form({ isDesktop = false }: FormProps) {
             return product;
           };
 
-          // Crear producto principal (usando el precio del campo productPrice)
-          const mainProductPrice = parseFloat(productPrice);
-          if (isNaN(mainProductPrice) || mainProductPrice <= 0) {
-            throw new Error('El precio principal debe ser válido y mayor a 0');
+          // IMPORTANTE: Cuando hay variantes, el producto principal se crea con los datos de la PRIMERA variante
+          // La primera variante se convierte en el producto principal
+          const firstVariant = validVariants[0];
+          const firstVariantPrice = parseFloat(firstVariant.price);
+          if (isNaN(firstVariantPrice) || firstVariantPrice <= 0) {
+            throw new Error('La primera variante debe tener un precio válido y mayor a 0');
           }
 
+          // Crear producto principal con los datos de la primera variante
+          const mainProductName = firstVariant.name.trim() 
+            ? `${productName} ${firstVariant.name.trim()}` 
+            : productName;
+
           const mainProductData = createProductWithPromotion(
-            productName,
-            mainProductPrice,
-            hasPromotion ? promotionPrice : undefined
+            mainProductName,
+            firstVariantPrice,
+            firstVariant.promotionPrice?.trim() || undefined
           );
 
-          // Crear producto principal
+          // Crear producto principal (que es la primera variante)
           const mainProduct = await createProductMutation.mutateAsync(mainProductData);
           createdProducts.push(mainProduct);
           createdProduct = mainProduct; // Guardar el primero para el modal
 
-          // Crear cada variante como producto independiente
-          for (const variant of validVariants) {
+          // Crear las demás variantes como productos secundarios (a partir de la segunda)
+          for (let i = 1; i < validVariants.length; i++) {
+            const variant = validVariants[i];
             const variantPrice = parseFloat(variant.price);
             if (isNaN(variantPrice) || variantPrice <= 0) {
               console.warn(`Variante "${variant.name}" tiene precio inválido, se omite`);

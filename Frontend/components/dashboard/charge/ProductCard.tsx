@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { Plus, Minus, ChevronDown, Package, Percent } from 'lucide-react'
 import { Product } from '../products_list/data/mockProducts';
 import Image from 'next/image';
@@ -49,7 +50,42 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
 
   // Extraer el nombre de la variante del nombre completo (ej: "Coca Cola 500g" -> "500g")
   const getVariantName = (variant: Product | null): string => {
-    if (!variant) return 'Padre' // Si es null, es el producto padre
+    if (!variant) {
+      // Si es null, es el producto padre - extraer el nombre de la variante del nombre del producto
+      if (!product.name) return (product as Product & { unit?: string }).unit || '1 KG'
+      
+      // Si hay variantes, intentar encontrar el nombre base común
+      if (product.variants && product.variants.length > 0) {
+        const firstVariant = product.variants[0]
+        if (firstVariant.name && product.name) {
+          // Encontrar el prefijo común entre el producto padre y la primera variante
+          // Ambos deberían tener el formato "Nombre Base Variante"
+          const productWords = product.name.split(' ')
+          const variantWords = firstVariant.name.split(' ')
+          
+          // Encontrar palabras comunes al inicio (el nombre base del producto)
+          let commonPrefix = ''
+          const minLength = Math.min(productWords.length, variantWords.length)
+          for (let i = 0; i < minLength; i++) {
+            if (productWords[i] === variantWords[i]) {
+              commonPrefix += (commonPrefix ? ' ' : '') + productWords[i]
+            } else {
+              break
+            }
+          }
+          
+          // Si encontramos un prefijo común, extraer la parte de la variante del producto padre
+          if (commonPrefix && product.name.startsWith(commonPrefix)) {
+            const variantPart = product.name.substring(commonPrefix.length).trim()
+            return variantPart || (product as Product & { unit?: string }).unit || '1 KG'
+          }
+        }
+      }
+      
+      // Si no se puede extraer, usar el nombre completo o la unidad
+      return product.name || (product as Product & { unit?: string }).unit || '1 KG'
+    }
+    
     if (!product.name || !variant.name) return variant.name || ''
     // Si el nombre de la variante contiene el nombre del producto, extraer solo la parte de la variante
     if (variant.name.startsWith(product.name)) {
@@ -64,24 +100,58 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
     }
   }
 
-  // Cerrar dropdown al hacer click fuera - usar dos refs para mobile y desktop
+  // Refs para los botones y dropdowns
+  const buttonRefMobile = useRef<HTMLButtonElement>(null)
+  const buttonRefDesktop = useRef<HTMLButtonElement>(null)
   const dropdownRefMobile = useRef<HTMLDivElement>(null)
   const dropdownRefDesktop = useRef<HTMLDivElement>(null)
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detectar si es móvil
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Calcular posición del dropdown cuando se abre
+  useEffect(() => {
+    if (showVariantOptions) {
+      const button = isMobile ? buttonRefMobile.current : buttonRefDesktop.current
+      if (button) {
+        const rect = button.getBoundingClientRect()
+        // Ancho mínimo más grande para mejor legibilidad
+        const minWidth = isMobile ? 200 : 220
+        const calculatedWidth = Math.max(rect.width, minWidth)
+        setDropdownPosition({
+          top: isMobile ? rect.bottom + window.scrollY + 8 : rect.top + window.scrollY - 8,
+          left: rect.left + window.scrollX,
+          width: calculatedWidth
+        })
+      }
+    } else {
+      setDropdownPosition(null)
+    }
+  }, [showVariantOptions, isMobile])
   
+  // Cerrar dropdown al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node
-      const isInsideMobile = dropdownRefMobile.current?.contains(target)
-      const isInsideDesktop = dropdownRefDesktop.current?.contains(target)
+      const isInsideButton = buttonRefMobile.current?.contains(target) || buttonRefDesktop.current?.contains(target)
+      const isInsideDropdown = dropdownRefMobile.current?.contains(target) || dropdownRefDesktop.current?.contains(target)
       
-      // Solo cerrar si el click está fuera de ambos dropdowns
-      if (!isInsideMobile && !isInsideDesktop) {
+      // Solo cerrar si el click está fuera del botón y del dropdown
+      if (!isInsideButton && !isInsideDropdown) {
         setShowVariantOptions(false)
       }
     }
 
     if (showVariantOptions) {
-      // Usar un pequeño delay para evitar que se cierre inmediatamente
       const timeoutId = setTimeout(() => {
         document.addEventListener('mousedown', handleClickOutside, true)
       }, 10)
@@ -143,7 +213,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
             {product.image ? (
             <Image
               src={product.image}
-              alt={product.name}
+              alt={currentProduct.name}
               width={100}
               height={100}
               className="rounded-[16px] lg:rounded-2xl object-cover w-full h-full"
@@ -157,10 +227,10 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
 
         {/* Contenido principal */}
         <div className="flex-1 flex flex-col justify-between min-h-[80px] lg:min-h-[100px]">
-          {/* Título del producto - siempre mostrar nombre del padre */}
+          {/* Título del producto - mostrar nombre de la variante seleccionada */}
           <div className="pr-20 lg:pr-24 mb-4">
             <h3 className="text-gray-900 text-[16px] lg:text-[18px] leading-[1.3] w-[90%] tracking-tight font-semibold">
-              {product.name}
+              {currentProduct.name}
             </h3>
           </div>
 
@@ -168,8 +238,9 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           <div className="flex items-center justify-between h-[25px] lg:h-[30px]">
             {/* Selector de variantes - si tiene variantes */}
             {product.variants && product.variants.length > 0 ? (
-              <div className="relative bg-[#F7F4F1] rounded-lg text-center min-w-[70px] h-[30px] lg:min-w-[80px] lg:h-[35px] flex items-center justify-center px-2" ref={dropdownRefMobile}>
+              <div className="relative bg-[#F7F4F1] rounded-lg text-center min-w-[70px] h-[30px] lg:min-w-[80px] lg:h-[35px] flex items-center justify-center px-2">
                 <button
+                  ref={buttonRefMobile}
                   onClick={(e) => {
                     e.stopPropagation()
                     setShowVariantOptions(!showVariantOptions)
@@ -179,61 +250,10 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
                   <span className="font-medium truncate">
                     {selectedVariantId 
                       ? getVariantName(product.variants.find(v => v.id === selectedVariantId) || null)
-                      : 'Padre'}
+                      : getVariantName(null)}
                   </span>
                   <ChevronDown className={`w-4 h-4 lg:w-5 lg:h-5 text-gray-500 transition-transform flex-shrink-0 ${showVariantOptions ? 'rotate-180' : ''}`} />
                 </button>
-                {showVariantOptions && (
-                  <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-20 min-w-[120px] max-w-[150px] lg:min-w-[140px] lg:max-w-[180px] max-h-48 overflow-y-auto">
-                    {/* Opción del producto padre */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        setSelectedVariantId(null)
-                        setShowVariantOptions(false)
-                      }}
-                      className={`block w-full text-left px-4 py-2 text-[14px] lg:text-[15px] font-medium transition-colors ${
-                        selectedVariantId === null 
-                          ? 'bg-brand-50 text-brand-700' 
-                          : 'text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="truncate">Padre</span>
-                        <span className="text-gray-500 font-medium text-xs flex-shrink-0">
-                          CHF {formatPrice(product.price)}
-                        </span>
-                      </div>
-                    </button>
-                    {/* Variantes */}
-                    {product.variants.map((variant) => (
-                      <button
-                        key={variant.id}
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          setSelectedVariantId(variant.id)
-                          setShowVariantOptions(false)
-                        }}
-                        className={`block w-full text-left px-4 py-2 text-[14px] lg:text-[15px] font-medium transition-colors ${
-                          selectedVariantId === variant.id 
-                            ? 'bg-brand-50 text-brand-700' 
-                            : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="truncate">{getVariantName(variant)}</span>
-                          <span className="text-gray-500 font-medium text-xs flex-shrink-0">
-                            CHF {formatPrice(variant.price)}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             ) : (
               <div className="text-[14px] lg:text-[15px] text-gray-500">
@@ -276,7 +296,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           {product.image ? (
             <Image
               src={product.image}
-              alt={product.name}
+              alt={currentProduct.name}
               width={100}
               height={100}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -290,10 +310,10 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
 
         {/* Contenido - derecha */}
         <div className="flex-1 flex flex-col justify-between min-h-[100px]">
-          {/* Título del producto - siempre mostrar nombre del padre */}
+          {/* Título del producto - mostrar nombre de la variante seleccionada */}
           <div className="pr-20">
             <h3 className="text-gray-900 text-[15px] leading-tight tracking-tight font-semibold line-clamp-2">
-              {product.name}
+              {currentProduct.name}
             </h3>
           </div>
 
@@ -301,8 +321,9 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           <div className="flex items-center justify-between">
             {/* Selector de variantes - si tiene variantes */}
             {product.variants && product.variants.length > 0 ? (
-              <div className="relative bg-gray-50 rounded-lg min-w-[75px] h-[32px] flex items-center justify-center px-2" ref={dropdownRefDesktop}>
+              <div className="relative bg-gray-50 rounded-lg min-w-[75px] h-[32px] flex items-center justify-center px-2">
                 <button
+                  ref={buttonRefDesktop}
                   onClick={(e) => {
                     e.stopPropagation()
                     setShowVariantOptions(!showVariantOptions)
@@ -312,61 +333,10 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
                   <span className="font-medium truncate">
                     {selectedVariantId 
                       ? getVariantName(product.variants.find(v => v.id === selectedVariantId) || null)
-                      : 'Padre'}
+                      : getVariantName(null)}
                   </span>
                   <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform flex-shrink-0 ${showVariantOptions ? 'rotate-180' : ''}`} />
                 </button>
-                {showVariantOptions && (
-                  <div className="absolute bottom-full left-0 mb-2 bg-white rounded-lg shadow-xl border border-gray-100 py-1 z-20 min-w-[140px] max-w-[180px] max-h-48 overflow-y-auto">
-                    {/* Opción del producto padre */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        setSelectedVariantId(null)
-                        setShowVariantOptions(false)
-                      }}
-                      className={`block w-full text-left px-3 py-2 text-[14px] font-medium transition-colors ${
-                        selectedVariantId === null 
-                          ? 'bg-brand-50 text-brand-700' 
-                          : 'text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="truncate">Padre</span>
-                        <span className="text-gray-500 font-medium text-xs flex-shrink-0">
-                          CHF {formatPrice(product.price)}
-                        </span>
-                      </div>
-                    </button>
-                    {/* Variantes */}
-                    {product.variants.map((variant) => (
-                      <button
-                        key={variant.id}
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          setSelectedVariantId(variant.id)
-                          setShowVariantOptions(false)
-                        }}
-                        className={`block w-full text-left px-3 py-2 text-[14px] font-medium transition-colors ${
-                          selectedVariantId === variant.id 
-                            ? 'bg-brand-50 text-brand-700' 
-                            : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="truncate">{getVariantName(variant)}</span>
-                          <span className="text-gray-500 font-medium text-xs flex-shrink-0">
-                            CHF {formatPrice(variant.price)}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             ) : (
               <div className="text-[14px] text-gray-500 font-medium">
@@ -401,6 +371,70 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           </div>
         </div>
       </div>
+
+      {/* Dropdown renderizado con Portal para que esté por encima de todo */}
+      {showVariantOptions && dropdownPosition && typeof window !== 'undefined' && createPortal(
+        <div
+          ref={isMobile ? dropdownRefMobile : dropdownRefDesktop}
+          className="fixed bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-[99999] min-w-[200px] max-w-[280px] lg:min-w-[220px] lg:max-w-[300px] max-h-48 overflow-y-auto"
+          style={{
+            top: isMobile ? `${dropdownPosition.top}px` : `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            width: `${dropdownPosition.width}px`,
+            zIndex: 99999
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Opción del producto padre */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              setSelectedVariantId(null)
+              setShowVariantOptions(false)
+            }}
+            className={`block w-full text-left px-4 py-2 text-[14px] lg:text-[15px] font-medium transition-colors ${
+              selectedVariantId === null 
+                ? 'bg-brand-50 text-brand-700' 
+                : 'text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex-1 break-words">{getVariantName(null)}</span>
+              <span className="text-gray-500 font-medium text-sm flex-shrink-0">
+                CHF {formatPrice(product.price)}
+              </span>
+            </div>
+          </button>
+          {/* Variantes */}
+          {product.variants && product.variants.map((variant) => (
+            <button
+              key={variant.id}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setSelectedVariantId(variant.id)
+                setShowVariantOptions(false)
+              }}
+              className={`block w-full text-left px-4 py-2 text-[14px] lg:text-[15px] font-medium transition-colors ${
+                selectedVariantId === variant.id 
+                  ? 'bg-brand-50 text-brand-700' 
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex-1 break-words">{getVariantName(variant)}</span>
+                <span className="text-gray-500 font-medium text-sm flex-shrink-0">
+                  CHF {formatPrice(variant.price)}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
     </div>
   )
 }

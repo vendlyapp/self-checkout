@@ -49,7 +49,7 @@ export default function DeleteDiscountCodeModal({
       <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl p-6 animate-scale-in gpu-accelerated mx-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Código löschen</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Code archivieren</h2>
           <button
             onClick={onCancel}
             disabled={isDeleting}
@@ -63,10 +63,10 @@ export default function DeleteDiscountCodeModal({
         {/* Content */}
         <div className="mb-6">
           <p className="text-gray-700 mb-2">
-            Sind Sie sicher, dass Sie den Code <span className="font-semibold">{code.code}</span> löschen möchten?
+            Sind Sie sicher, dass Sie den Code <span className="font-semibold">{code.code}</span> archivieren möchten?
           </p>
           <p className="text-sm text-gray-500">
-            Diese Aktion kann nicht rückgängig gemacht werden.
+            Der Code wird archiviert und kann später in der Archivansicht wiederhergestellt werden.
           </p>
         </div>
 
@@ -82,15 +82,15 @@ export default function DeleteDiscountCodeModal({
           <button
             onClick={onConfirm}
             disabled={isDeleting}
-            className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 active:bg-red-800 transition-all touch-manipulation active:scale-95 disabled:opacity-50 flex items-center justify-center"
+            className="flex-1 px-4 py-3 bg-orange-600 text-white rounded-xl font-medium hover:bg-orange-700 active:bg-orange-800 transition-all touch-manipulation active:scale-95 disabled:opacity-50 flex items-center justify-center"
           >
             {isDeleting ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Löschen...
+                Archivieren...
               </>
             ) : (
-              'Löschen'
+              'Archivieren'
             )}
           </button>
         </div>

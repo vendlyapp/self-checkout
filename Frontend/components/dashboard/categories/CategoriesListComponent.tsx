@@ -11,7 +11,7 @@ import CategoryCard from "./CategoryCard";
 import CategoryFilters, { CategoryFilterStatus } from "./CategoryFilters";
 import { SearchInput } from "@/components/ui/search-input";
 import FixedHeaderContainer from "@/components/dashboard/products_list/FixedHeaderContainer";
-import { Plus } from "lucide-react";
+import { Plus, ArrowLeftIcon } from "lucide-react";
 
 interface CategoriesListComponentProps {
   isStandalone?: boolean; // Si es true, es la página dedicada. Si es false, es parte del dashboard
@@ -172,6 +172,7 @@ export default function CategoriesListComponent({
               aria-label="Zurück"
               tabIndex={0}
             >
+              <ArrowLeftIcon className="w-6 h-6 transition-interactive" />
               <span className="text-[18px] font-semibold transition-interactive">Alle Kategorien</span>
             </button>
             <div className="flex items-center gap-2">

@@ -1,5 +1,6 @@
 // Product Form Types
 export interface ProductVariant {
+  id?: string; // ID de la variante si ya existe en la base de datos (solo en modo edición)
   name: string;
   price: string;
   promotionPrice: string;
@@ -78,7 +79,7 @@ export interface SharedFormProps {
 
   // Funciones de variantes
   addVariant: () => void;
-  removeVariant: (index: number) => void;
+  removeVariant: (index: number) => void | Promise<void>; // Puede ser async en modo edición
   updateVariant: (index: number, field: keyof ProductVariant, value: string) => void;
   handleToggleVariants: (newValue: boolean) => void;
 
