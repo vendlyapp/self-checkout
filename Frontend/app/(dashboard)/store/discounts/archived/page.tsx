@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import HeaderNav from '@/components/navigation/HeaderNav'
 import DiscountCodeCard from '@/components/dashboard/discounts/DiscountCodeCard'
 import { useResponsive } from '@/hooks'

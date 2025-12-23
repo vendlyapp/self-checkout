@@ -81,7 +81,7 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
       return product.variants.find(v => v.id === selectedVariantId) || product
     }
     return product // Producto padre por defecto
-  }, [selectedVariantId, product.variants, product])
+  }, [selectedVariantId, product])
 
   // Extraer el nombre de la variante del nombre completo (ej: "Coca Cola 500g" -> "500g")
   const getVariantName = (variant: Product | null): string => {

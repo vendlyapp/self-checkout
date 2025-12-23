@@ -118,9 +118,6 @@ export default function DiscountsList() {
     return nonArchivedCodes.filter((code) => code.status === activeFilter)
   }, [discountCodes, archivedCodes, activeFilter])
 
-  const handleFilterChange = (filter: 'all' | 'active' | 'inactive' | 'archived') => {
-    setActiveFilter(filter)
-  }
 
   if (isLoading || isLoadingArchived) {
     return (

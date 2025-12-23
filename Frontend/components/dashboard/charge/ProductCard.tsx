@@ -31,7 +31,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
     } else {
       setSelectedVariantId(null)
     }
-  }, [product.variants, product.id])
+  }, [product.variants, product.id, selectedVariantId])
 
   // Obtener el producto/variante actualmente seleccionado para el precio
   // Si selectedVariantId es null, usar el producto padre
@@ -40,7 +40,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
       return product.variants.find(v => v.id === selectedVariantId) || product
     }
     return product // Producto padre por defecto
-  }, [selectedVariantId, product.variants, product])
+  }, [selectedVariantId, product])
 
   // Calcular cantidad inicial basándose en la variante seleccionada
   const currentQuantity = useMemo(() => {

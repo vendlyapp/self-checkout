@@ -566,8 +566,8 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
         console.log('[EditForm] Producto principal actualizado exitosamente:', updatedProduct);
 
         // SEGUNDO: Si hay variantes, actualizar/crear variantes (igual que en la creación)
-        let variantErrors: string[] = [];
-        let variantSuccesses: string[] = [];
+        const variantErrors: string[] = [];
+        const variantSuccesses: string[] = [];
 
         if (hasVariants && variants.length > 0) {
           // Filtrar solo las variantes válidas
@@ -790,11 +790,15 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
     hasPromotion,
     productId,
     updateProductMutation,
+    createProductMutation,
+    deleteProductMutation,
     isActive,
     productImages,
     promotionDuration,
     customEndDate,
     productCategoryId,
+    variants,
+    allProducts,
   ]);
 
   const handleModalClose = useCallback(() => {
