@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Package, Search, Store, RefreshCw, DollarSign, CheckCircle, XCircle, TrendingUp, Tag, ShoppingBag, ArrowLeft, BarChart3 } from 'lucide-react';
+import { Package, Search, Store, RefreshCw, DollarSign, CheckCircle, XCircle, TrendingUp, Tag, ShoppingBag, ArrowLeft, BarChart3, Edit } from 'lucide-react';
 import { useSuperAdminStore } from '@/lib/stores/superAdminStore';
 import type { Product } from '@/lib/services/superAdminService';
+import EditProductModal from '@/components/admin/stores/EditProductModal';
+import { ProductService } from '@/lib/services/productService';
 import {
   Table,
   TableBody,
@@ -29,6 +31,8 @@ export default function SuperAdminProducts() {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStore, setSelectedStore] = useState<StoreInfo | null>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -83,6 +87,29 @@ export default function SuperAdminProducts() {
   };
 
   const storeStats = selectedStore ? getStoreStats(selectedStore.products) : null;
+
+  const handleEditProduct = async (product: Product) => {
+    // Fetch full product details
+    try {
+      console.log('[SuperAdminProducts] Opening edit modal for product:', product.id);
+      setEditingProduct(product); // Set product immediately so modal can open
+      setIsEditModalOpen(true);
+      
+      const response = await ProductService.getProductById(product.id);
+      if (response.success && response.data) {
+        // Update with full product details
+        setEditingProduct(response.data as any);
+      } else {
+        console.error('[SuperAdminProducts] Failed to load product details');
+      }
+    } catch (err) {
+      console.error('[SuperAdminProducts] Error loading product:', err);
+    }
+  };
+
+  const handleEditSuccess = () => {
+    refreshAll(); // Refresh products list
+  };
 
   if (productsLoading && products.length === 0) {
     return (
@@ -260,17 +287,23 @@ export default function SuperAdminProducts() {
                     >
                       Stock
                     </TableCell>
-                    <TableCell
-                      isHeader
-                      className="py-3 px-6 font-medium text-gray-700 dark:text-gray-300 text-start text-xs"
-                    >
-                      Estado
-                    </TableCell>
-                  </TableRow>
-                </TableHeader>
-                <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
-                  {filteredProducts.map((product) => (
-                    <TableRow key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30">
+                      <TableCell
+                        isHeader
+                        className="py-3 px-6 font-medium text-gray-700 dark:text-gray-300 text-start text-xs"
+                      >
+                        Estado
+                      </TableCell>
+                      <TableCell
+                        isHeader
+                        className="py-3 px-6 font-medium text-gray-700 dark:text-gray-300 text-start text-xs"
+                      >
+                        Acciones
+                      </TableCell>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
+                    {filteredProducts.map((product) => (
+                      <TableRow key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30">
                       <TableCell className="py-4 px-6">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-brand-50 dark:bg-brand-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -334,6 +367,19 @@ export default function SuperAdminProducts() {
                           </span>
                         )}
                       </TableCell>
+                      <TableCell className="py-4 px-6">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditProduct(product);
+                          }}
+                          className="flex items-center gap-2 px-3 py-1.5 text-sm text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-500/10 rounded-lg transition-colors border border-brand-200 dark:border-brand-500/30"
+                          title="Editar producto"
+                        >
+                          <Edit className="w-4 h-4" />
+                          <span>Editar</span>
+                        </button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -341,6 +387,17 @@ export default function SuperAdminProducts() {
             </div>
           </div>
         )}
+
+        {/* Edit Product Modal */}
+        <EditProductModal
+          product={editingProduct as any}
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditingProduct(null);
+          }}
+          onSuccess={handleEditSuccess}
+        />
       </div>
     );
   }
@@ -438,6 +495,17 @@ export default function SuperAdminProducts() {
           })}
         </div>
       )}
+
+      {/* Edit Product Modal */}
+      <EditProductModal
+        product={editingProduct as any}
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingProduct(null);
+        }}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   );
 }

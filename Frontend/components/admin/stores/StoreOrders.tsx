@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShoppingCart, Search, Calendar, DollarSign, Package, CheckCircle2, Clock, XCircle, RefreshCw } from 'lucide-react';
-import { type Store } from '@/lib/services/superAdminService';
+import { SuperAdminService, type Store } from '@/lib/services/superAdminService';
 import { formatSwissPrice } from '@/lib/utils';
 
 interface Order {
@@ -37,12 +37,22 @@ export default function StoreOrders({ storeId, store }: StoreOrdersProps) {
     try {
       setLoading(true);
       setError(null);
-      // For now, we'll use mock data since the endpoint might not exist yet
-      const mockOrders = generateMockOrders(store);
-      setOrders(mockOrders);
+      
+      const response = await SuperAdminService.getStoreOrders(storeId, {
+        limit: 100
+      });
+
+      if (response.success && response.data) {
+        const ordersData = Array.isArray(response.data) ? response.data : [];
+        setOrders(ordersData as Order[]);
+      } else {
+        throw new Error(response.error || 'Error al cargar las órdenes');
+      }
     } catch (error) {
       console.error('Error fetching orders:', error);
       setError(error instanceof Error ? error.message : 'Error al cargar las órdenes');
+      // Fallback to empty array on error
+      setOrders([]);
     } finally {
       setLoading(false);
     }

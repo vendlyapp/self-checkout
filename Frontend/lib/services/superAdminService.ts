@@ -223,9 +223,69 @@ export class SuperAdminService {
   /**
    * Get store analytics data
    */
-  static async getStoreAnalytics(storeId: string): Promise<ApiResponse<Record<string, unknown>>> {
-    const url = `${API_CONFIG.BASE_URL}/api/super-admin/stores/${storeId}/analytics`;
-    return makeRequest<Record<string, unknown>>(url);
+  static async getStoreAnalytics(storeId: string, params?: {
+    period?: 'day' | 'week' | 'month' | 'year';
+  }): Promise<ApiResponse<{
+    salesData: Array<{
+      day: string;
+      date: string;
+      currentWeek: number;
+      lastWeek: number;
+    }>;
+    revenueData: Array<{
+      date: string;
+      revenue: number;
+    }>;
+    categoriesData: Array<{
+      name: string;
+      value: number;
+      count: number;
+      revenue: number;
+    }>;
+    paymentMethodsData: Array<{
+      name: string;
+      value: number;
+      amount: number;
+      color: string;
+    }>;
+    ordersData: Array<{
+      status: string;
+      count: number;
+      color: string;
+    }>;
+    totalSales: number;
+    salesGrowth: number;
+    orderStats?: {
+      totalOrders: number;
+      totalRevenue: number;
+      averageOrderValue: number;
+      recentOrders: number;
+      uniqueCustomers: number;
+    } | null;
+    productStats?: {
+      total: number;
+      active: number;
+      lowStock: number;
+      outOfStock: number;
+      inactive: number;
+    } | null;
+    categoryStats?: {
+      total: number;
+      withProducts: number;
+      withoutProducts: number;
+    } | null;
+    discountStats?: {
+      total: number;
+      active: number;
+      inactive: number;
+      archived: number;
+    } | null;
+  }>> {
+    const queryParams = new URLSearchParams();
+    if (params?.period) queryParams.append('period', params.period);
+
+    const url = `${API_CONFIG.BASE_URL}/api/super-admin/stores/${storeId}/analytics${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    return makeRequest(url);
   }
 
   /**
@@ -234,12 +294,33 @@ export class SuperAdminService {
   static async getStoreOrders(storeId: string, params?: {
     limit?: number;
     offset?: number;
-  }): Promise<ApiResponse<unknown[]>> {
+  }): Promise<ApiResponse<Array<{
+    id: string;
+    orderNumber: string;
+    userId: string;
+    total: number;
+    status: string;
+    createdAt: string;
+    customerName: string;
+    customerEmail: string;
+    itemsCount: number;
+    paymentMethod: string;
+  }> & { count?: number; total?: number }>> {
     const queryParams = new URLSearchParams();
     if (params?.limit) queryParams.append('limit', params.limit.toString());
     if (params?.offset) queryParams.append('offset', params.offset.toString());
 
     const url = `${API_CONFIG.BASE_URL}/api/super-admin/stores/${storeId}/orders${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-    return makeRequest<unknown[]>(url);
+    return makeRequest(url);
+  }
+
+  /**
+   * Regenerate QR code for a store
+   */
+  static async regenerateQRCode(storeId: string): Promise<ApiResponse<Store>> {
+    const url = `${API_CONFIG.BASE_URL}/api/super-admin/stores/${storeId}/regenerate-qr`;
+    return makeRequest<Store>(url, {
+      method: 'POST',
+    });
   }
 }

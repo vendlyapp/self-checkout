@@ -81,6 +81,45 @@ router.get('/stores/:id', superAdminController.getStoreDetails);
 
 /**
  * @swagger
+ * /api/super-admin/stores/{id}:
+ *   put:
+ *     summary: Actualizar información de una tienda
+ *     tags: [Super Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               slug:
+ *                 type: string
+ *               logo:
+ *                 type: string
+ *               isActive:
+ *                 type: boolean
+ *               isOpen:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Tienda actualizada exitosamente
+ *       404:
+ *         description: Tienda no encontrada
+ */
+router.put('/stores/:id', superAdminController.updateStore);
+
+/**
+ * @swagger
  * /api/super-admin/stores/{id}/status:
  *   put:
  *     summary: Activar o desactivar una tienda
@@ -111,6 +150,86 @@ router.get('/stores/:id', superAdminController.getStoreDetails);
  *         description: Tienda no encontrada
  */
 router.put('/stores/:id/status', superAdminController.toggleStoreStatus);
+
+/**
+ * @swagger
+ * /api/super-admin/stores/{id}/regenerate-qr:
+ *   post:
+ *     summary: Regenerar código QR de una tienda
+ *     tags: [Super Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: QR code regenerado exitosamente
+ *       404:
+ *         description: Tienda no encontrada
+ */
+router.post('/stores/:id/regenerate-qr', superAdminController.regenerateQRCode);
+
+/**
+ * @swagger
+ * /api/super-admin/stores/{id}/analytics:
+ *   get:
+ *     summary: Obtener analytics de una tienda específica
+ *     tags: [Super Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: period
+ *         schema:
+ *           type: string
+ *           enum: [day, week, month, year]
+ *           default: month
+ *     responses:
+ *       200:
+ *         description: Analytics de la tienda
+ *       404:
+ *         description: Tienda no encontrada
+ */
+router.get('/stores/:id/analytics', superAdminController.getStoreAnalytics);
+
+/**
+ * @swagger
+ * /api/super-admin/stores/{id}/orders:
+ *   get:
+ *     summary: Obtener órdenes de una tienda específica
+ *     tags: [Super Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Lista de órdenes de la tienda
+ *       404:
+ *         description: Tienda no encontrada
+ */
+router.get('/stores/:id/orders', superAdminController.getStoreOrders);
 
 /**
  * @swagger

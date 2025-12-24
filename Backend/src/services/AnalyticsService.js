@@ -296,13 +296,13 @@ class AnalyticsService {
         SELECT
           s.id AS "storeId",
           s.name AS "storeName",
-          COUNT(*) AS "activeCustomers"
-        FROM "ActiveSession" a
-        INNER JOIN "Store" s ON s.id = a."storeId"
-        WHERE a.role = 'CUSTOMER'
+          COALESCE(COUNT(a.id), 0) AS "activeCustomers"
+        FROM "Store" s
+        LEFT JOIN "ActiveSession" a ON s.id = a."storeId"::text
+          AND a.role = 'CUSTOMER'
           AND a."lastSeen" >= NOW() - ($1::int || ' minutes')::interval
         GROUP BY s.id, s.name
-        ORDER BY "activeCustomers" DESC
+        ORDER BY "activeCustomers" DESC, s.name ASC
       `,
       [minutes],
     );

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { QrCode, Download, Edit2, Save, Loader2, Copy, Share2 } from 'lucide-react';
+import { QrCode, Download, Edit2, Save, Loader2, Copy, Share2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { SuperAdminService, type Store } from '@/lib/services/superAdminService';
 
@@ -17,6 +17,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const [storeName, setStoreName] = useState('');
   const [storeLogo, setStoreLogo] = useState('');
 
@@ -90,7 +91,9 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
 
   const getStoreUrl = () => {
     if (typeof window === 'undefined') return '';
-    return `${window.location.origin}/store/${storeData?.slug || store?.slug || ''}`;
+    // Use NEXT_PUBLIC_SITE_URL if available (for production), otherwise use current origin
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+    return `${baseUrl}/store/${storeData?.slug || store?.slug || ''}`;
   };
 
   const copyStoreUrl = () => {
@@ -114,6 +117,28 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
       }
     } else {
       copyStoreUrl();
+    }
+  };
+
+  const handleRegenerateQR = async () => {
+    try {
+      setRegenerating(true);
+      const response = await SuperAdminService.regenerateQRCode(storeId);
+
+      if (response.success && response.data) {
+        setStoreData(response.data);
+        toast.success('QR code regenerado exitosamente');
+        if (onUpdate) {
+          onUpdate();
+        }
+      } else {
+        toast.error(response.error || 'Error al regenerar el QR code');
+      }
+    } catch (error) {
+      console.error('Error regenerating QR:', error);
+      toast.error('Error al regenerar el QR code');
+    } finally {
+      setRegenerating(false);
     }
   };
 
@@ -186,6 +211,24 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
                 </button>
               </div>
 
+              <button
+                onClick={handleRegenerateQR}
+                disabled={regenerating}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl transition-colors font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {regenerating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Regenerando...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    Regenerar QR Code
+                  </>
+                )}
+              </button>
+
               <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-xl p-4">
                 <p className="text-sm text-blue-900 dark:text-blue-300 font-medium mb-2">
                   💡 Cómo funciona:
@@ -209,8 +252,8 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
       {/* Store Info Card */}
       <Card className="bg-card rounded-2xl border border-border/50 transition-all duration-200 hover:shadow-md">
         <CardHeader className="px-6 pt-6 pb-4">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="min-w-0 flex-1">
               <CardTitle className="flex items-center gap-2 text-lg lg:text-xl mb-2">
                 Información de la Tienda
               </CardTitle>
@@ -221,7 +264,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
             {!editing && (
               <button
                 onClick={() => setEditing(true)}
-                className="flex items-center gap-2 px-3 py-2 text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-500/10 rounded-lg transition-colors text-sm"
+                className="flex items-center gap-2 px-3 py-2 text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-500/10 rounded-lg transition-colors text-sm flex-shrink-0"
               >
                 <Edit2 className="w-4 h-4" />
                 Editar
@@ -252,9 +295,11 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
                 Slug (URL)
               </label>
               <div className="flex items-center gap-2">
-                <p className="text-xs text-muted-foreground font-mono bg-muted px-3 py-2 rounded-lg flex-1 break-all">
-                  {displayStore.slug}
-                </p>
+                <div className="flex-1 min-w-0 max-w-full">
+                  <p className="text-xs text-muted-foreground font-mono bg-muted px-3 py-2 rounded-lg truncate w-full">
+                    {displayStore.slug}
+                  </p>
+                </div>
                 <button
                   onClick={copyStoreUrl}
                   className="p-2 hover:bg-muted rounded-lg transition-colors flex-shrink-0"
@@ -265,11 +310,11 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-foreground mb-2">
-                Logo URL (opcional)
-              </label>
-              {editing ? (
+            {editing && (
+              <div>
+                <label className="block text-sm font-semibold text-foreground mb-2">
+                  Logo URL (opcional)
+                </label>
                 <input
                   type="text"
                   value={storeLogo}
@@ -277,12 +322,8 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
                   placeholder="https://example.com/logo.png"
                   className="w-full px-4 py-3 border-2 border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-300 bg-background text-foreground placeholder:text-muted-foreground text-sm"
                 />
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  {displayStore.logo || 'Sin logo'}
-                </p>
-              )}
-            </div>
+              </div>
+            )}
 
             {editing && (
               <div className="flex gap-3 pt-4 border-t border-border">
@@ -317,8 +358,8 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
       {/* Public Link Card */}
       <Card className="bg-card rounded-2xl border border-border/50 transition-all duration-200 hover:shadow-md">
         <CardHeader className="px-6 pt-6 pb-4">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="min-w-0 flex-1">
               <CardTitle className="flex items-center gap-2 text-lg lg:text-xl mb-2">
                 Enlace Público
               </CardTitle>
@@ -328,7 +369,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
             </div>
             <button
               onClick={copyStoreUrl}
-              className="flex items-center gap-2 px-3 py-2 text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-500/10 rounded-lg transition-colors text-sm"
+              className="flex items-center gap-2 px-3 py-2 text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-500/10 rounded-lg transition-colors text-sm flex-shrink-0"
             >
               <Copy className="w-4 h-4" />
               Copiar
@@ -336,8 +377,17 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
           </div>
         </CardHeader>
         <CardContent className="px-6 pb-6 pt-4">
-          <div className="bg-muted rounded-xl p-4 font-mono text-xs break-all mb-3" suppressHydrationWarning>
-            {getStoreUrl()}
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex-1 min-w-0 max-w-full bg-muted rounded-xl p-4 font-mono text-xs truncate" suppressHydrationWarning>
+              {getStoreUrl()}
+            </div>
+            <button
+              onClick={copyStoreUrl}
+              className="p-2 hover:bg-muted rounded-lg transition-colors flex-shrink-0"
+              title="Copiar URL completa"
+            >
+              <Copy className="w-4 h-4 text-muted-foreground" />
+            </button>
           </div>
           <p className="text-xs text-muted-foreground">
             Los clientes pueden visitar este enlace para ver los productos de la tienda

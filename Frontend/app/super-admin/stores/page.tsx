@@ -71,11 +71,11 @@ export default function SuperAdminStores() {
   const totalOrders = stores.reduce((sum, s) => sum + (Number(s.orderCount) || 0), 0);
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="space-y-4 md:space-y-6 w-full min-w-0">
       {/* ============================================ */}
       {/* HEADER */}
       {/* ============================================ */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full min-w-0">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white/90">Gestión de Tiendas</h1>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Administra todas las tiendas de la plataforma</p>
@@ -192,13 +192,13 @@ export default function SuperAdminStores() {
                     }`} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-gray-900 dark:text-white/90 truncate">{store.name}</h3>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <h3 className="font-bold text-gray-900 dark:text-white/90 truncate flex-1 min-w-0">{store.name}</h3>
                       <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-brand-500 transition-colors flex-shrink-0" />
                     </div>
-                    <div className="flex items-center mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center mt-1 text-xs text-gray-500 dark:text-gray-400 min-w-0">
                       <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
-                      <span className="truncate">{store.slug}</span>
+                      <span className="truncate min-w-0">{store.slug}</span>
                     </div>
                   </div>
                 </div>

@@ -90,6 +90,27 @@ class SuperAdminController {
   }
 
   /**
+   * Update store information
+   * @route PUT /api/super-admin/stores/:id
+   */
+  async updateStore(req, res) {
+    try {
+      const { id } = req.params;
+      const result = await superAdminService.updateStore(id, req.body);
+      res.status(HTTP_STATUS.OK).json(result);
+    } catch (error) {
+      const statusCode = error.message.includes('not found') || error.message.includes('requerido') || error.message.includes('ya está en uso')
+        ? HTTP_STATUS.BAD_REQUEST
+        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
+
+      res.status(statusCode).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
    * Toggle store status
    * @route PUT /api/super-admin/stores/:id/status
    */
@@ -137,6 +158,76 @@ class SuperAdminController {
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Get store analytics
+   * @route GET /api/super-admin/stores/:id/analytics
+   */
+  async getStoreAnalytics(req, res) {
+    try {
+      const { id } = req.params;
+      const { period = 'month' } = req.query;
+      const result = await superAdminService.getStoreAnalytics(id, { period });
+      res.status(HTTP_STATUS.OK).json(result);
+    } catch (error) {
+      const statusCode = error.message.includes('not found')
+        ? HTTP_STATUS.NOT_FOUND
+        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
+
+      res.status(statusCode).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Get store orders
+   * @route GET /api/super-admin/stores/:id/orders
+   */
+  async getStoreOrders(req, res) {
+    try {
+      const { id } = req.params;
+      const { limit, offset } = req.query;
+      
+      const options = {};
+      if (limit) options.limit = parseInt(limit);
+      if (offset) options.offset = parseInt(offset);
+
+      const result = await superAdminService.getStoreOrders(id, options);
+      res.status(HTTP_STATUS.OK).json(result);
+    } catch (error) {
+      const statusCode = error.message.includes('not found')
+        ? HTTP_STATUS.NOT_FOUND
+        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
+
+      res.status(statusCode).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Regenerate QR code for a store
+   * @route POST /api/super-admin/stores/:id/regenerate-qr
+   */
+  async regenerateQRCode(req, res) {
+    try {
+      const { id } = req.params;
+      const result = await superAdminService.regenerateQRCode(id);
+      res.status(HTTP_STATUS.OK).json(result);
+    } catch (error) {
+      const statusCode = error.message.includes('not found')
+        ? HTTP_STATUS.NOT_FOUND
+        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
+
+      res.status(statusCode).json({
         success: false,
         error: error.message
       });

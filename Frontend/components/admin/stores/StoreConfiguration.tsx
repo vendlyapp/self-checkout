@@ -23,9 +23,16 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
+    
+    // Normalize slug to lowercase and remove invalid characters
+    let processedValue = value;
+    if (name === 'slug') {
+      processedValue = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    }
+    
     setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === 'checkbox' ? checked : processedValue,
     }));
     // Clear messages when user starts typing
     setSuccess(false);
@@ -156,20 +163,18 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
                 Slug (URL)
               </label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
-                  vendly.ch/
-                </span>
                 <input
                   type="text"
                   name="slug"
                   value={formData.slug}
                   onChange={handleInputChange}
-                  className="w-full pl-24 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-300 bg-background text-foreground placeholder:text-muted-foreground transition-all"
+                  pattern="[a-z0-9-]+"
+                  className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-300 bg-background text-foreground placeholder:text-muted-foreground transition-all lowercase"
                   placeholder="slug-de-la-tienda"
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                URL única para la tienda. Solo letras minúsculas, números y guiones.
+                URL única para la tienda. Solo letras minúsculas, números y guiones. Se convertirá automáticamente a minúsculas.
               </p>
             </div>
           </div>

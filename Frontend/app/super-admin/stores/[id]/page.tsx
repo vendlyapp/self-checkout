@@ -119,20 +119,20 @@ export default function StoreDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full min-w-0">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-4 min-w-0 flex-1">
           <button
             onClick={() => router.back()}
-            className="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0"
             aria-label="Volver"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </button>
-          <div>
-            <div className="flex items-center gap-3">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
                 store.isActive 
                   ? 'bg-brand-50 dark:bg-brand-500/15' 
                   : 'bg-gray-100 dark:bg-gray-800'
@@ -143,12 +143,12 @@ export default function StoreDetailPage() {
                     : 'text-gray-400 dark:text-gray-600'
                 }`} />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white/90">{store.name}</h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">{store.slug}</p>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white/90 truncate">{store.name}</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5 truncate">{store.slug}</p>
               </div>
               <span
-                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${
                   store.isActive
                     ? 'bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-400'
                     : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-500'
@@ -208,8 +208,8 @@ export default function StoreDetailPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6 bg-gray-100 dark:bg-gray-900">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full min-w-0">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 bg-gray-100 dark:bg-gray-900 overflow-x-auto">
           <TabsTrigger value="qr" className="flex items-center gap-2">
             <QrCode className="w-4 h-4" />
             <span className="hidden sm:inline">QR & Gestión</span>

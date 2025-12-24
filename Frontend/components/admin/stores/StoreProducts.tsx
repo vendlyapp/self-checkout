@@ -2,9 +2,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, Search, AlertCircle, RefreshCw, TrendingUp } from 'lucide-react';
+import { Package, Search, AlertCircle, RefreshCw, TrendingUp, Edit } from 'lucide-react';
 import { SuperAdminService, type Product, type Store } from '@/lib/services/superAdminService';
 import { formatSwissPrice } from '@/lib/utils';
+import EditProductModal from './EditProductModal';
+import { ProductService } from '@/lib/services/productService';
 
 interface StoreProductsProps {
   storeId: string;
@@ -16,6 +18,8 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -38,6 +42,27 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditProduct = async (product: Product) => {
+    // Fetch full product details
+    try {
+      const response = await ProductService.getProductById(product.id);
+      if (response.success && response.data) {
+        // Convert to the Product type expected by the modal
+        setEditingProduct(response.data as any);
+        setIsEditModalOpen(true);
+      } else {
+        setError('No se pudo cargar la información del producto');
+      }
+    } catch (err) {
+      console.error('Error loading product:', err);
+      setError('Error al cargar el producto');
+    }
+  };
+
+  const handleEditSuccess = () => {
+    fetchProducts(); // Refresh products list
   };
 
   const filteredProducts = products.filter((product) =>
@@ -247,15 +272,28 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
                           )}
                         </div>
                       </div>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${
-                          product.isActive
-                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400'
-                            : 'bg-muted text-muted-foreground'
-                        }`}
-                      >
-                        {product.isActive ? 'Activo' : 'Inactivo'}
-                      </span>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditProduct(product);
+                          }}
+                          className="flex items-center gap-2 px-3 py-1.5 text-sm text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-500/10 rounded-lg transition-colors border border-brand-200 dark:border-brand-500/30"
+                          title="Editar producto"
+                        >
+                          <Edit className="w-4 h-4" />
+                          <span className="hidden sm:inline">Editar</span>
+                        </button>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            product.isActive
+                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400'
+                              : 'bg-muted text-muted-foreground'
+                          }`}
+                        >
+                          {product.isActive ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Product Details */}
@@ -296,6 +334,17 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Product Modal */}
+      <EditProductModal
+        product={editingProduct}
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingProduct(null);
+        }}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   );
 }
