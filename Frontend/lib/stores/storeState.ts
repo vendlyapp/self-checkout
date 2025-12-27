@@ -76,7 +76,33 @@ export const useStoreState = create<StoreState>()(
           });
 
           if (!response.ok) {
-            throw new Error('Error al obtener el estado de la tienda');
+            // Intentar obtener el mensaje de error de la respuesta
+            let errorMessage = 'Error al obtener el estado de la tienda';
+            
+            try {
+              const errorData = await response.json();
+              errorMessage = errorData.error || errorData.message || errorMessage;
+            } catch {
+              // Si no se puede parsear JSON, usar el status text
+              errorMessage = response.statusText || errorMessage;
+            }
+
+            // Si es 404, el usuario probablemente no tiene una tienda asociada
+            if (response.status === 404) {
+              console.warn('No se encontró una tienda asociada al usuario');
+              // No establecer error para 404, solo mantener el estado actual
+              set({ error: null });
+              return;
+            }
+
+            // Si es 401, el usuario no está autenticado
+            if (response.status === 401) {
+              console.warn('Usuario no autenticado');
+              set({ error: 'No autenticado' });
+              return;
+            }
+
+            throw new Error(errorMessage);
           }
 
           const data = await response.json();
@@ -87,10 +113,22 @@ export const useStoreState = create<StoreState>()(
               lastUpdated: new Date().toISOString(),
               error: null,
             });
+          } else if (data.data?.isOpen !== undefined) {
+            // Si la respuesta no tiene success pero tiene data.isOpen, usarlo igual
+            set({
+              isStoreOpen: data.data.isOpen,
+              lastUpdated: new Date().toISOString(),
+              error: null,
+            });
           }
         } catch (error) {
           console.error('Error al obtener estado de la tienda:', error);
-          set({ error: error instanceof Error ? error.message : 'Error desconocido' });
+          // Solo establecer error si no es un error de red esperado
+          if (error instanceof TypeError && error.message.includes('fetch')) {
+            set({ error: 'Error de conexión. Verifique su conexión a internet.' });
+          } else {
+            set({ error: error instanceof Error ? error.message : 'Error desconocido' });
+          }
         } finally {
           set({ isLoading: false });
         }

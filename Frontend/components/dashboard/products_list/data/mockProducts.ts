@@ -75,16 +75,8 @@ export interface ProductCategory {
   color?: string
 }
 
-// Categorías de productos
-export const productCategories: ProductCategory[] = [
-  { id: 'all', name: 'Alle', icon: 'ShoppingCart', count: 0 },
-  { id: 'brot', name: 'Brot', icon: 'Bread', count: 0 },
-  { id: 'gebäck', name: 'Gebäck', icon: 'Croissant', count: 0 },
-  { id: 'kuchen', name: 'Kuchen', icon: 'Cake', count: 0 },
-  { id: 'sandwiches', name: 'Sandwiches', icon: 'Sandwich', count: 0 },
-  { id: 'früchte', name: 'Früchte', icon: 'Apple', count: 0 },
-  { id: 'gemüse', name: 'Gemüse', icon: 'Carrot', count: 0 }
-]
+// Las categorías ahora se obtienen desde la API (useCategories hook)
+// No hay categorías hardcodeadas - todas vienen de la base de datos
 
 // Mock de productos para la panadería
 export const mockProducts: Product[] = [
@@ -847,8 +839,10 @@ const getMockProductsWithFilters = (filters?: {
 }
 
 export const fetchCategories = async (): Promise<ProductCategory[]> => {
+  // Las categorías ahora se obtienen desde la API usando useCategories hook
+  // Esta función se mantiene por compatibilidad pero debería usar la API
   await new Promise(resolve => setTimeout(resolve, 100))
-  return productCategories
+  return [] // Retornar array vacío - las categorías vienen de la API
 }
 
 // Funciones CRUD - Conectan con el backend
@@ -912,12 +906,13 @@ export const updateProductStock = async (id: string, quantity: number): Promise<
 }
 
 // Actualizar contadores de categorías basado en productos reales
-export const updateCategoryCounts = (): ProductCategory[] => {
-  return productCategories.map(category => {
+// Esta función ahora debe recibir las categorías como parámetro
+export const updateCategoryCounts = (categories: ProductCategory[], products: Product[]): ProductCategory[] => {
+  return categories.map(category => {
     if (category.id === 'all') {
-      return { ...category, count: mockProducts.length }
+      return { ...category, count: products.length }
     }
-    const count = mockProducts.filter(product => product.categoryId === category.id).length
+    const count = products.filter(product => product.categoryId === category.id).length
     return { ...category, count }
   })
 }

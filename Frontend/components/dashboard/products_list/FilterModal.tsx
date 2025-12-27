@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { X } from "lucide-react";
-import { ProductCategory, updateCategoryCounts } from "./data/mockProducts";
 import { createPortal } from "react-dom";
+import { useCategories } from "@/hooks/queries/useCategories";
+import { useProducts } from "@/hooks/queries";
+import { normalizeProductData } from "./data/mockProducts";
 
 interface FilterModalProps {
   isOpen: boolean;
@@ -43,37 +45,68 @@ export default function FilterModal({
   currentFilters,
 }: FilterModalProps) {
   const [filters, setFilters] = useState<FilterState>(currentFilters);
-  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  
+  // Obtener categorías reales de la API
+  const { data: categoriesData = [] } = useCategories();
+  
+  // Obtener productos para calcular contadores
+  const { data: productsData = [] } = useProducts({ isActive: true });
 
-  // Cargar categorías reales
+  // Calcular categorías con contadores dinámicos
+  const categories = useMemo(() => {
+    if (!categoriesData || !productsData) {
+      return [];
+    }
+
+    const normalizedProducts = productsData.map(normalizeProductData);
+    
+    // Agregar la opción "all" al inicio
+    const allProductsCount = normalizedProducts.length;
+    return [
+      {
+        id: 'all',
+        name: 'Alle',
+        icon: 'ShoppingCart',
+        count: allProductsCount,
+      },
+      ...categoriesData
+        .filter(cat => cat.isActive !== false)
+        .map(cat => {
+          const count = normalizedProducts.filter(p => p.categoryId === cat.id).length;
+          return {
+            id: cat.id,
+            name: cat.name,
+            icon: cat.icon || 'Package',
+            count: count,
+          };
+        })
+    ];
+  }, [categoriesData, productsData]);
+
+  // Actualizar contadores de estado
   useEffect(() => {
-    const loadCategories = () => {
-      const realCategories = updateCategoryCounts();
-      setCategories(realCategories);
+    if (!productsData) return;
+    
+    const normalizedProducts = productsData.map(normalizeProductData);
+    const allProductsCount = normalizedProducts.length;
+    
+    const statusCounts = statusOptions.map((status) => {
+      if (status.id === "all")
+        return { ...status, count: allProductsCount };
+      if (status.id === "active") {
+        const activeCount = normalizedProducts.filter(p => p.isActive !== false).length;
+        return { ...status, count: activeCount };
+      }
+      if (status.id === "inactive") {
+        const inactiveCount = normalizedProducts.filter(p => p.isActive === false).length;
+        return { ...status, count: inactiveCount };
+      }
+      return status;
+    });
 
-      // Actualizar contadores de estado
-      const statusCounts = statusOptions.map((status) => {
-        if (status.id === "all")
-          return { ...status, count: realCategories[0]?.count || 0 };
-        if (status.id === "active") {
-          const activeCount =
-            realCategories.reduce((acc, cat) => acc + cat.count, 0) * 0.8; // Estimación
-          return { ...status, count: Math.round(activeCount) };
-        }
-        if (status.id === "inactive") {
-          const inactiveCount =
-            realCategories.reduce((acc, cat) => acc + cat.count, 0) * 0.2; // Estimación
-          return { ...status, count: Math.round(inactiveCount) };
-        }
-        return status;
-      });
-
-      // Actualizar statusOptions con contadores reales
-      statusOptions.splice(0, statusOptions.length, ...statusCounts);
-    };
-
-    loadCategories();
-  }, []);
+    // Actualizar statusOptions con contadores reales
+    statusOptions.splice(0, statusOptions.length, ...statusCounts);
+  }, [productsData]);
 
   const handleSortChange = (sortBy: FilterState["sortBy"]) => {
     setFilters((prev) => ({ ...prev, sortBy }));

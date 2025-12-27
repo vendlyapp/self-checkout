@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Product,
-  productCategories,
   normalizeProductData,
 } from "./data/mockProducts";
-import { useProducts } from "@/hooks/queries";
+import { useProducts, useCategories } from "@/hooks/queries";
 import { getIcon } from "./data/iconMap";
 import ProductCardList from "./ProductCardList";
 import FilterModal, { FilterState } from "./FilterModal";
@@ -22,15 +21,38 @@ interface ProductsListComponentProps {
   showAddButton?: boolean;
 }
 
-// Convertir categorías a formato FilterOption (contadores se actualizarán dinámicamente)
-const productsListFilters = productCategories.map((category) => {
-  return {
-    id: category.id,
-    label: category.name,
-    icon: getIcon(category.icon),
-    count: 0, // Se actualizará dinámicamente
-  };
-});
+// Función helper para transformar categorías de la API al formato de filtros
+// Usa solo las categorías reales de la base de datos
+const transformCategoriesToFilters = (categories: any[], products: Product[]) => {
+  // Agregar la opción "all" al inicio
+  const allProductsCount = products.length;
+  const filters = [
+    {
+      id: 'all',
+      label: 'Alle',
+      icon: getIcon('ShoppingCart'),
+      count: allProductsCount,
+    }
+  ];
+
+  // Agregar solo las categorías reales de la API con sus iconos y nombres reales
+  categories.forEach((category) => {
+    // Solo incluir categorías activas
+    if (category.isActive !== false) {
+      // Contar productos que pertenecen a esta categoría
+      const count = products.filter(p => p.categoryId === category.id).length;
+      
+      filters.push({
+        id: category.id, // ID real de la categoría
+        label: category.name, // Nombre real de la categoría
+        icon: category.icon ? getIcon(category.icon) : getIcon('Package'), // Icono real de la categoría
+        count: count, // Conteo dinámico
+      });
+    }
+  });
+
+  return filters;
+};
 
 export default function ProductsListComponent({
   isStandalone = false,
@@ -52,25 +74,95 @@ export default function ProductsListComponent({
 
   // Estado compartido para productos y modal
   const [products, setProducts] = useState<Product[]>([]);
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [, setFilters] = useState(productsListFilters);
+  const [localIsFilterModalOpen, setLocalIsFilterModalOpen] = useState(false);
+  
+  // Obtener categorías reales de la API
+  const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
+  
+  // Usar React Query para obtener productos con cache
+  const { data: productsData, isLoading: productsLoading } = useProducts({
+    isActive: true,
+  });
+
+  // Función para agrupar productos padre-hijo
+  const groupProductsWithVariants = useCallback((products: Product[]): Product[] => {
+    // Separar productos padre (sin parentId) y variantes (con parentId)
+    const parentProducts: Product[] = [];
+    const variantsMap = new Map<string, Product[]>();
+
+    products.forEach(product => {
+      if (product.parentId) {
+        // Es una variante
+        if (!variantsMap.has(product.parentId)) {
+          variantsMap.set(product.parentId, []);
+        }
+        variantsMap.get(product.parentId)!.push(product);
+      } else {
+        // Es un producto padre
+        parentProducts.push(product);
+      }
+    });
+
+    // Agregar variantes a sus productos padre
+    return parentProducts.map(parent => {
+      const variants = variantsMap.get(parent.id) || [];
+      return {
+        ...parent,
+        variants: variants.length > 0 ? variants : undefined
+      };
+    });
+  }, []);
+
+  // Transformar categorías a formato de filtros con contadores dinámicos
+  // Solo usa categorías reales de la base de datos
+  const productsListFilters = useMemo(() => {
+    if (!categoriesData || !productsData) {
+      // Si no hay categorías o productos, retornar solo la opción "all"
+      return [
+        {
+          id: 'all',
+          label: 'Alle',
+          icon: getIcon('ShoppingCart'),
+          count: 0,
+        }
+      ];
+    }
+    
+    const normalizedProducts = productsData.map(normalizeProductData);
+    const groupedProducts = groupProductsWithVariants(normalizedProducts);
+    return transformCategoriesToFilters(categoriesData, groupedProducts);
+  }, [categoriesData, productsData, groupProductsWithVariants]);
+  
+  const [filters, setFilters] = useState(productsListFilters);
+  
+  // Actualizar filtros cuando cambian
+  useEffect(() => {
+    setFilters(productsListFilters);
+  }, [productsListFilters]);
 
   const {
     filterState: contextFilterState,
     searchQuery: contextSearchQuery,
     setFilterState: setContextFilterState,
     setSelectedFilters: setContextSelectedFilters,
+    selectedFilters: contextSelectedFilters,
     setSearchQuery: setContextSearchQuery,
     setTotalProducts,
     setFilteredProducts,
     setHasActiveFilters,
     setIsLoading,
     isLoading,
+    onOpenFilterModal: contextOnOpenFilterModal,
+    onCloseFilterModal: contextOnCloseFilterModal,
+    isFilterModalOpen: contextIsFilterModalOpen,
   } = useProductsList();
 
   // Usar estado del contexto cuando es standalone, estado local cuando no
   const searchQuery = isStandalone ? contextSearchQuery : localSearchQuery;
   const filterState = isStandalone ? contextFilterState : localFilterState;
+  const isFilterModalOpen = isStandalone 
+    ? (contextIsFilterModalOpen ?? false)
+    : localIsFilterModalOpen;
 
   const setSelectedFilters = isStandalone
     ? setContextSelectedFilters
@@ -81,11 +173,28 @@ export default function ProductsListComponent({
   const setFilterState = isStandalone
     ? setContextFilterState
     : setLocalFilterState;
+  
+  // Obtener selectedFilters del contexto cuando es standalone
+  const selectedFilters = isStandalone 
+    ? (contextSelectedFilters || [])
+    : [];
 
   // Función para aplicar filtros reales a los productos
   const applyFiltersToProducts = useCallback(
-    (products: Product[], filters: FilterState) => {
+    (products: Product[], filters: FilterState, searchTerm?: string) => {
       let filteredProducts = [...products];
+
+      // Filtrar por búsqueda (searchQuery)
+      if (searchTerm && searchTerm.trim() !== "") {
+        const searchLower = searchTerm.toLowerCase().trim();
+        filteredProducts = filteredProducts.filter((product) => {
+          const nameMatch = product.name.toLowerCase().includes(searchLower);
+          const descriptionMatch = product.description?.toLowerCase().includes(searchLower);
+          const skuMatch = product.sku?.toLowerCase().includes(searchLower);
+          const tagsMatch = product.tags?.some(tag => tag.toLowerCase().includes(searchLower));
+          return nameMatch || descriptionMatch || skuMatch || tagsMatch;
+        });
+      }
 
       // Filtrar por categorías
       if (
@@ -102,12 +211,12 @@ export default function ProductsListComponent({
         switch (filters.status) {
           case "active":
             filteredProducts = filteredProducts.filter(
-              (product) => product.stock > 0
+              (product) => product.isActive !== false && product.stock > 0
             );
             break;
           case "inactive":
             filteredProducts = filteredProducts.filter(
-              (product) => product.stock === 0
+              (product) => product.isActive === false || product.stock === 0
             );
             break;
           case "onSale":
@@ -187,41 +296,10 @@ export default function ProductsListComponent({
 
   const activeFiltersCount = getActiveFiltersCount();
 
-  // Usar React Query para obtener productos con cache
-  const { data: productsData, isLoading: productsLoading } = useProducts({
-    isActive: true,
-  });
+  // La sincronización de selectedFilters con filterState.categories se maneja en ProductsListContext.handleFilterChange
+  // No necesitamos un useEffect adicional aquí ya que handleFilterChange ya actualiza filterState.categories
 
-  // Función para agrupar productos padre-hijo
-  const groupProductsWithVariants = useCallback((products: Product[]): Product[] => {
-    // Separar productos padre (sin parentId) y variantes (con parentId)
-    const parentProducts: Product[] = [];
-    const variantsMap = new Map<string, Product[]>();
-
-    products.forEach(product => {
-      if (product.parentId) {
-        // Es una variante
-        if (!variantsMap.has(product.parentId)) {
-          variantsMap.set(product.parentId, []);
-        }
-        variantsMap.get(product.parentId)!.push(product);
-      } else {
-        // Es un producto padre
-        parentProducts.push(product);
-      }
-    });
-
-    // Agregar variantes a sus productos padre
-    return parentProducts.map(parent => {
-      const variants = variantsMap.get(parent.id) || [];
-      return {
-        ...parent,
-        variants: variants.length > 0 ? variants : undefined
-      };
-    });
-  }, []);
-
-  // Procesar productos cuando se cargan
+  // Procesar productos cuando se cargan o cambian los filtros/búsqueda
   useEffect(() => {
     if (productsData) {
       // Normalizar productos
@@ -230,21 +308,13 @@ export default function ProductsListComponent({
       // Agrupar productos con variantes (solo mostrar productos padre)
       const groupedProducts = groupProductsWithVariants(normalizedProducts);
       
+      // Aplicar filtros incluyendo búsqueda
       const filteredProducts = applyFiltersToProducts(
         groupedProducts,
-        filterState
+        filterState,
+        searchQuery
       );
       setProducts(filteredProducts);
-
-      // Actualizar contadores de filtros dinámicamente (contar solo productos padre)
-      const updatedFilters = productsListFilters.map((filter) => {
-        if (filter.id === 'all') {
-          return { ...filter, count: groupedProducts.length };
-        }
-        const count = groupedProducts.filter(p => p.categoryId === filter.id).length;
-        return { ...filter, count };
-      });
-      setFilters(updatedFilters);
 
       if (isStandalone) {
         setTotalProducts(groupedProducts.length);
@@ -252,17 +322,29 @@ export default function ProductsListComponent({
         setHasActiveFilters(activeFiltersCount > 0);
       }
     }
-  }, [productsData, filterState, isStandalone, setTotalProducts, setFilteredProducts, setHasActiveFilters, activeFiltersCount, applyFiltersToProducts, groupProductsWithVariants]);
+  }, [productsData, filterState, searchQuery, isStandalone, setTotalProducts, setFilteredProducts, setHasActiveFilters, activeFiltersCount, applyFiltersToProducts, groupProductsWithVariants]);
 
   // Sincronizar isLoading del contexto con React Query
   useEffect(() => {
     if (isStandalone) {
-      setIsLoading(productsLoading);
+      setIsLoading(productsLoading || categoriesLoading);
     }
-  }, [productsLoading, isStandalone, setIsLoading]);
+  }, [productsLoading, categoriesLoading, isStandalone, setIsLoading]);
+
+  const handleOpenFilterModal = () => {
+    if (isStandalone && contextOnOpenFilterModal) {
+      contextOnOpenFilterModal();
+    } else {
+      setLocalIsFilterModalOpen(true);
+    }
+  };
 
   const handleCloseFilterModal = () => {
-    setIsFilterModalOpen(false);
+    if (isStandalone && contextOnCloseFilterModal) {
+      contextOnCloseFilterModal();
+    } else {
+      setLocalIsFilterModalOpen(false);
+    }
   };
 
   const handleApplyFilters = useCallback((filters: FilterState) => {
@@ -272,7 +354,8 @@ export default function ProductsListComponent({
     if (productsData) {
       const normalizedProducts = productsData.map(normalizeProductData);
       const groupedProducts = groupProductsWithVariants(normalizedProducts);
-      const filteredProducts = applyFiltersToProducts(groupedProducts, filters);
+      // Aplicar filtros incluyendo búsqueda actual
+      const filteredProducts = applyFiltersToProducts(groupedProducts, filters, searchQuery);
       setProducts(filteredProducts);
 
       // Sincronizar filtros de categorías con selectedFilters
@@ -286,7 +369,7 @@ export default function ProductsListComponent({
         setHasActiveFilters(getActiveFiltersCount() > 0);
       }
     }
-  }, [productsData, applyFiltersToProducts, isStandalone, setFilteredProducts, setHasActiveFilters, setSelectedFilters, getActiveFiltersCount, setFilterState, groupProductsWithVariants]);
+  }, [productsData, applyFiltersToProducts, searchQuery, isStandalone, setFilteredProducts, setHasActiveFilters, setSelectedFilters, getActiveFiltersCount, setFilterState, groupProductsWithVariants]);
 
   const handleClearFilters = useCallback(() => {
     const defaultFilters: FilterState = {
@@ -304,7 +387,8 @@ export default function ProductsListComponent({
     if (productsData) {
       const normalizedProducts = productsData.map(normalizeProductData);
       const groupedProducts = groupProductsWithVariants(normalizedProducts);
-      const filteredProducts = applyFiltersToProducts(groupedProducts, defaultFilters);
+      // Aplicar filtros por defecto sin búsqueda
+      const filteredProducts = applyFiltersToProducts(groupedProducts, defaultFilters, "");
       setProducts(filteredProducts);
       
       if (isStandalone) {
@@ -358,8 +442,18 @@ export default function ProductsListComponent({
               <p className="text-gray-500 text-base font-medium">
                 {searchQuery
                   ? `Keine Produkte für "${searchQuery}" gefunden`
+                  : activeFiltersCount > 0
+                  ? "Keine Produkte entsprechen den ausgewählten Filtern"
                   : "Keine Produkte verfügbar"}
               </p>
+              {activeFiltersCount > 0 && (
+                <button
+                  onClick={handleClearFilters}
+                  className="mt-4 px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors text-sm font-medium"
+                >
+                  Filter zurücksetzen
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -417,8 +511,18 @@ export default function ProductsListComponent({
               <p className="text-muted-foreground">
                 {searchQuery
                   ? `Keine Produkte für "${searchQuery}" gefunden`
+                  : activeFiltersCount > 0
+                  ? "Keine Produkte entsprechen den ausgewählten Filtern"
                   : "Keine Produkte verfügbar"}
               </p>
+              {activeFiltersCount > 0 && (
+                <button
+                  onClick={handleClearFilters}
+                  className="mt-4 px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors text-sm font-medium"
+                >
+                  Filter zurücksetzen
+                </button>
+              )}
             </div>
           )}
         </div>

@@ -3,6 +3,8 @@
 import React, { Suspense } from 'react';
 import ProductsListComponent from '@/components/dashboard/products_list/ProductsListComponent';
 import { useResponsive } from '@/hooks';
+import { useProductsList } from '@/components/dashboard/products_list/ProductsListContext';
+import { SlidersHorizontal } from 'lucide-react';
 
 // Hacer la página dinámica para evitar pre-rendering
 export const dynamic = 'force-dynamic';
@@ -12,6 +14,7 @@ export const dynamic = 'force-dynamic';
  */
 export default function ProductsList() {
   const { } = useResponsive();
+  const { onOpenFilterModal, activeFiltersCount } = useProductsList();
 
   return (
     <div className="w-full animate-page-enter gpu-accelerated">
@@ -39,15 +42,30 @@ export default function ProductsList() {
               <h1 className="text-3xl font-bold text-gray-900 tracking-tight transition-interactive">Produktverwaltung</h1>
               <p className="text-gray-500 mt-2 text-base transition-interactive">Verwalten Sie Ihre Produkte, Kategorien und Aktionen</p>
             </div>
-            <div className="w-full max-w-md animate-stagger-2">
+            <div className="flex items-center gap-4 w-full max-w-md animate-stagger-2">
               <input
                 type="text"
                 placeholder="Produkte durchsuchen..."
-                className="w-full px-5 py-3.5 bg-white border-2 border-gray-200 rounded-2xl 
+                className="flex-1 px-5 py-3.5 bg-white border-2 border-gray-200 rounded-2xl 
                          focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent 
                          transition-interactive text-base placeholder:text-gray-400
                          shadow-sm hover:border-gray-300 hover:shadow-md gpu-accelerated"
               />
+              <button
+                onClick={onOpenFilterModal}
+                className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-white border-2 border-gray-200 
+                         hover:border-brand-500 hover:bg-brand-50 transition-interactive gpu-accelerated 
+                         active:scale-95 shadow-sm hover:shadow-md"
+                aria-label="Filter öffnen"
+              >
+                <SlidersHorizontal className="w-5 h-5 text-gray-700 transition-interactive" />
+                {activeFiltersCount > 0 && (
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-brand-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-sm
+                                animate-bounce-in transition-interactive">
+                    {activeFiltersCount > 9 ? "9+" : activeFiltersCount}
+                  </div>
+                )}
+              </button>
             </div>
           </div>
 

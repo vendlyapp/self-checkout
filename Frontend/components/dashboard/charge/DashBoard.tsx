@@ -47,15 +47,34 @@ export default function DashBoardCharge({
     const applyFiltersAndSearch = async () => {
       setLoading(true);
       try {
-        const categoryId =
-          selectedFilters.length > 0 ? selectedFilters[0] : "all";
+        // Si hay filtros seleccionados, usar todos (no solo el primero)
+        // Si no hay filtros o solo está "all", mostrar todos los productos
+        const categoryIds = selectedFilters.length > 0 && !selectedFilters.includes('all')
+          ? selectedFilters
+          : undefined; // undefined = mostrar todos
+        
         const filteredProducts = await fetchProducts({
-          categoryId,
+          categoryId: categoryIds && categoryIds.length > 0 ? categoryIds[0] : "all", // Por compatibilidad con la API
           searchTerm: searchQuery,
         });
-        setProducts(filteredProducts);
+        
+        // Si hay múltiples categorías seleccionadas, filtrar localmente
+        let finalProducts = filteredProducts;
+        if (categoryIds && categoryIds.length > 1) {
+          finalProducts = filteredProducts.filter((product: Product) =>
+            categoryIds.includes(product.categoryId)
+          );
+        } else if (categoryIds && categoryIds.length === 1) {
+          // Ya está filtrado por la API, pero asegurarse de que coincida
+          finalProducts = filteredProducts.filter((product: Product) =>
+            product.categoryId === categoryIds[0]
+          );
+        }
+        
+        setProducts(finalProducts);
       } catch {
         // Error al filtrar productos
+        setProducts([]);
       } finally {
         setLoading(false);
       }

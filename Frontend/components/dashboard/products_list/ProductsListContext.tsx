@@ -1,10 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from "react";
 import { FilterState } from "./FilterModal";
 import { FilterOption } from "@/components/Sliders/SliderFIlter";
-import { updateCategoryCounts } from "./data/mockProducts";
 import { getIcon } from "./data/iconMap";
+import { useCategories } from "@/hooks/queries/useCategories";
+import { useProducts } from "@/hooks/queries";
+import { normalizeProductData } from "./data/mockProducts";
 
 interface ProductsListContextType {
   totalProducts: number;
@@ -92,15 +94,46 @@ export const ProductsListProvider: React.FC<ProductsListProviderProps> = ({
   const [activeFiltersCount, setActiveFiltersCount] = useState(0);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
-  // Calcular filtros de productos con contadores
-  const productsListFilters: FilterOption[] = updateCategoryCounts().map((category) => {
-    return {
-      id: category.id,
-      label: category.name,
-      icon: getIcon(category.icon),
-      count: category.count,
-    };
-  });
+  // Obtener categorías y productos reales de la API
+  const { data: categoriesData = [] } = useCategories();
+  const { data: productsData = [] } = useProducts({ isActive: true });
+
+  // Calcular filtros de productos con contadores dinámicos
+  const productsListFilters: FilterOption[] = useMemo(() => {
+    if (!categoriesData || !productsData) {
+      return [
+        {
+          id: 'all',
+          label: 'Alle',
+          icon: getIcon('ShoppingCart'),
+          count: 0,
+        }
+      ];
+    }
+
+    const normalizedProducts = productsData.map(normalizeProductData);
+    const allProductsCount = normalizedProducts.length;
+
+    return [
+      {
+        id: 'all',
+        label: 'Alle',
+        icon: getIcon('ShoppingCart'),
+        count: allProductsCount,
+      },
+      ...categoriesData
+        .filter(cat => cat.isActive !== false)
+        .map(cat => {
+          const count = normalizedProducts.filter(p => p.categoryId === cat.id).length;
+          return {
+            id: cat.id,
+            label: cat.name,
+            icon: getIcon(cat.icon || 'Package'),
+            count: count,
+          };
+        })
+    ];
+  }, [categoriesData, productsData]);
 
   // Actualizar contador de filtros activos
   useEffect(() => {
@@ -114,6 +147,22 @@ export const ProductsListProvider: React.FC<ProductsListProviderProps> = ({
 
   const handleFilterChange = (filters: string[]) => {
     setSelectedFilters(filters);
+    
+    // Sincronizar con filterState.categories
+    // Si no hay filtros o solo está "all", establecer categories a ["all"]
+    if (filters.length === 0 || (filters.length === 1 && filters[0] === 'all')) {
+      setFilterState(prev => ({
+        ...prev,
+        categories: ['all']
+      }));
+    } else {
+      // Filtrar "all" si está presente y establecer las categorías seleccionadas
+      const categoriesWithoutAll = filters.filter(id => id !== 'all');
+      setFilterState(prev => ({
+        ...prev,
+        categories: categoriesWithoutAll.length > 0 ? categoriesWithoutAll : ['all']
+      }));
+    }
   };
 
   const handleOpenFilterModal = () => {

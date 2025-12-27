@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import ProductsList from "../dashboard/charge/ProductsList";
 import { Product, normalizeProductData } from "../dashboard/products_list/data/mockProducts";
 import { useCartStore } from "@/lib/stores/cartStore";
@@ -7,15 +7,22 @@ import { SearchInput } from "@/components/ui/search-input";
 import { ScanBarcode, Store as StoreIcon, ShoppingBag } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { buildApiUrl } from "@/lib/config/api";
+import { useCategories } from "@/hooks/queries/useCategories";
+import { getIcon } from "../dashboard/products_list/data/iconMap";
+import { FilterSlider, FilterOption } from "@/components/Sliders/SliderFIlter";
 
 const DashboardUser = () => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedFilters, setSelectedFilters] = useState<string[]>(['all']);
   const [products, setProducts] = useState<Product[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCartStore();
   const { store } = useScannedStoreStore();
+
+  // Obtener categorías reales de la API
+  const { data: categoriesData = [] } = useCategories();
 
   // Mensaje de estado
   const hasStore = !!store?.slug;
@@ -73,8 +80,8 @@ const DashboardUser = () => {
         // Agrupar productos con variantes (solo mostrar productos padre)
         const groupedProducts = groupProductsWithVariants(normalizedProducts);
         
-        setProducts(groupedProducts);
         setAllProducts(groupedProducts);
+        // Los productos filtrados se aplicarán automáticamente en el useEffect de applyFiltersAndSearch
       } else {
         setProducts([]);
         setAllProducts([]);
@@ -88,23 +95,61 @@ const DashboardUser = () => {
     }
   }, [store?.slug]); // Removido groupProductsWithVariants de las dependencias
 
-  // Manejar búsqueda
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    
+  // Calcular filtros de categorías con contadores dinámicos - Formato para FilterSlider
+  const categoryFilters: FilterOption[] = useMemo(() => {
+    if (!categoriesData || allProducts.length === 0) {
+      return [];
+    }
+
+    const allProductsCount = allProducts.length;
+
+    return [
+      {
+        id: 'all',
+        label: 'Alle',
+        icon: getIcon('ShoppingCart'),
+        count: allProductsCount,
+      },
+      ...categoriesData
+        .filter(cat => cat.isActive !== false)
+        .map(cat => {
+          const count = allProducts.filter(p => p.categoryId === cat.id).length;
+          return {
+            id: cat.id,
+            label: cat.name,
+            icon: getIcon(cat.icon || 'Package'),
+            count: count,
+          };
+        })
+    ];
+  }, [categoriesData, allProducts]);
+
+  // Aplicar filtros y búsqueda a los productos
+  const applyFiltersAndSearch = useCallback(() => {
     if (!hasStore || allProducts.length === 0) {
+      setProducts([]);
       return;
     }
 
     let filtered = [...allProducts];
 
+    // Filtrar por categorías seleccionadas (si no está vacío y no incluye "all")
+    const activeCategoryFilters = selectedFilters.filter(id => id !== 'all');
+    if (activeCategoryFilters.length > 0) {
+      filtered = filtered.filter((p: Product) =>
+        activeCategoryFilters.includes(p.categoryId)
+      );
+    }
+
     // Filtrar por búsqueda (buscar en nombre del producto padre y en variantes)
-    if (query) {
-      const queryLower = query.toLowerCase();
+    if (searchQuery && searchQuery.trim() !== "") {
+      const queryLower = searchQuery.toLowerCase().trim();
       filtered = filtered.filter((p: Product) => {
         // Buscar en nombre del producto padre
         const matchesParent = p.name.toLowerCase().includes(queryLower) ||
-          (p.description && p.description.toLowerCase().includes(queryLower));
+          (p.description && p.description.toLowerCase().includes(queryLower)) ||
+          (p.sku && p.sku.toLowerCase().includes(queryLower)) ||
+          (p.tags && p.tags.some(tag => tag.toLowerCase().includes(queryLower)));
         
         // Buscar en nombres de variantes
         const matchesVariant = p.variants?.some(variant => 
@@ -117,6 +162,29 @@ const DashboardUser = () => {
     }
 
     setProducts(filtered);
+  }, [hasStore, allProducts, selectedFilters, searchQuery]);
+
+  // Manejar búsqueda
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  // Manejar cambio de filtros - Compatible con FilterSlider
+  const handleFilterChange = (filters: string[]) => {
+    // Si se pasa un array vacío, establecer "all"
+    if (filters.length === 0) {
+      setSelectedFilters(['all']);
+      return;
+    }
+    
+    // Si se incluye "all", solo dejar "all"
+    if (filters.includes('all')) {
+      setSelectedFilters(['all']);
+      return;
+    }
+    
+    // Si no hay "all", usar los filtros seleccionados
+    setSelectedFilters(filters);
   };
 
   // Manejar agregar al carrito
@@ -135,8 +203,13 @@ const DashboardUser = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store?.slug]); // Solo ejecutar cuando cambie la tienda
 
+  // Aplicar filtros cuando cambien los filtros, búsqueda o productos
+  useEffect(() => {
+    applyFiltersAndSearch();
+  }, [applyFiltersAndSearch]);
+
   return (
-    <div className="flex flex-col h-full bg-background-cream">
+    <div className="flex flex-col w-full bg-background-cream">
       {/* Header con información de la tienda */}
       <div className="bg-background-cream border-b border-white animate-slide-down">
         <div className="flex items-center justify-between w-full px-4 py-3">
@@ -192,14 +265,28 @@ const DashboardUser = () => {
               </button>
             </div>
           </div>
+
+          {/* Filtros de categorías - Slider horizontal como en otras pantallas */}
+          {categoryFilters.length > 0 && (
+            <div className="bg-background-cream border-b border-gray-100 animate-stagger-3"
+                 style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
+              <FilterSlider
+                filters={categoryFilters}
+                selectedFilters={selectedFilters.includes('all') ? [] : selectedFilters.filter(id => id !== 'all')}
+                onFilterChange={handleFilterChange}
+                showCount={true}
+                multiSelect={true}
+              />
+            </div>
+          )}
         </div>
       )}
 
-      {/* Lista de productos con scroll propio */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Lista de productos - sin scroll propio ya que el layout lo maneja */}
+      <div className="flex-1">
         {!store ? (
           // Sin tienda escaneada
-          <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+          <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
             <div className="w-24 h-24 bg-gray-100 rounded-3xl flex items-center justify-center mb-6">
               <ShoppingBag className="w-12 h-12 text-gray-400" strokeWidth={1.5} />
             </div>
@@ -246,17 +333,34 @@ const DashboardUser = () => {
             </div>
           </div>
         ) : products.length === 0 && !loading ? (
-          // Tienda sin productos
+          // Tienda sin productos o sin productos que coincidan con los filtros
           <div className="flex flex-col items-center justify-center h-full p-8 text-center animate-scale-in">
             <div className="w-24 h-24 bg-gray-100 rounded-3xl flex items-center justify-center mb-6 transition-interactive">
               <StoreIcon className="w-12 h-12 text-gray-400 transition-interactive" strokeWidth={1.5} />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-3 transition-interactive">
-              Keine Produkte verfügbar
+              {searchQuery || (selectedFilters.length > 0 && !selectedFilters.includes('all'))
+                ? "Keine Produkte gefunden"
+                : "Keine Produkte verfügbar"}
             </h2>
             <p className="text-gray-600 mb-6 max-w-md transition-interactive">
-              Dieses Geschäft hat noch keine Produkte hinzugefügt
+              {searchQuery
+                ? `Keine Produkte für "${searchQuery}" gefunden`
+                : (selectedFilters.length > 0 && !selectedFilters.includes('all'))
+                ? "Keine Produkte entsprechen den ausgewählten Filtern"
+                : "Dieses Geschäft hat noch keine Produkte hinzugefügt"}
             </p>
+            {(searchQuery || (selectedFilters.length > 0 && !selectedFilters.includes('all'))) && (
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedFilters(['all']);
+                }}
+                className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors text-sm font-medium"
+              >
+                Filter zurücksetzen
+              </button>
+            )}
           </div>
         ) : (
           // Mostrar productos
