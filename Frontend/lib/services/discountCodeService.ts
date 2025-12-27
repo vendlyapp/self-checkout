@@ -108,21 +108,51 @@ export const discountCodeService = {
 
   /**
    * Valida un código de descuento
+   * Este endpoint puede ser usado sin autenticación para que usuarios puedan validar códigos
+   * @param code - Código de descuento a validar
+   * @param storeId - ID de la tienda (opcional, para validar que el código pertenezca a esa tienda)
    */
-  async validateCode(code: string): Promise<DiscountCode> {
-    const headers = await getAuthHeaders();
-    const response = await fetch(buildApiUrl(`/api/discount-codes/validate/${code}`), {
-      method: 'GET',
-      headers,
-    });
+  async validateCode(code: string, storeId?: string): Promise<DiscountCode> {
+    try {
+      // Intentar obtener headers con auth, pero no es crítico si falla
+      let headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      try {
+        const authHeaders = await getAuthHeaders();
+        headers = authHeaders;
+      } catch {
+        // Si no hay auth, continuar sin token (endpoint puede ser público)
+      }
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Código de descuento inválido');
+      // Construir URL con query parameter storeId si se proporciona
+      let url = `/api/discount-codes/validate/${encodeURIComponent(code)}`;
+      if (storeId) {
+        url += `?storeId=${encodeURIComponent(storeId)}`;
+      }
+
+      const response = await fetch(buildApiUrl(url), {
+        method: 'GET',
+        headers,
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Error al validar código' }));
+        throw new Error(error.error || 'Código de descuento inválido');
+      }
+
+      const result = await response.json();
+      if (!result.success || !result.data) {
+        throw new Error(result.error || 'Código de descuento inválido');
+      }
+      return result.data;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Error desconocido al validar código de descuento');
     }
-
-    const result = await response.json();
-    return result.data;
   },
 
   /**

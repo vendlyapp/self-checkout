@@ -4,7 +4,36 @@ const discountCodeController = require('../controllers/DiscountCodeController');
 const { validateUUID } = require('../middleware/validation');
 const { authMiddleware } = require('../middleware/authMiddleware');
 
-// Todas las rutas requieren autenticación
+/**
+ * @swagger
+ * /api/discount-codes/validate/{code}:
+ *   get:
+ *     summary: Validar un código de descuento
+ *     description: Valida si un código de descuento es válido y está activo. Este endpoint es público y no requiere autenticación. Si se proporciona storeId, valida que el código pertenezca a esa tienda.
+ *     tags: [DiscountCodes]
+ *     parameters:
+ *       - in: path
+ *         name: code
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Código de descuento a validar
+ *       - in: query
+ *         name: storeId
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: ID de la tienda para validar que el código pertenezca a esa tienda
+ *     responses:
+ *       200:
+ *         description: Código válido
+ *       400:
+ *         description: Código inválido o expirado
+ */
+// Endpoint público para validar códigos (debe estar ANTES del middleware de autenticación)
+router.get('/validate/:code', discountCodeController.validateDiscountCode);
+
+// Todas las demás rutas requieren autenticación
 router.use(authMiddleware);
 
 /**
@@ -55,28 +84,6 @@ router.get('/stats', discountCodeController.getStats);
  *         description: No autenticado
  */
 router.get('/archived', discountCodeController.getArchivedDiscountCodes);
-
-/**
- * @swagger
- * /api/discount-codes/validate/{code}:
- *   get:
- *     summary: Validar un código de descuento
- *     description: Valida si un código de descuento es válido y está activo
- *     tags: [DiscountCodes]
- *     parameters:
- *       - in: path
- *         name: code
- *         required: true
- *         schema:
- *           type: string
- *         description: Código de descuento a validar
- *     responses:
- *       200:
- *         description: Código válido
- *       400:
- *         description: Código inválido o expirado
- */
-router.get('/validate/:code', discountCodeController.validateDiscountCode);
 
 /**
  * @swagger

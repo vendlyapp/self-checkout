@@ -133,7 +133,7 @@ export default function StoreCartPage() {
                   <div className="flex items-center bg-[#F2FDF5] rounded-xl px-4 py-3 mt-2 mb-2 shadow-sm border border-brand-200">
                     <div className="flex-1">
                       <div className="text-[#3C7E44] font-semibold text-[15px] leading-tight">
-                        10% Rabatt auf Bio-Produkte
+                        Promo Code: {localPromoCode}
                       </div>
                       <div className="text-[#3C7E44] text-[15px]">
                         - {formatSwissPriceWithCHF(discountAmount)}

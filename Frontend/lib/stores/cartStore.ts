@@ -25,7 +25,7 @@ interface CartState {
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
-  applyPromoCode: (code: string) => void;
+  applyPromoCode: (code: string, discount?: number) => void;
   removePromoCode: () => void;
   getTotalItems: () => number;
   getSubtotal: () => number;
@@ -113,18 +113,26 @@ export const useCartStore = create<CartState>()(
           discountAmount: 0,
         }),
 
-      applyPromoCode: (code) => {
+      applyPromoCode: (code: string, discount?: number) => {
+        // Si se proporciona un descuento, usarlo directamente
+        // Si no, calcular según el código (compatibilidad hacia atrás)
         const state = get();
         const subtotal = state.getSubtotal();
-
-        if (code.trim().toUpperCase() === "CHECK01") {
-          const discount = +(subtotal * 0.1).toFixed(2);
-          set({
-            promoCode: code,
-            promoApplied: true,
-            discountAmount: discount,
-          });
+        
+        let discountAmount = discount;
+        
+        // Si no se proporciona descuento, mantener lógica legacy por compatibilidad
+        if (discountAmount === undefined) {
+          // Los hooks ahora calculan el descuento y lo pasan
+          // Mantener esto solo para compatibilidad
+          discountAmount = 0;
         }
+        
+        set({
+          promoCode: code.trim().toUpperCase(),
+          promoApplied: true,
+          discountAmount: discountAmount || 0,
+        });
       },
 
       removePromoCode: () => {

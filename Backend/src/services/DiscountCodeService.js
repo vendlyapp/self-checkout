@@ -160,30 +160,51 @@ class DiscountCodeService {
   /**
    * Busca un código por su código (string)
    * @param {string} code - Código a buscar
+   * @param {string} storeId - ID de la tienda (opcional, para validar que el código pertenezca a esa tienda)
    * @returns {Promise<Object>}
    */
-  async findByCode(code) {
-    const selectQuery = `
+  async findByCode(code, storeId = null) {
+    let selectQuery = `
       SELECT 
-        id,
-        code,
-        discount_type,
-        discount_value,
-        max_redemptions,
-        current_redemptions,
-        valid_from,
-        valid_until,
-        is_active,
-        archived,
-        created_at,
-        updated_at
-      FROM "DiscountCode"
-      WHERE code = $1 AND archived = false
+        dc.id,
+        dc.code,
+        dc.discount_type,
+        dc.discount_value,
+        dc.max_redemptions,
+        dc.current_redemptions,
+        dc.valid_from,
+        dc.valid_until,
+        dc.is_active,
+        dc.archived,
+        dc.owner_id,
+        dc.created_at,
+        dc.updated_at
+      FROM "DiscountCode" dc
+      WHERE dc.code = $1 AND dc.archived = false
     `;
     
-    const result = await query(selectQuery, [code.toUpperCase()]);
+    const params = [code.toUpperCase()];
+
+    // Si se proporciona storeId, validar que el código pertenezca a esa tienda
+    if (storeId) {
+      // Obtener el ownerId del store
+      const storeResult = await query('SELECT "ownerId" FROM "Store" WHERE id = $1', [storeId]);
+      
+      if (storeResult.rows.length === 0) {
+        throw new Error('Tienda no encontrada');
+      }
+
+      const ownerId = storeResult.rows[0].ownerId;
+      selectQuery += ` AND dc.owner_id = $2`;
+      params.push(ownerId);
+    }
+    
+    const result = await query(selectQuery, params);
 
     if (result.rows.length === 0) {
+      if (storeId) {
+        throw new Error('Código de descuento no encontrado o no válido para esta tienda');
+      }
       throw new Error('Código de descuento no encontrado');
     }
 

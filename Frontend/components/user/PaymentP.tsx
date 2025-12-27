@@ -131,10 +131,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 </div>
               </div>
 
-              <div className="bg-blue-50 p-4 rounded-xl mb-6">
+              <div className="bg-brand-50 p-4 rounded-xl mb-6">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-600">Gesamtbetrag:</span>
-                  <span className="text-2xl font-bold text-blue-600">
+                  <span className="text-2xl font-bold text-brand-600">
                     CHF {totalAmount.toFixed(2)}
                   </span>
                 </div>
@@ -162,7 +162,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 <button
                   onClick={onConfirm}
                   disabled={isProcessing}
-                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="flex-1 px-4 py-3 bg-brand-500 text-white rounded-xl font-medium hover:bg-brand-600 transition-colors disabled:opacity-50"
                 >
                   Bestätigen
                 </button>
@@ -360,11 +360,9 @@ export default function PaymentP() {
     // Usar iconos de lucide-react en lugar de SVG para esta página
     const IconComponent = getPaymentMethodIconForPaymentPage(method.code);
     
-    // Extraer el color sin los corchetes de Tailwind si está presente
+    // Usar el color directamente de la base de datos (ya viene como hex)
     const bgColorValue = method.bgColor || '#6E7996';
-    const bgColor = `bg-[${bgColorValue}]`;
     const textColorValue = method.textColor || '#FFFFFF';
-    const textColor = `text-[${textColorValue}]`;
     
     return {
       id: method.code,
@@ -372,8 +370,8 @@ export default function PaymentP() {
       icon: IconComponent,
       isSvg: false, // Siempre false porque usamos iconos de lucide-react
       iconPath: null, // No usamos SVG aquí
-      bgColor: bgColor,
-      textColor: textColor,
+      bgColor: bgColorValue, // Guardar el valor directo para usar en style
+      textColor: textColorValue, // Guardar el valor directo para usar en style
       methodData: method, // Guardar datos completos para uso futuro
     };
   }) || [];
@@ -475,7 +473,7 @@ export default function PaymentP() {
           <div className="flex items-center bg-[#F2FDF5] rounded-xl px-4 py-3 mt-2 mb-2 shadow-sm border border-brand-200 mr-12">
             <div className="flex-1">
               <div className="text-[#3C7E44] font-semibold text-[15px] leading-tight">
-                10% Rabatt auf Bio-Produkte
+                Promo Code: {localPromoCode}
               </div>
               <div className="text-[#3C7E44] text-[15px]">
                 - {formatSwissPriceWithCHF(discountAmount || 0)}
@@ -518,24 +516,29 @@ export default function PaymentP() {
                 key={method.id}
                 onClick={() => handlePaymentMethodSelect(method.id)}
                 className={`
-                  ${method.bgColor} ${method.textColor} px-4 py-4 w-[345px] h-[50px] text-sm rounded-full
+                  px-4 py-4 w-[345px] h-[50px] text-sm rounded-full
                   flex items-center justify-center gap-2 transition-interactive gpu-accelerated
-                  ${isSelected ? "ring-4 ring-blue-300 ring-opacity-50" : ""}
-                  hover:scale-105 active:scale-95 touch-target tap-highlight-transparent
+                  ${isSelected ? "ring-4 ring-brand-300 ring-opacity-50" : ""}
+                  hover:opacity-90 active:scale-95 touch-target tap-highlight-transparent
                   animate-slide-up-fade relative
                 `}
                 style={{ 
+                  backgroundColor: method.bgColor, // Usar color directamente desde la DB
+                  color: method.textColor, // Usar color de texto directamente desde la DB
                   minHeight: "50px",
                   animationDelay: `${index * 0.1}s`,
                   animationFillMode: 'both'
                 }}
                 aria-label={`${method.name} auswählen`}
               >
-                {React.createElement(method.icon, { className: "w-5 h-5 text-white transition-interactive" })}
-                <span className="font-medium text-white">{method.name}</span>
+                {React.createElement(method.icon, { 
+                  className: "w-5 h-5 transition-interactive",
+                  color: method.textColor
+                } as React.ComponentProps<typeof method.icon>)}
+                <span className="font-medium" style={{ color: method.textColor }}>{method.name}</span>
                 {isSelected && (
                   <div className="absolute right-4 animate-bounce-in">
-                    <Eclipse className="w-4 h-4 text-white transition-interactive" />
+                    <Eclipse className="w-4 h-4 transition-interactive" color={method.textColor} />
                   </div>
                 )}
               </button>

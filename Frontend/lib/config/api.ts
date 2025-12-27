@@ -52,6 +52,11 @@ export const API_CONFIG = {
     // Payment Methods
     PAYMENT_METHODS_STORE: (storeId: string) => `/api/payment-methods/store/${storeId}`,
     PAYMENT_METHOD_BY_ID: (id: string) => `/api/payment-methods/${id}`,
+    
+    // Discount Codes
+    DISCOUNT_CODES: '/api/discount-codes',
+    DISCOUNT_CODE_VALIDATE: (code: string) => `/api/discount-codes/validate/${code}`,
+    DISCOUNT_CODE_BY_ID: (id: string) => `/api/discount-codes/${id}`,
   },
   
   // Configuración de paginación

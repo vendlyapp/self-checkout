@@ -79,12 +79,15 @@ class DiscountCodeController {
    * @param {Object} req - Request object de Express
    * @param {Object} req.params - Parámetros de ruta
    * @param {string} req.params.code - Código a validar
+   * @param {Object} req.query - Query parameters
+   * @param {string} [req.query.storeId] - ID de la tienda para validar que el código pertenezca a esa tienda
    * @param {Object} res - Response object de Express
    * @returns {Promise<void>} JSON con los datos del código si es válido
    */
   async validateDiscountCode(req, res) {
     try {
       const { code } = req.params;
+      const { storeId } = req.query;
       
       if (!code || !code.trim()) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -93,10 +96,13 @@ class DiscountCodeController {
         });
       }
 
-      const result = await discountCodeService.findByCode(code);
+      const result = await discountCodeService.findByCode(code, storeId || null);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      const statusCode = error.message.includes('no encontrado') || error.message.includes('no está activo')
+      const statusCode = error.message.includes('no encontrado') || 
+                         error.message.includes('no está activo') ||
+                         error.message.includes('no válido para esta tienda') ||
+                         error.message.includes('Tienda no encontrada')
         ? HTTP_STATUS.BAD_REQUEST
         : HTTP_STATUS.INTERNAL_SERVER_ERROR;
 
