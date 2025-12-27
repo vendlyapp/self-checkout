@@ -98,9 +98,48 @@ const transformOrdersToSalesData = (orders: RecentOrder[]): SalesData[] => {
 
 // Helper function to transform orders into PaymentMethods
 const transformOrdersToPaymentMethods = (orders: RecentOrder[]): PaymentMethod[] => {
-  // Por ahora, como no tenemos paymentMethod en las órdenes, retornamos un array vacío
-  // Esto se puede mejorar cuando el backend incluya paymentMethod
-  return [];
+  if (orders.length === 0) {
+    return [];
+  }
+
+  // Agrupar órdenes por método de pago
+  const paymentMethodMap = new Map<string, { count: number; total: number }>();
+
+  orders.forEach((order) => {
+    const method = order.paymentMethod || 'Desconocido';
+    const total = typeof order.total === 'number' ? order.total : parseFloat(String(order.total)) || 0;
+
+    if (!paymentMethodMap.has(method)) {
+      paymentMethodMap.set(method, { count: 0, total: 0 });
+    }
+
+    const current = paymentMethodMap.get(method)!;
+    current.count += 1;
+    current.total += total;
+  });
+
+  // Convertir a array de PaymentMethod
+  const totalOrders = orders.length;
+  const totalRevenue = Array.from(paymentMethodMap.values()).reduce((sum, method) => sum + method.total, 0);
+
+  return Array.from(paymentMethodMap.entries()).map(([name, data]) => ({
+    name,
+    value: totalOrders > 0 ? Math.round((data.count / totalOrders) * 100) : 0,
+    amount: data.total,
+    color: getPaymentMethodColor(name),
+  }));
+};
+
+// Helper para asignar colores a métodos de pago
+const getPaymentMethodColor = (method: string): string => {
+  const methodLower = method.toLowerCase();
+  if (methodLower.includes('twint')) return '#6B46C1';
+  if (methodLower.includes('qr') || methodLower.includes('rechnung')) return '#059669';
+  if (methodLower.includes('cash') || methodLower.includes('bargeld')) return '#D97706';
+  if (methodLower.includes('card') || methodLower.includes('kredit') || methodLower.includes('debit')) return '#2563EB';
+  if (methodLower.includes('klarna')) return '#F97316';
+  if (methodLower.includes('postfinance')) return '#DC2626';
+  return '#6B7280'; // Default gray
 };
 
 // Helper function to transform orders into ShopActivity

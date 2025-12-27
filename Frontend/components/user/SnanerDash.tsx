@@ -117,13 +117,13 @@ const SnanerDash = () => {
       console.error("Error al iniciar el escáner:", error);
       setIsScanning(false);
       
-      let errorMsg = "No se pudo acceder a la cámara. Por favor, verifica los permisos.";
+      let errorMsg = "Zugriff auf die Kamera nicht möglich. Bitte überprüfen Sie die Berechtigungen.";
       const errorObj = error as { message?: string; name?: string };
       if (errorObj?.message?.includes("Permission denied") || errorObj?.name === "NotAllowedError") {
-        errorMsg = "Permisos de cámara denegados. Por favor, permite el acceso a la cámara en la configuración del navegador.";
+        errorMsg = "Kameraberechtigung verweigert. Bitte erlauben Sie den Zugriff auf die Kamera in den Browsereinstellungen.";
         setShowCameraPermissionModal(true);
       } else if (errorObj?.message?.includes("not found") || errorObj?.name === "NotFoundError") {
-        errorMsg = "No se encontró ninguna cámara en tu dispositivo.";
+        errorMsg = "Keine Kamera auf Ihrem Gerät gefunden.";
       }
       
       setErrorMessage(errorMsg);
@@ -173,13 +173,13 @@ const SnanerDash = () => {
       const response = await fetch(url);
 
       if (!response.ok) {
-        throw new Error("Producto no encontrado");
+        throw new Error("Produkt nicht gefunden");
       }
 
       const result = await response.json();
 
       if (!result.success || !result.data) {
-        throw new Error("Producto no encontrado");
+        throw new Error("Produkt nicht gefunden");
       }
 
       // Convertir el producto al formato correcto
@@ -462,10 +462,10 @@ const SnanerDash = () => {
               <Camera className="w-8 h-8 text-white transition-interactive" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2 transition-interactive">
-              Cámara necesaria
+              Kamera erforderlich
             </h3>
             <p className="text-gray-600 mb-6 transition-interactive">
-              Para escanear códigos QR, necesitamos acceso a tu cámara. Por favor, permite el acceso cuando tu navegador lo solicite.
+              Um QR-Codes zu scannen, benötigen wir Zugriff auf Ihre Kamera. Bitte erlauben Sie den Zugriff, wenn Ihr Browser danach fragt.
             </p>
 
             <div className="flex flex-col gap-3">

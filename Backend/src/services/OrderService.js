@@ -84,13 +84,36 @@ class OrderService {
       total += resolvedPrice * item.quantity;
     }
 
+    // Usar el total del payload si viene (ya incluye descuentos), sino calcularlo
+    const finalTotal = orderPayload.total !== undefined && Number.isFinite(orderPayload.total)
+      ? Number(orderPayload.total)
+      : total;
+
     const result = await transaction(async (client) => {
+      // Establecer status como 'completed' por defecto ya que el pago se procesa inmediatamente
+      const orderStatus = orderPayload.status || 'completed';
+      const paymentMethod = orderPayload.paymentMethod || null;
+      const storeId = orderPayload.storeId || null;
+      
+      // Preparar metadata como JSONB
+      let metadataJson = '{}';
+      if (orderPayload.metadata && typeof orderPayload.metadata === 'object') {
+        metadataJson = JSON.stringify(orderPayload.metadata);
+      }
+
       const orderQuery = `
-        INSERT INTO "Order" ("userId", "total")
-        VALUES ($1, $2)
+        INSERT INTO "Order" ("userId", "total", "status", "paymentMethod", "storeId", "metadata")
+        VALUES ($1, $2, $3, $4, $5, $6::jsonb)
         RETURNING *
       `;
-      const orderResult = await client.query(orderQuery, [sanitizedUserId, total]);
+      const orderResult = await client.query(orderQuery, [
+        sanitizedUserId,
+        finalTotal,
+        orderStatus,
+        paymentMethod,
+        storeId,
+        metadataJson
+      ]);
       const order = orderResult.rows[0];
 
       const orderItems = [];
@@ -139,17 +162,41 @@ class OrderService {
   }
 
   async findAll(options = {}) {
-    const { limit = 50, offset = 0 } = options;
+    const { limit = 50, offset = 0, status, storeId } = options;
+
+    let whereClause = '';
+    const params = [];
+    let paramCount = 0;
+
+    // Filtrar por status si se proporciona
+    if (status) {
+      paramCount++;
+      whereClause = `WHERE o.status = $${paramCount}`;
+      params.push(status);
+    }
+
+    // Filtrar por storeId si se proporciona
+    if (storeId) {
+      paramCount++;
+      if (whereClause) {
+        whereClause += ` AND o."storeId" = $${paramCount}`;
+      } else {
+        whereClause = `WHERE o."storeId" = $${paramCount}`;
+      }
+      params.push(storeId);
+    }
 
     const selectQuery = `
       SELECT o.*, u.name as userName, u.email as userEmail
       FROM "Order" o
       LEFT JOIN "User" u ON o."userId" = u.id
+      ${whereClause}
       ORDER BY o."createdAt" DESC
-      LIMIT $1 OFFSET $2
+      LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}
     `;
+    params.push(limit, offset);
 
-    const result = await query(selectQuery, [limit, offset]);
+    const result = await query(selectQuery, params);
     const orders = result.rows;
 
     // Obtener items para cada orden
@@ -361,16 +408,31 @@ class OrderService {
     };
   }
 
-  async getRecentOrders(limit = 10) {
+  async getRecentOrders(limit = 10, status = null) {
+    let whereClause = '';
+    const params = [];
+    let paramCount = 0;
+
+    // Filtrar por status si se proporciona
+    if (status) {
+      paramCount++;
+      whereClause = `WHERE o.status = $${paramCount}`;
+      params.push(status);
+    }
+
+    paramCount++;
+    params.push(limit);
+
     const selectQuery = `
       SELECT o.*, u.name as userName, u.email as userEmail
       FROM "Order" o
       LEFT JOIN "User" u ON o."userId" = u.id
+      ${whereClause}
       ORDER BY o."createdAt" DESC
-      LIMIT $1
+      LIMIT $${paramCount}
     `;
 
-    const result = await query(selectQuery, [limit]);
+    const result = await query(selectQuery, params);
     const orders = result.rows;
 
     // Obtener items para cada orden
@@ -430,15 +492,38 @@ class OrderService {
       });
     }
 
+    // Usar el total del orderData si viene (ya incluye descuentos), sino calcularlo
+    const finalTotal = orderData.total !== undefined && Number.isFinite(orderData.total)
+      ? Number(orderData.total)
+      : total;
+
     // Crear orden usando transacción
     const result = await transaction(async (client) => {
+      // Establecer status como 'completed' por defecto ya que el pago se procesa inmediatamente
+      const orderStatus = orderData.status || 'completed';
+      const paymentMethod = orderData.paymentMethod || null;
+      const storeId = orderData.storeId || null;
+      
+      // Preparar metadata como JSONB
+      let metadataJson = '{}';
+      if (orderData.metadata && typeof orderData.metadata === 'object') {
+        metadataJson = JSON.stringify(orderData.metadata);
+      }
+
       // Crear orden
       const orderQuery = `
-        INSERT INTO "Order" ("userId", "total")
-        VALUES ($1, $2)
+        INSERT INTO "Order" ("userId", "total", "status", "paymentMethod", "storeId", "metadata")
+        VALUES ($1, $2, $3, $4, $5, $6::jsonb)
         RETURNING *
       `;
-      const orderResult = await client.query(orderQuery, [orderData.userId, total]);
+      const orderResult = await client.query(orderQuery, [
+        orderData.userId,
+        finalTotal,
+        orderStatus,
+        paymentMethod,
+        storeId,
+        metadataJson
+      ]);
       const order = orderResult.rows[0];
 
       // Crear items de la orden

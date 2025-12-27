@@ -150,7 +150,7 @@ export default function SuperAdminProducts() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Buscar productos..."
+                placeholder="Produkte suchen..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-300 w-full sm:w-64 dark:bg-gray-900 dark:border-gray-800 dark:text-white/90 dark:placeholder:text-gray-500"
@@ -159,7 +159,7 @@ export default function SuperAdminProducts() {
             <button
               onClick={() => refreshAll()}
               className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
-              title="Actualizar datos"
+              title="Daten aktualisieren"
             >
               <RefreshCw className="w-4 h-4" />
             </button>
@@ -374,7 +374,7 @@ export default function SuperAdminProducts() {
                             handleEditProduct(product);
                           }}
                           className="flex items-center gap-2 px-3 py-1.5 text-sm text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-500/10 rounded-lg transition-colors border border-brand-200 dark:border-brand-500/30"
-                          title="Editar producto"
+                          title="Produkt bearbeiten"
                         >
                           <Edit className="w-4 h-4" />
                           <span>Editar</span>

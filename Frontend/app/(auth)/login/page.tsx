@@ -158,9 +158,9 @@ function LoginForm() {
           
           {/* Texto elegante */}
           <div className="flex flex-col items-center space-y-3">
-            <p className="text-gray-700 font-light text-base tracking-wide">Verificando tu rol...</p>
+            <p className="text-gray-700 font-light text-base tracking-wide">Rolle wird überprüft...</p>
             <p className="text-gray-500 font-light text-xs tracking-wide">
-              {userRole === 'SUPER_ADMIN' ? 'Accediendo como Super Admin' : 'Iniciando sesión'}
+              {userRole === 'SUPER_ADMIN' ? 'Als Super Admin anmelden' : 'Anmeldung läuft'}
             </p>
             <div className="flex items-center justify-center gap-1.5 pt-1">
               <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0s', animationDuration: '1.4s' }}></div>
@@ -185,8 +185,8 @@ function LoginForm() {
       });
 
       if (signInError) {
-        setError(signInError.message || 'Error al iniciar sesión');
-        toast.error('Error al iniciar sesión');
+        setError(signInError.message || 'Fehler beim Anmelden');
+        toast.error('Fehler beim Anmelden');
         return;
       }
 
@@ -231,21 +231,21 @@ function LoginForm() {
         // Redireccionar según el rol
         if (detectedRole === 'SUPER_ADMIN') {
           console.log('🚀 Redirigiendo a SUPER_ADMIN dashboard');
-          toast.success('¡Bienvenido Super Admin!');
+          toast.success('Willkommen Super Admin!');
           router.push('/super-admin/dashboard');
         } else {
           console.log('🚀 Redirigiendo a dashboard regular');
-          toast.success('¡Bienvenido de nuevo!');
+          toast.success('Willkommen zurück!');
             router.push(returnUrl);
         }
       } else {
-        setError('Error al iniciar sesión');
-        toast.error('Error al iniciar sesión');
+        setError('Fehler beim Anmelden');
+        toast.error('Fehler beim Anmelden');
       }
     } catch (error) {
       console.error('Error:', error);
-      setError('Error inesperado al iniciar sesión');
-      toast.error('Error inesperado');
+      setError('Unerwarteter Fehler beim Anmelden');
+      toast.error('Unerwarteter Fehler');
     } finally {
       setLoading(false);
     }

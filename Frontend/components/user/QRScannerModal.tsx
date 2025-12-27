@@ -31,7 +31,7 @@ export const QRScannerModal = ({ isOpen, onClose }: QRScannerModalProps) => {
 
   const handleScan = async () => {
     if (!storeSlug.trim()) {
-      setError('Por favor ingresa el código de la tienda')
+      setError('Bitte geben Sie den Geschäftscode ein')
       return
     }
 

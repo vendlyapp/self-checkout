@@ -65,8 +65,8 @@ export default function CategoriesPage() {
       await deleteCategoryMutation.mutateAsync(deletingCategory.id);
       setDeletingCategory(null);
     } catch (error) {
-      console.error('Error al eliminar categoría:', error);
-      alert(error instanceof Error ? error.message : 'Error al eliminar categoría');
+      console.error('Fehler beim Löschen der Kategorie:', error);
+      alert(error instanceof Error ? error.message : 'Fehler beim Löschen der Kategorie');
     }
   };
 

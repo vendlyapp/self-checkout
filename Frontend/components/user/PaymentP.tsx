@@ -282,7 +282,7 @@ export default function PaymentP() {
     const orderItems = getOrderItemsPayload();
 
     if (orderItems.length === 0) {
-      setOrderError("Tu carrito está vacío.");
+      setOrderError("Ihr Warenkorb ist leer.");
       setPaymentStep("confirm");
       return;
     }
@@ -318,7 +318,7 @@ export default function PaymentP() {
       const message =
         error instanceof Error
           ? error.message
-          : "No pudimos procesar tu pago. Intenta nuevamente.";
+          : "Wir konnten Ihre Zahlung nicht verarbeiten. Bitte versuchen Sie es erneut.";
       setOrderError(message);
       setPaymentStep("confirm");
     }

@@ -101,7 +101,7 @@ const PaymentMethodsPage = () => {
       // Refetch para obtener los datos actualizados
       await refetch()
     } catch (error) {
-      console.error('Error al actualizar método de pago:', error)
+      console.error('Fehler beim Aktualisieren der Zahlungsmethode:', error)
     } finally {
       setUpdatingMethodName(null)
     }
@@ -121,7 +121,7 @@ const PaymentMethodsPage = () => {
   if (!store) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">No se encontró información de la tienda</p>
+        <p className="text-gray-500">Keine Geschäftsinformationen gefunden</p>
       </div>
     )
   }
@@ -147,15 +147,15 @@ const PaymentMethodsPage = () => {
                 {updatingMethodName ? (
                   <>
                     {paymentMethods.find(m => m.name === updatingMethodName)?.isActive
-                      ? 'Desactivando método de pago...'
-                      : 'Activando método de pago...'}
+                      ? 'Zahlungsmethode wird deaktiviert...'
+                      : 'Zahlungsmethode wird aktiviert...'}
                   </>
                 ) : (
                   'Actualizando método de pago...'
                 )}
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Por favor, espera un momento
+                Bitte warten Sie einen Moment
               </p>
             </div>
           </div>
@@ -216,7 +216,7 @@ const PaymentMethodsPage = () => {
 
       {paymentMethods.length === 0 && !methodsLoading && (
         <div className="text-center py-12">
-          <p className="text-gray-500">No hay métodos de pago disponibles</p>
+          <p className="text-gray-500">Keine Zahlungsmethoden verfügbar</p>
         </div>
       )}
     </div>

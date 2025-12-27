@@ -149,12 +149,12 @@ export default function Form({ isDesktop = false }: FormProps) {
 
     filesToProcess.forEach((file) => {
       if (!file.type.startsWith('image/')) {
-        alert(`${file.name} no es una imagen válida`);
+        alert(`${file.name} ist kein gültiges Bild`);
         return;
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        alert(`${file.name} es demasiado grande. Máximo 5MB`);
+        alert(`${file.name} ist zu groß. Maximum 5MB`);
         return;
       }
 
@@ -164,7 +164,7 @@ export default function Form({ isDesktop = false }: FormProps) {
         setProductImages((prev) => [...prev, base64String]);
       };
       reader.onerror = () => {
-        alert(`Error al leer ${file.name}`);
+        alert(`Fehler beim Lesen von ${file.name}`);
       };
       reader.readAsDataURL(file);
     });
@@ -189,7 +189,7 @@ export default function Form({ isDesktop = false }: FormProps) {
       // Validar variantes antes de continuar
       if (hasVariants) {
         if (variants.length === 0) {
-          alert('Debe agregar al menos una variante');
+          alert('Sie müssen mindestens eine Variante hinzufügen');
           return;
         }
         
@@ -199,7 +199,7 @@ export default function Form({ isDesktop = false }: FormProps) {
         );
         
         if (validVariants.length === 0) {
-          alert('Debe completar al menos una variante con nombre y precio');
+          alert('Sie müssen mindestens eine Variante mit Name und Preis ausfüllen');
           return;
         }
         
@@ -216,8 +216,8 @@ export default function Form({ isDesktop = false }: FormProps) {
               if (!nameValid || !priceValid) {
                 return {
                   index: index + 1,
-                  name: nameValid ? '✓' : '✗ Nombre requerido',
-                  price: priceValid ? '✓' : '✗ Precio requerido y mayor a 0'
+                  name: nameValid ? '✓' : '✗ Name erforderlich',
+                  price: priceValid ? '✓' : '✗ Preis erforderlich und größer als 0'
                 };
               }
               return null;
@@ -225,8 +225,8 @@ export default function Form({ isDesktop = false }: FormProps) {
             .filter((v): v is { index: number; name: string; price: string } => v !== null);
           
           const errorMessage = invalidVariants.length > 0
-            ? `Variantes inválidas:\n${invalidVariants.map(v => `Variante ${v.index}: ${v.name}, ${v.price}`).join('\n')}`
-            : 'Todas las variantes deben tener nombre y precio válidos';
+            ? `Ungültige Varianten:\n${invalidVariants.map(v => `Variante ${v.index}: ${v.name}, ${v.price}`).join('\n')}`
+            : 'Alle Varianten müssen einen gültigen Namen und Preis haben';
           
           alert(errorMessage);
           return;
@@ -266,12 +266,12 @@ export default function Form({ isDesktop = false }: FormProps) {
           );
           
           if (validVariants.length === 0) {
-            throw new Error('Debe completar al menos una variante con nombre y precio');
+            throw new Error('Sie müssen mindestens eine Variante mit Name und Preis ausfüllen');
           }
           
           // Validar que todas las variantes completadas sean válidas
           if (!validateVariants(validVariants)) {
-            throw new Error('Todas las variantes deben tener nombre y precio válidos (precio > 0)');
+            throw new Error('Alle Varianten müssen einen gültigen Namen und Preis haben (Preis > 0)');
           }
           
           // Función auxiliar para crear objeto de producto con promoción

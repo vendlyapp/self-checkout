@@ -223,7 +223,7 @@ export default function StoreOrders({ storeId, store }: StoreOrdersProps) {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <input
                 type="text"
-                placeholder="Buscar por número, cliente o email..."
+                placeholder="Nach Nummer, Kunde oder E-Mail suchen..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-300 bg-background text-foreground placeholder:text-muted-foreground"
@@ -248,7 +248,7 @@ export default function StoreOrders({ storeId, store }: StoreOrdersProps) {
             <div className="text-center py-16">
               <ShoppingCart className="w-20 h-20 text-muted-foreground/30 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                {searchTerm ? 'No se encontraron órdenes' : 'No hay órdenes en esta tienda'}
+                {searchTerm ? 'Keine Bestellungen gefunden' : 'Keine Bestellungen in diesem Geschäft'}
               </h3>
               <p className="text-sm text-muted-foreground">
                 {searchTerm 

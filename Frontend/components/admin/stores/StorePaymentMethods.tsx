@@ -98,7 +98,7 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
       })
       await refetch()
     } catch (error) {
-      console.error('Error al actualizar método de pago:', error)
+      console.error('Fehler beim Aktualisieren der Zahlungsmethode:', error)
     } finally {
       setUpdatingMethodName(null)
     }
@@ -141,15 +141,15 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
                 {updatingMethodName ? (
                   <>
                     {paymentMethods.find(m => m.name === updatingMethodName)?.isActive
-                      ? 'Desactivando método de pago...'
-                      : 'Activando método de pago...'}
+                      ? 'Zahlungsmethode wird deaktiviert...'
+                      : 'Zahlungsmethode wird aktiviert...'}
                   </>
                 ) : (
                   'Actualizando método de pago...'
                 )}
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Por favor, espera un momento
+                Bitte warten Sie einen Moment
               </p>
             </div>
           </div>
@@ -270,7 +270,7 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
           <div className="text-center py-8">
             <CreditCard className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground">
-              No hay métodos de pago configurados para esta tienda
+              Keine Zahlungsmethoden für dieses Geschäft konfiguriert
             </p>
           </div>
         )}

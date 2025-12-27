@@ -18,7 +18,7 @@ interface SearchInputProps {
 }
 
 export function SearchInput({
-  placeholder = "Buscar...",
+  placeholder = "Suchen...",
   value: controlledValue,
   onChange,
   onSearch,
@@ -132,10 +132,10 @@ export function SearchInput({
             <button
               onClick={onFilterClick}
               className="hidden lg:flex absolute right-16 items-center gap-1 px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-150"
-              aria-label="Filtros"
+              aria-label="Filter"
             >
               <Filter className="w-3 h-3" />
-              <span>Filtros</span>
+              <span>Filter</span>
             </button>
           )}
 
@@ -144,7 +144,7 @@ export function SearchInput({
             <button
               onClick={handleClear}
               className="absolute right-12 lg:right-16 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-150"
-              aria-label="Limpiar búsqueda"
+              aria-label="Suche löschen"
             >
               <X className="w-4 h-4 lg:w-5 lg:h-5" />
             </button>
@@ -157,7 +157,7 @@ export function SearchInput({
               "absolute right-2 w-8 h-8 lg:w-10 lg:h-10 bg-brand-500 hover:bg-brand-600 rounded-full flex items-center justify-center transition-all duration-200",
               "shadow-md hover:shadow-lg hover:scale-105"
             )}
-            aria-label="Buscar"
+            aria-label="Suchen"
           >
             <Search className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
           </button>
@@ -190,14 +190,14 @@ export function SearchInput({
             {/* Sugerencias de búsqueda */}
             {value && (
               <div className="p-3">
-                <div className="text-xs text-gray-500 mb-2">Buscar &quot;{value}&quot;</div>
+                <div className="text-xs text-gray-500 mb-2">Suchen &quot;{value}&quot;</div>
                 <div className="space-y-1">
                   <button
                     onClick={() => handleSuggestionClick(value)}
                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-150 flex items-center gap-2"
                   >
                     <Search className="w-3 h-3 text-gray-400" />
-                    Buscar &quot;{value}&quot;
+                    Suchen &quot;{value}&quot;
                   </button>
                 </div>
               </div>

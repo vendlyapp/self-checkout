@@ -48,7 +48,7 @@ export default function MyQRPage() {
     link.href = store.qrCode
     link.download = `qr-${store.slug}.png`
     link.click()
-    toast.success('QR descargado')
+    toast.success('QR heruntergeladen')
   }
 
   const getStoreUrl = () => {
@@ -59,7 +59,7 @@ export default function MyQRPage() {
   const copyStoreUrl = () => {
     const url = getStoreUrl();
     navigator.clipboard.writeText(url);
-    toast.success('URL copiada al portapapeles');
+    toast.success('URL in die Zwischenablage kopiert');
   };
 
   const shareStore = async () => {
@@ -101,7 +101,7 @@ export default function MyQRPage() {
       <div className="p-4 md:p-8">
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
           <p className="text-yellow-800">
-            {error instanceof Error ? error.message : 'No se encontró tu tienda'}
+            {error instanceof Error ? error.message : 'Ihr Geschäft wurde nicht gefunden'}
           </p>
         </div>
       </div>
@@ -324,7 +324,7 @@ export default function MyQRPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Información de la tienda */}
+            {/* Geschäftsinformationen */}
             <div className="bg-white rounded-2xl shadow-lg p-6 animate-stagger-2 animate-fade-in-scale">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">Geschäftsinformationen</h2>
@@ -505,7 +505,7 @@ export default function MyQRPage() {
             </div>
           </div>
 
-          {/* Vista previa del enlace */}
+          {/* Link-Vorschau */}
           <div className="bg-white rounded-2xl shadow-lg p-6 animate-stagger-4 animate-fade-in-scale">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900 transition-interactive">Öffentlicher Link</h2>

@@ -132,8 +132,8 @@ export const useDashboard = (): UseDashboardReturn => {
         receipt: `Beleg #${String(order.id).slice(-4).toUpperCase()}`,
         time: timeAgo,
         amount,
-        paymentMethod: 'Karte', // Por ahora fijo, puede venir del backend
-        status: 'completed' as const,
+        paymentMethod: order.paymentMethod || 'Karte', // Usar paymentMethod del backend si está disponible
+        status: (order.status || 'completed') as 'pending' | 'completed' | 'cancelled',
       };
     }) || [];
 

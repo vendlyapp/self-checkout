@@ -173,12 +173,12 @@ export default function DiscountsList() {
                 {activeFilter === 'archived'
                   ? 'Keine archivierten Codes vorhanden'
                   : discountCodes.length === 0 
-                  ? 'No hay códigos de descuento creados aún'
+                  ? 'Noch keine Rabattcodes erstellt'
                   : activeFilter === 'active'
-                  ? 'No hay códigos activos'
+                  ? 'Keine aktiven Codes'
                   : activeFilter === 'inactive'
-                  ? 'No hay códigos inactivos'
-                  : 'No hay códigos de descuento'
+                  ? 'Keine inaktiven Codes'
+                  : 'Keine Rabattcodes'
                 }
               </p>
             </div>

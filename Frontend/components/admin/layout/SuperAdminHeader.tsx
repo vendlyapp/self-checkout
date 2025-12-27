@@ -206,7 +206,7 @@ const SuperAdminHeader: React.FC = () => {
                 </div>
                 <div className="flex-1 overflow-y-auto">
                   <p className="text-center text-gray-500 dark:text-gray-400 py-8">
-                    No hay notificaciones nuevas
+                    Keine neuen Benachrichtigungen
                   </p>
                 </div>
               </Dropdown>

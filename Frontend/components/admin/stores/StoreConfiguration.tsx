@@ -348,7 +348,7 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
               </div>
               {!hasChanges && (
                 <p className="text-xs text-muted-foreground text-center sm:text-left">
-                  No hay cambios pendientes para guardar
+                  Keine ausstehenden Änderungen zum Speichern
                 </p>
               )}
             </div>

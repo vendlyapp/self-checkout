@@ -98,7 +98,7 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
         return
       }
       if (!file.type.startsWith('image/')) {
-        toast.error('Por favor selecciona una imagen válida')
+        toast.error('Bitte wählen Sie ein gültiges Bild aus')
         return
       }
       setLogoFile(file)
@@ -221,7 +221,7 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
   if (!store) {
     return (
       <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
-        <p className="text-yellow-800">No se encontró tu tienda</p>
+        <p className="text-yellow-800">Ihr Geschäft wurde nicht gefunden</p>
       </div>
     )
   }

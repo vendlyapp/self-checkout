@@ -57,14 +57,14 @@ export default function RegisterPage() {
 
     // Validaciones
     if (formData.password !== formData.confirmPassword) {
-      setError('Las contraseñas no coinciden');
-      toast.error('Las contraseñas no coinciden');
+      setError('Die Passwörter stimmen nicht überein');
+      toast.error('Die Passwörter stimmen nicht überein');
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
-      toast.error('Contraseña muy corta');
+      setError('Das Passwort muss mindestens 6 Zeichen lang sein');
+      toast.error('Passwort zu kurz');
       return;
     }
 
@@ -79,17 +79,17 @@ export default function RegisterPage() {
       );
 
       if (signUpError) {
-        setError(signUpError.message || 'Error al registrar usuario');
-        toast.error('Error al registrar');
+        setError(signUpError.message || 'Fehler beim Registrieren des Benutzers');
+        toast.error('Fehler beim Registrieren');
         return;
       }
 
       if (data?.user) {
-        toast.success('¡Cuenta creada exitosamente!');
+        toast.success('Konto erfolgreich erstellt!');
         
         // Si necesita confirmar email, mostrar mensaje
         if (!data.session) {
-          toast.info('Por favor, confirma tu email para continuar');
+          toast.info('Bitte bestätigen Sie Ihre E-Mail, um fortzufahren');
           router.push(`/check-email?email=${encodeURIComponent(formData.email)}`);
         } else {
           // Si la sesión está activa, ir directo al dashboard
@@ -97,8 +97,8 @@ export default function RegisterPage() {
         }
       }
     } catch {
-      setError('Error inesperado al registrar');
-      toast.error('Error inesperado');
+      setError('Unerwarteter Fehler beim Registrieren');
+      toast.error('Unerwarteter Fehler');
     } finally {
       setLoading(false);
     }

@@ -43,6 +43,10 @@ interface OrderResponse {
   id: string;
   userId: string;
   total: number;
+  status?: 'pending' | 'processing' | 'completed' | 'cancelled';
+  paymentMethod?: string;
+  storeId?: string;
+  metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
   items: OrderItemResponse[];
@@ -174,6 +178,10 @@ export interface RecentOrder {
   id: string;
   userId: string;
   total: number;
+  status?: 'pending' | 'processing' | 'completed' | 'cancelled';
+  paymentMethod?: string;
+  storeId?: string;
+  metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
   userName?: string;
@@ -192,7 +200,7 @@ export interface RecentOrder {
 export const OrderService = {
   createOrder: async (input: CreateOrderInput): Promise<OrderResponse> => {
     if (!input.items || input.items.length === 0) {
-      throw new Error('Tu carrito está vacío.');
+      throw new Error('Ihr Warenkorb ist leer.');
     }
 
     const normalizedItems = input.items
@@ -204,7 +212,7 @@ export const OrderService = {
       .filter((item) => item.productId.length > 0 && item.quantity > 0);
 
     if (normalizedItems.length === 0) {
-      throw new Error('Agrega productos válidos antes de pagar.');
+      throw new Error('Fügen Sie gültige Produkte hinzu, bevor Sie bezahlen.');
     }
 
     const { token, userId } = await getAuthContext();
@@ -231,7 +239,7 @@ export const OrderService = {
 
     if (!response.ok || !payload.success || !payload.data) {
       const apiMessage = payload.error || payload.message;
-      throw new Error(apiMessage || `Error ${response.status} al crear la orden.`);
+      throw new Error(apiMessage || `Fehler ${response.status} beim Erstellen der Bestellung.`);
     }
 
     return payload.data;

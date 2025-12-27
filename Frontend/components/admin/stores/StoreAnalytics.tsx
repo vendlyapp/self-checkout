@@ -198,7 +198,7 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
     return (
       <Card className="bg-card rounded-2xl border border-border/50">
         <CardContent className="p-6 text-center">
-          <p className="text-muted-foreground">No hay datos de analytics disponibles</p>
+          <p className="text-muted-foreground">Keine Analytics-Daten verfügbar</p>
         </CardContent>
       </Card>
     );
@@ -387,7 +387,7 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">No hay categorías con productos en esta tienda</p>
+              <p className="text-muted-foreground">Keine Kategorien mit Produkten in diesem Geschäft</p>
             </div>
           )}
         </CardContent>

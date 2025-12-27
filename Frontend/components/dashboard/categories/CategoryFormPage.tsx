@@ -202,8 +202,8 @@ export default function CategoryFormPage({
         setShowSuccessModal(true);
       }
     } catch (error) {
-      console.error("Error al guardar categoría:", error);
-      alert(error instanceof Error ? error.message : "Error al guardar categoría");
+      console.error("Fehler beim Speichern der Kategorie:", error);
+      alert(error instanceof Error ? error.message : "Fehler beim Speichern der Kategorie");
       setIsSubmitting(false);
     }
   };

@@ -397,7 +397,7 @@ export default function EditProductModal({ product, isOpen, onClose, onSuccess }
     return createPortal(
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md">
-          <p className="text-gray-600 text-center mb-4">Producto no encontrado</p>
+          <p className="text-gray-600 text-center mb-4">Produkt nicht gefunden</p>
           <button
             onClick={onClose}
             className="w-full px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700"

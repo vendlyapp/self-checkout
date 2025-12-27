@@ -309,12 +309,12 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
 
     filesToProcess.forEach((file) => {
       if (!file.type.startsWith('image/')) {
-        alert(`${file.name} no es una imagen válida`);
+        alert(`${file.name} ist kein gültiges Bild`);
         return;
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        alert(`${file.name} es demasiado grande. Máximo 5MB`);
+        alert(`${file.name} ist zu groß. Maximum 5MB`);
         return;
       }
 
@@ -324,7 +324,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
         setProductImages((prev) => [...prev, base64String]);
       };
       reader.onerror = () => {
-        alert(`Error al leer ${file.name}`);
+        alert(`Fehler beim Lesen von ${file.name}`);
       };
       reader.readAsDataURL(file);
     });
@@ -373,10 +373,10 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
       if (variantToRemove.id) {
         try {
           await deleteProductMutation.mutateAsync(variantToRemove.id);
-          console.log(`[EditForm] Variante "${variantToRemove.name}" eliminada de la base de datos`);
+          console.log(`[EditForm] Variante "${variantToRemove.name}" aus der Datenbank gelöscht`);
         } catch (error) {
-          console.error(`[EditForm] Error al eliminar variante "${variantToRemove.name}":`, error);
-          alert(`Error al eliminar variante: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+          console.error(`[EditForm] Fehler beim Löschen der Variante "${variantToRemove.name}":`, error);
+          alert(`Fehler beim Löschen der Variante: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
           return; // No eliminar del estado si falla la eliminación en BD
         }
       }
@@ -577,7 +577,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
 
           // Validar que haya al menos una variante válida
           if (validVariants.length === 0) {
-            throw new Error('Debe completar al menos una variante con nombre y precio válidos');
+            throw new Error('Sie müssen mindestens eine Variante mit gültigem Namen und Preis ausfüllen');
           }
 
           // Función auxiliar para crear/actualizar variante con promoción (igual que en Form.tsx)
@@ -677,13 +677,13 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
               } else {
                 // Crear nueva variante (igual que en Form.tsx)
                 await createProductMutation.mutateAsync(variantData);
-                variantSuccesses.push(`Variante "${variantName}" creada`);
+                variantSuccesses.push(`Variante "${variantName}" erstellt`);
               }
             } catch (variantError: unknown) {
               const errorObj = variantError as { message?: string; error?: string; response?: { data?: { error?: string } } };
-              const errorMsg = errorObj?.message || errorObj?.error || errorObj?.response?.data?.error || 'Error desconocido al guardar variante';
+              const errorMsg = errorObj?.message || errorObj?.error || errorObj?.response?.data?.error || 'Unbekannter Fehler beim Speichern der Variante';
               variantErrors.push(`Variante "${variant.name}": ${errorMsg}`);
-              console.error(`[EditForm] Error al guardar variante "${variant.name}":`, variantError);
+              console.error(`[EditForm] Fehler beim Speichern der Variante "${variant.name}":`, variantError);
             }
           }
 
@@ -696,7 +696,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
 
           // Mostrar éxito si todas las variantes se guardaron correctamente
           if (variantSuccesses.length > 0 && variantErrors.length === 0) {
-            console.log('[EditForm] Todas las variantes guardadas exitosamente');
+            console.log('[EditForm] Alle Varianten erfolgreich gespeichert');
           }
 
           // TERCERO: Eliminar variantes que ya no están en la lista (para evitar duplicados)
@@ -734,12 +734,12 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
             for (const variantToDelete of variantsToDelete) {
               try {
                 await deleteProductMutation.mutateAsync(variantToDelete.id);
-                console.log(`[EditForm] Variante "${variantToDelete.name}" eliminada exitosamente`);
+                console.log(`[EditForm] Variante "${variantToDelete.name}" erfolgreich gelöscht`);
               } catch (deleteError: unknown) {
                 const errorObj = deleteError as { message?: string; error?: string };
-                const errorMsg = errorObj?.message || errorObj?.error || 'Error al eliminar variante';
-                console.error(`[EditForm] Error al eliminar variante "${variantToDelete.name}":`, deleteError);
-                variantErrors.push(`Error al eliminar variante: ${errorMsg}`);
+                const errorMsg = errorObj?.message || errorObj?.error || 'Fehler beim Löschen der Variante';
+                console.error(`[EditForm] Fehler beim Löschen der Variante "${variantToDelete.name}":`, deleteError);
+                variantErrors.push(`Fehler beim Löschen der Variante: ${errorMsg}`);
               }
             }
           }
@@ -758,7 +758,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
         // Mostrar mensaje de éxito
         if (hasVariants && variantErrors.length > 0) {
           // Si hay errores en variantes, mostrar mensaje mixto
-          alert(`Producto principal guardado exitosamente, pero hubo errores al guardar algunas variantes. Revisa la consola para más detalles.`);
+          alert(`Hauptprodukt erfolgreich gespeichert, aber es gab Fehler beim Speichern einiger Varianten. Überprüfen Sie die Konsole für weitere Details.`);
         } else {
           // Todo guardado correctamente
           setShowSuccessModal(true);
@@ -768,8 +768,8 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
         setIsSaving(false);
         console.error('[EditForm] Error updating product:', apiError);
         const errorObj = apiError as { message?: string; error?: string };
-        const errorMessage = errorObj?.message || errorObj?.error || 'Error al actualizar el producto';
-        alert(`Error: ${errorMessage}. Por favor, intenta nuevamente.`);
+        const errorMessage = errorObj?.message || errorObj?.error || 'Fehler beim Aktualisieren des Produkts';
+        alert(`Fehler: ${errorMessage}. Bitte versuchen Sie es erneut.`);
         throw apiError;
       }
     } catch (error: unknown) {
@@ -777,8 +777,8 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
       setIsSaving(false);
       console.error('[EditForm] Error en handleSave:', error);
       const errorObj = error as { message?: string };
-      const errorMessage = errorObj?.message || 'Error al actualizar el producto';
-      alert(`Error: ${errorMessage}. Por favor, intenta nuevamente.`);
+      const errorMessage = errorObj?.message || 'Fehler beim Aktualisieren des Produkts';
+      alert(`Fehler: ${errorMessage}. Bitte versuchen Sie es erneut.`);
     }
   }, [
     productName,

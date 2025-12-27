@@ -161,7 +161,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
       <Card className="bg-card rounded-2xl border border-border/50">
         <CardContent className="p-8">
           <div className="flex items-center justify-center">
-            <p className="text-muted-foreground">No se encontró información de la tienda</p>
+            <p className="text-muted-foreground">Keine Geschäftsinformationen gefunden</p>
           </div>
         </CardContent>
       </Card>

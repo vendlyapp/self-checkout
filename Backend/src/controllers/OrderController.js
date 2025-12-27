@@ -332,8 +332,11 @@ class OrderController {
    */
   async getRecentOrders(req, res) {
     try {
-      const { limit } = req.query;
-      const result = await orderService.getRecentOrders(parseInt(limit) || 10);
+      const { limit, status } = req.query;
+      const result = await orderService.getRecentOrders(
+        parseInt(limit) || 10,
+        status || null
+      );
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({

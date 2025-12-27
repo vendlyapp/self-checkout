@@ -178,7 +178,7 @@ export default function ResponsiveHeader({
                   handleValidInteraction(e);
                 }}
                 onClick={handleValidInteraction}
-                aria-label="Buscar"
+                aria-label="Suchen"
               >
                 <ChartNoAxesColumn className="header-icon" />
               </button>

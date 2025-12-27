@@ -89,8 +89,8 @@ export default function CategoriesListComponent({
       await deleteCategoryMutation.mutateAsync(deletingCategory.id);
       setDeletingCategory(null);
     } catch (error) {
-      console.error('Error al eliminar categoría:', error);
-      alert(error instanceof Error ? error.message : 'Error al eliminar categoría');
+      console.error('Fehler beim Löschen der Kategorie:', error);
+      alert(error instanceof Error ? error.message : 'Fehler beim Löschen der Kategorie');
     }
   };
 
@@ -118,8 +118,8 @@ export default function CategoriesListComponent({
         data: { isActive: true },
       });
     } catch (error) {
-      console.error('Error al activar categoría:', error);
-      alert(error instanceof Error ? error.message : 'Error al activar categoría');
+      console.error('Fehler beim Aktivieren der Kategorie:', error);
+      alert(error instanceof Error ? error.message : 'Fehler beim Aktivieren der Kategorie');
     }
   };
 
@@ -133,8 +133,8 @@ export default function CategoriesListComponent({
       });
       setTogglingCategory(null);
     } catch (error) {
-      console.error('Error al desactivar categoría:', error);
-      alert(error instanceof Error ? error.message : 'Error al desactivar categoría');
+      console.error('Fehler beim Deaktivieren der Kategorie:', error);
+      alert(error instanceof Error ? error.message : 'Fehler beim Deaktivieren der Kategorie');
     }
   };
 

@@ -72,8 +72,8 @@ export default function CategoryForm({ category, onClose, onSuccess }: CategoryF
       }
       onSuccess();
     } catch (error) {
-      console.error("Error al guardar categoría:", error);
-      alert(error instanceof Error ? error.message : "Error al guardar categoría");
+      console.error("Fehler beim Speichern der Kategorie:", error);
+      alert(error instanceof Error ? error.message : "Fehler beim Speichern der Kategorie");
     }
   };
 
