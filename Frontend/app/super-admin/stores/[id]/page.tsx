@@ -13,6 +13,7 @@ import StoreProducts from '@/components/admin/stores/StoreProducts';
 import StoreOrders from '@/components/admin/stores/StoreOrders';
 import StoreHistory from '@/components/admin/stores/StoreHistory';
 import StoreQRManagement from '@/components/admin/stores/StoreQRManagement';
+import StorePaymentMethods from '@/components/admin/stores/StorePaymentMethods';
 
 export default function StoreDetailPage() {
   const router = useRouter();
@@ -240,8 +241,9 @@ export default function StoreDetailPage() {
           <StoreQRManagement storeId={storeId} store={store} onUpdate={fetchStoreDetails} />
         </TabsContent>
 
-        <TabsContent value="analytics" className="mt-6">
+        <TabsContent value="analytics" className="mt-6 space-y-6">
           <StoreAnalytics storeId={storeId} store={store} />
+          <StorePaymentMethods storeId={storeId} />
         </TabsContent>
 
         <TabsContent value="products" className="mt-6">

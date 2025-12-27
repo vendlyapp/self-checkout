@@ -109,7 +109,6 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
   const [error, setError] = useState<string | null>(null);
   const [salesPeriod] = useState<TimePeriod>('woche');
   const [revenuePeriod] = useState<TimePeriod>('monat');
-  const [paymentPeriod] = useState<TimePeriod>('woche');
 
   useEffect(() => {
     // Fetch analytics when component mounts or storeId changes
@@ -207,7 +206,6 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
 
   const currentSalesPeriodLabel = periodOptions.find(option => option.value === salesPeriod)?.label || 'Woche';
   const currentRevenuePeriodLabel = periodOptions.find(option => option.value === revenuePeriod)?.label || 'Monat';
-  const currentPaymentPeriodLabel = periodOptions.find(option => option.value === paymentPeriod)?.label || 'Woche';
 
   return (
     <div className="space-y-6">
@@ -395,63 +393,7 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
         </CardContent>
       </Card>
 
-      {/* Gráfico 4: Métodos de Pago */}
-      <Card className="bg-card rounded-2xl border border-border/50 transition-all duration-200 hover:shadow-md">
-        <CardHeader className="px-6 pt-6 pb-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-foreground">Métodos de Pago</h3>
-            <div className="relative">
-              <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-all px-3 py-1.5 rounded-lg hover:bg-muted">
-                {currentPaymentPeriodLabel}
-                <ChevronDown className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="px-6 pb-6 pt-4">
-          <div className="space-y-6">
-            <div className="flex h-4 bg-muted rounded-lg overflow-hidden">
-              {analytics.paymentMethodsData.map((method, index: number) => (
-                <div
-                  key={method.name}
-                  className={`h-full transition-all duration-300 hover:opacity-80 ${
-                    index === 0 ? 'rounded-l-lg' : ''
-                  } ${index === analytics.paymentMethodsData.length - 1 ? 'rounded-r-lg' : ''}`}
-                  style={{ 
-                    width: `${method.value}%`,
-                    backgroundColor: method.color
-                  }}
-                />
-              ))}
-            </div>
-
-            <div className="space-y-3">
-              {analytics.paymentMethodsData.map((method) => (
-                <div 
-                  key={method.name}
-                  className="flex items-center justify-between group hover:bg-muted/30 p-3 rounded-xl transition-all"
-                >
-                  <div className="flex items-center gap-4">
-                    <div 
-                      className="w-3 h-6 rounded-sm transition-transform group-hover:scale-110 shadow-sm" 
-                      style={{ backgroundColor: method.color }}
-                    />
-                    <div className="flex items-baseline gap-3">
-                      <span className="font-bold text-lg">{method.value}%</span>
-                      <span className="text-sm text-muted-foreground font-medium">{method.name}</span>
-                    </div>
-                  </div>
-                  <div className="text-sm font-medium">
-                    CHF {method.amount.toLocaleString('de-CH')}.–
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Gráfico 5: Órdenes por Estado */}
+      {/* Gráfico 4: Órdenes por Estado */}
       <Card className="bg-card rounded-2xl border border-border/50 transition-all duration-200 hover:shadow-md">
         <CardHeader className="px-6 pt-6 pb-4">
           <h3 className="text-lg lg:text-xl font-semibold text-foreground">Órdenes por Estado</h3>

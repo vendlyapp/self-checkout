@@ -21,3 +21,7 @@ export { useRecentOrders } from './useRecentOrders';
 
 // Store queries
 export { useMyStore } from './useMyStore';
+
+// Payment Method queries
+export { usePaymentMethods } from './usePaymentMethods';
+export type { PaymentMethod } from './usePaymentMethods';

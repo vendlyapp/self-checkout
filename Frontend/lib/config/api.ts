@@ -48,6 +48,10 @@ export const API_CONFIG = {
     
     // Health
     HEALTH: '/health',
+    
+    // Payment Methods
+    PAYMENT_METHODS_STORE: (storeId: string) => `/api/payment-methods/store/${storeId}`,
+    PAYMENT_METHOD_BY_ID: (id: string) => `/api/payment-methods/${id}`,
   },
   
   // Configuración de paginación

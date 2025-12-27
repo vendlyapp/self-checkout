@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/lib/stores/cartStore";
 import {
@@ -9,9 +9,14 @@ import {
   FileText,
   DollarSign,
   Lock,
+  QrCode,
+  Coins,
 } from "lucide-react";
 import HeaderNav from "@/components/navigation/HeaderNav";
 import PaymentModal from "@/components/dashboard/charge/PaymentModal";
+import { useMyStore } from "@/hooks/queries/useMyStore";
+import { usePaymentMethods } from "@/hooks/queries/usePaymentMethods";
+import { ModernSpinner } from "@/components/ui";
 
 export default function PaymentPage() {
   const {
@@ -24,12 +29,60 @@ export default function PaymentPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
+  // Obtener la tienda del usuario autenticado
+  const { data: store, isLoading: storeLoading } = useMyStore();
+
+  // Obtener métodos de pago reales desde la API
+  const { data: paymentMethodsData, isLoading: paymentMethodsLoading } = usePaymentMethods({
+    storeId: store?.id || '',
+    activeOnly: true, // Solo mostrar métodos activos
+  });
+
+  // Sincronizar estado del carrito solo en el cliente para evitar hydration mismatch
+  const mountedRef = useRef(false);
+  
+  useEffect(() => {
+    // Solo establecer mounted una vez
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      setMounted(true);
+    }
+  }, []); // Sin dependencias para ejecutar solo una vez
+
   // Cálculos del carrito desde el store centralizado
-  const totalItems = getTotalItems();
-  const subtotal = getSubtotal();
-  const total = getTotalWithDiscount();
+  // Solo calcular después de montar para evitar hydration mismatch
+  const totalItems = mounted ? getTotalItems() : 0;
+  const subtotal = mounted ? getSubtotal() : 0;
+  const total = mounted ? getTotalWithDiscount() : 0;
+
+  // Mapeo de códigos de métodos de pago a iconos de lucide-react
+  const getPaymentMethodIcon = (code: string) => {
+    const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+      'twint': Smartphone,
+      'qr-rechnung': QrCode,
+      'bargeld': Coins,
+      'debit-credit': CreditCard,
+      'postfinance': CreditCard,
+      'klarna': CreditCard,
+    };
+    return iconMap[code] || CreditCard;
+  };
+
+  // Mapear métodos de pago de la API al formato esperado
+  const paymentMethods = paymentMethodsData?.map((method) => {
+    const IconComponent = getPaymentMethodIcon(method.code);
+    const bgColorValue = method.bgColor || '#6E7996';
+    
+    return {
+      code: method.code,
+      label: method.displayName,
+      icon: IconComponent,
+      bgColor: bgColorValue, // Guardar el valor del color directamente
+    };
+  }) || [];
 
   const handlePaymentMethodSelect = (method: string) => {
     setSelectedPaymentMethod(method);
@@ -42,6 +95,22 @@ export default function PaymentPage() {
     // Redirigir a /charge después del pago exitoso (flujo admin)
     router.push("/charge");
   };
+
+  // Mostrar loading state durante la hidratación o mientras se cargan los datos
+  if (!mounted || storeLoading || paymentMethodsLoading) {
+    return (
+      <div className="w-full animate-page-enter gpu-accelerated">
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <div className="text-center">
+            <ModernSpinner size="lg" color="brand" className="mb-4" />
+            <p className="text-xl font-semibold text-gray-900 mb-4">
+              Wird geladen...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -61,7 +130,7 @@ export default function PaymentPage() {
               <div className="w-full max-w-md mx-auto animate-slide-up-fade">
                 <div className="text-center p-4 bg-[#F9F6F4] rounded-xl animate-scale-in">
                   <div className="text-[18px] font-medium text-gray-700 mb-1 transition-interactive">
-                    Heiniger&apos;s Hofladen
+                    {store?.name || "Tienda"}
                   </div>
                   {promoApplied && (
                     <div className="text-[16px] text-gray-400 line-through mb-1 transition-interactive">
@@ -84,31 +153,33 @@ export default function PaymentPage() {
                   <div className="text-center text-[18px] font-semibold text-gray-800 mb-4 transition-interactive">
                     Zahlungsart wählen:
                   </div>
-                  <div className="flex flex-col gap-4">
-                    {[
-                      { method: "twint", icon: Smartphone, label: "TWINT", color: "bg-brand-500 hover:bg-brand-600" },
-                      { method: "card", icon: CreditCard, label: "Zahlungslink", color: "bg-[#7e8bb6] hover:bg-[#6b7aa3]" },
-                      { method: "cash", icon: DollarSign, label: "Bargeld", color: "bg-[#7b7575] hover:bg-[#6a6565]" },
-                      { method: "invoice", icon: FileText, label: "Rechnung", color: "bg-[#1d3b36] hover:bg-[#16302b]" }
-                    ].map((payment, index) => {
-                      const Icon = payment.icon;
-                      return (
-                        <button
-                          key={payment.method}
-                          onClick={() => handlePaymentMethodSelect(payment.method)}
-                          className={`w-full flex items-center justify-center gap-3 rounded-full ${payment.color} text-white font-bold text-[20px] py-4 shadow 
-                                   transition-interactive gpu-accelerated hover:scale-105 active:scale-95`}
-                          aria-label={payment.label}
-                          style={{
-                            animationDelay: `${index * 0.1}s`,
-                            animationFillMode: 'both'
-                          }}
-                        >
-                          <Icon className="w-6 h-6" /> {payment.label}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {paymentMethods.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">Keine Zahlungsmethoden verfügbar</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      {paymentMethods.map((payment, index) => {
+                        const Icon = payment.icon;
+                        return (
+                          <button
+                            key={payment.code}
+                            onClick={() => handlePaymentMethodSelect(payment.code)}
+                            className="w-full flex items-center justify-center gap-3 rounded-full hover:opacity-90 text-white font-bold text-[20px] py-4 shadow 
+                                     transition-interactive gpu-accelerated hover:scale-105 active:scale-95"
+                            aria-label={payment.label}
+                            style={{
+                              backgroundColor: payment.bgColor,
+                              animationDelay: `${index * 0.1}s`,
+                              animationFillMode: 'both'
+                            }}
+                          >
+                            <Icon className="w-6 h-6" /> {payment.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
                 <div className="w-full max-w-md mx-auto mt-auto mb-2 bg-white  py-3 px-4 shadow border border-gray-100">
                   <div className="flex items-center gap-2 justify-center text-[15px] text-gray-700 ">
@@ -152,31 +223,33 @@ export default function PaymentPage() {
               <div className="lg:col-span-1">
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 animate-fade-in-scale">
                   <h2 className="text-lg font-semibold text-gray-900 mb-6 transition-interactive">Zahlungsart wählen</h2>
-                  <div className="grid grid-cols-1 gap-4">
-                    {[
-                      { method: "twint", icon: Smartphone, label: "TWINT", color: "bg-brand-500 hover:bg-brand-600" },
-                      { method: "card", icon: CreditCard, label: "Zahlungslink", color: "bg-[#7e8bb6] hover:bg-[#6b7aa3]" },
-                      { method: "cash", icon: DollarSign, label: "Bargeld", color: "bg-[#7b7575] hover:bg-[#6a6565]" },
-                      { method: "invoice", icon: FileText, label: "Rechnung", color: "bg-[#1d3b36] hover:bg-[#16302b]" }
-                    ].map((payment, index) => {
-                      const Icon = payment.icon;
-                      return (
-                        <button
-                          key={payment.method}
-                          onClick={() => handlePaymentMethodSelect(payment.method)}
-                          className={`w-full flex items-center justify-center gap-4 rounded-xl ${payment.color} text-white font-bold text-lg py-4 shadow 
-                                   transition-interactive gpu-accelerated hover:scale-105 active:scale-95`}
-                          aria-label={payment.label}
-                          style={{
-                            animationDelay: `${index * 0.1}s`,
-                            animationFillMode: 'both'
-                          }}
-                        >
-                          <Icon className="w-6 h-6" /> {payment.label}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {paymentMethods.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">Keine Zahlungsmethoden verfügbar</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                      {paymentMethods.map((payment, index) => {
+                        const Icon = payment.icon;
+                        return (
+                          <button
+                            key={payment.code}
+                            onClick={() => handlePaymentMethodSelect(payment.code)}
+                            className="w-full flex items-center justify-center gap-4 rounded-xl hover:opacity-90 text-white font-bold text-lg py-4 shadow 
+                                     transition-interactive gpu-accelerated hover:scale-105 active:scale-95"
+                            aria-label={payment.label}
+                            style={{
+                              backgroundColor: payment.bgColor,
+                              animationDelay: `${index * 0.1}s`,
+                              animationFillMode: 'both'
+                            }}
+                          >
+                            <Icon className="w-6 h-6" /> {payment.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -188,7 +261,7 @@ export default function PaymentPage() {
                   {/* Store Info */}
                   <div className="text-center p-4 bg-[#F9F6F4] rounded-xl mb-6">
                     <div className="text-lg font-medium text-gray-700 mb-1">
-                      Heiniger&apos;s Hofladen
+                      {store?.name || "Tienda"}
                     </div>
                     {promoApplied && (
                       <div className="text-base text-gray-400 line-through mb-1">

@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import {
   Coins,
   CreditCard,
@@ -19,6 +20,18 @@ import { formatSwissPriceWithCHF } from "@/lib/utils";
 import { usePromoLogic } from "@/hooks";
 import { useCreateOrder } from "@/hooks/mutations";
 import { createPortal } from "react-dom";
+import { usePaymentMethods } from "@/hooks/queries/usePaymentMethods";
+
+interface PaymentMethodDisplay {
+  id: string;
+  name: string;
+  icon: React.ComponentType<{ className?: string; width?: number; height?: number }>;
+  isSvg?: boolean;
+  iconPath?: string | null;
+  bgColor: string;
+  textColor: string;
+  methodData?: any;
+}
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -29,6 +42,7 @@ interface PaymentModalProps {
   paymentStep: "confirm" | "processing" | "success";
   errorMessage?: string | null;
   onConfirm: () => void;
+  paymentMethods: PaymentMethodDisplay[];
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -40,6 +54,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   paymentStep,
   errorMessage,
   onConfirm,
+  paymentMethods,
 }) => {
   const [modalContainer, setModalContainer] = useState<HTMLElement | null>(null);
 
@@ -59,16 +74,25 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     return null;
   }
 
-  const methodInfo = (() => {
-    const methods = {
-      twint: { name: "TWINT", icon: Smartphone, color: "#25D076" },
-      card: { name: "Debit-, Kreditkarte", icon: CreditCard, color: "#6E7996" },
-      postfinance: { name: "PostFinance", icon: QrCode, color: "#F2AD00" },
-      cash: { name: "Bargeld", icon: Coins, color: "#766B6A" },
-    } as const;
-
-    return methods[selectedMethod as keyof typeof methods] || methods.card;
-  })();
+  // Buscar el método seleccionado en la lista de métodos de pago
+  const selectedMethodData = paymentMethods.find(m => m.id === selectedMethod);
+  const getColorFromBgColor = (bgColor: string): string => {
+    // Si viene con formato Tailwind bg-[#color], extraer el color
+    const match = bgColor.match(/bg-\[([^\]]+)\]/);
+    if (match) return match[1];
+    // Si ya es un color hex, retornarlo
+    if (bgColor.startsWith('#')) return bgColor;
+    return "#6E7996";
+  };
+  const methodInfo = selectedMethodData ? {
+    name: selectedMethodData.name,
+    icon: selectedMethodData.icon,
+    color: selectedMethodData.methodData?.bgColor || getColorFromBgColor(selectedMethodData.bgColor),
+  } : {
+    name: "Método de pago",
+    icon: CreditCard,
+    color: "#6E7996",
+  };
 
   const modalContent = (
     <div className="fixed inset-0 bg-white/20 backdrop-blur-md flex items-center justify-center z-[9999] p-4 animate-fade-in-scale" style={{ pointerEvents: 'auto' }}>
@@ -148,11 +172,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
           {paymentStep === "processing" && (
             <div className="text-center py-8">
-              <ModernSpinner size="lg" color="blue" className="mb-4" />
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              <ModernSpinner size="lg" color="brand" className="mb-6" />
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2 animate-pulse">
                 Zahlung wird verarbeitet
               </h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-400">
                 Bitte warten Sie, während wir Ihre Zahlung bearbeiten...
               </p>
             </div>
@@ -312,37 +336,47 @@ export default function PaymentP() {
   // isProcessing viene de la mutation
   const isProcessing = createOrderMutation.isPending;
 
+  // Obtener métodos de pago desde la API
+  const { data: paymentMethodsData, isLoading: paymentMethodsLoading } = usePaymentMethods({
+    storeId: store?.id || '',
+    activeOnly: true, // Solo mostrar métodos activos
+  });
 
-  const paymentMethods = [
-    {
-      id: "twint",
-      name: "TWINT",
-      icon: Smartphone,
-      bgColor: "bg-[#25D076]",
-      textColor: "text-white",
-    },
-    {
-      id: "card",
-      name: "Debit-, Kreditkarte",
-      icon: CreditCard,
-      bgColor: "bg-[#6E7996]",
-      textColor: "text-white",
-    },
-    {
-      id: "postfinance",
-      name: "PostFinance",
-      icon: QrCode,
-      bgColor: "bg-[#F2AD00]",
-      textColor: "text-white",
-    },
-    {
-      id: "cash",
-      name: "Bargeld",
-      icon: Coins,
-      bgColor: "bg-[#766B6A]",
-      textColor: "text-white",
-    },
-  ];
+  // Mapeo de códigos de métodos de pago a iconos de lucide-react (solo para esta página)
+  const getPaymentMethodIconForPaymentPage = (code: string) => {
+    const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+      'twint': Smartphone,
+      'qr-rechnung': QrCode,
+      'bargeld': Coins,
+      'debit-credit': CreditCard,
+      'postfinance': CreditCard,
+      'klarna': CreditCard,
+    };
+    return iconMap[code] || CreditCard;
+  };
+
+  // Mapear métodos de pago de la API al formato esperado por el componente
+  const paymentMethods: PaymentMethodDisplay[] = paymentMethodsData?.map((method) => {
+    // Usar iconos de lucide-react en lugar de SVG para esta página
+    const IconComponent = getPaymentMethodIconForPaymentPage(method.code);
+    
+    // Extraer el color sin los corchetes de Tailwind si está presente
+    const bgColorValue = method.bgColor || '#6E7996';
+    const bgColor = `bg-[${bgColorValue}]`;
+    const textColorValue = method.textColor || '#FFFFFF';
+    const textColor = `text-[${textColorValue}]`;
+    
+    return {
+      id: method.code,
+      name: method.displayName,
+      icon: IconComponent,
+      isSvg: false, // Siempre false porque usamos iconos de lucide-react
+      iconPath: null, // No usamos SVG aquí
+      bgColor: bgColor,
+      textColor: textColor,
+      methodData: method, // Guardar datos completos para uso futuro
+    };
+  }) || [];
 
   // Mostrar mensaje si el carrito está vacío (solo después de montar para evitar hydration mismatch)
   if (mounted && totalItems === 0) {
@@ -466,21 +500,29 @@ export default function PaymentP() {
           Zahlungsmethode wählen:
         </p>
 
-        <div className="space-y-3">
-          {paymentMethods.map((method, index) => {
-            const IconComponent = method.icon;
+        {paymentMethodsLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <ModernSpinner />
+          </div>
+        ) : paymentMethods.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-[#6E7996]">Keine Zahlungsmethoden verfügbar</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {paymentMethods.map((method, index) => {
             const isSelected = selectedPaymentMethod === method.id;
-
+            
             return (
               <button
                 key={method.id}
                 onClick={() => handlePaymentMethodSelect(method.id)}
                 className={`
                   ${method.bgColor} ${method.textColor} px-4 py-4 w-[345px] h-[50px] text-sm rounded-full
-                  flex items-center gap-2 justify-center transition-interactive gpu-accelerated
+                  flex items-center justify-center gap-2 transition-interactive gpu-accelerated
                   ${isSelected ? "ring-4 ring-blue-300 ring-opacity-50" : ""}
                   hover:scale-105 active:scale-95 touch-target tap-highlight-transparent
-                  animate-slide-up-fade
+                  animate-slide-up-fade relative
                 `}
                 style={{ 
                   minHeight: "50px",
@@ -489,17 +531,18 @@ export default function PaymentP() {
                 }}
                 aria-label={`${method.name} auswählen`}
               >
-                <IconComponent className="w-6 h-6 transition-interactive" />
-                {method.name}
+                {React.createElement(method.icon, { className: "w-5 h-5 text-white transition-interactive" })}
+                <span className="font-medium text-white">{method.name}</span>
                 {isSelected && (
-                  <div className="ml-auto animate-bounce-in">
+                  <div className="absolute right-4 animate-bounce-in">
                     <Eclipse className="w-4 h-4 text-white transition-interactive" />
                   </div>
                 )}
               </button>
             );
           })}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Footer de seguridad */}
@@ -527,6 +570,7 @@ export default function PaymentP() {
         paymentStep={paymentStep}
         errorMessage={orderError}
         onConfirm={handleConfirmPayment}
+        paymentMethods={paymentMethods}
       />
     </div>
   );

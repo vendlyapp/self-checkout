@@ -5,9 +5,10 @@ import { PaymentMethod } from './PaymentMethodsPage'
 interface PaymentMethodCardProps {
   method: PaymentMethod
   onToggle: (id: string) => void
+  isLoading?: boolean
 }
 
-const PaymentMethodCard = ({ method, onToggle }: PaymentMethodCardProps) => {
+const PaymentMethodCard = ({ method, onToggle, isLoading = false }: PaymentMethodCardProps) => {
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 active:scale-[0.98] gpu-accelerated">
       <div className="flex items-center justify-between">
@@ -27,8 +28,9 @@ const PaymentMethodCard = ({ method, onToggle }: PaymentMethodCardProps) => {
 
         {/* Toggle Switch */}
         <button
-          onClick={() => onToggle(method.id)}
-          className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-95 ${
+          onClick={() => !isLoading && onToggle(method.id)}
+          disabled={isLoading}
+          className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
             method.isActive 
               ? 'bg-[#25D076] shadow-sm shadow-[#25D076]/30' 
               : 'bg-gray-300'
@@ -36,6 +38,7 @@ const PaymentMethodCard = ({ method, onToggle }: PaymentMethodCardProps) => {
           role="switch"
           aria-checked={method.isActive}
           aria-label={`Toggle ${method.name}`}
+          aria-disabled={isLoading}
         >
           <span
             className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-all duration-300 ease-out ${
