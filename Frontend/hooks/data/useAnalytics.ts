@@ -123,10 +123,11 @@ const transformOrdersToPaymentMethods = (orders: RecentOrder[]): PaymentMethod[]
   const totalRevenue = Array.from(paymentMethodMap.values()).reduce((sum, method) => sum + method.total, 0);
 
   return Array.from(paymentMethodMap.entries()).map(([name, data]) => ({
-    name,
-    value: totalOrders > 0 ? Math.round((data.count / totalOrders) * 100) : 0,
-    amount: data.total,
+    type: name,
+    percentage: totalOrders > 0 ? Math.round((data.count / totalOrders) * 100) : 0,
+    total: data.total,
     color: getPaymentMethodColor(name),
+    transactions: data.count,
   }));
 };
 

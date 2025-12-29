@@ -44,7 +44,7 @@ export default function SuperAdminUsers() {
       <div className="p-8 flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-brand-500 mx-auto" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando usuarios...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Benutzer werden geladen...</p>
         </div>
       </div>
     );
@@ -64,7 +64,7 @@ export default function SuperAdminUsers() {
     const badges = {
       'SUPER_ADMIN': { bg: 'bg-brand-50 dark:bg-brand-500/15', text: 'text-brand-700 dark:text-brand-400', icon: Shield, label: 'Super Admin' },
       'ADMIN': { bg: 'bg-blue-50 dark:bg-blue-500/15', text: 'text-blue-700 dark:text-blue-400', icon: Store, label: 'Admin' },
-      'CUSTOMER': { bg: 'bg-green-50 dark:bg-green-500/15', text: 'text-green-700 dark:text-green-400', icon: UserCheck, label: 'Cliente' },
+      'CUSTOMER': { bg: 'bg-green-50 dark:bg-green-500/15', text: 'text-green-700 dark:text-green-400', icon: UserCheck, label: 'Kunde' },
     };
     return badges[role as keyof typeof badges] || badges['CUSTOMER'];
   };
@@ -78,7 +78,7 @@ export default function SuperAdminUsers() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
+    return date.toLocaleDateString('de-CH', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
@@ -92,15 +92,15 @@ export default function SuperAdminUsers() {
       {/* ============================================ */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white/90">Gestión de Usuarios</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Administra todos los usuarios de la plataforma</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white/90">Benutzerverwaltung</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Verwalten Sie alle Benutzer der Plattform</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative flex-1 sm:flex-none">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="Buscar usuarios..."
+              placeholder="Benutzer suchen..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-300 w-full sm:w-64 dark:bg-gray-900 dark:border-gray-800 dark:text-white/90 dark:placeholder:text-gray-500"
@@ -109,7 +109,7 @@ export default function SuperAdminUsers() {
           <button
             onClick={() => refreshAll()}
             className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
-            title="Actualizar datos"
+            title="Daten aktualisieren"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -123,7 +123,7 @@ export default function SuperAdminUsers() {
         <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Usuarios</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Benutzer insgesamt</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white/90">{roleCounts.total}</p>
             </div>
             <div className="w-12 h-12 bg-blue-50 dark:bg-blue-500/15 rounded-xl flex items-center justify-center">
@@ -183,7 +183,7 @@ export default function SuperAdminUsers() {
                 : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 dark:bg-gray-900 dark:border-gray-800 dark:text-gray-300 dark:hover:bg-gray-800'
             }`}
           >
-            {role === 'ALL' ? 'Todos' : role === 'SUPER_ADMIN' ? 'Super Admin' : role === 'ADMIN' ? 'Admins' : 'Clientes'}
+            {role === 'ALL' ? 'Alle' : role === 'SUPER_ADMIN' ? 'Super Admin' : role === 'ADMIN' ? 'Admins' : 'Kunden'}
           </button>
         ))}
       </div>
@@ -194,9 +194,9 @@ export default function SuperAdminUsers() {
       {filteredUsers.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200 dark:bg-white/[0.03] dark:border-gray-800">
           <Users className="w-16 h-16 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400 font-medium">No se encontraron usuarios</p>
+          <p className="text-gray-600 dark:text-gray-400 font-medium">Keine Benutzer gefunden</p>
           <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-            {searchTerm || filterRole !== 'ALL' ? 'Intenta con otros filtros' : 'No hay usuarios registrados'}
+            {searchTerm || filterRole !== 'ALL' ? 'Versuchen Sie andere Filter' : 'Keine Benutzer registriert'}
           </p>
         </div>
       ) : (
@@ -209,31 +209,31 @@ export default function SuperAdminUsers() {
                     isHeader
                     className="py-3 px-6 font-medium text-gray-700 dark:text-gray-300 text-start text-xs"
                   >
-                    Usuario
+                    Benutzer
                   </TableCell>
                   <TableCell
                     isHeader
                     className="py-3 px-6 font-medium text-gray-700 dark:text-gray-300 text-start text-xs"
                   >
-                    Email
+                    E-Mail
                   </TableCell>
                   <TableCell
                     isHeader
                     className="py-3 px-6 font-medium text-gray-700 dark:text-gray-300 text-start text-xs"
                   >
-                    Rol
+                    Rolle
                   </TableCell>
                   <TableCell
                     isHeader
                     className="py-3 px-6 font-medium text-gray-700 dark:text-gray-300 text-start text-xs"
                   >
-                    Tienda
+                    Geschäft
                   </TableCell>
                   <TableCell
                     isHeader
                     className="py-3 px-6 font-medium text-gray-700 dark:text-gray-300 text-start text-xs"
                   >
-                    Fecha de Registro
+                    Registrierungsdatum
                   </TableCell>
                 </TableRow>
               </TableHeader>

@@ -560,9 +560,9 @@ const SuperAdminAnalytics: React.FC = () => {
     return (
       <AdminDataState
         type="empty"
-        title="Sin datos de analítica"
-        description="Aún no hay suficiente información para mostrar. Intenta actualizar nuevamente."
-        actionLabel="Actualizar"
+        title="Keine Analytics-Daten"
+        description="Es gibt noch nicht genügend Informationen zum Anzeigen. Bitte versuchen Sie es erneut zu aktualisieren."
+        actionLabel="Aktualisieren"
         onAction={() => refreshAll()}
         className="min-h-[60vh]"
       />
@@ -577,46 +577,46 @@ const SuperAdminAnalytics: React.FC = () => {
   const metricCards = [
     {
       id: "revenue",
-      label: "Revenue total",
+      label: "Gesamtumsatz",
       icon: DollarSign,
       primaryValue: `CHF ${analyticsData.totalRevenue.toLocaleString("de-CH", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })}`,
-      secondaryValue: `${totalOrders.toLocaleString("de-CH")} órdenes`,
-      helperText: `Periodo ${
+      secondaryValue: `${totalOrders.toLocaleString("de-CH")} Bestellungen`,
+      helperText: `Zeitraum ${
         periodOptions.find((option) => option.value === selectedPeriod)?.label?.toLowerCase() ?? ""
       }`,
       tone: "brand" as const,
     },
     {
       id: "ticket",
-      label: "Ticket promedio",
+      label: "Durchschnittlicher Warenkorbwert",
       icon: ShoppingCart,
       primaryValue: `CHF ${avgOrderValue.toFixed(2)}`,
-      secondaryValue: "Por orden",
-      helperText: "Incluye todas las tiendas activas",
+      secondaryValue: "Pro Bestellung",
+      helperText: "Umfasst alle aktiven Geschäfte",
       tone: "neutral" as const,
     },
     {
       id: "growth",
-      label: "Crecimiento usuarios",
+      label: "Benutzerwachstum",
       icon: MetricIcon,
       primaryValue: `${userGrowthRate >= 0 ? "+" : ""}${userGrowthRate.toFixed(1)}%`,
-      secondaryValue: "Últimos 12 meses",
-      helperText: `${stats.users.total.toLocaleString("de-CH")} usuarios totales`,
+      secondaryValue: "Letzte 12 Monate",
+      helperText: `${stats.users.total.toLocaleString("de-CH")} Benutzer insgesamt`,
       tone: metricTone,
     },
     {
       id: "storeRevenue",
-      label: "Revenue por tienda",
+      label: "Umsatz pro Geschäft",
       icon: Store,
       primaryValue: `CHF ${avgRevenuePerStore.toLocaleString("de-CH", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })}`,
-      secondaryValue: `${activeStoreCount} tiendas activas`,
-      helperText: `${analyticsData.salesByStore.length.toLocaleString("de-CH")} tiendas totales`,
+      secondaryValue: `${activeStoreCount} aktive Geschäfte`,
+      helperText: `${analyticsData.salesByStore.length.toLocaleString("de-CH")} Geschäfte insgesamt`,
       tone: "warning" as const,
     },
   ];
@@ -627,12 +627,12 @@ const SuperAdminAnalytics: React.FC = () => {
     <div className="space-y-6 md:space-y-8">
       <AdminPageHeader
         title="Analytics & Insights"
-        description="Visualiza tendencias clave y el rendimiento integral de la plataforma Vendly."
+        description="Visualisieren Sie wichtige Trends und die Gesamtleistung der Vendly-Plattform."
         meta={
           lastUpdatedAt ? (
             <span className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 font-medium text-gray-600 dark:bg-gray-900/70 dark:text-gray-300">
               <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Actualizado {lastUpdatedAt}</span>
+              <span>Aktualisiert {lastUpdatedAt}</span>
             </span>
           ) : null
         }
@@ -643,14 +643,14 @@ const SuperAdminAnalytics: React.FC = () => {
               value={selectedPeriod}
               onChange={setSelectedPeriod}
               size="sm"
-              ariaLabel="Seleccionar periodo de visualización"
+              ariaLabel="Anzeigezeitraum auswählen"
             />
             <button
               type="button"
               onClick={() => refreshAll()}
               disabled={isRefreshing}
               tabIndex={0}
-              aria-label="Actualizar datos de analytics"
+              aria-label="Analytics-Daten aktualisieren"
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault();
@@ -658,12 +658,12 @@ const SuperAdminAnalytics: React.FC = () => {
                 }
               }}
               className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition hover:border-brand-200 hover:text-brand-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-brand-500/40 dark:hover:text-white dark:focus-visible:ring-offset-gray-950"
-              title="Actualizar datos"
+              title="Daten aktualisieren"
             >
               <RefreshCw
                 className={cn("h-4 w-4", isRefreshing ? "animate-spin" : undefined)}
               />
-              <span>Actualizar</span>
+              <span>Aktualisieren</span>
             </button>
           </div>
         }
@@ -686,8 +686,8 @@ const SuperAdminAnalytics: React.FC = () => {
       <div className="grid grid-cols-12 gap-4 md:gap-6 xl:items-stretch">
         <div className="col-span-12 lg:col-span-8">
           <AdminSectionCard
-            title="Tendencias de ventas"
-            subtitle="Ventas mensuales en comparación con el promedio"
+            title="Verkaufstrends"
+            subtitle="Monatliche Verkäufe im Vergleich zum Durchschnitt"
           >
             <div className="h-[360px]" aria-label="Gráfico de ventas mensuales">
               <ReactApexChart
@@ -702,12 +702,12 @@ const SuperAdminAnalytics: React.FC = () => {
 
         <div className="col-span-12 lg:col-span-4">
           <AdminSectionCard
-            title="Distribución de ingresos"
-            subtitle="Participación por tienda"
+            title="Umsatzverteilung"
+            subtitle="Anteil pro Geschäft"
           >
             <div
               className="h-[360px]"
-              aria-label="Distribución de ingresos por tienda (gráfico de dona)"
+              aria-label="Umsatzverteilung nach Geschäft (Donut-Diagramm)"
             >
               <ReactApexChart
                 options={revenueDistributionOptions}
@@ -723,8 +723,8 @@ const SuperAdminAnalytics: React.FC = () => {
       <div className="grid grid-cols-12 gap-4 md:gap-6 xl:items-stretch">
         <div className="col-span-12 lg:col-span-7">
           <AdminSectionCard
-            title="Top tiendas por revenue"
-            subtitle="Las 10 tiendas con mayor facturación"
+            title="Top Geschäfte nach Umsatz"
+            subtitle="Die 10 Geschäfte mit dem höchsten Umsatz"
           >
             <div className="h-[360px]" aria-label="Ranking de tiendas por ingresos">
               <ReactApexChart
@@ -739,8 +739,8 @@ const SuperAdminAnalytics: React.FC = () => {
 
         <div className="col-span-12 lg:col-span-5">
           <AdminSectionCard
-            title="Crecimiento de usuarios"
-            subtitle="Tendencia en los últimos 12 meses"
+            title="Benutzerwachstum"
+            subtitle="Trend der letzten 12 Monate"
           >
             <div className="h-[360px]" aria-label="Gráfico de crecimiento de usuarios">
               <ReactApexChart
@@ -758,7 +758,7 @@ const SuperAdminAnalytics: React.FC = () => {
         title="Productos por categoría"
         subtitle="Distribución de productos en la plataforma"
       >
-        <div className="h-[360px]" aria-label="Distribución de productos por categoría">
+        <div className="h-[360px]" aria-label="Produktverteilung nach Kategorie">
           <ReactApexChart
             options={categoriesOptions}
             series={categoriesSeries}

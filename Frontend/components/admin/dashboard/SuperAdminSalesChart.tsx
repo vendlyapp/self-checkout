@@ -16,7 +16,7 @@ interface SuperAdminSalesChartProps {
 }
 
 export default function SuperAdminSalesChart({ monthlyData }: SuperAdminSalesChartProps) {
-  // Datos por defecto si no se proporcionan
+  // Standarddaten wenn keine bereitgestellt werden
   const defaultData = [168, 385, 201, 298, 187, 195, 291, 110, 215, 390, 280, 112];
   const salesData = monthlyData || defaultData;
 
@@ -48,18 +48,18 @@ export default function SuperAdminSalesChart({ monthlyData }: SuperAdminSalesCha
     },
     xaxis: {
       categories: [
-        "Ene",
+        "Jan",
         "Feb",
-        "Mar",
-        "Abr",
-        "May",
+        "Mär",
+        "Apr",
+        "Mai",
         "Jun",
         "Jul",
-        "Ago",
+        "Aug",
         "Sep",
-        "Oct",
+        "Okt",
         "Nov",
-        "Dic",
+        "Dez",
       ],
       axisBorder: {
         show: false,
@@ -101,7 +101,7 @@ export default function SuperAdminSalesChart({ monthlyData }: SuperAdminSalesCha
 
   const series = [
     {
-      name: "Ventas",
+      name: "Verkäufe",
       data: salesData,
     },
   ];
@@ -121,10 +121,10 @@ export default function SuperAdminSalesChart({ monthlyData }: SuperAdminSalesCha
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-            Ventas Mensuales
+            Monatliche Verkäufe
           </h3>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Ingresos por mes
+            Umsatz pro Monat
           </p>
         </div>
 
@@ -141,13 +141,13 @@ export default function SuperAdminSalesChart({ monthlyData }: SuperAdminSalesCha
               onItemClick={closeDropdown}
               className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
             >
-              Ver más
+              Mehr anzeigen
             </DropdownItem>
             <DropdownItem
               onItemClick={closeDropdown}
               className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
             >
-              Exportar
+              Exportieren
             </DropdownItem>
           </Dropdown>
         </div>

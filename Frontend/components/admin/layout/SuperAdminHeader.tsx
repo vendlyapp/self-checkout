@@ -66,7 +66,7 @@ const SuperAdminHeader: React.FC = () => {
         console.warn('Error en contextos de logout (puede ignorarse):', contextError);
       }
       
-      toast.success('Sesión cerrada correctamente');
+      toast.success('Erfolgreich abgemeldet');
       
       // Redirigir a la ruta raíz
       setTimeout(() => {
@@ -79,7 +79,7 @@ const SuperAdminHeader: React.FC = () => {
       
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
-      toast.error('Error al cerrar sesión. Redirigiendo...');
+      toast.error('Fehler beim Abmelden. Weiterleitung...');
       
       // Forzar limpieza básica en caso de error
       try {
@@ -160,7 +160,7 @@ const SuperAdminHeader: React.FC = () => {
                 <input
                   ref={inputRef}
                   type="text"
-                  placeholder="Buscar o presiona Cmd+K..."
+                  placeholder="Suchen oder Cmd+K drücken..."
                   className="h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pl-12 pr-14 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 xl:w-[430px]"
                 />
                 <button
@@ -201,7 +201,7 @@ const SuperAdminHeader: React.FC = () => {
               >
                 <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 dark:border-gray-700">
                   <h5 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                    Notificaciones
+                    Benachrichtigungen
                   </h5>
                 </div>
                 <div className="flex-1 overflow-y-auto">
@@ -265,7 +265,7 @@ const SuperAdminHeader: React.FC = () => {
                     className="flex items-center gap-3 px-3 py-2 font-medium text-gray-700 rounded-lg text-sm hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300 cursor-pointer"
                   >
                     <Settings className="w-5 h-5" />
-                    Configuración
+                    Einstellungen
                   </DropdownItem>
                 </li>
               </ul>
@@ -277,12 +277,12 @@ const SuperAdminHeader: React.FC = () => {
                 {isLoggingOut ? (
                   <>
                     <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-                    <span>Cerrando sesión...</span>
+                    <span>Abmelden...</span>
                   </>
                 ) : (
                   <>
                     <LogOut className="w-5 h-5" />
-                    <span>Cerrar Sesión</span>
+                    <span>Abmelden</span>
                   </>
                 )}
               </button>

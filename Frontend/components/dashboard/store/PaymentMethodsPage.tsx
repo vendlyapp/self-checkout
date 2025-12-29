@@ -70,7 +70,7 @@ const PaymentMethodsPage = () => {
       </div>
     ) : (
       <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100">
-        {React.createElement(getPaymentMethodIcon(method.icon) as any, { className: 'w-6 h-6 text-gray-600' })}
+        {React.createElement(getPaymentMethodIcon(method.icon), { className: 'w-6 h-6 text-gray-600' })}
       </div>
     )
 

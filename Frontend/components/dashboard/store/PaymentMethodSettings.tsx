@@ -27,7 +27,7 @@ const PaymentMethodSettings = ({ paymentMethods, onConfigure }: PaymentMethodSet
 
     return items.map(item => {
       const method = methodMap[item.id]
-      const isConfigured = method?.isActive && method?.isConfigured
+      const isConfigured = method?.isActive ?? false
       
       return {
         id: item.id,

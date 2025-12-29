@@ -18,7 +18,7 @@ export default function SuperAdminStatisticsChart({
   salesData, 
   revenueData 
 }: SuperAdminStatisticsChartProps) {
-  // Datos por defecto
+  // Standarddaten
   const defaultSalesData = [180, 190, 170, 160, 175, 165, 170, 205, 230, 210, 240, 235];
   const defaultRevenueData = [40, 30, 50, 40, 55, 40, 70, 100, 110, 120, 150, 140];
   
@@ -86,18 +86,18 @@ export default function SuperAdminStatisticsChart({
     xaxis: {
       type: "category",
       categories: [
-        "Ene",
+        "Jan",
         "Feb",
-        "Mar",
-        "Abr",
-        "May",
+        "Mär",
+        "Apr",
+        "Mai",
         "Jun",
         "Jul",
-        "Ago",
+        "Aug",
         "Sep",
-        "Oct",
+        "Okt",
         "Nov",
-        "Dic",
+        "Dez",
       ],
       axisBorder: {
         show: false,
@@ -128,11 +128,11 @@ export default function SuperAdminStatisticsChart({
 
   const series = [
     {
-      name: "Ventas",
+      name: "Verkäufe",
       data: sales,
     },
     {
-      name: "Ingresos",
+      name: "Umsatz",
       data: revenue,
     },
   ];
@@ -142,10 +142,10 @@ export default function SuperAdminStatisticsChart({
       <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:justify-between sm:mb-5">
         <div>
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-            Estadísticas de la Plataforma
+            Plattformstatistiken
           </h3>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Tendencias de ventas e ingresos mensuales
+            Trends für monatliche Verkäufe und Umsatz
           </p>
         </div>
         <div className="flex items-start gap-3 sm:justify-end">

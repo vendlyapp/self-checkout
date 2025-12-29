@@ -48,7 +48,7 @@ export const getPaymentMethodIcon = (iconName: string | null | undefined): Lucid
   
   // Si es una ruta SVG, retornar un componente que renderice el SVG
   if (isSvgIcon(iconName)) {
-    return ({ className, width = 24, height = 24 }) => (
+    const SvgIconComponent = ({ className, width = 24, height = 24 }: { className?: string; width?: number; height?: number }) => (
       <Image 
         src={iconName} 
         alt="Payment method icon" 
@@ -57,6 +57,8 @@ export const getPaymentMethodIcon = (iconName: string | null | undefined): Lucid
         className={className}
       />
     );
+    SvgIconComponent.displayName = 'SvgIconComponent';
+    return SvgIconComponent;
   }
   
   // Si es un icono de lucide-react, retornarlo

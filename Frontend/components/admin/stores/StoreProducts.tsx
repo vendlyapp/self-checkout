@@ -6,7 +6,7 @@ import { Package, Search, AlertCircle, RefreshCw, TrendingUp, Edit } from 'lucid
 import { SuperAdminService, type Product, type Store } from '@/lib/services/superAdminService';
 import { formatSwissPrice } from '@/lib/utils';
 import EditProductModal from './EditProductModal';
-import { ProductService } from '@/lib/services/productService';
+import { ProductService, type Product as ProductServiceProduct } from '@/lib/services/productService';
 
 interface StoreProductsProps {
   storeId: string;
@@ -18,7 +18,7 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductServiceProduct | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
       const response = await ProductService.getProductById(product.id);
       if (response.success && response.data) {
         // Convert to the Product type expected by the modal
-        setEditingProduct(response.data as any);
+        setEditingProduct(response.data);
         setIsEditModalOpen(true);
       } else {
         setError('No se pudo cargar la información del producto');

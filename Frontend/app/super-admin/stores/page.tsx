@@ -27,8 +27,8 @@ export default function SuperAdminStores() {
     try {
       await toggleStoreStatus(storeId, !currentStatus);
     } catch (err) {
-      console.error('Error al cambiar estado:', err);
-      alert('Error al cambiar el estado de la tienda');
+      console.error('Fehler beim Ändern des Status:', err);
+      alert('Fehler beim Ändern des Geschäftsstatus');
     }
   };
 
@@ -48,7 +48,7 @@ export default function SuperAdminStores() {
       <div className="p-8 flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-brand-500 mx-auto" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando tiendas...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Geschäfte werden geladen...</p>
         </div>
       </div>
     );
@@ -77,15 +77,15 @@ export default function SuperAdminStores() {
       {/* ============================================ */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full min-w-0">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white/90">Gestión de Tiendas</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Administra todas las tiendas de la plataforma</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white/90">Geschäftsverwaltung</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Verwalten Sie alle Geschäfte der Plattform</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative flex-1 sm:flex-none">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="Buscar tiendas..."
+              placeholder="Geschäfte suchen..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-300 w-full sm:w-64 dark:bg-gray-900 dark:border-gray-800 dark:text-white/90 dark:placeholder:text-gray-500"
@@ -94,7 +94,7 @@ export default function SuperAdminStores() {
           <button
             onClick={() => refreshAll()}
             className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
-            title="Actualizar datos"
+            title="Daten aktualisieren"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -108,7 +108,7 @@ export default function SuperAdminStores() {
         <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Tiendas</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Geschäfte insgesamt</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white/90">{stores.length}</p>
             </div>
             <div className="w-12 h-12 bg-brand-50 dark:bg-brand-500/15 rounded-xl flex items-center justify-center">
@@ -122,7 +122,7 @@ export default function SuperAdminStores() {
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Activas</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white/90">{activeStores}</p>
-              <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">{inactiveStores} inactivas</p>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">{inactiveStores} inaktiv</p>
             </div>
             <div className="w-12 h-12 bg-green-50 dark:bg-green-500/15 rounded-xl flex items-center justify-center">
               <Power className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -133,7 +133,7 @@ export default function SuperAdminStores() {
         <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Revenue Total</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Gesamtumsatz</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white/90">
                 CHF {totalRevenue.toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
@@ -149,7 +149,7 @@ export default function SuperAdminStores() {
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Productos</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white/90">{totalProducts}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{totalOrders} órdenes</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{totalOrders} Bestellungen</p>
             </div>
             <div className="w-12 h-12 bg-blue-50 dark:bg-blue-500/15 rounded-xl flex items-center justify-center">
               <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -164,9 +164,9 @@ export default function SuperAdminStores() {
       {filteredStores.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200 dark:bg-white/[0.03] dark:border-gray-800">
           <StoreIcon className="w-16 h-16 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400 font-medium">No se encontraron tiendas</p>
+          <p className="text-gray-600 dark:text-gray-400 font-medium">Keine Geschäfte gefunden</p>
           <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-            {searchTerm ? 'Intenta con otro término de búsqueda' : 'No hay tiendas registradas'}
+            {searchTerm ? 'Versuchen Sie einen anderen Suchbegriff' : 'Keine Geschäfte registriert'}
           </p>
         </div>
       ) : (
@@ -209,7 +209,7 @@ export default function SuperAdminStores() {
                       : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-500'
                   }`}
                 >
-                  {store.isActive ? 'Activa' : 'Inactiva'}
+                  {store.isActive ? 'Aktiv' : 'Inaktiv'}
                 </span>
               </div>
 
@@ -218,7 +218,7 @@ export default function SuperAdminStores() {
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center text-gray-600 dark:text-gray-400">
                     <User className="w-4 h-4 mr-2" />
-                    <span>Propietario</span>
+                    <span>Eigentümer</span>
                   </div>
                   <span className="font-semibold text-gray-900 dark:text-white/90 truncate ml-2 max-w-[60%]">
                     {store.ownerName}
@@ -243,7 +243,7 @@ export default function SuperAdminStores() {
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center text-gray-600 dark:text-gray-400">
                     <ShoppingCart className="w-4 h-4 mr-2" />
-                    <span>Órdenes</span>
+                    <span>Bestellungen</span>
                   </div>
                   <span className="font-semibold text-gray-900 dark:text-white/90">{store.orderCount}</span>
                 </div>
@@ -268,12 +268,12 @@ export default function SuperAdminStores() {
                   {store.isActive ? (
                     <>
                       <PowerOff className="w-4 h-4" />
-                      <span>Desactivar</span>
+                      <span>Deaktivieren</span>
                     </>
                   ) : (
                     <>
                       <Power className="w-4 h-4" />
-                      <span>Activar</span>
+                      <span>Aktivieren</span>
                     </>
                   )}
                 </button>

@@ -24,8 +24,8 @@ export default function SuperAdminQuickActions() {
   const actions: QuickAction[] = [
     {
       id: "stores",
-      title: "Gestionar Tiendas",
-      description: "Ver y administrar todas las tiendas",
+      title: "Geschäfte verwalten",
+      description: "Alle Geschäfte anzeigen und verwalten",
       href: "/super-admin/stores",
       icon: Store,
       color: "text-brand-600 dark:text-brand-400",
@@ -33,8 +33,8 @@ export default function SuperAdminQuickActions() {
     },
     {
       id: "users",
-      title: "Gestionar Usuarios",
-      description: "Administrar usuarios y permisos",
+      title: "Benutzer verwalten",
+      description: "Benutzer und Berechtigungen verwalten",
       href: "/super-admin/users",
       icon: Users,
       color: "text-blue-600 dark:text-blue-400",
@@ -42,8 +42,8 @@ export default function SuperAdminQuickActions() {
     },
     {
       id: "products",
-      title: "Ver Productos",
-      description: "Explorar todos los productos",
+      title: "Produkte anzeigen",
+      description: "Alle Produkte durchsuchen",
       href: "/super-admin/products",
       icon: Package,
       color: "text-green-600 dark:text-green-400",
@@ -51,8 +51,8 @@ export default function SuperAdminQuickActions() {
     },
     {
       id: "analytics",
-      title: "Analíticas",
-      description: "Ver análisis detallados",
+      title: "Analytics",
+      description: "Detaillierte Analysen anzeigen",
       href: "/super-admin/analytics",
       icon: BarChart3,
       color: "text-orange-600 dark:text-orange-400",
@@ -60,8 +60,8 @@ export default function SuperAdminQuickActions() {
     },
     {
       id: "settings",
-      title: "Configuración",
-      description: "Ajustes del sistema",
+      title: "Einstellungen",
+      description: "Systemeinstellungen",
       href: "/super-admin/settings",
       icon: Settings,
       color: "text-gray-600 dark:text-gray-400",
@@ -69,8 +69,8 @@ export default function SuperAdminQuickActions() {
     },
     {
       id: "reports",
-      title: "Reportes",
-      description: "Generar reportes",
+      title: "Berichte",
+      description: "Berichte generieren",
       href: "/super-admin/reports",
       icon: FileText,
       color: "text-indigo-600 dark:text-indigo-400",
@@ -82,10 +82,10 @@ export default function SuperAdminQuickActions() {
     <div className="h-full flex flex-col rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] sm:p-6">
       <div className="mb-4 sm:mb-5">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-          Acciones Rápidas
+          Schnellaktionen
         </h3>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Acceso rápido a las funciones principales
+          Schnellzugriff auf Hauptfunktionen
         </p>
       </div>
 

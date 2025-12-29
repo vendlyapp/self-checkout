@@ -23,7 +23,7 @@ interface ProductsListComponentProps {
 
 // Función helper para transformar categorías de la API al formato de filtros
 // Usa solo las categorías reales de la base de datos
-const transformCategoriesToFilters = (categories: any[], products: Product[]) => {
+const transformCategoriesToFilters = (categories: { id: string; name: string; icon?: string; isActive?: boolean }[], products: Product[]) => {
   // Agregar la opción "all" al inicio
   const allProductsCount = products.length;
   const filters = [

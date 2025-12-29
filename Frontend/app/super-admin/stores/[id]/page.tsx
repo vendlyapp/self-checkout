@@ -55,7 +55,7 @@ export default function StoreDetailPage() {
         setStore(storeFromList);
         setError(null);
       } else if (!store) {
-        setError('No se pudo cargar la tienda');
+        setError('Geschäft konnte nicht geladen werden');
       }
     } catch (err) {
       console.error('Error fetching store details:', err);
@@ -65,7 +65,7 @@ export default function StoreDetailPage() {
         setStore(storeFromList);
         setError(null);
       } else if (!store) {
-        setError('Error al cargar los detalles de la tienda');
+        setError('Fehler beim Laden der Geschäftsdetails');
       }
     } finally {
       if (showLoading) {
@@ -96,7 +96,7 @@ export default function StoreDetailPage() {
       <div className="p-8 flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-brand-500 mx-auto" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando tienda...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Geschäft wird geladen...</p>
         </div>
       </div>
     );
@@ -110,10 +110,10 @@ export default function StoreDetailPage() {
           className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 mb-4"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Volver</span>
+          <span>Zurück</span>
         </button>
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl dark:bg-red-500/15 dark:border-red-500/50 dark:text-red-400">
-          {error || 'Tienda no encontrada'}
+          {error || 'Geschäft nicht gefunden'}
         </div>
       </div>
     );
@@ -155,7 +155,7 @@ export default function StoreDetailPage() {
                     : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-500'
                 }`}
               >
-                {store.isActive ? 'Activa' : 'Inactiva'}
+                {store.isActive ? 'Aktiv' : 'Inaktiv'}
               </span>
             </div>
           </div>
@@ -168,7 +168,7 @@ export default function StoreDetailPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Revenue Total</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Gesamtumsatz</p>
                 <p className="text-xl font-bold text-gray-900 dark:text-white/90">
                   CHF {Number(store.totalRevenue || 0).toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
@@ -180,7 +180,7 @@ export default function StoreDetailPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Productos</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Produkte</p>
                 <p className="text-xl font-bold text-gray-900 dark:text-white/90">{store.productCount || 0}</p>
               </div>
             </div>
@@ -190,7 +190,7 @@ export default function StoreDetailPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Órdenes</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Bestellungen</p>
                 <p className="text-xl font-bold text-gray-900 dark:text-white/90">{store.orderCount || 0}</p>
               </div>
             </div>
@@ -200,7 +200,7 @@ export default function StoreDetailPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Propietario</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Eigentümer</p>
                 <p className="text-sm font-semibold text-gray-900 dark:text-white/90 truncate">{store.ownerName}</p>
               </div>
             </div>
@@ -213,7 +213,7 @@ export default function StoreDetailPage() {
         <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 bg-gray-100 dark:bg-gray-900 overflow-x-auto">
           <TabsTrigger value="qr" className="flex items-center gap-2">
             <QrCode className="w-4 h-4" />
-            <span className="hidden sm:inline">QR & Gestión</span>
+            <span className="hidden sm:inline">QR & Verwaltung</span>
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <BarChart3 className="w-4 h-4" />
@@ -221,19 +221,19 @@ export default function StoreDetailPage() {
           </TabsTrigger>
           <TabsTrigger value="products" className="flex items-center gap-2">
             <Package className="w-4 h-4" />
-            <span className="hidden sm:inline">Productos</span>
+            <span className="hidden sm:inline">Produkte</span>
           </TabsTrigger>
           <TabsTrigger value="orders" className="flex items-center gap-2">
             <ShoppingCart className="w-4 h-4" />
-            <span className="hidden sm:inline">Ventas</span>
+            <span className="hidden sm:inline">Verkäufe</span>
           </TabsTrigger>
           <TabsTrigger value="configuration" className="flex items-center gap-2">
             <Settings className="w-4 h-4" />
-            <span className="hidden sm:inline">Configuración</span>
+            <span className="hidden sm:inline">Einstellungen</span>
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
             <History className="w-4 h-4" />
-            <span className="hidden sm:inline">Historial</span>
+            <span className="hidden sm:inline">Verlauf</span>
           </TabsTrigger>
         </TabsList>
 

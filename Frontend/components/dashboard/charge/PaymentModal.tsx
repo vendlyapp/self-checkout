@@ -61,7 +61,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   // Obtener información del método seleccionado desde los datos reales
   const getMethodInfo = (methodId: string) => {
     // Buscar el método en los datos reales de la API
-    const method = paymentMethodsData?.find((m: any) => m.code === methodId);
+    const method = paymentMethodsData?.find((m) => m.code === methodId);
     
     if (method) {
       return {

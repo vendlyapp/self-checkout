@@ -37,9 +37,9 @@ export default function SuperAdminPlatformOverview({
   const overviewItems = [
     {
       id: "users",
-      label: "Usuarios Totales",
+      label: "Benutzer insgesamt",
       value: stats.users.total,
-      subtitle: `${stats.users.admins} admins, ${stats.users.customers} clientes`,
+      subtitle: `${stats.users.admins} Admins, ${stats.users.customers} Kunden`,
       icon: Users,
       iconColor: "text-blue-600 dark:text-blue-400",
       bgColor: "bg-blue-50 dark:bg-blue-500/15",
@@ -49,9 +49,9 @@ export default function SuperAdminPlatformOverview({
     },
     {
       id: "stores",
-      label: "Tiendas Activas",
+      label: "Aktive Geschäfte",
       value: stats.stores.active,
-      subtitle: `De ${stats.stores.total} total`,
+      subtitle: `Von ${stats.stores.total} insgesamt`,
       icon: Store,
       iconColor: "text-brand-600 dark:text-brand-400",
       bgColor: "bg-brand-50 dark:bg-brand-500/15",
@@ -61,9 +61,9 @@ export default function SuperAdminPlatformOverview({
     },
     {
       id: "products",
-      label: "Total Productos",
+      label: "Produkte insgesamt",
       value: stats.products.total,
-      subtitle: "En todas las tiendas",
+      subtitle: "In allen Geschäften",
       icon: Package,
       iconColor: "text-green-600 dark:text-green-400",
       bgColor: "bg-green-50 dark:bg-green-500/15",
@@ -73,12 +73,12 @@ export default function SuperAdminPlatformOverview({
     },
     {
       id: "revenue",
-      label: "Ingresos Totales",
+      label: "Gesamtumsatz",
       value: `CHF ${Number(stats.orders.revenue || 0).toLocaleString("de-CH", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })}`,
-      subtitle: "Desde el inicio",
+      subtitle: "Seit Beginn",
       icon: TrendingUp,
       iconColor: "text-orange-600 dark:text-orange-400",
       bgColor: "bg-orange-50 dark:bg-orange-500/15",
@@ -92,10 +92,10 @@ export default function SuperAdminPlatformOverview({
     <div className="h-full flex flex-col rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] sm:p-6">
       <div className="mb-4 sm:mb-5">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-          Resumen de la Plataforma
+          Plattformübersicht
         </h3>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Vista general de los indicadores clave
+          Übersicht der wichtigsten Indikatoren
         </p>
       </div>
 

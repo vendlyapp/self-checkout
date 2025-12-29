@@ -30,7 +30,7 @@ interface PaymentMethodDisplay {
   iconPath?: string | null;
   bgColor: string;
   textColor: string;
-  methodData?: any;
+  methodData?: { id: string; name: string; displayName: string; code: string; bgColor?: string | null; textColor?: string | null; [key: string]: unknown };
 }
 
 interface PaymentModalProps {
@@ -372,7 +372,11 @@ export default function PaymentP() {
       iconPath: null, // No usamos SVG aquí
       bgColor: bgColorValue, // Guardar el valor directo para usar en style
       textColor: textColorValue, // Guardar el valor directo para usar en style
-      methodData: method, // Guardar datos completos para uso futuro
+        methodData: {
+          ...method,
+          bgColor: method.bgColor ?? undefined,
+          textColor: method.textColor ?? undefined,
+        },
     };
   }) || [];
 

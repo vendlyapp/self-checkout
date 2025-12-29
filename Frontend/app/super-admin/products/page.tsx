@@ -40,7 +40,7 @@ export default function SuperAdminProducts() {
 
   // Group products by store
   const productsByStore = products.reduce((acc: Record<string, StoreInfo>, product: Product) => {
-    const storeName = product.storeName || 'Sin asignar';
+    const storeName = product.storeName || 'Nicht zugewiesen';
     if (!acc[storeName]) {
       acc[storeName] = {
         name: storeName,
@@ -98,7 +98,7 @@ export default function SuperAdminProducts() {
       const response = await ProductService.getProductById(product.id);
       if (response.success && response.data) {
         // Update with full product details
-        setEditingProduct(response.data as any);
+        setEditingProduct(response.data as Product);
       } else {
         console.error('[SuperAdminProducts] Failed to load product details');
       }
@@ -116,7 +116,7 @@ export default function SuperAdminProducts() {
       <div className="p-8 flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-brand-500 mx-auto" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando productos...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Produkte werden geladen...</p>
         </div>
       </div>
     );
@@ -136,12 +136,12 @@ export default function SuperAdminProducts() {
               className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Volver</span>
+              <span>Zurück</span>
             </button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white/90">{selectedStore.name}</h1>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                {selectedStore.ownerName && `Propietario: ${selectedStore.ownerName}`}
+                {selectedStore.ownerName && `Eigentümer: ${selectedStore.ownerName}`}
               </p>
             </div>
           </div>
@@ -174,9 +174,9 @@ export default function SuperAdminProducts() {
             <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Productos</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Produkte insgesamt</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white/90">{storeStats.total}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{storeStats.active} activos</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{storeStats.active} aktiv</p>
                 </div>
                 <div className="w-12 h-12 bg-brand-50 dark:bg-brand-500/15 rounded-xl flex items-center justify-center">
                   <Package className="w-6 h-6 text-brand-600 dark:text-brand-400" />
@@ -187,11 +187,11 @@ export default function SuperAdminProducts() {
             <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Precio Promedio</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Durchschnittspreis</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white/90">
                     CHF {storeStats.avgPrice.toFixed(2)}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Por producto</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Pro Produkt</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-50 dark:bg-blue-500/15 rounded-xl flex items-center justify-center">
                   <BarChart3 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -202,11 +202,11 @@ export default function SuperAdminProducts() {
             <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Valor Total</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Gesamtwert</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white/90">
                     CHF {storeStats.totalValue.toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">En inventario</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Im Inventar</p>
                 </div>
                 <div className="w-12 h-12 bg-orange-50 dark:bg-orange-500/15 rounded-xl flex items-center justify-center">
                   <TrendingUp className="w-6 h-6 text-orange-600 dark:text-orange-400" />
@@ -217,10 +217,10 @@ export default function SuperAdminProducts() {
             <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Stock Total</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Lagerbestand insgesamt</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white/90">{storeStats.totalStock}</p>
                   <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">
-                    {storeStats.lowStock} bajo, {storeStats.outOfStock} sin stock
+                    {storeStats.lowStock} niedrig, {storeStats.outOfStock} nicht vorrätig
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-green-50 dark:bg-green-500/15 rounded-xl flex items-center justify-center">
@@ -246,9 +246,9 @@ export default function SuperAdminProducts() {
         {filteredProducts.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-xl border border-gray-200 dark:bg-white/[0.03] dark:border-gray-800">
             <Package className="w-16 h-16 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400 font-medium">No se encontraron productos</p>
+            <p className="text-gray-600 dark:text-gray-400 font-medium">Keine Produkte gefunden</p>
             <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-              {searchTerm ? 'Intenta con otro término de búsqueda' : 'No hay productos en esta tienda'}
+              {searchTerm ? 'Versuchen Sie einen anderen Suchbegriff' : 'Keine Produkte in diesem Geschäft'}
             </p>
           </div>
         ) : (
@@ -261,7 +261,7 @@ export default function SuperAdminProducts() {
                       isHeader
                       className="py-3 px-6 font-medium text-gray-700 dark:text-gray-300 text-start text-xs"
                     >
-                      Nombre del Producto
+                      Produktname
                     </TableCell>
                     <TableCell
                       isHeader
@@ -273,31 +273,31 @@ export default function SuperAdminProducts() {
                       isHeader
                       className="py-3 px-6 font-medium text-gray-700 dark:text-gray-300 text-start text-xs"
                     >
-                      Categoría
+                      Kategorie
                     </TableCell>
                     <TableCell
                       isHeader
                       className="py-3 px-6 font-medium text-gray-700 dark:text-gray-300 text-start text-xs"
                     >
-                      Precio
+                      Preis
                     </TableCell>
                     <TableCell
                       isHeader
                       className="py-3 px-6 font-medium text-gray-700 dark:text-gray-300 text-start text-xs"
                     >
-                      Stock
+                      Lagerbestand
                     </TableCell>
                       <TableCell
                         isHeader
                         className="py-3 px-6 font-medium text-gray-700 dark:text-gray-300 text-start text-xs"
                       >
-                        Estado
+                        Status
                       </TableCell>
                       <TableCell
                         isHeader
                         className="py-3 px-6 font-medium text-gray-700 dark:text-gray-300 text-start text-xs"
                       >
-                        Acciones
+                        Aktionen
                       </TableCell>
                     </TableRow>
                   </TableHeader>
@@ -358,12 +358,12 @@ export default function SuperAdminProducts() {
                         {product.isActive ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-400">
                             <CheckCircle className="w-3 h-3" />
-                            Activo
+                            Aktiv
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-500">
                             <XCircle className="w-3 h-3" />
-                            Inactivo
+                            Inaktiv
                           </span>
                         )}
                       </TableCell>
@@ -377,7 +377,7 @@ export default function SuperAdminProducts() {
                           title="Produkt bearbeiten"
                         >
                           <Edit className="w-4 h-4" />
-                          <span>Editar</span>
+                          <span>Bearbeiten</span>
                         </button>
                       </TableCell>
                     </TableRow>
@@ -390,7 +390,12 @@ export default function SuperAdminProducts() {
 
         {/* Edit Product Modal */}
         <EditProductModal
-          product={editingProduct as any}
+          product={editingProduct ? {
+            ...editingProduct,
+            categoryId: editingProduct.category || '',
+            images: editingProduct.image ? [editingProduct.image] : [],
+            isActive: editingProduct.isActive ?? true,
+          } as unknown as import('@/lib/services/productService').Product : null}
           isOpen={isEditModalOpen}
           onClose={() => {
             setIsEditModalOpen(false);
@@ -410,14 +415,14 @@ export default function SuperAdminProducts() {
       {/* ============================================ */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white/90">Gestión de Productos</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Selecciona una tienda para ver sus productos</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white/90">Produktverwaltung</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Wählen Sie ein Geschäft aus, um dessen Produkte anzuzeigen</p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => refreshAll()}
             className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
-            title="Actualizar datos"
+            title="Daten aktualisieren"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -439,8 +444,8 @@ export default function SuperAdminProducts() {
       {allStores.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200 dark:bg-white/[0.03] dark:border-gray-800">
           <Store className="w-16 h-16 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400 font-medium">No hay tiendas con productos</p>
-          <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">No se encontraron tiendas con productos registrados</p>
+          <p className="text-gray-600 dark:text-gray-400 font-medium">Keine Geschäfte mit Produkten</p>
+          <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">Keine Geschäfte mit registrierten Produkten gefunden</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -470,23 +475,23 @@ export default function SuperAdminProducts() {
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Total Productos</span>
+                    <span className="text-gray-600 dark:text-gray-400">Produkte insgesamt</span>
                     <span className="font-semibold text-gray-900 dark:text-white/90">{stats.total}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Precio Promedio</span>
+                    <span className="text-gray-600 dark:text-gray-400">Durchschnittspreis</span>
                     <span className="font-semibold text-brand-600 dark:text-brand-400">
                       CHF {stats.avgPrice.toFixed(2)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Valor Total</span>
+                    <span className="text-gray-600 dark:text-gray-400">Gesamtwert</span>
                     <span className="font-semibold text-gray-900 dark:text-white/90">
                       CHF {stats.totalValue.toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-100 dark:border-gray-800">
-                    <span className="text-gray-600 dark:text-gray-400">Stock Total</span>
+                    <span className="text-gray-600 dark:text-gray-400">Lagerbestand insgesamt</span>
                     <span className="font-semibold text-gray-900 dark:text-white/90">{stats.totalStock}</span>
                   </div>
                 </div>
@@ -498,7 +503,12 @@ export default function SuperAdminProducts() {
 
       {/* Edit Product Modal */}
       <EditProductModal
-        product={editingProduct as any}
+        product={editingProduct ? {
+          ...editingProduct,
+          categoryId: editingProduct.category || '',
+          images: editingProduct.image ? [editingProduct.image] : [],
+          isActive: editingProduct.isActive ?? true,
+        } as unknown as import('@/lib/services/productService').Product : null}
         isOpen={isEditModalOpen}
         onClose={() => {
           setIsEditModalOpen(false);

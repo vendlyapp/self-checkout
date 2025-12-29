@@ -25,11 +25,11 @@ interface SuperAdminRecentOrdersProps {
 }
 
 export default function SuperAdminRecentOrders({ orders }: SuperAdminRecentOrdersProps) {
-  // Datos de ejemplo si no hay órdenes reales
+  // Beispieldaten wenn keine echten Bestellungen vorhanden sind
   const defaultOrders: Order[] = [
     {
       id: "1",
-      storeName: "Tienda Ejemplo 1",
+      storeName: "Beispielgeschäft 1",
       total: 1250.50,
       items: 5,
       status: "completed",
@@ -37,7 +37,7 @@ export default function SuperAdminRecentOrders({ orders }: SuperAdminRecentOrder
     },
     {
       id: "2",
-      storeName: "Tienda Ejemplo 2",
+      storeName: "Beispielgeschäft 2",
       total: 890.25,
       items: 3,
       status: "pending",
@@ -45,7 +45,7 @@ export default function SuperAdminRecentOrders({ orders }: SuperAdminRecentOrder
     },
     {
       id: "3",
-      storeName: "Tienda Ejemplo 3",
+      storeName: "Beispielgeschäft 3",
       total: 2340.75,
       items: 8,
       status: "completed",
@@ -53,7 +53,7 @@ export default function SuperAdminRecentOrders({ orders }: SuperAdminRecentOrder
     },
     {
       id: "4",
-      storeName: "Tienda Ejemplo 4",
+      storeName: "Beispielgeschäft 4",
       total: 567.00,
       items: 2,
       status: "cancelled",
@@ -61,7 +61,7 @@ export default function SuperAdminRecentOrders({ orders }: SuperAdminRecentOrder
     },
     {
       id: "5",
-      storeName: "Tienda Ejemplo 5",
+      storeName: "Beispielgeschäft 5",
       total: 1890.00,
       items: 12,
       status: "completed",
@@ -74,11 +74,11 @@ export default function SuperAdminRecentOrders({ orders }: SuperAdminRecentOrder
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
-        return <Badge color="success">Completada</Badge>;
+        return <Badge color="success">Abgeschlossen</Badge>;
       case "pending":
-        return <Badge color="warning">Pendiente</Badge>;
+        return <Badge color="warning">Ausstehend</Badge>;
       case "cancelled":
-        return <Badge color="error">Cancelada</Badge>;
+        return <Badge color="error">Storniert</Badge>;
       default:
         return <Badge color="light">{status}</Badge>;
     }
@@ -86,7 +86,7 @@ export default function SuperAdminRecentOrders({ orders }: SuperAdminRecentOrder
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("es-ES", {
+    return date.toLocaleDateString("de-CH", {
       day: "2-digit",
       month: "short",
       year: "numeric",
@@ -98,10 +98,10 @@ export default function SuperAdminRecentOrders({ orders }: SuperAdminRecentOrder
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-            Órdenes Recientes
+            Letzte Bestellungen
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Últimas transacciones de la plataforma
+            Letzte Transaktionen der Plattform
           </p>
         </div>
 
@@ -110,7 +110,7 @@ export default function SuperAdminRecentOrders({ orders }: SuperAdminRecentOrder
             href="/super-admin/analytics"
             className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 cursor-pointer"
           >
-            Ver todas
+            Alle anzeigen
           </Link>
         </div>
       </div>
@@ -123,31 +123,31 @@ export default function SuperAdminRecentOrders({ orders }: SuperAdminRecentOrder
                 isHeader
                 className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400"
               >
-                Tienda
+                Geschäft
               </TableCell>
               <TableCell
                 isHeader
                 className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400"
               >
-                Productos
+                Produkte
               </TableCell>
               <TableCell
                 isHeader
                 className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400"
               >
-                Total
+                Gesamt
               </TableCell>
               <TableCell
                 isHeader
                 className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400"
               >
-                Fecha
+                Datum
               </TableCell>
               <TableCell
                 isHeader
                 className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400"
               >
-                Estado
+                Status
               </TableCell>
             </TableRow>
           </TableHeader>

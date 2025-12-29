@@ -21,7 +21,7 @@ export default function SuperAdminLayout({ children }: Props) {
   useSessionTimeout({
     enabled: true,
     onSessionExpired: () => {
-      console.log('Sesión expirada por inactividad (30 minutos)');
+      console.log('Sitzung aufgrund von Inaktivität abgelaufen (30 Minuten)');
     },
   });
 
@@ -63,7 +63,7 @@ export default function SuperAdminLayout({ children }: Props) {
           
           {/* Texto elegante */}
           <div className="flex flex-col items-center space-y-3">
-            <p className="text-gray-600 dark:text-gray-300 font-light text-sm tracking-wide">Verificando acceso...</p>
+            <p className="text-gray-600 dark:text-gray-300 font-light text-sm tracking-wide">Zugriff wird überprüft...</p>
             <div className="flex items-center justify-center gap-1.5">
               <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0s', animationDuration: '1.4s' }}></div>
               <div className="w-1.5 h-1.5 bg-[#25d076] rounded-full animate-bounce" style={{ animationDelay: '0.2s', animationDuration: '1.4s' }}></div>

@@ -68,9 +68,10 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
       </div>
     ) : (
       <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100 dark:bg-gray-800">
-        {React.createElement(getPaymentMethodIcon(method.icon) as any, { 
-          className: 'w-6 h-6 text-gray-600 dark:text-gray-400' 
-        })}
+        {(() => {
+          const IconComponent = getPaymentMethodIcon(method.icon);
+          return <IconComponent className="w-6 h-6 text-gray-600 dark:text-gray-400" />;
+        })()}
       </div>
     )
 

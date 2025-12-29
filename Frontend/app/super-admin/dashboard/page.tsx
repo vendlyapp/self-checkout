@@ -39,7 +39,7 @@ const SuperAdminDashboard: React.FC = () => {
       return null;
     }
 
-    return new Date(statsLastFetch).toLocaleString("es-ES", {
+    return new Date(statsLastFetch).toLocaleString("de-CH", {
       day: "2-digit",
       month: "short",
       hour: "2-digit",
@@ -62,8 +62,8 @@ const SuperAdminDashboard: React.FC = () => {
     return (
       <AdminDataState
         type="loading"
-        title="Cargando estadísticas"
-        description="Estamos preparando los datos del panel para ti."
+        title="Statistiken werden geladen"
+        description="Wir bereiten die Dashboard-Daten für Sie vor."
         className="min-h-[60vh]"
       />
     );
@@ -73,9 +73,9 @@ const SuperAdminDashboard: React.FC = () => {
     return (
       <AdminDataState
         type="error"
-        title="No pudimos cargar las estadísticas"
+        title="Statistiken konnten nicht geladen werden"
         description={statsError}
-        actionLabel="Reintentar"
+        actionLabel="Erneut versuchen"
         onAction={() => fetchStats(true)}
         className="min-h-[60vh]"
       />
@@ -86,9 +86,9 @@ const SuperAdminDashboard: React.FC = () => {
     return (
       <AdminDataState
         type="empty"
-        title="Sin datos disponibles"
-        description="Aún no hay estadísticas para mostrar. Intenta actualizar nuevamente."
-        actionLabel="Actualizar"
+        title="Keine Daten verfügbar"
+        description="Es gibt noch keine Statistiken zum Anzeigen. Bitte versuchen Sie es erneut zu aktualisieren."
+        actionLabel="Aktualisieren"
         onAction={() => fetchStats(true)}
         className="min-h-[60vh]"
       />
@@ -98,13 +98,13 @@ const SuperAdminDashboard: React.FC = () => {
   return (
     <div className="space-y-6 md:space-y-8">
       <AdminPageHeader
-        title="Panel de Control"
-        description="Indicadores generales y rendimiento de la plataforma Vendly."
+        title="Dashboard"
+        description="Allgemeine Indikatoren und Leistung der Vendly-Plattform."
         meta={
           lastUpdatedAt ? (
             <span className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 font-medium text-gray-600 dark:bg-gray-900/70 dark:text-gray-300">
               <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Actualizado {lastUpdatedAt}</span>
+              <span>Aktualisiert {lastUpdatedAt}</span>
             </span>
           ) : null
         }
@@ -114,7 +114,7 @@ const SuperAdminDashboard: React.FC = () => {
             onClick={handleRefresh}
             disabled={statsLoading}
             tabIndex={0}
-            aria-label="Actualizar datos del panel"
+            aria-label="Dashboard-Daten aktualisieren"
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
@@ -122,7 +122,7 @@ const SuperAdminDashboard: React.FC = () => {
               }
             }}
             className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-semibold text-gray-700 transition hover:border-brand-200 hover:text-brand-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-brand-500/40 dark:hover:text-white dark:focus-visible:ring-offset-gray-950"
-            title="Actualizar datos"
+            title="Daten aktualisieren"
           >
             <RefreshCw
               className={cn(
@@ -130,7 +130,7 @@ const SuperAdminDashboard: React.FC = () => {
                 statsLoading ? "animate-spin" : undefined,
               )}
             />
-            <span>Actualizar</span>
+            <span>Aktualisieren</span>
           </button>
         }
       />

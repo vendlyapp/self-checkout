@@ -58,7 +58,7 @@ export default function SuperAdminTarget({
             offsetY: -40,
             color: "#1D2939",
             formatter: function (val) {
-              return val + "%";
+              return parseFloat(val.toFixed(2)) + "%";
             },
           },
         },
@@ -71,7 +71,7 @@ export default function SuperAdminTarget({
     stroke: {
       lineCap: "round",
     },
-    labels: ["Progreso"],
+    labels: ["Fortschritt"],
   };
 
   const [isOpen, setIsOpen] = useState(false);
@@ -90,10 +90,10 @@ export default function SuperAdminTarget({
         <div className="flex justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-              Objetivo Mensual
+              Monatliches Ziel
             </h3>
             <p className="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400">
-              Meta de ingresos para este mes
+              Umsatzziel für diesen Monat
             </p>
           </div>
           <div className="relative inline-block">
@@ -109,13 +109,13 @@ export default function SuperAdminTarget({
                 onItemClick={closeDropdown}
                 className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
               >
-                Ver más
+                Mehr anzeigen
               </DropdownItem>
               <DropdownItem
                 onItemClick={closeDropdown}
                 className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
               >
-                Configurar
+                Konfigurieren
               </DropdownItem>
             </Dropdown>
           </div>
@@ -138,20 +138,20 @@ export default function SuperAdminTarget({
             }`}
           >
             {isPositive ? "+" : ""}
-            {growth}%
+            {typeof growth === 'number' ? parseFloat(growth.toFixed(2)) : growth}%
           </span>
         </div>
         <p className="mx-auto mt-8 w-full max-w-[380px] text-center text-sm text-gray-500 dark:text-gray-400 sm:text-base">
-          Has ganado CHF {currentRevenue.toLocaleString()} este mes,{" "}
-          {isPositive ? "superior" : "inferior"} al mes anterior.{" "}
-          {isPositive ? "¡Sigue así!" : "¡Vamos a mejorar!"}
+          Sie haben CHF {currentRevenue.toLocaleString()} diesen Monat verdient,{" "}
+          {isPositive ? "höher" : "niedriger"} als im Vormonat.{" "}
+          {isPositive ? "Weiter so!" : "Lass uns verbessern!"}
         </p>
       </div>
 
       <div className="flex items-center justify-center gap-5 px-6 py-3.5 sm:gap-8 sm:py-5 flex-shrink-0">
         <div>
           <p className="mb-1 text-center text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
-            Meta
+            Ziel
           </p>
           <p className="flex items-center justify-center gap-1 text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
             CHF {targetRevenue.toLocaleString()}
@@ -162,7 +162,7 @@ export default function SuperAdminTarget({
 
         <div>
           <p className="mb-1 text-center text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
-            Actual
+            Aktuell
           </p>
           <p className="flex items-center justify-center gap-1 text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
             CHF {currentRevenue.toLocaleString()}
@@ -178,7 +178,7 @@ export default function SuperAdminTarget({
 
         <div>
           <p className="mb-1 text-center text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
-            Crecimiento
+            Wachstum
           </p>
           <p
             className={`flex items-center justify-center gap-1 text-base font-semibold sm:text-lg ${
@@ -188,7 +188,7 @@ export default function SuperAdminTarget({
             }`}
           >
             {isPositive ? "+" : ""}
-            {growth}%
+            {typeof growth === 'number' ? parseFloat(growth.toFixed(2)) : growth}%
           </p>
         </div>
       </div>

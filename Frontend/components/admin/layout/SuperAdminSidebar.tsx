@@ -28,17 +28,17 @@ const navItems: NavItem[] = [
   },
   {
     icon: <Store className="w-5 h-5" />,
-    name: "Tiendas",
+    name: "Geschäfte",
     path: "/super-admin/stores",
   },
   {
     icon: <Users className="w-5 h-5" />,
-    name: "Usuarios",
+    name: "Benutzer",
     path: "/super-admin/users",
   },
   {
     icon: <ShoppingCart className="w-5 h-5" />,
-    name: "Productos",
+    name: "Produkte",
     path: "/super-admin/products",
   },
   {
