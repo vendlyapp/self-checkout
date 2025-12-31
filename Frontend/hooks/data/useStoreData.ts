@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useScannedStoreStore } from '@/lib/stores/scannedStoreStore';
+import { useScannedStoreStore, type StoreInfo } from '@/lib/stores/scannedStoreStore';
 import { useCartStore } from '@/lib/stores/cartStore';
 import { buildApiUrl } from '@/lib/config/api';
 
@@ -9,7 +9,7 @@ interface UseStoreDataOptions {
 }
 
 interface UseStoreDataReturn {
-  store: ReturnType<typeof useScannedStoreStore>['store'];
+  store: StoreInfo | null;
   isLoading: boolean;
   error: string | null;
   loadStore: () => Promise<void>;
