@@ -46,7 +46,7 @@ export default function StorePromotionPage() {
   return (
     <div>
       <div>
-        <HeaderNav title="Aktionen" />
+        <HeaderNav title="Aktionen" promotionCount={products.length} />
       </div>
       {products.length > 0 && (
         <div className="w-full mt-4">

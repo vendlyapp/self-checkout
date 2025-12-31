@@ -31,6 +31,8 @@ const getProgressFraction = (product: Product): number => {
 };
 
 const getProgressLabel = (product: Product): string | undefined => {
+  // Mostrar duración de la promoción (mock por ahora)
+  // TODO: Reemplazar con cálculo real cuando tengamos promotionEndAt en la base de datos
   if (product.promotionEndAt) {
     const end = new Date(product.promotionEndAt).getTime();
     const now = Date.now();
@@ -43,7 +45,8 @@ const getProgressLabel = (product: Product): string | undefined => {
       return `Aktion gültig: noch ${minutes} Min`;
     }
   }
-  return `Noch ${product.stock} auf Lager`;
+  // Mock: mostrar duración fija por ahora
+  return "Aktion gültig: noch 6 Std";
 };
 
 const SliderP: React.FC<SliderPProps> = ({ products = [] }) => {

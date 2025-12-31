@@ -19,7 +19,7 @@ const SnanerDash = () => {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scanContainerRef = useRef<HTMLDivElement>(null);
   const isCleaningUpRef = useRef(false);
-  const scannerIdRef = useRef(`qr-reader-${Date.now()}`);
+  const [scannerId] = useState(() => 'qr-reader-scanner');
   const router = useRouter();
   const { addToCart } = useCartStore();
   const { store } = useScannedStoreStore();
@@ -77,28 +77,34 @@ const SnanerDash = () => {
 
       // Asegurar que el contenedor tenga el ID correcto
       if (scanContainerRef.current) {
-        scanContainerRef.current.id = scannerIdRef.current;
+        scanContainerRef.current.id = scannerId;
         // Limpiar cualquier contenido previo del contenedor
         scanContainerRef.current.innerHTML = "";
       }
 
       // Crear instancia del escáner
-      const scanner = new Html5Qrcode(scannerIdRef.current, {
+      const scanner = new Html5Qrcode(scannerId, {
         verbose: false,
       });
 
       scannerRef.current = scanner;
 
       // Configuración del escáner - sin qrbox para mostrar toda la cámara
+      // Mejor calidad de video para evitar efecto borroso
       const config = {
-        fps: 10,
+        fps: 30, // Aumentar FPS para mejor fluidez
         aspectRatio: 1.0,
         supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
         showTorchButtonIfSupported: false,
         showZoomSliderIfSupported: false,
+        videoConstraints: {
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 1280 },
+        },
       };
 
-      // Iniciar el escaneo
+      // Iniciar el escaneo - solo facingMode en el primer parámetro
       await scanner.start(
         { facingMode: "environment" }, // Cámara trasera
         config,
@@ -265,26 +271,26 @@ const SnanerDash = () => {
   };
 
   return (
-    <div className="animate-page-enter gpu-accelerated">
-      <div className="flex-1 flex flex-col items-center justify-center ml-16 mr-16 pb-24 pt-20 animate-fade-in-scale">
-        <div className="relative w-[280px] h-[280px] animate-scale-in">
+    <div>
+      <div className="flex-1 flex flex-col items-center justify-center ml-16 mr-16 pb-24 pt-20">
+        <div className="relative w-[280px] h-[280px]">
           {/* Main scanner container - La cámara se renderiza aquí */}
           <div
-            id={scannerIdRef.current}
+            id={scannerId}
             ref={scanContainerRef}
-            className="absolute inset-0 bg-black rounded-3xl shadow-2xl overflow-hidden transition-interactive"
+            className="absolute inset-0 bg-black/50 rounded-2xl shadow-2xl overflow-hidden"
             style={{ zIndex: 1 }}
           ></div>
 
           {/* Overlay con decoraciones y contenido - Solo cuando NO está escaneando */}
           {!isScanning && (
             <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-3xl"></div>
+              <div className="absolute inset-0 bg-white/90 rounded-3xl"></div>
               <div className="relative z-30 text-center">
                 {/* Barcode icon with better styling */}
                 <div className="relative mb-6">
                   <ScanBarcode
-                    className="w-20 h-20 text-gray-600 mx-auto animate-pulse"
+                    className="w-20 h-20 text-gray-600 mx-auto"
                     strokeWidth={1.5}
                   />
                   <div className="justify-center items-center text-[10px] W-[100px] text-gray-600 font-medium">
@@ -322,44 +328,13 @@ const SnanerDash = () => {
                 <div className="absolute bottom-0 right-0 w-3 h-full bg-gradient-to-t from-[#25D076] to-transparent rounded-br-2xl"></div>
               </div>
 
-              {/* Enhanced animated scanner line */}
-              <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-                <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-                  <div
-                    className="absolute w-64 h-1 bg-gradient-to-r from-transparent via-[#25D076] to-transparent opacity-90 shadow-lg"
-                    style={{
-                      animation: "scanLine 1.5s ease-in-out infinite",
-                      filter: "drop-shadow(0 0 8px #25D076)",
-                    }}
-                  ></div>
-                </div>
-                <style jsx>{`
-                  @keyframes scanLine {
-                    0% {
-                      transform: translateY(-140px);
-                      opacity: 0;
-                    }
-                    10% {
-                      opacity: 1;
-                    }
-                    90% {
-                      opacity: 1;
-                    }
-                    100% {
-                      transform: translateY(140px);
-                      opacity: 0;
-                    }
-                  }
-                `}</style>
-
-                {/* Status indicator */}
-                <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-auto">
-                  <div className="flex items-center space-x-2 bg-white/90 px-4 py-2 rounded-full shadow-lg">
-                    <div className="w-2 h-2 bg-[#25D076] rounded-full animate-pulse"></div>
-                    <span className="text-[#25D076] text-sm font-semibold">
-                      Analysiert...
-                    </span>
-                  </div>
+              {/* Status indicator */}
+              <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-auto z-30">
+                <div className="flex items-center space-x-2 bg-black/95 px-4 py-2 rounded-full shadow-lg">
+                  <div className="w-2 h-2 bg-[#25D076] rounded-full"></div>
+                  <span className="text-[#25D076] text-sm font-semibold">
+                    Analysiert...
+                  </span>
                 </div>
               </div>
             </>
@@ -368,15 +343,13 @@ const SnanerDash = () => {
 
         <button
           onClick={handleStartScan}
-          className="bg-gradient-to-r from-[#25D076] to-[#25D076] text-white px-6 py-4 justify-center w-[305px] rounded-full mt-10 font-bold text-lg 
-                   hover:from-[#25D076]/80 hover:to-[#25D076]/80 transition-interactive gpu-accelerated disabled:opacity-50 
-                   shadow-2xl active:scale-95 hover:scale-105 flex items-center space-x-3 touch-target tap-highlight-transparent
-                   animate-slide-up-fade"
+          className="bg-[#25D076] text-white px-6 py-4 justify-center w-[305px] rounded-full mt-10 font-bold text-lg 
+                   disabled:opacity-50 shadow-lg flex items-center space-x-3 touch-target tap-highlight-transparent"
           style={{ minHeight: '56px' }}
           aria-label={isScanning ? "Escaneo detener" : "Produkt scannen"}
         >
-          <ScanBarcode className="w-5 h-5 transition-interactive" />
-          <span className="text-white font-semibold text-[16px] transition-interactive">
+          <ScanBarcode className="w-5 h-5" />
+          <span className="text-white font-semibold text-[16px]">
             {isScanning ? "Escaneo stoppen" : "Produkt scannen"}
           </span>
         </button>
@@ -384,13 +357,13 @@ const SnanerDash = () => {
 
       {/* Success Modal */}
       {showSuccessModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in-scale">
-          <div className="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl animate-scale-in gpu-accelerated">
-            <div className="w-16 h-16 bg-[#25D076] rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce-in">
-              <CheckCircle className="w-8 h-8 text-white transition-interactive" />
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl">
+            <div className="w-16 h-16 bg-[#25D076] rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2 transition-interactive">Erfolgreich!</h3>
-            <p className="text-gray-600 mb-4 transition-interactive">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Erfolgreich!</h3>
+            <p className="text-gray-600 mb-4">
               {scannedProduct
                 ? `${scannedProduct.name} wurde zum Warenkorb hinzugefügt`
                 : "Produkt erfolgreich gescannt"}
@@ -404,8 +377,7 @@ const SnanerDash = () => {
                   handleStartScan();
                 }}
                 className="bg-[#25D076] text-white px-6 py-4 rounded-full font-semibold hover:bg-[#25D076]/90 
-                         transition-interactive gpu-accelerated w-full touch-target tap-highlight-transparent 
-                         active:scale-95 hover:scale-105"
+                         w-full touch-target tap-highlight-transparent"
                 style={{ minHeight: '48px' }}
                 aria-label="Weiter scannen"
               >
@@ -418,8 +390,8 @@ const SnanerDash = () => {
                   router.push(targetRoute);
                 }}
                 className="bg-white text-[#25D076] border-2 border-[#25D076] px-6 py-4 rounded-full font-semibold 
-                         hover:bg-[#25D076] hover:text-white transition-interactive gpu-accelerated w-full 
-                         touch-target tap-highlight-transparent active:scale-95 hover:scale-105"
+                         hover:bg-[#25D076] hover:text-white w-full 
+                         touch-target tap-highlight-transparent"
                 style={{ minHeight: '48px' }}
                 aria-label="Warenkorb anzeigen"
               >
@@ -432,19 +404,18 @@ const SnanerDash = () => {
 
       {/* Error Modal */}
       {showErrorModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in-scale">
-          <div className="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl animate-scale-in gpu-accelerated">
-            <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce-in">
-              <XCircle className="w-8 h-8 text-white transition-interactive" />
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl">
+            <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <XCircle className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2 transition-interactive">Fehler</h3>
-            <p className="text-gray-600 mb-6 transition-interactive">{errorMessage}</p>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Fehler</h3>
+            <p className="text-gray-600 mb-6">{errorMessage}</p>
 
             <button
               onClick={handleCloseErrorModal}
               className="bg-[#25D076] text-white px-6 py-4 rounded-full font-semibold hover:bg-[#25D076]/90 
-                       transition-interactive gpu-accelerated w-full touch-target tap-highlight-transparent 
-                       active:scale-95 hover:scale-105"
+                       w-full touch-target tap-highlight-transparent"
               style={{ minHeight: '48px' }}
               aria-label="Erneut versuchen"
             >
@@ -456,15 +427,15 @@ const SnanerDash = () => {
 
       {/* Camera Permission Modal */}
       {showCameraPermissionModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in-scale">
-          <div className="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl animate-scale-in gpu-accelerated">
-            <div className="w-16 h-16 bg-[#25D076] rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce-in">
-              <Camera className="w-8 h-8 text-white transition-interactive" />
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl">
+            <div className="w-16 h-16 bg-[#25D076] rounded-full flex items-center justify-center mx-auto mb-4">
+              <Camera className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2 transition-interactive">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
               Kamera erforderlich
             </h3>
-            <p className="text-gray-600 mb-6 transition-interactive">
+            <p className="text-gray-600 mb-6">
               Um QR-Codes zu scannen, benötigen wir Zugriff auf Ihre Kamera. Bitte erlauben Sie den Zugriff, wenn Ihr Browser danach fragt.
             </p>
 
@@ -472,8 +443,7 @@ const SnanerDash = () => {
               <button
                 onClick={handleGrantPermission}
                 className="bg-[#25D076] text-white px-6 py-4 rounded-full font-semibold hover:bg-[#25D076]/90 
-                         transition-interactive gpu-accelerated w-full touch-target tap-highlight-transparent 
-                         active:scale-95 hover:scale-105"
+                         w-full touch-target tap-highlight-transparent"
                 style={{ minHeight: '48px' }}
                 aria-label="Permitir acceso a la cámara"
               >
@@ -482,8 +452,8 @@ const SnanerDash = () => {
               <button
                 onClick={handleCloseCameraPermissionModal}
                 className="bg-white text-gray-600 border-2 border-gray-300 px-6 py-4 rounded-full font-semibold 
-                         hover:bg-gray-50 transition-interactive gpu-accelerated w-full 
-                         touch-target tap-highlight-transparent active:scale-95 hover:scale-105"
+                         hover:bg-gray-50 w-full 
+                         touch-target tap-highlight-transparent"
                 style={{ minHeight: '48px' }}
                 aria-label="Cancelar"
               >

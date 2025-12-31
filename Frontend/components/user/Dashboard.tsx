@@ -187,7 +187,7 @@ const DashboardUser = ({ onLoadingChange }: DashboardUserProps = {}) => {
   return (
     <div className="flex flex-col w-full bg-background-cream">
       {/* Header con información de la tienda */}
-      <div className="bg-background-cream border-2 border-white pl-2 pr-2">
+      <div className="bg-background-cream border-1 border-white pl-2 pr-2">
         <div className="flex items-center justify-between w-full px-4 py-3">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="flex flex-col items-start justify-start flex-1 min-w-0">

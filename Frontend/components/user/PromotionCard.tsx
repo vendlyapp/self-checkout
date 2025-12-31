@@ -164,26 +164,16 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
         </h4>
       </div>
 
-      {/* Progress bar */}
-      <div className="w-full mb-2 h-[40px] flex flex-col justify-center">
-        <div className="w-full h-3 rounded-full bg-[#F2EDE8] overflow-hidden shadow-inner">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-[#C9B27B] to-[#D4C08C] shadow-sm"
-            style={{
-              width: progressWidth,
-              minWidth: progressFraction > 0 ? "8px" : "0px", // Mínimo 8px si hay progreso
-            }}
-            aria-hidden="true"
-          />
-        </div>
-        {progressLabel && (
+      {/* Promotion Duration - Reemplaza la barra de progreso */}
+      {progressLabel && (
+        <div className="w-full mb-2 h-[40px] flex flex-col justify-center">
           <div className="text-center">
-            <span className="font-medium text-[10px] text-gray-600">
+            <span className="font-semibold text-xs text-[#6E7996]">
               {progressLabel}
             </span>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* CTA Button - positioned at bottom */}
       <div className="mt-auto w-full flex justify-center">

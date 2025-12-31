@@ -9,6 +9,9 @@ export const useDiscountCodes = () => {
       const codes = await discountCodeService.getAll();
       return codes;
     },
+    staleTime: 30 * 1000, // 30 segundos - datos frescos para ver usos actualizados
+    refetchOnWindowFocus: true, // Refrescar cuando el usuario vuelve a la ventana
+    refetchOnMount: true, // Refrescar al montar el componente
   });
 };
 
@@ -29,6 +32,9 @@ export const useDiscountCodeStats = () => {
     queryFn: async () => {
       return await discountCodeService.getStats();
     },
+    staleTime: 30 * 1000, // 30 segundos - datos frescos para estadísticas actualizadas
+    refetchOnWindowFocus: true, // Refrescar cuando el usuario vuelve a la ventana
+    refetchOnMount: true, // Refrescar al montar el componente
   });
 };
 

@@ -1811,6 +1811,10 @@
     height: 100% !important;
     object-fit: cover;
     border-radius: 1.5rem;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
   }
 
   /* Estilos específicos para elementos generados por html5-qrcode */

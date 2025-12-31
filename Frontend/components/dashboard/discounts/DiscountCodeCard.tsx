@@ -1,6 +1,7 @@
 'use client'
 
 import { Edit, Trash2 } from 'lucide-react'
+import { clsx } from 'clsx'
 import { DiscountCode } from './types'
 
 interface DiscountCodeCardProps {
@@ -86,10 +87,17 @@ export default function DiscountCodeCard({
       <div className="mb-3">
         <div className="flex items-center justify-between mb-1">
           <p className="text-sm text-gray-600">
-            Einlösungen: <span className="font-semibold">{code.current_redemptions}</span> / <span className="font-semibold">{code.max_redemptions}</span>
+            Einlösungen: <span className="font-semibold text-gray-900">{code.current_redemptions}</span> / <span className="font-semibold text-gray-900">{code.max_redemptions}</span>
           </p>
-          <p className="text-sm font-semibold text-gray-700">
-            {code.max_redemptions - code.current_redemptions} verbleibend
+          <p className={clsx(
+            "text-sm font-semibold",
+            code.max_redemptions - code.current_redemptions === 0
+              ? "text-red-600"
+              : code.max_redemptions - code.current_redemptions <= code.max_redemptions * 0.2
+              ? "text-orange-600"
+              : "text-gray-700"
+          )}>
+            {Math.max(0, code.max_redemptions - code.current_redemptions)} verbleibend
           </p>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">

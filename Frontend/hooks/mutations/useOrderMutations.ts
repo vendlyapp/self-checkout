@@ -17,6 +17,9 @@ export const useCreateOrder = () => {
       // Invalidar cache de órdenes y estadísticas
       queryClient.invalidateQueries({ queryKey: ['recentOrders'] });
       queryClient.invalidateQueries({ queryKey: ['orderStats'] });
+      // Invalidar cache de códigos de descuento para actualizar usos
+      queryClient.invalidateQueries({ queryKey: ['discountCodes'] });
+      queryClient.invalidateQueries({ queryKey: ['discountCodeStats'] });
     },
   });
 };

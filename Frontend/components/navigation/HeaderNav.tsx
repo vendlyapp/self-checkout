@@ -12,6 +12,7 @@ interface HeaderNavProps {
   showAddButton?: boolean;
   closeDestination?: string;
   isFixed?: boolean;
+  promotionCount?: number; // Número real de promociones
 }
 
 export default function HeaderNav({
@@ -19,6 +20,7 @@ export default function HeaderNav({
   showAddButton = false,
   closeDestination = "/dashboard",
   isFixed = false,
+  promotionCount, // Número real de promociones pasado como prop
 }: HeaderNavProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -27,10 +29,16 @@ export default function HeaderNav({
   const isPromotionPage = pathname?.includes('/promotion');
   const [products, setProducts] = useState<Product[]>([]);
   useEffect(() => {
-    const promotionalProducts = getPromotionalProducts();
-    setProducts(promotionalProducts);
-  }, []);
+    // Solo usar mock si no se pasa promotionCount
+    if (promotionCount === undefined) {
+      const promotionalProducts = getPromotionalProducts();
+      setProducts(promotionalProducts);
+    }
+  }, [promotionCount]);
   const hasItems = cartItems.length > 0;
+  
+  // Usar promotionCount si está disponible, sino usar products.length del mock
+  const displayCount = promotionCount !== undefined ? promotionCount : products.length;
 
   return (
     <div className={`${isFixed ? 'fixed top-[80px]' : ''} flex justify-between items-center p-4 bg-white left-0 right-0 z-40 safe-area-top pt-[calc(1rem+env(safe-area-inset-top))]`}>
@@ -59,7 +67,7 @@ export default function HeaderNav({
             <div className="flex items-center gap-0.5">
               <Zap className="w-4 h-4 text-black" />
               <span className="text-[14px] font-semibold">
-                {products.length === 0 ? "0" : products.length}
+                {displayCount}
               </span>
               <button
                 className="text-black text-[14px] px-2 py-1 rounded hover:bg-red-50"
