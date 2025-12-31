@@ -29,15 +29,15 @@ export default function HeaderUser({ isDarkMode = false }: HeaderUserProps) {
   return (
     <>
       <header className="dashboard-header h-[calc(85px+env(safe-area-inset-top))] w-full flex items-center justify-center pt-[env(safe-area-inset-top)]">
-        <div className={`dashboard-header-content ${headerBgClass} h-[85px] w-full flex border-b ${borderClass} items-center justify-center`}>
-           {/* Logo de la tienda */}
-          <div className="flex items-center justify-center w-1/2 sm:pl-6 px-2">
+        <div className={`dashboard-header-content ${headerBgClass} h-[85px] w-full flex items-center px-4`}>
+           {/* Logo de la tienda - 50% izquierda */}
+          <div className="w-1/2 flex items-center justify-start p-2 rounded">
             {storeLogo ? (
-              <div className="relative w-full max-w-[120px] sm:max-w-[160px] h-[60px] sm:h-[70px] p-2 overflow-hidden transition-interactive">
+              <div className="relative max-w-[160px] sm:max-w-[180px] h-[65px] sm:h-[75px] p-2 overflow-hidden">
                 <img
                   src={storeLogo}
                   alt={store?.name || "Store Logo"}
-                  className="w-full h-full object-cover rounded-lg transition-interactive gpu-accelerated"
+                  className="w-full h-full object-cover rounded-lg"
                   onError={() => {
                     // Si falla la carga, usar icono por defecto
                     setStoreLogo(null);
@@ -45,21 +45,21 @@ export default function HeaderUser({ isDarkMode = false }: HeaderUserProps) {
                 />
               </div>
             ) : (
-              <div className="w-[100px] sm:w-[140px] h-[60px] sm:h-[70px] bg-gray-100 rounded-xl flex items-center justify-center p-2 border border-gray-200 transition-interactive">
-                <Store className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 transition-interactive" />
+              <div className="w-[120px] sm:w-[160px] h-[65px] sm:h-[75px] bg-gray-100 rounded-xl flex items-center justify-center p-2 border border-gray-200">
+                <Store className="w-7 h-7 sm:w-8 sm:h-8 text-gray-400" />
               </div>
             )}
           </div>
-          <div className="flex items-center justify-center w-1/2">
-            <Link href="/dashboard" className="dashboard-logo touch-target tap-highlight-transparent transition-interactive gpu-accelerated active:scale-95">
+          {/* Logo de checkout - 50% derecha */}
+          <div className="w-1/2 flex items-center justify-end p-2 rounded">
+            <Link href="/dashboard" className="dashboard-logo touch-target tap-highlight-transparent">
               <Image
                 src={isDarkMode ? "/logo-b.svg" : "/logo.svg"}
                 alt="Self-Checkout Logo"
-                width={50}
-                height={50}
+                width={23}
+                height={23}
                 priority
-                className="transition-interactive"
-                style={{ width: 'auto', height: 'auto' }}
+                className="h-[23px] w-auto"
               />
             </Link>
           </div>

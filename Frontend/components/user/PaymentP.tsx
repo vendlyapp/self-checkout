@@ -15,7 +15,6 @@ import { useCartStore } from "@/lib/stores/cartStore";
 import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ModernSpinner } from "@/components/ui";
 import { formatSwissPriceWithCHF } from "@/lib/utils";
 import { usePromoLogic } from "@/hooks";
 import { useCreateOrder } from "@/hooks/mutations";
@@ -95,9 +94,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   };
 
   const modalContent = (
-    <div className="fixed inset-0 bg-white/20 backdrop-blur-md flex items-center justify-center z-[9999] p-4 animate-fade-in-scale" style={{ pointerEvents: 'auto' }}>
-      <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-hidden shadow-2xl 
-                      animate-scale-in gpu-accelerated">
+    <div className="fixed inset-0 bg-white/20 backdrop-blur-md flex items-center justify-center z-[9999] p-4" style={{ pointerEvents: 'auto' }}>
+      <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-hidden shadow-2xl">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">
             Zahlung bestätigen
@@ -172,8 +170,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
           {paymentStep === "processing" && (
             <div className="text-center py-8">
-              <ModernSpinner size="lg" color="brand" className="mb-6" />
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2 animate-pulse">
+              <div className="relative w-8 h-8 mx-auto mb-4">
+                <div className="absolute inset-0 rounded-full border-2 border-gray-200"></div>
+                <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#25D076] animate-spin"></div>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
                 Zahlung wird verarbeitet
               </h3>
               <p className="text-gray-600 dark:text-gray-400">
@@ -213,6 +214,7 @@ export default function PaymentP() {
     getTotalWithVAT,
     getOrderItemsPayload,
     clearCart,
+    promoCode,
   } = useCartStore();
   const { store } = useScannedStoreStore();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
@@ -303,6 +305,7 @@ export default function PaymentP() {
           storeSlug: store?.slug ?? null,
           storeName: store?.name ?? null,
           promoApplied,
+          promoCode: promoApplied && promoCode ? promoCode : null, // Enviar código de descuento para registrar uso
           discountAmount: promoApplied ? discountAmount ?? 0 : 0,
           totalBeforeVAT: Number(subtotal.toFixed(2)),
           totalWithVAT: Number(totalWithVAT.toFixed(2)),
@@ -311,9 +314,10 @@ export default function PaymentP() {
 
       setPaymentStep("success");
 
+      // Redirección más rápida después de mostrar el modal de éxito
       setTimeout(() => {
         handlePaymentSuccess();
-      }, 1500);
+      }, 800);
     } catch (error) {
       const message =
         error instanceof Error
@@ -330,7 +334,13 @@ export default function PaymentP() {
     setIsModalOpen(false);
     setPaymentStep("confirm");
     setOrderError(null);
-    router.push("/user");
+    // Redirigir a la página principal de la tienda
+    const storeSlug = store?.slug;
+    if (storeSlug) {
+      router.push(`/store/${storeSlug}`);
+    } else {
+      router.push("/user");
+    }
   };
   
   // isProcessing viene de la mutation
@@ -385,10 +395,10 @@ export default function PaymentP() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] bg-[#F9F6F4]">
         <div className="text-center">
-          <p className="text-2xl font-semibold text-[#373F49] mb-4 transition-interactive">
+          <p className="text-2xl font-semibold text-[#373F49] mb-4">
             Ihr Warenkorb ist leer
           </p>
-          <p className="text-[#6E7996] transition-interactive">
+          <p className="text-[#6E7996]">
             Fügen Sie Produkte hinzu, um fortzufahren
           </p>
         </div>
@@ -413,23 +423,23 @@ export default function PaymentP() {
     <div>
       {/* Header con información real del carrito */}
       <div className="flex flex-col gap-2 justify-center items-center bg-[#F9F6F4] w-full p-2 border-b border-[#E5E5E5]">
-        <p className="text-xl pt-4 font-semibold text-[#373F49] transition-interactive">
+        <p className="text-xl pt-4 font-semibold text-[#373F49]">
           {store?.name ?? "Gastbestellung"}
         </p>
-        <p className="text-5xl font-bold transition-interactive">
+        <p className="text-5xl font-bold">
           CHF {formatSwissPriceWithCHF(payableTotal)}
         </p>
-        <p className="text-lg font-semibold text-[#373F49] transition-interactive">
+        <p className="text-lg font-semibold text-[#373F49]">
           inkl. MwSt • {totalItems} {totalItems === 1 ? "Artikel" : "Artikel"}
         </p>
         
       </div>
 
       {/* Código promocional */}
-      <div className="pt-4 pl-12 animate-stagger-2">
+      <div className="pt-4 pl-12">
         <label
           htmlFor="promo"
-          className="text-[#25D076] text-[15px] font-semibold cursor-pointer hover:underline transition-interactive"
+          className="text-[#25D076] text-[15px] font-semibold cursor-pointer hover:underline"
         >
           Promo Code?
         </label>
@@ -457,7 +467,7 @@ export default function PaymentP() {
               <button
                 onClick={handleApplyPromo}
                 className="bg-brand-500 justify-center items-center flex hover:bg-brand-600 text-white font-semibold rounded-lg px-4 py-3  
-                         transition-interactive gpu-accelerated touch-target tap-highlight-transparent 
+                         touch-target tap-highlight-transparent 
                          active:scale-95 hover:scale-105"
                 aria-label="Promo anwenden"
                 style={{ minHeight: "44px" }}
@@ -504,7 +514,10 @@ export default function PaymentP() {
 
         {paymentMethodsLoading ? (
           <div className="flex items-center justify-center py-8">
-            <ModernSpinner />
+            <div className="relative w-8 h-8">
+              <div className="absolute inset-0 rounded-full border-2 border-gray-200"></div>
+              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#25D076] animate-spin"></div>
+            </div>
           </div>
         ) : paymentMethods.length === 0 ? (
           <div className="text-center py-8">
@@ -521,10 +534,10 @@ export default function PaymentP() {
                 onClick={() => handlePaymentMethodSelect(method.id)}
                 className={`
                   px-4 py-4 w-[345px] h-[50px] text-sm rounded-full
-                  flex items-center justify-center gap-2 transition-interactive gpu-accelerated
+                  flex items-center justify-center gap-2
                   ${isSelected ? "ring-4 ring-brand-300 ring-opacity-50" : ""}
                   hover:opacity-90 active:scale-95 touch-target tap-highlight-transparent
-                  animate-slide-up-fade relative
+                  relative
                 `}
                 style={{ 
                   backgroundColor: method.bgColor, // Usar color directamente desde la DB
@@ -536,13 +549,13 @@ export default function PaymentP() {
                 aria-label={`${method.name} auswählen`}
               >
                 {React.createElement(method.icon, { 
-                  className: "w-5 h-5 transition-interactive",
+                  className: "w-5 h-5",
                   color: method.textColor
                 } as React.ComponentProps<typeof method.icon>)}
                 <span className="font-medium" style={{ color: method.textColor }}>{method.name}</span>
                 {isSelected && (
-                  <div className="absolute right-4 animate-bounce-in">
-                    <Eclipse className="w-4 h-4 transition-interactive" color={method.textColor} />
+                  <div className="absolute right-4">
+                    <Eclipse className="w-4 h-4" color={method.textColor} />
                   </div>
                 )}
               </button>

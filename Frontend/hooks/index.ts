@@ -14,6 +14,7 @@ export * from './business';
 export { useProducts as useProductsData, useProductActions } from './data/useProducts';
 export { useDashboard } from './data/useDashboard';
 export { useAnalytics, useQuickAccess } from './data/useAnalytics';
+export { useStoreData } from './data/useStoreData';
 
 // Query Hooks - React Query hooks with caching
 export * from './queries';

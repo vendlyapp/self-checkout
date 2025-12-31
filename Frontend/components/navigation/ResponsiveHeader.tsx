@@ -157,10 +157,10 @@ export default function ResponsiveHeader({
               <Image
                 src="/logo.svg"
                 alt="Self-Checkout Logo"
-                width={100}
-                height={100}
+                width={32}
+                height={32}
                 priority
-                style={{ width: 'auto', height: 'auto' }}
+                className="h-[32px] w-auto"
               />
             </Link>
 
@@ -302,7 +302,7 @@ export default function ResponsiveHeader({
                   width={32}
                   height={32}
                   priority
-                  style={{ width: 'auto', height: 'auto' }}
+                  className="h-[32px] w-auto"
                 />
                 <div className="flex flex-col">
                   <span className="font-semibold text-gray-900 text-base">

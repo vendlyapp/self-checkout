@@ -1,7 +1,9 @@
 'use client'
 import { useCartStore } from '@/lib/stores/cartStore';
 import CartSummary from '../dashboard/charge/CartSummary';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
+import { useScannedStoreStore } from '@/lib/stores/scannedStoreStore';
+import { ChevronRight } from 'lucide-react';
 
 interface UserCartSummaryProps {
   variant?: 'inline';
@@ -10,6 +12,9 @@ interface UserCartSummaryProps {
 export default function UserCartSummary({ variant }: UserCartSummaryProps) {
   const { cartItems } = useCartStore();
   const router = useRouter();
+  const params = useParams();
+  const { store } = useScannedStoreStore();
+  const slug = params?.slug as string || store?.slug;
 
   // Solo productos con cantidad > 0
   const validCartItems = cartItems ? cartItems.filter(item => item.quantity > 0) : [];
@@ -20,20 +25,19 @@ export default function UserCartSummary({ variant }: UserCartSummaryProps) {
     const totalItems = validCartItems.reduce((sum, item) => sum + item.quantity, 0);
     const totalPrice = validCartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
     return (
-      <div className="w-full max-w-[430px] mx-auto bg-brand-500 rounded-lg flex items-center justify-between px-4 py-3 mb-3 
-                      animate-slide-up-fade safe-area-bottom overflow-hidden gpu-accelerated">
-        <span className="text-white font-semibold text-base mobile-base truncate mb-3 transition-interactive">
-          {totalItems} Artikel &bull; CHF {totalPrice.toFixed(2)}
+      <div className="w-full max-w-[430px] mx-auto bg-brand-500 rounded-lg flex items-center justify-between px-4 mb-3 
+                      safe-area-bottom overflow-hidden h-[50px]">
+        <span className="text-white font-semibold text-sm truncate">
+          {totalItems} Artikel &bull; <span className="font-bold">CHF {totalPrice.toFixed(2)}</span>
         </span>
         <button
-          className="bg-white text-[#6E7996] font-bold px-5 mb-3 py-2 rounded-lg text-base shadow-sm hover:bg-gray-50 
-                   transition-interactive gpu-accelerated touch-target tap-highlight-transparent active:scale-95 
-                   hover:scale-105 flex-shrink-0"
-          onClick={() => router.push("/user/payment")}
-          style={{ minHeight: "44px", minWidth: "100px" }}
+          className="bg-white text-[#6E7996] font-bold px-2 rounded-lg text-sm shadow-sm 
+                   tap-highlight-transparent flex-shrink-0 h-[32px] flex items-center justify-center"
+          onClick={() => router.push(slug ? `/store/${slug}/payment` : "/user/payment")}
           aria-label="Zur Bezahlung gehen"
         >
-          Bezahlen
+          <span>Bezahlen</span>
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
     );
@@ -43,7 +47,7 @@ export default function UserCartSummary({ variant }: UserCartSummaryProps) {
   return (
     <CartSummary
       items={validCartItems}
-      onContinue={() => router.push('/user/cart')}
+      onContinue={() => router.push(slug ? `/store/${slug}/cart` : '/user/cart')}
     />
   );
 }

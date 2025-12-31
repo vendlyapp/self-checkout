@@ -213,7 +213,7 @@ export function SearchInput({
     <div className={clsx("relative w-full", className)}>
       <div className="relative flex items-center h-14 bg-white rounded-full border border-gray-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all duration-200">
         {/* Icono de búsqueda */}
-        <Search className="absolute left-4 w-6 h-6 text-gray-400 pointer-events-none" />
+        <Search className="absolute left-4 w-5 h-5 text-gray-400 pointer-events-none" />
 
         {/* Input */}
         <input
@@ -223,7 +223,7 @@ export function SearchInput({
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="w-full h-full pl-14 pr-14 text-lg text-gray-900 placeholder-gray-400 bg-transparent focus:outline-none"
+          className="w-full h-full pl-12 pr-12 text-sm text-gray-900 placeholder-gray-400 bg-transparent focus:outline-none"
         />
 
         {/* Botón de limpiar */}

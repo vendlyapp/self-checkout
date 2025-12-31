@@ -23,8 +23,11 @@ export default function ProductsList({
     return (
       <div className={`p-4 pb-32 lg:p-0 lg:pb-0 ${className}`}>
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-500 mx-auto"></div>
-          <p className="mt-4 text-base text-gray-500 font-medium">
+          <div className="relative w-8 h-8 mx-auto">
+            <div className="absolute inset-0 rounded-full border-2 border-gray-200"></div>
+            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#25D076] animate-spin"></div>
+          </div>
+          <p className="mt-4 text-sm text-gray-600 font-medium">
             Produkte werden geladen...
           </p>
         </div>
@@ -47,47 +50,27 @@ export default function ProductsList({
   }
 
   return (
-    <div className={`p-4 pb-32 lg:p-0 lg:pb-8 ${className} animate-fade-in-scale`}>
+    <div className={`p-4 pb-32 lg:p-0 lg:pb-8 ${className}`}>
       {/* Mobile: Lista vertical */}
       <div className="lg:hidden space-y-2">
-        {products.map((product, index) => {
-          return (
-            <div
-              key={product.id}
-              className="animate-slide-up-fade gpu-accelerated"
-              style={{
-                animationDelay: `${index * 0.05}s`,
-                animationFillMode: 'both'
-              }}
-            >
-              <ProductCard
-                product={product}
-                onAddToCart={onAddToCart}
-              />
-            </div>
-          );
-        })}
+        {products.map((product) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            onAddToCart={onAddToCart}
+          />
+        ))}
       </div>
 
       {/* Desktop/Tablet: Grid compacto */}
       <div className="hidden lg:grid lg:grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-3">
-        {products.map((product, index) => {
-          return (
-            <div
-              key={product.id}
-              className="animate-slide-up-fade gpu-accelerated"
-              style={{
-                animationDelay: `${index * 0.05}s`,
-                animationFillMode: 'both'
-              }}
-            >
-              <ProductCard
-                product={product}
-                onAddToCart={onAddToCart}
-              />
-            </div>
-          );
-        })}
+        {products.map((product) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            onAddToCart={onAddToCart}
+          />
+        ))}
       </div>
     </div>
   );

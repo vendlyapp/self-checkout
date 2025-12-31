@@ -1,6 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import { buildApiUrl, getAuthHeaders } from '@/lib/config/api'
 
 interface StoreData {
@@ -21,6 +22,22 @@ interface StoreData {
 }
 
 export const useMyStore = () => {
+  const [hasSession, setHasSession] = useState<boolean | null>(null)
+
+  // Verificar si hay sesión antes de ejecutar la query
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const { supabase } = await import('@/lib/supabase/client')
+        const { data: { session } } = await supabase.auth.getSession()
+        setHasSession(!!session?.access_token)
+      } catch {
+        setHasSession(false)
+      }
+    }
+    checkSession()
+  }, [])
+
   return useQuery({
     queryKey: ['myStore'],
     queryFn: async ({ signal }) => {
@@ -64,11 +81,13 @@ export const useMyStore = () => {
         throw error
       }
     },
+    enabled: hasSession === true, // Solo ejecutar si hay sesión
     staleTime: 5 * 60 * 1000, // 5 minutos
     gcTime: 10 * 60 * 1000, // 10 minutos
     retry: 2,
     retryDelay: 1000,
     refetchOnWindowFocus: false,
+    throwOnError: false, // No lanzar errores automáticamente
   })
 }
 

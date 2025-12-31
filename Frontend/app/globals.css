@@ -643,7 +643,9 @@
 
   /* Iconos */
   .nav-icon {
-    @apply w-6 h-6 text-gray-500;
+    @apply text-gray-500;
+    width: 24.5px;
+    height: 24.5px;
     transition: all var(--transition-normal);
     will-change: transform;
   }
@@ -868,11 +870,13 @@
   }
 
   .dashboard-logo img {
-    @apply h-6 w-auto;
+    height: 22px;
+    width: auto;
   }
 
   .dashboard-logo-d img {
-    @apply h-8 w-auto;
+    height: 32px;
+    width: auto;
   }
 
   /* Header actions container */

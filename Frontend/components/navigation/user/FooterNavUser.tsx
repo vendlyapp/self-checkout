@@ -10,6 +10,7 @@ import { lightFeedback } from "@/lib/utils/safeFeedback";
 import UserCartSummary from "@/components/user/UserCartSummary";
 import UserCartSummaryCart from "@/components/user/UserCartSummaryCart";
 import { useCartStore } from "@/lib/stores/cartStore";
+import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
 
 interface NavItemUser {
   id: string;
@@ -36,7 +37,7 @@ const getNavItems = (baseRoute: string): NavItemUser[] => [
     id: "actions",
     icon: ScanBarcode,
     label: "",
-    href: "/user/scan", // Siempre va a scan para cambiar de tienda
+    href: `${baseRoute}/scan`, // Va a scan de la tienda actual
     isMain: true,
   },
   {
@@ -53,19 +54,6 @@ const getNavItems = (baseRoute: string): NavItemUser[] => [
   },
 ];
 
-// Skeleton loader component
-const SkeletonLoader = () => (
-  <nav className="nav-container">
-    <div className="flex items-center justify-around h-full px-4 max-w-[430px] mx-auto">
-      {[...Array(5)].map((_, i) => (
-        <div
-          key={i}
-          className="w-12 h-12 bg-gray-200 rounded-lg animate-pulse"
-        />
-      ))}
-    </div>
-  </nav>
-);
 
 export default function FooterNav() {
   const pathname = usePathname();
@@ -75,10 +63,15 @@ export default function FooterNav() {
   const [pressedItem, setPressedItem] = useState<string | null>(null);
   const { cartItems } = useCartStore();
 
-  // Determinar base route según si estamos en /store/[slug] o /user
+  // Siempre usar /store/[slug] como base route
+  // Si no hay slug, usar /user como fallback
   const isStoreRoute = pathname?.startsWith('/store/');
   const slug = params?.slug as string | undefined;
-  const baseRoute = isStoreRoute && slug ? `/store/${slug}` : '/user';
+  const { store } = useScannedStoreStore();
+  
+  // Usar slug de params si está disponible, sino usar store.slug del store
+  const currentSlug = slug || store?.slug;
+  const baseRoute = currentSlug ? `/store/${currentSlug}` : '/user';
   
   const navItems = useMemo(() => getNavItems(baseRoute), [baseRoute]);
 
@@ -141,6 +134,16 @@ export default function FooterNav() {
       .reduce((sum, item) => sum + item.quantity, 0);
   }, [cartItems]);
 
+  // Verificar si hay items válidos en el carrito (cantidad > 0)
+  const hasValidCartItems = useMemo(() => {
+    if (!cartItems || cartItems.length === 0) return false;
+    return cartItems.some(item => item.quantity > 0);
+  }, [cartItems]);
+
+  // Determinar qué componente de carrito mostrar basado en la ruta
+  const isCartRoute = pathname === "/user/cart" || pathname?.includes('/cart');
+  const isPaymentRoute = pathname === "/user/payment" || pathname?.includes('/payment');
+
   // Ocultar FooterNav en la pantalla de carrito
   if (pathname === "/charge/cart") {
     return null;
@@ -148,36 +151,33 @@ export default function FooterNav() {
 
   // Prevenir problemas de hidratación
   if (!mounted) {
-    return <SkeletonLoader />;
+    return null;
   }
 
-  // Determinar qué componente de carrito mostrar basado en la ruta
-  const isCartRoute = pathname === "/user/cart" || pathname?.includes('/cart');
-  const isPaymentRoute = pathname === "/user/payment" || pathname?.includes('/payment');
-
   return (
-    <nav className="bg-white rounded-t-xl shadow-t-xl shadow-black safe-area-bottom">
-      {/* Resumen de carrito arriba solo cuando estoy en /user/cart - con contenedor limitado */}
-      {isCartRoute && (
-        <div className="w-full max-w-[430px] mx-auto">
+    <div className="bg-white rounded-t-3xl">
+      {/* Resumen de carrito arriba solo cuando estoy en /user/cart Y hay items en el carrito - fuera del nav para separación visual */}
+      {isCartRoute && hasValidCartItems && (
+        <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl pb-2">
           <UserCartSummaryCart variant="inline" />
         </div>
       )}
 
-      <div className="flex items-center justify-between w-full px-6 max-w-[430px] mx-auto pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 border-t-2 border-black/10 rounded-t-xl">
+      {/* Footer Nav con borde y sombra para separación visual */}
+      <div className="rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.12)] bg-white overflow-hidden">
+        <nav className="bg-white rounded-t-3xl safe-area-bottom border-t border-[#E5E6F8]" style={{ borderTopWidth: '0.5px' }}>
+          <div className="flex items-center justify-between w-full px-6 max-w-[430px] mx-auto pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2">
         {processedItems.map((item) => {
           const Icon = item.icon;
 
           if (item.isMain) {
-            // Botón principal (SCANEAR) con estilo modificado
+            // Botón principal (SCANEAR) con animaciones de color
             return (
               <Link
                 key={item.id}
                 href={item.href}
-                className={clsx(
-                  "relative inline-flex items-center justify-center w-16 h-16 transition-interactive gpu-accelerated hover:scale-110 active:scale-95",
-                  item.isPressed && "scale-90"
-                )}
+                prefetch={true}
+                className="relative inline-flex items-center justify-center w-16 h-16 transition-opacity active:opacity-70"
                 onTouchStart={() => handlePress(item.id)}
                 onMouseDown={(e) => {
                   handlePress(item.id);
@@ -186,11 +186,11 @@ export default function FooterNav() {
                 onClick={handleValidInteraction}
                 aria-label="Scan"
               >
-                {/* Animated Green Halo */}
+                {/* Animated Green Halo - Animaciones de color para el botón de scan */}
                 <div
                   className={clsx(
                     "absolute inset-0 w-full h-full rounded-full animate-pulse",
-                    pathname === "/user/scan"
+                    pathname?.includes('/scan')
                       ? "bg-[#25D076]/30"
                       : "bg-[#766B6A]/30"
                   )}
@@ -199,7 +199,7 @@ export default function FooterNav() {
                 <div
                   className={clsx(
                     "absolute inset-1 w-14 h-14 rounded-full animate-pulse",
-                    pathname === "/user/scan"
+                    pathname?.includes('/scan')
                       ? "bg-[#25D076]/20"
                       : "bg-[#766B6A]/20"
                   )}
@@ -209,24 +209,23 @@ export default function FooterNav() {
                 <div
                   className={clsx(
                     "absolute inset-2 w-12 h-12 rounded-full animate-pulse",
-                    pathname === "/user/scan"
+                    pathname?.includes('/scan')
                       ? "bg-[#25D076]/10"
                       : "bg-[#766B6A]/10"
                   )}
                   style={{ animationDelay: "1s" }}
                 />
 
-                {/* White Circle with Lucide Icon */}
+                {/* Circle with Lucide Icon */}
                 <div
                   className={clsx(
-                    "relative w-12 h-12 bg-[#766B6A] rounded-full flex items-center justify-center shadow-lg text-white",
-                    item.isActive && "bg-white text-[#25D076]",
-                    item.isPressed && "scale-95"
+                    "relative w-[49px] h-[49px] bg-[#766B6A] rounded-full flex items-center justify-center shadow-lg text-white",
+                    item.isActive && "bg-white text-[#25D076]"
                   )}
                 >
                   <Icon
                     className={clsx(
-                      item.isPressed && "scale-95",
+                      "w-[25px] h-[25px]",
                       item.isActive && "text-[#25D076]"
                     )}
                     strokeWidth={2.5}
@@ -241,10 +240,10 @@ export default function FooterNav() {
             <Link
               key={item.id}
               href={item.href}
+              prefetch={true}
               className={clsx(
-                "nav-item transition-interactive gpu-accelerated",
-                item.isActive && "nav-item-active",
-                item.isPressed && "scale-95 opacity-70"
+                "nav-item transition-opacity active:opacity-70",
+                item.isActive && "nav-item-active"
               )}
               onTouchStart={() => handlePress(item.id)}
               onMouseDown={(e) => {
@@ -257,16 +256,15 @@ export default function FooterNav() {
               <div className="relative">
                 <Icon
                   className={clsx(
-                    "nav-icon transition-interactive",
-                    item.isActive && "nav-icon-active",
-                    item.isPressed && "scale-90"
+                    "nav-icon",
+                    item.isActive && "nav-icon-active"
                   )}
                   strokeWidth={item.isActive ? 2.2 : 1.8}
                 />
                 {item.id === "cart" && cartItemCount > 0 && (
                   <span
                     className={clsx(
-                      "absolute -top-1.5 -right-2.5 min-w-5 h-5 px-1 rounded-full text-white text-[10px] leading-5 font-bold text-center transition-interactive animate-bounce-in",
+                      "absolute -top-1.5 -right-2.5 min-w-5 h-5 px-1 rounded-full text-white text-[10px] leading-5 font-bold text-center",
                       item.isActive ? "bg-red-500" : "bg-red-500/70"
                     )}
                     aria-label={`Artículos en carrito: ${cartItemCount}`}
@@ -278,7 +276,7 @@ export default function FooterNav() {
               </div>
               <span
                 className={clsx(
-                  "nav-label transition-interactive",
+                  "nav-label",
                   item.isActive && "nav-label-active"
                 )}
               >
@@ -287,15 +285,16 @@ export default function FooterNav() {
             </Link>
           );
         })}
-      </div>
-
-      {/* Resumen de carrito abajo solo cuando NO estoy en /user/cart Y NO estoy en /user/payment - con contenedor limitado */}
-      {!isCartRoute && !isPaymentRoute && (
-        <div className="w-full max-w-[430px] mx-auto flex flex-col gap-2 px-4 pb-[env(safe-area-inset-bottom)]">
-          <UserCartSummary variant="inline" />
-
         </div>
-      )}
-    </nav>
+
+          {/* Resumen de carrito abajo solo cuando NO estoy en /user/cart Y NO estoy en /user/payment - con contenedor limitado */}
+          {!isCartRoute && !isPaymentRoute && (
+            <div className="w-full max-w-[430px] mx-auto flex flex-col gap-2 px-4 pb-[env(safe-area-inset-bottom)]">
+              <UserCartSummary variant="inline" />
+            </div>
+          )}
+        </nav>
+      </div>
+    </div>
   );
 }

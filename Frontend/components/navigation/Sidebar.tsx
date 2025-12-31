@@ -165,10 +165,10 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
           <Image
             src="/logo.svg"
             alt="Self-Checkout Logo"
-            width={40}
-            height={40}
+            width={48}
+            height={48}
             priority
-            style={{ width: 'auto', height: 'auto' }}
+            className="h-[48px] w-auto"
           />
           <div>
             <span className="font-bold text-gray-900 text-lg">Self-Checkout</span>

@@ -8,3 +8,4 @@ export {
   CardTitle,
 } from "./card";
 export { default as ModernSpinner } from "./ModernSpinner";
+export { default as InitialLoadingScreen } from "./InitialLoadingScreen";

@@ -23,25 +23,33 @@ const PromotionSlider: React.FC<PromotionSliderProps> = ({
 }) => {
   const safeItems = useMemo(() => items ?? [], [items]);
 
+  // Solo activar loop si hay más de 2 items
+  const shouldLoop = safeItems.length > 2;
+
   return (
-    <div className={clsx("w-full animate-fade-in-scale gpu-accelerated", className)}>
+    <div className={clsx("w-full", className)}>
       <Swiper
         modules={[Autoplay, FreeMode]}
         spaceBetween={8}
         slidesPerView={1.6}
-        maxBackfaceHiddenSlides={9}
         centeredSlides={true}
         freeMode={{
           enabled: true,
           momentum: true,
           momentumRatio: 0.25,
           momentumVelocityRatio: 0.5,
+          sticky: false,
         }}
-        autoplay={{
-          delay: 3000,
-          disableOnInteraction: false,
-          pauseOnMouseEnter: true,
-        }}
+        autoplay={
+          safeItems.length > 1
+            ? {
+                delay: 3000,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true,
+                stopOnLastSlide: false,
+              }
+            : false
+        }
         breakpoints={{
           320: {
             slidesPerView: 1.6,
@@ -56,17 +64,19 @@ const PromotionSlider: React.FC<PromotionSliderProps> = ({
             slidesPerView: 1.7,
           },
         }}
-        loop={true}
+        loop={shouldLoop}
         grabCursor={true}
         touchRatio={1}
-        resistance={false}
+        resistance={true}
+        resistanceRatio={0.85}
         allowTouchMove={true}
         preventClicks={false}
         preventClicksPropagation={false}
+        watchOverflow={true}
         className="w-full"
       >
         {safeItems.map((props, idx) => (
-          <SwiperSlide key={idx}>
+          <SwiperSlide key={`promo-${idx}-${props.name}`}>
             <div className="flex justify-center">
               <PromotionCard {...props} />
             </div>

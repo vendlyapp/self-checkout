@@ -1,4 +1,5 @@
 const { query, transaction } = require('../../lib/database');
+const discountCodeService = require('./DiscountCodeService');
 
 class OrderService {
 
@@ -148,7 +149,28 @@ class OrderService {
         orderItems.push(itemResult.rows[0]);
       }
 
-      return { order, items: orderItems };
+      // Incrementar usos del código de descuento si se aplicó uno
+      let discountCodeUpdated = null;
+      if (orderPayload.metadata && orderPayload.metadata.promoCode) {
+        try {
+          const promoCode = orderPayload.metadata.promoCode.trim().toUpperCase();
+          const incrementResult = await discountCodeService.incrementRedemptions(promoCode);
+          discountCodeUpdated = incrementResult.data;
+          
+          // Si el código alcanzó el límite, desactivarlo automáticamente
+          if (discountCodeUpdated.current_redemptions >= discountCodeUpdated.max_redemptions) {
+            await client.query(
+              'UPDATE "DiscountCode" SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE code = $1',
+              [promoCode]
+            );
+          }
+        } catch (discountError) {
+          // No fallar la orden si hay error con el código de descuento
+          console.error('Error al incrementar usos del código de descuento:', discountError);
+        }
+      }
+
+      return { order, items: orderItems, discountCodeUpdated };
     });
 
     return {
@@ -543,7 +565,28 @@ class OrderService {
         orderItems.push(itemResult.rows[0]);
       }
 
-      return { order, items: orderItems };
+      // Incrementar usos del código de descuento si se aplicó uno
+      let discountCodeUpdated = null;
+      if (orderData.metadata && orderData.metadata.promoCode) {
+        try {
+          const promoCode = orderData.metadata.promoCode.trim().toUpperCase();
+          const incrementResult = await discountCodeService.incrementRedemptions(promoCode);
+          discountCodeUpdated = incrementResult.data;
+          
+          // Si el código alcanzó el límite, desactivarlo automáticamente
+          if (discountCodeUpdated.current_redemptions >= discountCodeUpdated.max_redemptions) {
+            await client.query(
+              'UPDATE "DiscountCode" SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE code = $1',
+              [promoCode]
+            );
+          }
+        } catch (discountError) {
+          // No fallar la orden si hay error con el código de descuento
+          console.error('Error al incrementar usos del código de descuento:', discountError);
+        }
+      }
+
+      return { order, items: orderItems, discountCodeUpdated };
     });
 
     return {

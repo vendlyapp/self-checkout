@@ -1,31 +1,43 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import ProductsList from "../dashboard/charge/ProductsList";
-import { Product, normalizeProductData } from "../dashboard/products_list/data/mockProducts";
+import { Product } from "../dashboard/products_list/data/mockProducts";
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
 import { SearchInput } from "@/components/ui/search-input";
 import { ScanBarcode, Store as StoreIcon, ShoppingBag } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { buildApiUrl } from "@/lib/config/api";
 import { useCategories } from "@/hooks/queries/useCategories";
+import { useStoreProducts } from "@/hooks/queries/useStoreProducts";
 import { getIcon } from "../dashboard/products_list/data/iconMap";
 import { FilterSlider, FilterOption } from "@/components/Sliders/SliderFIlter";
 
-const DashboardUser = () => {
+interface DashboardUserProps {
+  onLoadingChange?: (isLoading: boolean) => void;
+}
+
+const DashboardUser = ({ onLoadingChange }: DashboardUserProps = {}) => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilters, setSelectedFilters] = useState<string[]>(['all']);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const { addToCart } = useCartStore();
   const { store } = useScannedStoreStore();
 
   // Obtener categorías reales de la API
   const { data: categoriesData = [] } = useCategories();
 
+  // Obtener productos de la tienda con cache inteligente
+  const { 
+    data: rawProducts = [], 
+    isLoading: productsLoading,
+    isFetching: productsFetching 
+  } = useStoreProducts({ 
+    slug: store?.slug || '', 
+    enabled: !!store?.slug 
+  });
+
   // Mensaje de estado
   const hasStore = !!store?.slug;
+  const loading = productsLoading || productsFetching;
 
   // Función para agrupar productos padre-hijo
   const groupProductsWithVariants = useCallback((products: Product[]): Product[] => {
@@ -56,44 +68,18 @@ const DashboardUser = () => {
     });
   }, []);
 
-  // Cargar productos iniciales
-  const loadInitialProducts = useCallback(async () => {
-    setLoading(true);
-    try {
-      if (!store?.slug) {
-        // Sin tienda escaneada, no mostrar nada
-        setProducts([]);
-        setAllProducts([]);
-        setLoading(false);
-        return;
-      }
-
-      // Cargar productos de la tienda desde la API
-      const url = buildApiUrl(`/api/store/${store.slug}/products`);
-      const response = await fetch(url);
-      const result = await response.json();
-      
-      if (result.success && result.data) {
-        // Normalizar productos usando la función de normalización
-        const normalizedProducts = result.data.map((p: unknown) => normalizeProductData(p as Product));
-        
-        // Agrupar productos con variantes (solo mostrar productos padre)
-        const groupedProducts = groupProductsWithVariants(normalizedProducts);
-        
-        setAllProducts(groupedProducts);
-        // Los productos filtrados se aplicarán automáticamente en el useEffect de applyFiltersAndSearch
-      } else {
-        setProducts([]);
-        setAllProducts([]);
-      }
-    } catch (error) {
-      console.error("Error al cargar productos:", error);
-      setProducts([]);
-      setAllProducts([]);
-    } finally {
-      setLoading(false);
+  // Procesar productos cuando cambien (agrupar variantes)
+  const allProducts = useMemo(() => {
+    if (!rawProducts || rawProducts.length === 0) {
+      return [];
     }
-  }, [store?.slug]); // Removido groupProductsWithVariants de las dependencias
+    return groupProductsWithVariants(rawProducts);
+  }, [rawProducts, groupProductsWithVariants]);
+
+  // Notificar cambios de loading al componente padre
+  useEffect(() => {
+    onLoadingChange?.(loading);
+  }, [loading, onLoadingChange]);
 
   // Calcular filtros de categorías con contadores dinámicos - Formato para FilterSlider
   const categoryFilters: FilterOption[] = useMemo(() => {
@@ -124,11 +110,10 @@ const DashboardUser = () => {
     ];
   }, [categoriesData, allProducts]);
 
-  // Aplicar filtros y búsqueda a los productos
-  const applyFiltersAndSearch = useCallback(() => {
+  // Aplicar filtros y búsqueda a los productos usando useMemo para evitar loops infinitos
+  const products = useMemo(() => {
     if (!hasStore || allProducts.length === 0) {
-      setProducts([]);
-      return;
+      return [];
     }
 
     let filtered = [...allProducts];
@@ -161,7 +146,7 @@ const DashboardUser = () => {
       });
     }
 
-    setProducts(filtered);
+    return filtered;
   }, [hasStore, allProducts, selectedFilters, searchQuery]);
 
   // Manejar búsqueda
@@ -194,44 +179,33 @@ const DashboardUser = () => {
 
   // Manejar escaneo QR
   const handleScanQR = () => {
-    router.push('/user/scan');
+    if (store?.slug) {
+      router.push(`/store/${store.slug}/scan`);
+    }
   };
-
-  // Cargar productos al montar el componente o cuando cambie la tienda
-  useEffect(() => {
-    loadInitialProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store?.slug]); // Solo ejecutar cuando cambie la tienda
-
-  // Aplicar filtros cuando cambien los filtros, búsqueda o productos
-  useEffect(() => {
-    applyFiltersAndSearch();
-  }, [applyFiltersAndSearch]);
 
   return (
     <div className="flex flex-col w-full bg-background-cream">
       {/* Header con información de la tienda */}
-      <div className="bg-background-cream border-b border-white animate-slide-down">
+      <div className="bg-background-cream border-2 border-white pl-2 pr-2">
         <div className="flex items-center justify-between w-full px-4 py-3">
-          <div className="flex items-center gap-3 flex-1 min-w-0 animate-stagger-1">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="flex flex-col items-start justify-start flex-1 min-w-0">
-              <p className="text-black font-bold text-[17px] truncate w-full transition-interactive">
+              {/* Título de la tienda con color #111827 */}
+              <p className="text-[#111827] font-bold text-[17px] truncate w-full">
                 {store?.name || 'Heinigers Hofladen'}
               </p>
-              {store?.address && (
-                <p className="text-gray-600 text-[12px] mt-0.5 truncate w-full transition-interactive">
-                  {store.address}
-                </p>
-              )}
-              <p className="text-gray-500 text-[13px] mt-0.5 transition-interactive">
-                {store ? `${products.length} Produkte verfügbar` : 'Grundhof 3, 8305 Dietlikon • ⭐ 4.8'}
+              {/* Ciudad y puntuación en la misma línea - formato: "8305 Ciudad • ⭐ 4.8" */}
+              <p className="text-gray-600 text-[12px] mt-0.5 flex items-center gap-1 truncate w-full">
+                <span>{store?.address || '8305 Dietlikon'}</span>
+                <span className="text-gray-400">•</span>
+                <span className="text-yellow-500">⭐</span>
+                <span className="text-gray-500">4.8</span>
               </p>
             </div>
           </div>
-          <div className="flex items-center justify-end flex-shrink-0 ml-2 animate-stagger-2">
-            <button className="bg-white text-gray-500 px-4 rounded-md hover:bg-gray-50 
-                          transition-interactive gpu-accelerated touch-target tap-highlight-transparent 
-                          active:scale-95 whitespace-nowrap" 
+          <div className="flex items-center justify-end flex-shrink-0 ml-2">
+            <button className="bg-white text-gray-500 px-4 py-1 rounded-lg hover:bg-gray-50 whitespace-nowrap transition-colors" 
                     style={{ minHeight: '35px' }}>
               Kontakt
             </button>
@@ -241,26 +215,24 @@ const DashboardUser = () => {
 
       {/* Contenedor de búsqueda y filtros - solo mostrar si la tienda está abierta */}
       {store && store.isOpen !== false && (
-        <div className="bg-background-cream animate-slide-down" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
+        <div className="bg-background-cream">
           {/* Barra de búsqueda y botón QR */}
           <div className="p-4 flex gap-4 items-center justify-center bg-background-cream">
-            <div className="animate-stagger-1">
+            <div>
               <SearchInput
                 placeholder="Produkte suchen..."
-                className="flex-1 max-w-[260px] h-[54px] transition-interactive gpu-accelerated"
+                className="flex-1 max-w-[260px] h-[54px]"
                 value={searchQuery}
                 onChange={handleSearch}
               />
             </div>
-            <div className="animate-stagger-2">
+            <div>
               <button
                 onClick={handleScanQR}
-                className="bg-brand-500 cursor-pointer justify-center text-center text-white px-4 py-3 flex items-center text-[18px] font-semibold gap-2 rounded-[30px] w-[124px] h-[54px] 
-                         hover:bg-brand-600 transition-interactive gpu-accelerated touch-target tap-highlight-transparent 
-                         active:scale-95 hover:scale-105"
+                className="bg-brand-500 cursor-pointer justify-center text-center text-white px-4 py-3 flex items-center text-[18px] font-semibold gap-2 rounded-[30px] w-[124px] h-[54px]"
                 aria-label="QR Code scannen"
               >
-                <ScanBarcode className="w-6 h-6 transition-interactive" />
+                <ScanBarcode className="w-6 h-6" />
                 <span className="text-[16px] text-center">Scan</span>
               </button>
             </div>
@@ -268,8 +240,7 @@ const DashboardUser = () => {
 
           {/* Filtros de categorías - Slider horizontal como en otras pantallas */}
           {categoryFilters.length > 0 && (
-            <div className="bg-background-cream border-b border-gray-100 animate-stagger-3"
-                 style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
+            <div className="bg-background-cream border-b border-gray-100">
               <FilterSlider
                 filters={categoryFilters}
                 selectedFilters={selectedFilters.includes('all') ? [] : selectedFilters.filter(id => id !== 'all')}
@@ -298,7 +269,7 @@ const DashboardUser = () => {
             </p>
             <button
               onClick={handleScanQR}
-              className="flex items-center gap-3 px-6 py-3 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-colors font-semibold"
+              className="flex items-center gap-3 px-6 py-3 bg-brand-500 text-white rounded-xl font-semibold"
             >
               <ScanBarcode className="w-5 h-5" />
               Jetzt scannen
@@ -306,27 +277,27 @@ const DashboardUser = () => {
           </div>
         ) : store.isOpen === false ? (
           // Tienda cerrada
-          <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-background-cream animate-scale-in">
-            <div className="w-32 h-32 bg-orange-100 rounded-full flex items-center justify-center mb-6 animate-pulse transition-interactive">
-              <svg className="w-16 h-16 text-orange-500 transition-interactive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-background-cream">
+            <div className="w-32 h-32 bg-orange-100 rounded-full flex items-center justify-center mb-6">
+              <svg className="w-16 h-16 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-3 transition-interactive">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">
               Geschäft geschlossen
             </h2>
-            <p className="text-gray-600 mb-2 text-lg max-w-md transition-interactive">
+            <p className="text-gray-600 mb-2 text-lg max-w-md">
               Entschuldigung, {store.name} ist zur Zeit geschlossen
             </p>
-            <p className="text-gray-500 mb-8 text-sm max-w-md transition-interactive">
+            <p className="text-gray-500 mb-8 text-sm max-w-md">
               Bitte versuchen Sie es später erneut. Vielen Dank für Ihr Verständnis.
             </p>
-            <div className="bg-gray-50 rounded-2xl p-6 max-w-md w-full transition-interactive">
+            <div className="bg-gray-50 rounded-2xl p-6 max-w-md w-full">
               <div className="flex items-center gap-3 text-gray-700">
-                <svg className="w-6 h-6 text-gray-500 transition-interactive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span className="text-sm transition-interactive">
+                <span className="text-sm">
                   Wir sind derzeit nicht verfügbar
                 </span>
               </div>
@@ -334,16 +305,16 @@ const DashboardUser = () => {
           </div>
         ) : products.length === 0 && !loading ? (
           // Tienda sin productos o sin productos que coincidan con los filtros
-          <div className="flex flex-col items-center justify-center h-full p-8 text-center animate-scale-in">
-            <div className="w-24 h-24 bg-gray-100 rounded-3xl flex items-center justify-center mb-6 transition-interactive">
-              <StoreIcon className="w-12 h-12 text-gray-400 transition-interactive" strokeWidth={1.5} />
+          <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+            <div className="w-24 h-24 bg-gray-100 rounded-3xl flex items-center justify-center mb-6">
+              <StoreIcon className="w-12 h-12 text-gray-400" strokeWidth={1.5} />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-3 transition-interactive">
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
               {searchQuery || (selectedFilters.length > 0 && !selectedFilters.includes('all'))
                 ? "Keine Produkte gefunden"
                 : "Keine Produkte verfügbar"}
             </h2>
-            <p className="text-gray-600 mb-6 max-w-md transition-interactive">
+            <p className="text-gray-600 mb-6 max-w-md">
               {searchQuery
                 ? `Keine Produkte für "${searchQuery}" gefunden`
                 : (selectedFilters.length > 0 && !selectedFilters.includes('all'))
@@ -356,7 +327,7 @@ const DashboardUser = () => {
                   setSearchQuery("");
                   setSelectedFilters(['all']);
                 }}
-                className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors text-sm font-medium"
+                className="px-4 py-2 bg-brand-500 text-white rounded-lg text-sm font-medium"
               >
                 Filter zurücksetzen
               </button>
@@ -364,7 +335,7 @@ const DashboardUser = () => {
           </div>
         ) : (
           // Mostrar productos
-          <div className="animate-fade-in-scale">
+          <div>
             <ProductsList
               products={products}
               onAddToCart={handleAddToCart}

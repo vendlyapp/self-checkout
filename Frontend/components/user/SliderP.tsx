@@ -70,7 +70,8 @@ const SliderP: React.FC<SliderPProps> = ({ products = [] }) => {
         addToCart(product, 1);
       };
 
-      const imageUrl = product.image || <Package className="w-10 h-10 text-gray-400" />;
+      // Asegurar que imageUrl sea una string, no un componente React
+      const imageUrl = product.image || (product.images && product.images.length > 0 ? product.images[0] : '');
 
       return {
         title: product.promotionTitle ?? (product.isOnSale ? "Aktion" : "Empfehlung"),

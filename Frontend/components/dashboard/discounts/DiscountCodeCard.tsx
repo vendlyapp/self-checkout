@@ -84,17 +84,33 @@ export default function DiscountCodeCard({
 
       {/* Usage Info */}
       <div className="mb-3">
-        <p className="text-sm text-gray-600 mb-1">
-          Einlösungen: {code.current_redemptions}/{code.max_redemptions}
-        </p>
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-sm text-gray-600">
+            Einlösungen: <span className="font-semibold">{code.current_redemptions}</span> / <span className="font-semibold">{code.max_redemptions}</span>
+          </p>
+          <p className="text-sm font-semibold text-gray-700">
+            {code.max_redemptions - code.current_redemptions} verbleibend
+          </p>
+        </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div
             className={`h-2 rounded-full transition-all ${
-              isActive ? 'bg-[#25D076]' : 'bg-gray-400'
+              code.current_redemptions >= code.max_redemptions
+                ? 'bg-red-500'
+                : code.current_redemptions >= code.max_redemptions * 0.8
+                ? 'bg-orange-500'
+                : isActive
+                ? 'bg-[#25D076]'
+                : 'bg-gray-400'
             }`}
             style={{ width: `${Math.min(progressPercentage, 100)}%` }}
           />
         </div>
+        {code.current_redemptions >= code.max_redemptions && (
+          <p className="text-xs text-red-600 mt-1 font-medium">
+            Limit erreicht - Code automatisch deaktiviert
+          </p>
+        )}
       </div>
 
       {/* Expiry Date */}

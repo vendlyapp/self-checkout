@@ -86,14 +86,14 @@ export default function Header() {
         <div className="dashboard-header-content bg-background-cream h-[85px] w-full">
           {/* Logo */}
           <Link href="/dashboard" className="dashboard-logo-d touch-target tap-highlight-transparent">
-            <Image
-              src="/logo.svg"
-              alt="Self-Checkout Logo"
-              width={100}
-              height={100}
-              priority
-              style={{ width: 'auto', height: 'auto' }}
-            />
+              <Image
+                src="/logo.svg"
+                alt="Self-Checkout Logo"
+                width={32}
+                height={32}
+                priority
+                className="h-[32px] w-auto"
+              />
           </Link>
 
           {/* Actions */}

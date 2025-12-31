@@ -82,10 +82,7 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
     <div
       className={clsx(
         // Layout y estructura
-        "bg-white rounded-2xl p-4 flex flex-col items-center shrink-0 transition-interactive gpu-accelerated",
-        // Animaciones
-        "animate-scale-in hover:scale-105",
-
+        "bg-white rounded-2xl p-4 flex flex-col items-center shrink-0",
         className
       )}
       style={{
@@ -171,7 +168,7 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
       <div className="w-full mb-2 h-[40px] flex flex-col justify-center">
         <div className="w-full h-3 rounded-full bg-[#F2EDE8] overflow-hidden shadow-inner">
           <div
-            className="h-full rounded-full transition-all duration-300 bg-gradient-to-r from-[#C9B27B] to-[#D4C08C] shadow-sm"
+            className="h-full rounded-full bg-gradient-to-r from-[#C9B27B] to-[#D4C08C] shadow-sm"
             style={{
               width: progressWidth,
               minWidth: progressFraction > 0 ? "8px" : "0px", // Mínimo 8px si hay progreso
@@ -200,16 +197,14 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
             "flex items-center justify-center gap-2 shrink-0 rounded-full",
             // Tipografía
             "font-bold text-white text-sm",
-            // Transiciones
-            "transition-interactive gpu-accelerated",
             // Evitar interferencia con Swiper
             "relative z-10 pointer-events-auto",
             // Estados
             disabled || isAdding
               ? "opacity-50 cursor-not-allowed bg-gray-400"
               : justAdded
-              ? "bg-brand-500-600 hover:bg-brand-600"
-              : "bg-brand-500 hover:bg-brand-500/90 hover:scale-105 active:scale-95",
+              ? "bg-brand-600"
+              : "bg-brand-500",
             // Sombra personalizada
             "shadow-[0_7px_29px_0_rgba(100,100,111,0.20)]"
           )}

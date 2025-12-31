@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
-import { useMyStore } from "@/hooks/queries/useMyStore";
+// Removido useMyStore - no se necesita autenticación en vista de usuario
 import type { PromoCodeReturn } from "@/types";
 import { discountCodeService, type DiscountCode } from "@/lib/services/discountCodeService";
 
@@ -40,7 +40,7 @@ import { discountCodeService, type DiscountCode } from "@/lib/services/discountC
 export const usePromoCode = (): PromoCodeReturn => {
   const { getSubtotal, applyPromoCode, removePromoCode } = useCartStore();
   const { store: scannedStore } = useScannedStoreStore();
-  const { data: myStore } = useMyStore();
+  // No usar useMyStore en vista de usuario - solo usar scannedStore que no requiere autenticación
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [discountAmount, setDiscountAmount] = useState(0);
@@ -63,11 +63,21 @@ export const usePromoCode = (): PromoCodeReturn => {
     setPromoError("");
 
     try {
-      // Obtener storeId del store actual (priorizar store escaneado, sino usar store del usuario autenticado)
-      const storeId = scannedStore?.id || myStore?.id;
+      // Obtener storeId solo del store escaneado (no requiere autenticación)
+      const storeId = scannedStore?.id;
       
       // Validar código desde la base de datos con storeId
       const validated = await discountCodeService.validateCode(codeToValidate, storeId || undefined);
+      
+      // Verificar que el código no haya alcanzado el límite de usos
+      if (validated.current_redemptions >= validated.max_redemptions) {
+        throw new Error('Este código de descuento ha alcanzado su límite de usos');
+      }
+      
+      // Verificar que el código esté activo
+      if (!validated.is_active || validated.status !== 'active') {
+        throw new Error('Este código de descuento no está activo');
+      }
       
       // Calcular descuento según el tipo
       let discount = 0;
@@ -98,8 +108,10 @@ export const usePromoCode = (): PromoCodeReturn => {
       // Traducir algunos errores comunes
       if (errorMessage.includes('no encontrado') || errorMessage.includes('inválido')) {
         setPromoError("Der Code existiert nicht oder ist ungültig.");
-      } else if (errorMessage.includes('no está activo') || errorMessage.includes('expirado')) {
+      } else if (errorMessage.includes('no está activo') || errorMessage.includes('expirado') || errorMessage.includes('nicht aktiv')) {
         setPromoError("Der Code ist nicht aktiv oder abgelaufen.");
+      } else if (errorMessage.includes('límite de usos') || errorMessage.includes('alcanzado su límite')) {
+        setPromoError("Dieser Code hat sein Nutzungslimit erreicht.");
       } else {
         setPromoError(errorMessage);
       }

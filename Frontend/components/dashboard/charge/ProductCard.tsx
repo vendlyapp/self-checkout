@@ -175,8 +175,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
 
   return (
     <div className="bg-white rounded-[20px] lg:rounded-xl h-[130px] lg:h-[140px] p-4 lg:p-4 relative 
-                    shadow-sm hover:shadow-md lg:border lg:border-gray-100 
-                    transition-interactive gpu-accelerated hover:scale-[1.01] active:scale-[0.98] group">
+                    shadow-sm lg:border lg:border-gray-100">
       {/* Badge de precio - usar currentProduct para mostrar precio de la variante seleccionada */}
       <div className="absolute top-3 right-3 lg:top-3 lg:right-3">
         {currentProduct.originalPrice ? (
@@ -299,7 +298,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
               alt={currentProduct.name}
               width={100}
               height={100}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-cover"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
