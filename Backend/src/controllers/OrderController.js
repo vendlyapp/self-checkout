@@ -239,12 +239,22 @@ class OrderController {
     const generatedEmail = normalizedEmail || this.generateGuestEmail(storeSlug, storeId);
     const password = randomUUID();
 
-    const createdUser = await userService.create({
+    // Crear usuario con datos del cliente si están disponibles
+    const userData = {
       email: generatedEmail,
       password,
       name: displayName,
       role: 'CUSTOMER',
-    });
+    };
+    
+    // Si hay datos adicionales del cliente (address, phone), guardarlos en metadata del usuario
+    // Nota: La tabla User puede no tener estos campos, así que los guardamos en metadata si existe
+    if (customer?.address || customer?.phone) {
+      // Estos datos se guardarán en la orden, no en el usuario
+      // El usuario solo tiene name y email
+    }
+
+    const createdUser = await userService.create(userData);
 
     return createdUser.data.id;
   }

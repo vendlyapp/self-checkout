@@ -75,6 +75,7 @@ interface PaymentModalProps {
     phone: string;
   };
   setPersonalData?: (data: { name: string; email: string; address: string; phone: string }) => void;
+  onSaveCustomerData?: (data: { name: string; email: string; address: string; phone: string }) => void;
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -99,6 +100,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   onStepChange,
   personalData: externalPersonalData,
   setPersonalData: setExternalPersonalData,
+  onSaveCustomerData,
 }) => {
   const [modalContainer, setModalContainer] = useState<HTMLElement | null>(null);
   const [invoiceOption, setInvoiceOption] = useState<'none' | 'print' | 'email' | 'phone' | 'full'>('none');
@@ -431,7 +433,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   <input
                     type="text"
                     value={personalData.name}
-                    onChange={(e) => setPersonalData({...personalData, name: e.target.value})}
+                    onChange={(e) => {
+                      const newData = {...personalData, name: e.target.value};
+                      setPersonalData(newData);
+                      // Guardar automáticamente mientras el usuario escribe (opcional, solo si quiere guardar)
+                    }}
                     placeholder="Max Mustermann"
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white transition-colors"
                   />
@@ -836,9 +842,18 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <div className="p-4 border-t border-gray-200 bg-white">
               <button
                 onClick={() => {
+                  // Si el usuario quiere guardar sus datos, guardarlos en localStorage
+                  if (saveDataForFuture && personalData.name && personalData.email) {
+                    onSaveCustomerData?.(personalData);
+                    console.log('Customer data saved to localStorage:', personalData);
+                  }
+                  
+                  // Guardar preferencias si están seleccionadas
                   if (saveDataForFuture || receiveOffers) {
                     console.log('Saving preferences:', { saveDataForFuture, receiveOffers, personalData });
+                    // Aquí se enviarían las preferencias al backend si es necesario
                   }
+                  
                   onClose();
                 }}
                 className="w-full bg-[#25D076] hover:bg-[#20B865] text-white font-semibold rounded-xl py-3.5 text-base transition-colors shadow-lg shadow-[#25D076]/20"
@@ -872,12 +887,40 @@ export default function PaymentP() {
   const [orderError, setOrderError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [showPromoInput, setShowPromoInput] = useState(false);
-  const [personalData, setPersonalData] = useState({
-    name: '',
-    email: '',
-    address: '',
-    phone: '',
-  });
+  
+  // Cargar datos guardados del localStorage al iniciar
+  const loadSavedCustomerData = (): { name: string; email: string; address: string; phone: string } => {
+    if (typeof window === 'undefined') {
+      return { name: '', email: '', address: '', phone: '' };
+    }
+    try {
+      const saved = localStorage.getItem('vendly_customer_data');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          name: parsed.name || '',
+          email: parsed.email || '',
+          address: parsed.address || '',
+          phone: parsed.phone || '',
+        };
+      }
+    } catch (error) {
+      console.error('Error loading customer data from localStorage:', error);
+    }
+    return { name: '', email: '', address: '', phone: '' };
+  };
+
+  // Guardar datos del cliente en localStorage
+  const saveCustomerDataToLocalStorage = (data: { name: string; email: string; address: string; phone: string }) => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem('vendly_customer_data', JSON.stringify(data));
+    } catch (error) {
+      console.error('Error saving customer data to localStorage:', error);
+    }
+  };
+
+  const [personalData, setPersonalData] = useState(loadSavedCustomerData());
   const router = useRouter();
   
   // Usar mutation de React Query para crear órdenes
@@ -893,6 +936,16 @@ export default function PaymentP() {
   } = usePromoLogic();
   
   const { promoInfo } = useCartStore();
+
+  // Cargar datos guardados cuando se monta el componente
+  useEffect(() => {
+    if (mounted) {
+      const savedData = loadSavedCustomerData();
+      if (savedData.name || savedData.email) {
+        setPersonalData(savedData);
+      }
+    }
+  }, [mounted]);
 
   // Sincronizar estado del carrito solo en el cliente para evitar hydration mismatch
   // Usar useRef para evitar re-renders innecesarios
@@ -951,6 +1004,16 @@ export default function PaymentP() {
       setOrderError(null);
       setPaymentStep("processing");
 
+      // Preparar datos del cliente para enviar al backend
+      const customerData = personalData.name && personalData.email 
+        ? {
+            name: personalData.name,
+            email: personalData.email,
+            address: personalData.address || undefined,
+            phone: personalData.phone || undefined,
+          }
+        : undefined;
+
       // Usar mutation de React Query
       await createOrderMutation.mutateAsync({
         items: orderItems,
@@ -958,6 +1021,7 @@ export default function PaymentP() {
         total: payableTotal,
         storeId: store?.id,
         storeSlug: store?.slug,
+        customer: customerData, // Enviar datos del cliente al backend
         metadata: {
           storeId: store?.id ?? null,
           storeSlug: store?.slug ?? null,
@@ -967,6 +1031,8 @@ export default function PaymentP() {
           discountAmount: promoApplied ? discountAmount ?? 0 : 0,
           totalBeforeVAT: Number(subtotal.toFixed(2)),
           totalWithVAT: Number(totalWithVAT.toFixed(2)),
+          // Incluir datos del cliente en metadata también para referencia
+          customerData: customerData,
         },
       });
 
@@ -1304,6 +1370,7 @@ export default function PaymentP() {
         onStepChange={handleStepChange}
         personalData={personalData}
         setPersonalData={setPersonalData}
+        onSaveCustomerData={saveCustomerDataToLocalStorage}
       />
     </div>
   );

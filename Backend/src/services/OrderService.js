@@ -96,11 +96,23 @@ class OrderService {
       const paymentMethod = orderPayload.paymentMethod || null;
       const storeId = orderPayload.storeId || null;
       
-      // Preparar metadata como JSONB
+      // Preparar metadata como JSONB, incluyendo datos del cliente si están disponibles
       let metadataJson = '{}';
-      if (orderPayload.metadata && typeof orderPayload.metadata === 'object') {
-        metadataJson = JSON.stringify(orderPayload.metadata);
+      const metadata = orderPayload.metadata && typeof orderPayload.metadata === 'object' 
+        ? { ...orderPayload.metadata } 
+        : {};
+      
+      // Agregar datos del cliente a metadata si están disponibles
+      if (orderPayload.customer && typeof orderPayload.customer === 'object') {
+        metadata.customer = {
+          name: orderPayload.customer.name || null,
+          email: orderPayload.customer.email || null,
+          address: orderPayload.customer.address || null,
+          phone: orderPayload.customer.phone || null,
+        };
       }
+      
+      metadataJson = JSON.stringify(metadata);
 
       const orderQuery = `
         INSERT INTO "Order" ("userId", "total", "status", "paymentMethod", "storeId", "metadata")
@@ -526,11 +538,23 @@ class OrderService {
       const paymentMethod = orderData.paymentMethod || null;
       const storeId = orderData.storeId || null;
       
-      // Preparar metadata como JSONB
+      // Preparar metadata como JSONB, incluyendo datos del cliente si están disponibles
       let metadataJson = '{}';
-      if (orderData.metadata && typeof orderData.metadata === 'object') {
-        metadataJson = JSON.stringify(orderData.metadata);
+      const metadata = orderData.metadata && typeof orderData.metadata === 'object' 
+        ? { ...orderData.metadata } 
+        : {};
+      
+      // Agregar datos del cliente a metadata si están disponibles
+      if (orderData.customer && typeof orderData.customer === 'object') {
+        metadata.customer = {
+          name: orderData.customer.name || null,
+          email: orderData.customer.email || null,
+          address: orderData.customer.address || null,
+          phone: orderData.customer.phone || null,
+        };
       }
+      
+      metadataJson = JSON.stringify(metadata);
 
       // Crear orden
       const orderQuery = `
