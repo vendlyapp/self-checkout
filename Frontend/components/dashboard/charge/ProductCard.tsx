@@ -52,7 +52,12 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
   const getVariantName = (variant: Product | null): string => {
     if (!variant) {
       // Si es null, es el producto padre - extraer el nombre de la variante del nombre del producto
-      if (!product.name) return (product as Product & { unit?: string }).unit || '1 KG'
+      // Si el producto NO tiene variantes, retornar cadena vacía (no mostrar nada)
+      if (!product.variants || product.variants.length === 0) {
+        return ''
+      }
+      
+      if (!product.name) return ''
       
       // Si hay variantes, intentar encontrar el nombre base común
       if (product.variants && product.variants.length > 0) {
@@ -77,13 +82,13 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           // Si encontramos un prefijo común, extraer la parte de la variante del producto padre
           if (commonPrefix && product.name.startsWith(commonPrefix)) {
             const variantPart = product.name.substring(commonPrefix.length).trim()
-            return variantPart || (product as Product & { unit?: string }).unit || '1 KG'
+            return variantPart || ''
           }
         }
       }
       
-      // Si no se puede extraer, usar el nombre completo o la unidad
-      return product.name || (product as Product & { unit?: string }).unit || '1 KG'
+      // Si no se puede extraer, retornar cadena vacía (no mostrar nada)
+      return ''
     }
     
     if (!product.name || !variant.name) return variant.name || ''
@@ -235,7 +240,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
 
           {/* Controles en la parte inferior */}
           <div className="flex items-center justify-between h-[25px] lg:h-[30px]">
-            {/* Selector de variantes - si tiene variantes */}
+            {/* Selector de variantes - solo si tiene variantes, o espacio invisible para mantener layout */}
             {product.variants && product.variants.length > 0 ? (
               <div className="relative bg-[#F7F4F1] rounded-lg text-center min-w-[70px] h-[30px] lg:min-w-[80px] lg:h-[35px] flex items-center justify-center px-2">
                 <button
@@ -255,13 +260,11 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
                 </button>
               </div>
             ) : (
-              <div className="text-[14px] lg:text-[15px] text-gray-500">
-                Unidad
-              </div>
+              <div className="min-w-[70px] lg:min-w-[80px]"></div>
             )}
 
             {/* Controles de cantidad */}
-            <div className="flex items-center h-full pt-4">
+            <div className="flex items-center h-full pt-4 ml-auto">
               {currentQuantity > 0 && (
                 <>
                   <button
@@ -318,7 +321,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
 
           {/* Controles en la parte inferior */}
           <div className="flex items-center justify-between">
-            {/* Selector de variantes - si tiene variantes */}
+            {/* Selector de variantes - solo si tiene variantes, o espacio invisible para mantener layout */}
             {product.variants && product.variants.length > 0 ? (
               <div className="relative bg-gray-50 rounded-lg min-w-[75px] h-[32px] flex items-center justify-center px-2">
                 <button
@@ -338,13 +341,11 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
                 </button>
               </div>
             ) : (
-              <div className="text-[14px] text-gray-500 font-medium">
-                Unidad
-              </div>
+              <div className="min-w-[75px]"></div>
             )}
 
             {/* Controles de cantidad */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 ml-auto">
               {currentQuantity > 0 && (
                 <>
                   <button

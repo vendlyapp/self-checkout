@@ -1,7 +1,6 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import HeaderNav from '@/components/navigation/HeaderNav'
 import SliderP from '@/components/user/SliderP'
 import ProductsList from '@/components/dashboard/charge/ProductsList'
 import { Product } from '@/components/dashboard/products_list/data/mockProducts'
@@ -32,22 +31,16 @@ export default function StorePromotionPage() {
 
   if (!store) {
     return (
-      <>
-        <HeaderNav title="Aktionen" />
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <Store className="w-16 h-16 text-gray-300 mb-4" />
-          <p className="text-gray-600 font-medium">Kein Geschäft ausgewählt</p>
-          <p className="text-gray-400 text-sm mt-2">Scannen Sie einen QR-Code</p>
-        </div>
-      </>
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <Store className="w-16 h-16 text-gray-300 mb-4" />
+        <p className="text-gray-600 font-medium">Kein Geschäft ausgewählt</p>
+        <p className="text-gray-400 text-sm mt-2">Scannen Sie einen QR-Code</p>
+      </div>
     )
   }
 
   return (
     <div>
-      <div>
-        <HeaderNav title="Aktionen" promotionCount={products.length} />
-      </div>
       {products.length > 0 && (
         <div className="w-full mt-4">
           <SliderP products={products} />

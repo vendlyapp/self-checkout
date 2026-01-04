@@ -6,21 +6,47 @@ import HeaderUser from "@/components/navigation/user/HeaderUser"
 import { useScrollReset } from "@/hooks"
 import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore"
 import { LoadingProductsModalProvider } from "@/lib/contexts/LoadingProductsModalContext"
-import { useParams } from "next/navigation"
+import { useParams, useRouter, usePathname } from "next/navigation"
 import { useStoreData } from "@/hooks/data/useStoreData"
 import { InitialLoadingScreen } from "@/components/ui"
+import { StoreProvider, useStoreContext } from "./StoreContext"
+import StoreFixedHeader from "@/components/user/StoreFixedHeader"
+import StoreInfoHeader from "@/components/user/StoreInfoHeader"
+import HeaderNav from "@/components/navigation/HeaderNav"
 
-interface StoreLayoutProps {
+interface StoreLayoutContentProps {
   children: ReactNode
 }
 
-export default function StoreLayout({ children }: StoreLayoutProps) {
+function StoreLayoutContent({ children }: StoreLayoutContentProps) {
   const { scrollContainerRef } = useScrollReset()
   const { store } = useScannedStoreStore()
   const params = useParams()
+  const router = useRouter()
+  const pathname = usePathname()
   const slug = params.slug as string
   const { isLoading: isStoreLoading } = useStoreData({ slug, autoLoad: true })
   const [modalContainer, setModalContainer] = useState<HTMLDivElement | null>(null)
+  const storeContext = useStoreContext()
+  
+  // Determinar si estamos en la página principal de productos (no en cart, payment, etc.)
+  const isMainProductsPage = pathname === `/store/${slug}` || pathname === `/store/${slug}/`
+  
+  // Determinar el título del HeaderNav según la ruta (solo para páginas que no son la principal)
+  const getHeaderNavTitle = (): string | null => {
+    if (isMainProductsPage) return null
+    
+    if (pathname?.includes('/cart')) return 'Warenkorb'
+    if (pathname?.includes('/payment')) return 'Bezahlung'
+    if (pathname?.includes('/promotion')) return 'Aktionen'
+    if (pathname?.includes('/search')) return 'Suchen'
+    // scan no tiene HeaderNav, usa su propio componente
+    
+    return null
+  }
+  
+  const headerNavTitle = getHeaderNavTitle()
+  const shouldShowHeaderNav = !isMainProductsPage && headerNavTitle !== null && !pathname?.includes('/scan')
   
   // Si la tienda está cerrada, ocultar navbar y footer
   const isStoreClosed = store?.isOpen === false
@@ -61,6 +87,25 @@ export default function StoreLayout({ children }: StoreLayoutProps) {
     }
   }, [])
 
+  // Calcular altura total de headers fijos:
+  // Solo en la página principal de productos:
+  // - HeaderUser: ~85px (con safe area)
+  // - StoreInfoHeader (título tienda + Kontakt): ~60px
+  // - Barra de búsqueda: ~85px (54px + padding)
+  // - Filtros de categorías: ~70px (altura variable)
+  // En otras páginas:
+  // - HeaderUser: ~85px (con safe area)
+  // - HeaderNav: ~60px (con flecha de navegación)
+  const fixedHeadersHeight = isMainProductsPage && store && store.isOpen !== false && storeContext.categoryFilters.length > 0
+    ? 'calc(85px + env(safe-area-inset-top) + 60px + 85px + 70px)'
+    : isMainProductsPage && store && store.isOpen !== false
+    ? 'calc(85px + env(safe-area-inset-top) + 60px + 85px)'
+    : isMainProductsPage && store
+    ? 'calc(85px + env(safe-area-inset-top) + 60px)'
+    : shouldShowHeaderNav
+    ? 'calc(85px + env(safe-area-inset-top) + 60px)'
+    : 'calc(85px + env(safe-area-inset-top))'
+
   return (
     <LoadingProductsModalProvider>
       {/* Pantalla de carga inicial - solo en recarga completa, no en navegación */}
@@ -74,16 +119,44 @@ export default function StoreLayout({ children }: StoreLayoutProps) {
           </div>
         )}
 
+        {/* Header de información de la tienda (título + Kontakt) - Solo en página principal */}
+        {!isStoreClosed && store && isMainProductsPage && (
+          <StoreInfoHeader isFixed={true} />
+        )}
+
+        {/* Headers fijos de búsqueda y filtros - Solo en página principal y si la tienda está abierta */}
+        {!isStoreClosed && store && store.isOpen !== false && isMainProductsPage && (
+          <StoreFixedHeader
+            searchQuery={storeContext.searchQuery}
+            onSearch={storeContext.onSearch}
+            selectedFilters={storeContext.selectedFilters}
+            onFilterChange={storeContext.onFilterChange}
+            onScanQR={storeContext.onScanQR}
+            categoryFilters={storeContext.categoryFilters}
+            isFixed={true}
+          />
+        )}
+
+        {/* HeaderNav fijo - Solo en páginas que no son la principal (cart, payment, promotion, search) */}
+        {!isStoreClosed && shouldShowHeaderNav && headerNavTitle && (
+          <div 
+            className="fixed left-0 right-0 z-40 bg-white"
+            style={{ top: 'calc(85px + env(safe-area-inset-top))' }}
+          >
+            <HeaderNav title={headerNavTitle} isFixed={false} />
+          </div>
+        )}
+
         {/* Contenido principal optimizado para PWA iOS */}
         <main
           ref={scrollContainerRef}
-          className={`
-            flex-1 overflow-y-auto overflow-x-hidden relative no-scrollbar ios-scroll-fix
-            transition-opacity duration-200 ease-in-out
-            ${isStoreClosed ? 'pt-0 pb-0' : 'pt-[calc(85px+env(safe-area-inset-top))] pb-[calc(100px+env(safe-area-inset-bottom))]'}
-          `}
+          className="flex-1 overflow-y-auto overflow-x-hidden relative no-scrollbar ios-scroll-fix"
+          style={{
+            paddingTop: isStoreClosed ? 0 : fixedHeadersHeight,
+            paddingBottom: isStoreClosed ? 0 : 'calc(100px + env(safe-area-inset-bottom))'
+          }}
         >
-          <div className="w-full animate-fade-in">{children}</div>
+          <div className="w-full">{children}</div>
         </main>
 
         {/* Footer de navegación fijo con safe area - ocultar si tienda cerrada */}
@@ -94,5 +167,26 @@ export default function StoreLayout({ children }: StoreLayoutProps) {
         )}
       </div>
     </LoadingProductsModalProvider>
+  )
+}
+
+interface StoreLayoutProps {
+  children: ReactNode
+}
+
+export default function StoreLayout({ children }: StoreLayoutProps) {
+  const router = useRouter()
+  const { store } = useScannedStoreStore()
+
+  const handleScanQR = () => {
+    if (store?.slug) {
+      router.push(`/store/${store.slug}/scan`)
+    }
+  }
+
+  return (
+    <StoreProvider onScanQR={handleScanQR}>
+      <StoreLayoutContent>{children}</StoreLayoutContent>
+    </StoreProvider>
   )
 }

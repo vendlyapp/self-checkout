@@ -1,26 +1,23 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import ProductsList from "../dashboard/charge/ProductsList";
 import { Product } from "../dashboard/products_list/data/mockProducts";
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
-import { SearchInput } from "@/components/ui/search-input";
-import { ScanBarcode, Store as StoreIcon, ShoppingBag } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Store as StoreIcon, ShoppingBag, ScanBarcode } from "lucide-react";
 import { useCategories } from "@/hooks/queries/useCategories";
 import { useStoreProducts } from "@/hooks/queries/useStoreProducts";
 import { getIcon } from "../dashboard/products_list/data/iconMap";
-import { FilterSlider, FilterOption } from "@/components/Sliders/SliderFIlter";
+import { FilterOption } from "@/components/Sliders/SliderFIlter";
+import { useStoreContext } from "@/app/store/[slug]/StoreContext";
 
 interface DashboardUserProps {
   onLoadingChange?: (isLoading: boolean) => void;
 }
 
 const DashboardUser = ({ onLoadingChange }: DashboardUserProps = {}) => {
-  const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilters, setSelectedFilters] = useState<string[]>(['all']);
   const { addToCart } = useCartStore();
   const { store } = useScannedStoreStore();
+  const { searchQuery, selectedFilters, setCategoryFilters, onScanQR } = useStoreContext();
 
   // Obtener categorías reales de la API
   const { data: categoriesData = [] } = useCategories();
@@ -110,6 +107,19 @@ const DashboardUser = ({ onLoadingChange }: DashboardUserProps = {}) => {
     ];
   }, [categoriesData, allProducts]);
 
+  // Actualizar filtros de categorías en el contexto cuando cambien
+  // Usar useRef para comparar y evitar loops infinitos
+  const prevCategoryFiltersRef = useRef<string>('');
+  
+  useEffect(() => {
+    // Comparar usando JSON.stringify para evitar actualizaciones innecesarias
+    const currentFiltersString = JSON.stringify(categoryFilters);
+    if (prevCategoryFiltersRef.current !== currentFiltersString) {
+      prevCategoryFiltersRef.current = currentFiltersString;
+      setCategoryFilters(categoryFilters);
+    }
+  }, [categoryFilters, setCategoryFilters]);
+
   // Aplicar filtros y búsqueda a los productos usando useMemo para evitar loops infinitos
   const products = useMemo(() => {
     if (!hasStore || allProducts.length === 0) {
@@ -149,110 +159,13 @@ const DashboardUser = ({ onLoadingChange }: DashboardUserProps = {}) => {
     return filtered;
   }, [hasStore, allProducts, selectedFilters, searchQuery]);
 
-  // Manejar búsqueda
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
-
-  // Manejar cambio de filtros - Compatible con FilterSlider
-  const handleFilterChange = (filters: string[]) => {
-    // Si se pasa un array vacío, establecer "all"
-    if (filters.length === 0) {
-      setSelectedFilters(['all']);
-      return;
-    }
-    
-    // Si se incluye "all", solo dejar "all"
-    if (filters.includes('all')) {
-      setSelectedFilters(['all']);
-      return;
-    }
-    
-    // Si no hay "all", usar los filtros seleccionados
-    setSelectedFilters(filters);
-  };
-
   // Manejar agregar al carrito
   const handleAddToCart = (product: Product, quantity: number) => {
     addToCart(product, quantity);
   };
 
-  // Manejar escaneo QR
-  const handleScanQR = () => {
-    if (store?.slug) {
-      router.push(`/store/${store.slug}/scan`);
-    }
-  };
-
   return (
     <div className="flex flex-col w-full bg-background-cream">
-      {/* Header con información de la tienda */}
-      <div className="bg-background-cream border-1 border-white pl-2 pr-2">
-        <div className="flex items-center justify-between w-full px-4 py-3">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="flex flex-col items-start justify-start flex-1 min-w-0">
-              {/* Título de la tienda con color #111827 */}
-              <p className="text-[#111827] font-bold text-[17px] truncate w-full">
-                {store?.name || 'Heinigers Hofladen'}
-              </p>
-              {/* Ciudad y puntuación en la misma línea - formato: "8305 Ciudad • ⭐ 4.8" */}
-              <p className="text-gray-600 text-[12px] mt-0.5 flex items-center gap-1 truncate w-full">
-                <span>{store?.address || '8305 Dietlikon'}</span>
-                <span className="text-gray-400">•</span>
-                <span className="text-yellow-500">⭐</span>
-                <span className="text-gray-500">4.8</span>
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center justify-end flex-shrink-0 ml-2">
-            <button className="bg-white text-gray-500 px-4 py-1 rounded-lg hover:bg-gray-50 whitespace-nowrap transition-colors" 
-                    style={{ minHeight: '35px' }}>
-              Kontakt
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Contenedor de búsqueda y filtros - solo mostrar si la tienda está abierta */}
-      {store && store.isOpen !== false && (
-        <div className="bg-background-cream">
-          {/* Barra de búsqueda y botón QR */}
-          <div className="p-4 flex gap-4 items-center justify-center bg-background-cream">
-            <div>
-              <SearchInput
-                placeholder="Produkte suchen..."
-                className="flex-1 max-w-[260px] h-[54px]"
-                value={searchQuery}
-                onChange={handleSearch}
-              />
-            </div>
-            <div>
-              <button
-                onClick={handleScanQR}
-                className="bg-brand-500 cursor-pointer justify-center text-center text-white px-4 py-3 flex items-center text-[18px] font-semibold gap-2 rounded-[30px] w-[124px] h-[54px]"
-                aria-label="QR Code scannen"
-              >
-                <ScanBarcode className="w-6 h-6" />
-                <span className="text-[16px] text-center">Scan</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Filtros de categorías - Slider horizontal como en otras pantallas */}
-          {categoryFilters.length > 0 && (
-            <div className="bg-background-cream border-b border-gray-100">
-              <FilterSlider
-                filters={categoryFilters}
-                selectedFilters={selectedFilters.includes('all') ? [] : selectedFilters.filter(id => id !== 'all')}
-                onFilterChange={handleFilterChange}
-                showCount={true}
-                multiSelect={true}
-              />
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Lista de productos - sin scroll propio ya que el layout lo maneja */}
       <div className="flex-1">
         {!store ? (

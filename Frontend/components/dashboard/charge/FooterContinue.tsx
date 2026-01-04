@@ -1,5 +1,6 @@
 import React from "react";
 import { formatSwissPriceWithCHF } from "@/lib/utils";
+import { useCartStore } from "@/lib/stores/cartStore";
 
 type FooterContinueProps = {
   subtotal: number;
@@ -20,6 +21,8 @@ const FooterContinue: React.FC<FooterContinueProps> = ({
   promoCode,
   onContinue,
 }) => {
+  const { promoInfo } = useCartStore();
+  
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
       <div className="mb-2">
@@ -35,21 +38,19 @@ const FooterContinue: React.FC<FooterContinueProps> = ({
             </div>
             <div className="flex items-center justify-between mt-1">
               <div className="text-[#3C7E44] font-semibold text-[15px]">
-                10% Rabatt auf Bio-Produkte
+                {promoInfo?.discountType === 'percentage' 
+                  ? `${Math.round(promoInfo.discountValue)}% Rabatt${promoInfo.description ? ` auf ${promoInfo.description}` : ''}`
+                  : promoInfo?.description 
+                  ? promoInfo.description
+                  : 'Rabatt'
+                }
               </div>
               <div className="text-[#3C7E44] text-[15px] font-semibold">
                 - {formatSwissPriceWithCHF(discountAmount)}
               </div>
             </div>
-            {/* Código promocional aplicado */}
-            <div className="flex items-center justify-between mt-2 p-2 bg-[#F2FDF5] rounded-lg border border-[#3C7E44]/20">
-              <div className="text-[#3C7E44] text-[14px] font-medium">
-                Promo Code: <span className="font-bold">{promoCode?.toUpperCase()}</span>
-              </div>
-              <div className="text-[#3C7E44] text-[12px] bg-[#3C7E44]/10 px-2 py-1 rounded-full">
-                ✓ Angewendet
-              </div>
-            </div>
+            {/* Separador */}
+            <div className="border-t border-gray-200 my-2"></div>
           </>
         )}
       </div>

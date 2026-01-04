@@ -1,7 +1,6 @@
 'use client'
 
 import { useCartStore } from "@/lib/stores/cartStore";
-import HeaderNav from "@/components/navigation/HeaderNav";
 import React from "react";
 import ProductCard from "@/components/dashboard/charge/ProductCard";
 import { Product } from "@/components/dashboard/products_list/data/mockProducts";
@@ -27,6 +26,8 @@ export default function StoreCartPage() {
     handleApplyPromo,
     handleRemovePromo,
   } = usePromoLogic();
+  
+  const { promoInfo } = useCartStore();
 
   const handleUpdateQuantity = (product: Product, newQuantity: number) => {
     updateQuantity(product.id, newQuantity);
@@ -34,7 +35,6 @@ export default function StoreCartPage() {
 
   return (
     <>
-      <HeaderNav title="Warenkorb" />
       {/* Lista de productos */}
       <div className="flex-1 px-4 pt-4 pb-48 mt-4">
         {cartItems.length === 0 ? (
@@ -107,11 +107,18 @@ export default function StoreCartPage() {
                 ) : (
                   <div className="flex items-center bg-[#F2FDF5] rounded-xl px-4 py-3 mt-2 mb-2 shadow-sm border border-brand-200">
                     <div className="flex-1">
-                      <div className="text-[#3C7E44] font-semibold text-[15px] leading-tight">
-                        Promo Code: {localPromoCode}
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="text-[#3C7E44] font-semibold text-[15px] leading-tight">
+                          Code: {localPromoCode}
+                        </div>
                       </div>
-                      <div className="text-[#3C7E44] text-[15px]">
-                        - {formatSwissPriceWithCHF(discountAmount)}
+                      <div className="text-[#3C7E44] text-[14px] leading-tight">
+                        {promoInfo?.discountType === 'percentage' 
+                          ? `${Math.round(promoInfo.discountValue)}% Rabatt auf deine Produkte`
+                          : promoInfo?.description 
+                          ? promoInfo.description
+                          : 'Rabatt'
+                        } - {formatSwissPriceWithCHF(discountAmount)}
                       </div>
                     </div>
                     <button

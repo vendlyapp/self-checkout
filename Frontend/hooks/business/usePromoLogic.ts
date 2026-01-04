@@ -86,8 +86,16 @@ export const usePromoLogic = (): PromoLogicReturn => {
         discount = Math.min(validated.discount_value, subtotal); // No puede exceder el subtotal
       }
 
-      // Aplicar en el store del carrito con el descuento calculado
-      applyPromoCode(codeToValidate, discount);
+      // Crear información del código promocional
+      const promoInfo = {
+        code: codeToValidate,
+        discountType: validated.discount_type,
+        discountValue: validated.discount_value,
+        // description no está disponible en el modelo actual, se puede agregar en el futuro
+      };
+
+      // Aplicar en el store del carrito con el descuento calculado y la información del código
+      applyPromoCode(codeToValidate, discount, promoInfo);
       setPromoError("");
     } catch (error) {
       // Mensaje de error amigable

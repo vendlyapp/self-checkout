@@ -42,6 +42,15 @@ interface PaymentModalProps {
   errorMessage?: string | null;
   onConfirm: () => void;
   paymentMethods: PaymentMethodDisplay[];
+  promoApplied?: boolean;
+  promoCode?: string;
+  discountAmount?: number;
+  subtotal?: number;
+  promoInfo?: {
+    discountType: 'percentage' | 'fixed';
+    discountValue: number;
+    description?: string;
+  };
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -54,6 +63,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   errorMessage,
   onConfirm,
   paymentMethods,
+  promoApplied = false,
+  promoCode,
+  discountAmount = 0,
+  subtotal = 0,
+  promoInfo,
 }) => {
   const [modalContainer, setModalContainer] = useState<HTMLElement | null>(null);
 
@@ -130,6 +144,29 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               </div>
 
               <div className="bg-brand-50 p-4 rounded-xl mb-6">
+                {/* Mostrar subtotal si hay descuento aplicado */}
+                {promoApplied && (
+                  <>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-gray-600 text-sm">Zwischensumme:</span>
+                      <span className="text-gray-800 text-sm">
+                        CHF {subtotal.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[#3C7E44] text-sm font-semibold">
+                        {promoInfo?.discountType === 'percentage' 
+                          ? `${Math.round(promoInfo.discountValue)}% Rabatt auf deine Produkte`
+                          : 'Rabatt'
+                        }
+                      </span>
+                      <span className="text-[#3C7E44] text-sm font-semibold">
+                        - CHF {discountAmount?.toFixed(2) || '0.00'}
+                      </span>
+                    </div>
+                    <div className="border-t border-gray-200 my-2"></div>
+                  </>
+                )}
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-600">Gesamtbetrag:</span>
                   <span className="text-2xl font-bold text-brand-600">
@@ -137,6 +174,14 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   </span>
                 </div>
                 <p className="text-sm text-gray-500">inkl. MwSt</p>
+                {/* Mostrar código aplicado si hay descuento */}
+                {promoApplied && promoCode && (
+                  <div className="mt-2 pt-2 border-t border-gray-200">
+                    <p className="text-xs text-gray-500">
+                      Code: <span className="font-semibold">{promoCode.toUpperCase()}</span>
+                    </p>
+                  </div>
+                )}
               </div>
 
               {errorMessage && (
@@ -235,6 +280,8 @@ export default function PaymentP() {
     handleApplyPromo,
     handleRemovePromo,
   } = usePromoLogic();
+  
+  const { promoInfo } = useCartStore();
 
   // Sincronizar estado del carrito solo en el cliente para evitar hydration mismatch
   // Usar useRef para evitar re-renders innecesarios
@@ -486,11 +533,18 @@ export default function PaymentP() {
         ) : (
           <div className="flex items-center bg-[#F2FDF5] rounded-xl px-4 py-3 mt-2 mb-2 shadow-sm border border-brand-200 mr-12">
             <div className="flex-1">
-              <div className="text-[#3C7E44] font-semibold text-[15px] leading-tight">
-                Promo Code: {localPromoCode}
+              <div className="flex items-center gap-2 mb-1">
+                <div className="text-[#3C7E44] font-semibold text-[15px] leading-tight">
+                  Code: {localPromoCode}
+                </div>
               </div>
-              <div className="text-[#3C7E44] text-[15px]">
-                - {formatSwissPriceWithCHF(discountAmount || 0)}
+              <div className="text-[#3C7E44] text-[14px] leading-tight">
+                {promoInfo?.discountType === 'percentage' 
+                  ? `${Math.round(promoInfo.discountValue)}% Rabatt auf deine Produkte`
+                  : promoInfo?.description 
+                  ? promoInfo.description
+                  : 'Rabatt'
+                } - {formatSwissPriceWithCHF(discountAmount || 0)}
               </div>
             </div>
             <button
@@ -591,6 +645,11 @@ export default function PaymentP() {
         errorMessage={orderError}
         onConfirm={handleConfirmPayment}
         paymentMethods={paymentMethods}
+        promoApplied={promoApplied}
+        promoCode={promoCode}
+        discountAmount={discountAmount}
+        subtotal={subtotal}
+        promoInfo={promoInfo}
       />
     </div>
   );

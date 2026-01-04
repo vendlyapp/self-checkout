@@ -2,7 +2,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search, X, Store } from "lucide-react";
-import HeaderNav from "@/components/navigation/HeaderNav";
 import { SearchInput } from "@/components/ui/search-input";
 import ProductCard from "@/components/dashboard/charge/ProductCard";
 import { useCartStore } from "@/lib/stores/cartStore";
@@ -161,10 +160,6 @@ export default function SearchUser() {
 
   return (
     <div className="flex flex-col">
-      <div>
-        <HeaderNav title="Suchen" />
-      </div>
-
       {/* Contenedor principal con padding fijo */}
       <div className="flex-1 px-4 pb-32 mt-4 rounded-xl">
         {/* Barra de búsqueda fija en la parte superior */}

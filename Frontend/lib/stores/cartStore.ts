@@ -8,6 +8,13 @@ export type CartItem = {
   quantity: number;
 };
 
+interface PromoCodeInfo {
+  code: string;
+  discountType: 'percentage' | 'fixed';
+  discountValue: number;
+  description?: string;
+}
+
 interface CartState {
   currentStoreSlug: string | null;
   cartsByStore: Record<string, {
@@ -15,17 +22,19 @@ interface CartState {
     promoCode: string;
     promoApplied: boolean;
     discountAmount: number;
+    promoInfo?: PromoCodeInfo;
   }>;
   cartItems: CartItem[];
   promoCode: string;
   promoApplied: boolean;
   discountAmount: number;
+  promoInfo?: PromoCodeInfo;
   setCurrentStore: (slug: string | null) => void;
   addToCart: (product: Product, quantity?: number) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
-  applyPromoCode: (code: string, discount?: number) => void;
+  applyPromoCode: (code: string, discount?: number, promoInfo?: PromoCodeInfo) => void;
   removePromoCode: () => void;
   getTotalItems: () => number;
   getSubtotal: () => number;
@@ -55,6 +64,7 @@ export const useCartStore = create<CartState>()(
               promoCode: state.promoCode,
               promoApplied: state.promoApplied,
               discountAmount: state.discountAmount,
+              promoInfo: state.promoInfo,
             };
           }
 
@@ -64,6 +74,7 @@ export const useCartStore = create<CartState>()(
             promoCode: "",
             promoApplied: false,
             discountAmount: 0,
+            promoInfo: undefined,
           };
 
           return {
@@ -111,9 +122,10 @@ export const useCartStore = create<CartState>()(
           promoCode: "",
           promoApplied: false,
           discountAmount: 0,
+          promoInfo: undefined,
         }),
 
-      applyPromoCode: (code: string, discount?: number) => {
+      applyPromoCode: (code: string, discount?: number, promoInfo?: PromoCodeInfo) => {
         // Si se proporciona un descuento, usarlo directamente
         // Si no, calcular según el código (compatibilidad hacia atrás)
         const state = get();
@@ -132,6 +144,7 @@ export const useCartStore = create<CartState>()(
           promoCode: code.trim().toUpperCase(),
           promoApplied: true,
           discountAmount: discountAmount || 0,
+          promoInfo: promoInfo,
         });
       },
 
@@ -140,6 +153,7 @@ export const useCartStore = create<CartState>()(
           promoCode: "",
           promoApplied: false,
           discountAmount: 0,
+          promoInfo: undefined,
         });
       },
 

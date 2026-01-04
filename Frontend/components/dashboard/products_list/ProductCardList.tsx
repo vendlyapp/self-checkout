@@ -59,14 +59,15 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
   // Obtener el texto del selector de variantes
   const getSelectorText = (): string => {
     if (!product.variants || product.variants.length === 0) {
-      return product.unit || '1 KG'
+      // Si no hay variantes, no mostrar nada (retornar cadena vacía)
+      return ''
     }
     if (selectedVariantId) {
       const variant = product.variants.find(v => v.id === selectedVariantId)
       if (variant) {
         // Extraer el peso/unidad de la variante (ej: "500g", "1 KG")
         const variantName = getVariantName(variant)
-        return variantName || product.unit || '1 KG'
+        return variantName || ''
       }
     }
     // Si no hay variante seleccionada, mostrar el nombre de la variante padre
@@ -87,7 +88,12 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
   const getVariantName = (variant: Product | null): string => {
     if (!variant) {
       // Si es null, es el producto padre - extraer el nombre de la variante del nombre del producto
-      if (!product.name) return product.unit || '1 KG'
+      // Si el producto NO tiene variantes, retornar cadena vacía (no mostrar nada)
+      if (!product.variants || product.variants.length === 0) {
+        return ''
+      }
+      
+      if (!product.name) return ''
       
       // Si hay variantes, intentar encontrar el nombre base común
       if (product.variants && product.variants.length > 0) {
@@ -112,13 +118,13 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
           // Si encontramos un prefijo común, extraer la parte de la variante del producto padre
           if (commonPrefix && product.name.startsWith(commonPrefix)) {
             const variantPart = product.name.substring(commonPrefix.length).trim()
-            return variantPart || product.unit || '1 KG'
+            return variantPart || ''
           }
         }
       }
       
-      // Si no se puede extraer, usar el nombre completo o la unidad
-      return product.name || product.unit || '1 KG'
+      // Si no se puede extraer, retornar cadena vacía (no mostrar nada)
+      return ''
     }
     
     if (!product.name || !variant.name) return variant.name || ''
@@ -232,7 +238,7 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
           
           {/* Selector de variantes y precio en la misma línea */}
           <div className="flex items-center gap-3">
-            {/* Selector de variantes si hay variantes */}
+            {/* Selector de variantes - solo si hay variantes, o espacio invisible para mantener layout */}
             {product.variants && product.variants.length > 0 ? (
               <div className="relative">
                 <button
@@ -252,9 +258,7 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
                 </button>
               </div>
             ) : (
-              <div className="px-2.5 py-1 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-500 min-w-[80px]">
-                {product.unit || '1 KG'}
-              </div>
+              <div className="min-w-[80px]"></div>
             )}
 
             {/* Precio al lado del selector */}
@@ -332,7 +336,7 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
               }`}
             >
               <div className="flex items-center justify-between gap-3">
-                <span className="flex-1 break-words">{getVariantName(variant) || variant.unit || '1 KG'}</span>
+                <span className="flex-1 break-words">{getVariantName(variant) || variant.unit || ''}</span>
                 <span className="text-gray-500 font-medium text-sm flex-shrink-0">
                   {formatPrice(variant.price)}
                 </span>

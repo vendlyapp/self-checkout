@@ -12,7 +12,7 @@ interface UserCartSummaryCartProps {
 }
 
 export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProps) {
-  const { cartItems, promoApplied, promoCode, discountAmount } = useCartStore();
+  const { cartItems, promoApplied, promoCode, discountAmount, promoInfo } = useCartStore();
   const router = useRouter();
   const pathname = usePathname();
   const params = useParams();
@@ -26,10 +26,45 @@ export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProp
   // Inline: diseño optimizado para móvil con safe areas
   if (variant === 'inline') {
     const totalItems = validCartItems.reduce((sum, item) => sum + item.quantity, 0);
-    const totalPrice = validCartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+    const subtotal = validCartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+    const totalAfterDiscount = promoApplied ? subtotal - (discountAmount || 0) : subtotal;
 
     return (
       <div className="w-full max-w-[430px] mx-auto bg-white rounded-lg p-4 mb-1 rounded-t-xl safe-area-bottom overflow-hidden">
+        {/* Subtotal - Solo mostrar si hay descuento aplicado */}
+        {promoApplied && (
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-gray-800 font-semibold text-[16px]">
+              Zwischensumme
+            </div>
+            <div className="text-gray-800 text-[16px]">
+              {formatSwissPriceWithCHF(subtotal)}
+            </div>
+          </div>
+        )}
+
+        {/* Descuento aplicado */}
+        {promoApplied && (
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-[#3C7E44] font-semibold text-[15px]">
+              {promoInfo?.discountType === 'percentage' 
+                ? `${Math.round(promoInfo.discountValue)}% Rabatt${promoInfo.description ? ` auf ${promoInfo.description}` : ''}`
+                : promoInfo?.description 
+                ? promoInfo.description
+                : 'Rabatt'
+              }
+            </div>
+            <div className="text-[#3C7E44] text-[15px] font-semibold">
+              - {formatSwissPriceWithCHF(discountAmount || 0)}
+            </div>
+          </div>
+        )}
+
+        {/* Separador - Solo si hay descuento */}
+        {promoApplied && (
+          <div className="border-t border-gray-200 my-2"></div>
+        )}
+
         {/* Sección superior con Gesamtbetrag */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex flex-col">
@@ -41,28 +76,9 @@ export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProp
             </span>
           </div>
           <span className="text-2xl font-bold text-gray-900 mobile-xl">
-            {formatSwissPriceWithCHF(totalPrice)}
+            {formatSwissPriceWithCHF(totalAfterDiscount)}
           </span>
         </div>
-
-        {/* Código promocional aplicado */}
-        {promoApplied && (pathname === "/user/cart" || pathname?.includes('/cart')) && (
-          <div className="mb-4 p-3 bg-[#F2FDF5] rounded-lg border border-[#3C7E44]/20">
-            <div className="flex items-center justify-between mb-1">
-              <div className="text-[#3C7E44] text-[14px] font-medium mobile-sm">
-                Promo Code:{" "}
-                <span className="font-bold">{promoCode?.toUpperCase()}</span>
-              </div>
-              <div className="text-[#3C7E44] text-[12px] bg-[#3C7E44]/10 px-2 py-1 rounded-full mobile-xs">
-                ✓ Angewendet
-              </div>
-            </div>
-            <div className="text-[#3C7E44] text-[13px] mobile-xs">
-              10% Rabatt auf Bio-Produkte -{" "}
-              {formatSwissPriceWithCHF(discountAmount || 0)}
-            </div>
-          </div>
-        )}
 
         {/* Botón Zur Bezahlung optimizado para móvil */}
         <button
