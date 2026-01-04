@@ -1,7 +1,7 @@
 'use client'
 
 import { useCartStore } from "@/lib/stores/cartStore";
-import React from "react";
+import React, { useState } from "react";
 import ProductCard from "@/components/dashboard/charge/ProductCard";
 import { Product } from "@/components/dashboard/products_list/data/mockProducts";
 import { ChevronRight, ShoppingCart, X } from "lucide-react";
@@ -16,6 +16,7 @@ export default function StoreCartPage() {
   const slug = params.slug as string;
   const { cartItems, updateQuantity } = useCartStore();
   const { store } = useStoreData({ slug, autoLoad: true });
+  const [showPromoInput, setShowPromoInput] = useState(false);
 
   const {
     promoApplied,
@@ -59,51 +60,57 @@ export default function StoreCartPage() {
                 key={product.id}
                 product={product}
                 onAddToCart={handleUpdateQuantity}
+                isCartView={true}
               />
             ))}
 
             {/* Promo Code - Solo mostrar si hay items en el carrito */}
             {cartItems.length > 0 && (
               <div className="mt-6 px-2 pl-4 pr-4 pb-24">
-                <label
-                  htmlFor="promo"
-                  className="text-[#25D076] text-[15px] font-semibold"
-                >
-                  Promo Code?
-                </label>
                 {!promoApplied ? (
-                  <div className="flex flex-col gap-1 mt-1">
-                    <div className="flex gap-2">
-                      <input
-                        id="promo"
-                        type="text"
-                        autoCapitalize="characters"
-                        maxLength={10}
-                        value={localPromoCode}
-                        onChange={(e) => {
-                          setLocalPromoCode(e.target.value.toUpperCase());
-                        }}
-                        placeholder="Gib deinen Code ein"
-                        className="block w-full rounded-lg border-2 uppercase bg-white px-3 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-brand-500"
-                        aria-label="Promo Code"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleApplyPromo();
-                        }}
-                      />
-                      <button
-                        onClick={handleApplyPromo}
-                        className="bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg px-4 py-2 text-[15px] transition-colors"
-                        aria-label="Promo anwenden"
-                      >
-                        Anwenden
-                      </button>
-                    </div>
-                    {promoError && (
-                      <span className="text-red-600 text-[14px] font-medium mt-1">
-                        {promoError}
-                      </span>
+                  <>
+                    <button
+                      onClick={() => setShowPromoInput(!showPromoInput)}
+                      className="text-[#25D076] text-[15px] font-semibold hover:underline cursor-pointer"
+                    >
+                      Promo Code?
+                    </button>
+                    {showPromoInput && (
+                      <div className="flex flex-col gap-1 mt-1">
+                        <div className="flex gap-2">
+                          <input
+                            id="promo"
+                            type="text"
+                            autoCapitalize="characters"
+                            maxLength={10}
+                            value={localPromoCode}
+                            onChange={(e) => {
+                              setLocalPromoCode(e.target.value.toUpperCase());
+                            }}
+                            placeholder="Gib deinen Code ein"
+                            className="block w-full rounded-lg border-2 uppercase bg-white px-3 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-brand-500"
+                            aria-label="Promo Code"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleApplyPromo();
+                            }}
+                            autoFocus
+                          />
+                          <button
+                            onClick={handleApplyPromo}
+                            className="bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg px-4 py-2 text-[15px] transition-colors"
+                            aria-label="Promo anwenden"
+                          >
+                            Anwenden
+                          </button>
+                        </div>
+                        {promoError && (
+                          <span className="text-red-600 text-[14px] font-medium mt-1">
+                            {promoError}
+                          </span>
+                        )}
+                      </div>
                     )}
-                  </div>
+                  </>
                 ) : (
                   <div className="flex items-center bg-[#F2FDF5] rounded-xl px-4 py-3 mt-2 mb-2 shadow-sm border border-brand-200">
                     <div className="flex-1">

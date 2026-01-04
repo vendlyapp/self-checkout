@@ -10,9 +10,10 @@ import { useCartStore } from '@/lib/stores/cartStore';
 interface ProductCardProps {
   product: Product
   onAddToCart: (product: Product, quantity: number) => void
+  isCartView?: boolean // Versión simplificada para el carrito
 }
 
-export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
+export default function ProductCard({ product, onAddToCart, isCartView = false }: ProductCardProps) {
   const { cartItems } = useCartStore()
   const [showVariantOptions, setShowVariantOptions] = useState(false)
   // Por defecto, null = producto padre seleccionado
@@ -178,6 +179,101 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
     return `${numPrice.toFixed(2)}`
   }
 
+  // Versión simplificada para el carrito (sin selector de variantes)
+  if (isCartView) {
+    // En el carrito, el producto ya tiene la variante seleccionada
+    const cartProduct = product;
+    const cartQuantity = cartItems.find(item => item.product.id === cartProduct.id)?.quantity || 0;
+    
+    // Si el producto tiene variantes, intentar extraer nombre base y variante
+    // Si no tiene variantes, mostrar el nombre completo
+    let productBaseName = cartProduct.name || '';
+    let variantDisplayName = '';
+    
+    if (product.variants && product.variants.length > 0) {
+      // Si el producto en el carrito es una variante (coincide con alguna variante)
+      const matchingVariant = product.variants.find(v => v.id === cartProduct.id);
+      if (matchingVariant) {
+        // Es una variante, usar el nombre del producto padre como base
+        productBaseName = product.name || '';
+        // Extraer la parte de la variante del nombre
+        if (matchingVariant.name && product.name && matchingVariant.name.startsWith(product.name)) {
+          variantDisplayName = matchingVariant.name.substring(product.name.length).trim();
+        } else if (matchingVariant.name) {
+          variantDisplayName = matchingVariant.name;
+        }
+      } else {
+        // No es una variante, es el producto padre
+        productBaseName = product.name || cartProduct.name || '';
+      }
+    } else if (cartProduct.parentId) {
+      // El producto en el carrito es una variante pero no tenemos acceso al padre
+      // Mostrar el nombre completo tal como está
+      productBaseName = cartProduct.name || '';
+    }
+
+    return (
+      <div className="bg-white rounded-xl p-3 flex items-center gap-3 shadow-sm">
+        {/* Imagen del producto */}
+        <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-lg overflow-hidden bg-gray-50 flex-shrink-0">
+          {product.image ? (
+            <Image
+              src={product.image}
+              alt={cartProduct.name || 'Product'}
+              width={80}
+              height={80}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Package className="w-8 h-8 text-gray-300" />
+            </div>
+          )}
+        </div>
+
+        {/* Contenido principal */}
+        <div className="flex-1 min-w-0">
+          {/* Nombre del producto */}
+          <div className="mb-1">
+            <h3 className="text-gray-900 text-[15px] font-medium leading-tight">
+              {productBaseName}
+            </h3>
+            {variantDisplayName && (
+              <p className="text-gray-600 text-[13px] leading-tight">
+                {variantDisplayName}
+              </p>
+            )}
+          </div>
+          {/* Precio */}
+          <p className="text-gray-900 text-[16px] font-bold">
+            <span className="font-bold">CHF {formatPrice(cartProduct.price)}</span>
+          </p>
+        </div>
+
+        {/* Controles de cantidad */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => handleQuantityChange(cartQuantity - 1)}
+            className="w-8 h-8 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-white flex items-center justify-center"
+            disabled={cartQuantity <= 0}
+          >
+            <Minus className="w-4 h-4" strokeWidth={3.5} />
+          </button>
+          <span className="text-[16px] font-bold text-gray-900 min-w-[24px] text-center">
+            {cartQuantity}
+          </span>
+          <button
+            onClick={() => handleQuantityChange(cartQuantity + 1)}
+            disabled={cartQuantity >= cartProduct.stock}
+            className="w-9 h-9 rounded-full bg-[#25D076] hover:bg-[#25D076]/80 disabled:bg-[#25D076]/50 disabled:cursor-not-allowed text-white flex items-center justify-center"
+          >
+            <Plus className="w-5 h-5" strokeWidth={3.5} />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-[20px] lg:rounded-xl h-[130px] lg:h-[140px] p-4 lg:p-4 relative 
                     shadow-sm lg:border lg:border-gray-100">
@@ -269,12 +365,12 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
                 <>
                   <button
                     onClick={() => handleQuantityChange(currentQuantity - 1)}
-                    className="w-8 h-8 lg:w-9 lg:h-9 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-white flex items-center justify-center transition-all duration-200"
+                    className="w-8 h-8 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-white flex items-center justify-center transition-all duration-200"
                     disabled={currentQuantity <= 0}
                   >
-                    <Minus className="w-4 h-4 lg:w-5 lg:h-5" strokeWidth={2.5} />
+                    <Minus className="w-4 h-4" strokeWidth={3.5} />
                   </button>
-                  <span className="text-[16px] lg:text-[18px] font-bold text-gray-900 min-w-[24px] lg:min-w-[28px] text-center select-none">
+                  <span className="text-[16px] font-bold text-gray-900 min-w-[24px] text-center select-none">
                     {currentQuantity}
                   </span>
                 </>
@@ -282,9 +378,9 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
               <button
                 onClick={() => handleQuantityChange(currentQuantity + 1)}
                 disabled={currentQuantity >= currentProduct.stock}
-                className="w-10 h-10 lg:w-11 lg:h-11 rounded-full bg-[#25D076] hover:bg-[#25D076]/80 disabled:bg-[#25D076]/50 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all duration-200 shadow-sm"
+                className="w-9 h-9 rounded-full bg-[#25D076] hover:bg-[#25D076]/80 disabled:bg-[#25D076]/50 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all duration-200 shadow-sm"
               >
-                <Plus className="w-6 h-6 lg:w-7 lg:h-7" strokeWidth={2.5} />
+                <Plus className="w-5 h-5 text-white font-bold" strokeWidth={3.5} />
               </button>
             </div>
           </div>
@@ -350,10 +446,10 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
                 <>
                   <button
                     onClick={() => handleQuantityChange(currentQuantity - 1)}
-                    className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center justify-center transition-all duration-200"
+                    className="w-8 h-8 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-white flex items-center justify-center transition-all duration-200"
                     disabled={currentQuantity <= 0}
                   >
-                    <Minus className="w-4 h-4" strokeWidth={2.5} />
+                    <Minus className="w-4 h-4" strokeWidth={3.5} />
                   </button>
                   <span className="text-[16px] font-bold text-gray-900 min-w-[24px] text-center select-none">
                     {currentQuantity}
@@ -363,9 +459,9 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
               <button
                 onClick={() => handleQuantityChange(currentQuantity + 1)}
                 disabled={currentQuantity >= currentProduct.stock}
-                className="w-9 h-9 rounded-full bg-brand-500 hover:bg-brand-600 disabled:bg-brand-300 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all duration-200 shadow-sm"
+                className="w-9 h-9 rounded-full bg-[#25D076] hover:bg-[#25D076]/80 disabled:bg-[#25D076]/50 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all duration-200 shadow-sm"
               >
-                <Plus className="w-5 h-5" strokeWidth={2.5} />
+                <Plus className="w-5 h-5 text-white font-bold" strokeWidth={3.5} />
               </button>
             </div>
           </div>

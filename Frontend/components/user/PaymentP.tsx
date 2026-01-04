@@ -267,6 +267,7 @@ export default function PaymentP() {
   const [paymentStep, setPaymentStep] = useState<"confirm" | "processing" | "success">("confirm");
   const [orderError, setOrderError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [showPromoInput, setShowPromoInput] = useState(false);
   const router = useRouter();
   
   // Usar mutation de React Query para crear órdenes
@@ -484,52 +485,57 @@ export default function PaymentP() {
 
       {/* Código promocional */}
       <div className="pt-4 pl-12">
-        <label
-          htmlFor="promo"
-          className="text-[#25D076] text-[15px] font-semibold cursor-pointer hover:underline"
-        >
-          Promo Code?
-        </label>
         {!promoApplied ? (
-          <div className="flex flex-col gap-1 mt-1 pr-12">
-            <div className="flex gap-2">
-              <input
-                id="promo"
-                type="text"
-                autoCapitalize="characters"
-                maxLength={10}
-                value={localPromoCode}
-                onChange={(e) =>
-                  setLocalPromoCode(e.target.value.toUpperCase())
-                }
-                placeholder="Gib deinen Code ein"
-                className="block w-[60%] rounded-lg border-2 uppercase bg-white px-3 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-brand-500"
-                aria-label="Promo Code"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleApplyPromo();
-                  }
-                }}
-              />
-              <button
-                onClick={handleApplyPromo}
-                className="bg-brand-500 justify-center items-center flex hover:bg-brand-600 text-white font-semibold rounded-lg px-4 py-3  
-                         touch-target tap-highlight-transparent 
-                         active:scale-95 hover:scale-105"
-                aria-label="Promo anwenden"
-                style={{ minHeight: "44px" }}
-              >
-                <span className="text-white font-semibold text-base mobile-base text-[15px] truncate">
-                  Anwenden
-                </span>
-              </button>
-            </div>
-            {promoError && (
-              <span className="text-red-600 text-[14px] font-medium mt-1">
-                {promoError}
-              </span>
+          <>
+            <button
+              onClick={() => setShowPromoInput(!showPromoInput)}
+              className="text-[#25D076] text-[15px] font-semibold cursor-pointer hover:underline"
+            >
+              Promo Code?
+            </button>
+            {showPromoInput && (
+              <div className="flex flex-col gap-1 mt-1 pr-12">
+                <div className="flex gap-2">
+                  <input
+                    id="promo"
+                    type="text"
+                    autoCapitalize="characters"
+                    maxLength={10}
+                    value={localPromoCode}
+                    onChange={(e) =>
+                      setLocalPromoCode(e.target.value.toUpperCase())
+                    }
+                    placeholder="Gib deinen Code ein"
+                    className="block w-[60%] rounded-lg border-2 uppercase bg-white px-3 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    aria-label="Promo Code"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleApplyPromo();
+                      }
+                    }}
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleApplyPromo}
+                    className="bg-brand-500 justify-center items-center flex hover:bg-brand-600 text-white font-semibold rounded-lg px-4 py-3  
+                             touch-target tap-highlight-transparent 
+                             active:scale-95 hover:scale-105"
+                    aria-label="Promo anwenden"
+                    style={{ minHeight: "44px" }}
+                  >
+                    <span className="text-white font-semibold text-base mobile-base text-[15px] truncate">
+                      Anwenden
+                    </span>
+                  </button>
+                </div>
+                {promoError && (
+                  <span className="text-red-600 text-[14px] font-medium mt-1">
+                    {promoError}
+                  </span>
+                )}
+              </div>
             )}
-          </div>
+          </>
         ) : (
           <div className="flex items-center bg-[#F2FDF5] rounded-xl px-4 py-3 mt-2 mb-2 shadow-sm border border-brand-200 mr-12">
             <div className="flex-1">
