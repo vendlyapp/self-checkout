@@ -562,7 +562,7 @@ const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
           <p className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-gray-500 text-center leading-relaxed`}>
             Vielen Dank für Ihren Einkauf bei {invoice.storeName || 'Vendly'}!
           </p>
-          {invoice.metadata?.saveCustomerData && (
+          {invoice.metadata?.saveCustomerData === true && (
             <p className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-gray-400 text-center mt-1.5`}>
               Ihre Daten wurden für zukünftige Bestellungen gespeichert.
             </p>
