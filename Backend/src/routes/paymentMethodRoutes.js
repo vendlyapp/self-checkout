@@ -3,6 +3,7 @@ const router = express.Router();
 const paymentMethodController = require('../controllers/PaymentMethodController');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { validateUUID } = require('../middleware/validation');
+const { HTTP_STATUS } = require('../types');
 
 /**
  * @swagger
@@ -162,8 +163,25 @@ router.post('/store/:storeId', authMiddleware, paymentMethodController.createPay
  *         description: Error interno del servidor
  */
 // Ruta genérica: debe estar DESPUÉS de todas las rutas específicas
-// El middleware validateUUID asegurará que solo acepte UUIDs válidos
-router.get('/:id', validateUUID('id'), paymentMethodController.getPaymentMethodById);
+// IMPORTANTE: Esta ruta solo debe hacer match si NO es 'store' (para permitir que /store/:storeId se evalúe primero)
+router.get('/:id', (req, res, next) => {
+  // Si el id es 'store', rechazar explícitamente para que Express continúe buscando otras rutas
+  // Sin embargo, esto no debería suceder si las rutas están en el orden correcto
+  if (req.params.id === 'store') {
+    // No hacer match - dejar que Express continúe buscando otras rutas
+    // Esto no debería suceder, pero es una medida de seguridad
+    return next('route');
+  }
+  // Si llegamos aquí, validar UUID y continuar
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!req.params.id || !uuidRegex.test(req.params.id)) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({
+      success: false,
+      error: 'El id debe ser un UUID válido'
+    });
+  }
+  next();
+}, paymentMethodController.getPaymentMethodById);
 
 /**
  * @swagger
