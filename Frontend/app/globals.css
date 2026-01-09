@@ -1905,3 +1905,76 @@
     object-fit: cover;
   }
 }
+
+/* Estilos de impresión globales para facturas */
+@media print {
+  /* Asegurar que el body sea blanco y visible */
+  html, body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  
+  /* Ocultar todos los elementos de navegación y UI */
+  header,
+  nav,
+  footer,
+  [class*="HeaderNav"],
+  [class*="ResponsiveHeader"],
+  [class*="InvoiceActionsFooter"],
+  [class*="ResponsiveFooterNav"],
+  [class*="Sidebar"],
+  .fixed,
+  .sticky {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  
+  /* Mostrar el contenedor de la factura y su contenido */
+  .invoice-print-container {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    overflow: visible !important;
+  }
+  
+  .invoice-print-container,
+  .invoice-print-container *,
+  #invoice-content,
+  #invoice-content * {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  /* Asegurar que los elementos flex se muestren */
+  .invoice-print-container .flex,
+  #invoice-content .flex {
+    display: flex !important;
+  }
+  
+  /* Asegurar que las tablas se muestren */
+  .invoice-print-container table,
+  #invoice-content table {
+    display: table !important;
+  }
+  
+  .invoice-print-container tr,
+  #invoice-content tr {
+    display: table-row !important;
+  }
+  
+  .invoice-print-container td,
+  .invoice-print-container th,
+  #invoice-content td,
+  #invoice-content th {
+    display: table-cell !important;
+  }
+}

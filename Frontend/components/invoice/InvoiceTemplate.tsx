@@ -107,18 +107,178 @@ const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
   };
 
   return (
-    <div className="w-full">
+    <div id="invoice-content" className="w-full invoice-print">
       {/* Print Styles */}
       <style jsx global>{`
         @media print {
-          body {
-            background: white;
+          @page {
+            margin: 1cm;
+            size: A4;
           }
-          .no-print {
+          
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
+          
+          html, body {
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+          }
+          
+          /* Ocultar elementos de navegación y UI */
+          header,
+          nav,
+          footer,
+          .no-print,
+          [class*="HeaderNav"],
+          [class*="ResponsiveHeader"],
+          [class*="InvoiceActionsFooter"],
+          [class*="ResponsiveFooterNav"],
+          [class*="Sidebar"],
+          button:not(.print-button),
+          .print-hide,
+          .fixed {
             display: none !important;
+            visibility: hidden !important;
           }
-          .print-break {
-            page-break-after: always;
+          
+          /* Mostrar el contenedor de la factura */
+          .invoice-print-container {
+            display: block !important;
+            position: static !important;
+            width: 100% !important;
+            height: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+            overflow: visible !important;
+          }
+          
+          /* Asegurar que el contenido de la factura sea visible */
+          .invoice-print-container,
+          .invoice-print-container *,
+          #invoice-content,
+          #invoice-content * {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+          }
+          
+          /* Mostrar elementos inline correctamente */
+          .invoice-print-container span,
+          .invoice-print-container p,
+          .invoice-print-container div {
+            display: block !important;
+          }
+          
+          .invoice-print-container .flex {
+            display: flex !important;
+          }
+          
+          .invoice-print-container .inline,
+          .invoice-print-container .inline-block {
+            display: inline-block !important;
+          }
+          
+          /* Ocultar elementos de navegación y UI */
+          header,
+          nav,
+          footer,
+          .no-print,
+          [class*="HeaderNav"],
+          [class*="ResponsiveHeader"],
+          [class*="InvoiceActionsFooter"],
+          [class*="ResponsiveFooterNav"],
+          [class*="Sidebar"],
+          button:not(.print-button),
+          .print-hide,
+          .fixed {
+            display: none !important;
+            visibility: hidden !important;
+          }
+          
+          /* Estilos para el contenido de la factura */
+          .invoice-print,
+          #invoice-content {
+            background: white !important;
+            color: #000000 !important;
+            padding: 20px !important;
+            margin: 0 auto !important;
+            max-width: 100% !important;
+            box-shadow: none !important;
+            border: none !important;
+            page-break-inside: avoid;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+          }
+          
+          .invoice-print *,
+          #invoice-content * {
+            color: #000000 !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+          }
+          
+          .invoice-print .bg-gray-50,
+          #invoice-content .bg-gray-50 {
+            background: #f9fafb !important;
+          }
+          
+          .invoice-print .bg-white,
+          #invoice-content .bg-white {
+            background: #ffffff !important;
+          }
+          
+          .invoice-print .text-gray-900,
+          .invoice-print .text-gray-700,
+          .invoice-print .text-gray-600,
+          #invoice-content .text-gray-900,
+          #invoice-content .text-gray-700,
+          #invoice-content .text-gray-600 {
+            color: #1f2937 !important;
+          }
+          
+          .invoice-print .text-\\[\\#25D076\\],
+          #invoice-content .text-\\[\\#25D076\\] {
+            color: #059669 !important;
+          }
+          
+          .invoice-print .border-gray-200,
+          .invoice-print .border-gray-100,
+          #invoice-content .border-gray-200,
+          #invoice-content .border-gray-100 {
+            border-color: #e5e7eb !important;
+          }
+          
+          /* Asegurar que las tablas se impriman correctamente */
+          table {
+            page-break-inside: avoid;
+            width: 100% !important;
+          }
+          
+          tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+          }
+          
+          thead {
+            display: table-header-group;
+          }
+          
+          tfoot {
+            display: table-footer-group;
+          }
+          
+          /* Evitar saltos de página en elementos importantes */
+          .invoice-print > div {
+            page-break-inside: avoid;
           }
         }
       `}</style>

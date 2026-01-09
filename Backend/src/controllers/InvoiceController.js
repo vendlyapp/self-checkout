@@ -201,6 +201,37 @@ class InvoiceController {
   }
 
   /**
+   * Obtiene una factura por su token de compartir (público, sin autenticación)
+   * @route GET /api/invoices/public/:shareToken
+   */
+  async getInvoiceByShareToken(req, res) {
+    try {
+      const { shareToken } = req.params;
+
+      if (!shareToken) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: 'El token de compartir es requerido',
+        });
+      }
+
+      const result = await invoiceService.findByShareToken(shareToken);
+
+      if (!result.success) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json(result);
+      }
+
+      res.status(HTTP_STATUS.OK).json(result);
+    } catch (error) {
+      console.error('Error al obtener factura por token:', error);
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: error.message || 'Error al obtener la factura',
+      });
+    }
+  }
+
+  /**
    * Obtiene facturas por storeId
    * @route GET /api/invoices/store/:storeId
    */

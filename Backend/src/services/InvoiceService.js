@@ -1,4 +1,5 @@
 const { query, transaction } = require('../../lib/database');
+const crypto = require('crypto');
 
 class InvoiceService {
   /**
@@ -12,6 +13,13 @@ class InvoiceService {
     const day = String(date.getDate()).padStart(2, '0');
     const random = Math.random().toString(36).substring(2, 8).toUpperCase();
     return `INV-${year}${month}${day}-${random}`;
+  }
+
+  /**
+   * Genera un token único para compartir la factura públicamente
+   */
+  generateShareToken() {
+    return crypto.randomBytes(32).toString('hex');
   }
 
   /**
@@ -68,11 +76,30 @@ class InvoiceService {
       }
     } while (true);
 
+    // Generar token de compartir único
+    let shareToken;
+    attempts = 0;
+    do {
+      shareToken = this.generateShareToken();
+      const checkTokenQuery = await query(
+        'SELECT id FROM "Invoice" WHERE "shareToken" = $1',
+        [shareToken]
+      );
+      if (checkTokenQuery.rows.length === 0) {
+        break;
+      }
+      attempts++;
+      if (attempts >= maxAttempts) {
+        throw new Error('No se pudo generar un token de compartir único');
+      }
+    } while (true);
+
     const result = await transaction(async (client) => {
       const insertQuery = `
         INSERT INTO "Invoice" (
           "orderId",
           "invoiceNumber",
+          "shareToken",
           "customerName",
           "customerEmail",
           "customerAddress",
@@ -93,13 +120,14 @@ class InvoiceService {
           "status",
           "metadata"
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::jsonb, $15, $16, $17, $18, $19, $20, $21::jsonb)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, $16, $17, $18, $19, $20, $21, $22::jsonb)
         RETURNING *
       `;
 
       const invoiceResult = await client.query(insertQuery, [
         orderId,
         invoiceNumber,
+        shareToken,
         customerName || null,
         customerEmail || null,
         customerAddress || null,
@@ -177,6 +205,50 @@ class InvoiceService {
   /**
    * Obtiene una factura por número de factura
    */
+  /**
+   * Obtiene una factura por su token de compartir (público)
+   */
+  async findByShareToken(shareToken) {
+    if (!shareToken) {
+      throw new Error('El token de compartir es requerido');
+    }
+
+    const selectQuery = `
+      SELECT
+        i.*,
+        o."createdAt" as "orderDate",
+        o.status as "orderStatus"
+      FROM "Invoice" i
+      LEFT JOIN "Order" o ON i."orderId" = o.id
+      WHERE i."shareToken" = $1
+    `;
+
+    const result = await query(selectQuery, [shareToken]);
+
+    if (result.rows.length === 0) {
+      return {
+        success: false,
+        error: 'Factura no encontrada',
+        data: null,
+      };
+    }
+
+    const invoice = result.rows[0];
+
+    // Parsear JSONB fields
+    if (invoice.items && typeof invoice.items === 'string') {
+      invoice.items = JSON.parse(invoice.items);
+    }
+    if (invoice.metadata && typeof invoice.metadata === 'string') {
+      invoice.metadata = JSON.parse(invoice.metadata);
+    }
+
+    return {
+      success: true,
+      data: invoice,
+    };
+  }
+
   async findByInvoiceNumber(invoiceNumber) {
     if (!invoiceNumber) {
       throw new Error('El número de factura es requerido');

@@ -157,6 +157,28 @@ router.get('/customer/:email', invoiceController.getInvoicesByCustomerEmail);
  *       200:
  *         description: Lista de facturas
  */
+/**
+ * @swagger
+ * /api/invoices/public/{shareToken}:
+ *   get:
+ *     summary: Obtener factura por token de compartir (público)
+ *     description: Obtiene una factura usando su token de compartir. Esta ruta es pública y no requiere autenticación.
+ *     tags: [Invoices]
+ *     parameters:
+ *       - in: path
+ *         name: shareToken
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token de compartir de la factura
+ *     responses:
+ *       200:
+ *         description: Factura encontrada
+ *       404:
+ *         description: Factura no encontrada
+ */
+router.get('/public/:shareToken', invoiceController.getInvoiceByShareToken);
+
 router.get('/store/:storeId', validateUUID('storeId'), invoiceController.getInvoicesByStoreId);
 
 /**

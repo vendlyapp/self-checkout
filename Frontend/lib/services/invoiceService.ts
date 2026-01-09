@@ -13,6 +13,7 @@ export interface Invoice {
   id: string;
   orderId: string;
   invoiceNumber: string;
+  shareToken?: string;
   customerName?: string;
   customerEmail?: string;
   customerAddress?: string;
@@ -66,15 +67,24 @@ const API_CONFIG = {
 // Helper function to make authenticated requests
 const makeRequest = async <T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  useAuth = true
 ): Promise<ApiResponse<T>> => {
   try {
-    const { supabase } = await import('@/lib/supabase/client');
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
-    
     const url = buildApiUrl(endpoint);
-    const headers = getAuthHeaders(token);
+    
+    // Si no se requiere autenticación, no incluir headers de auth
+    let headers: HeadersInit;
+    if (useAuth) {
+      const { supabase } = await import('@/lib/supabase/client');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      headers = getAuthHeaders(token);
+    } else {
+      headers = {
+        'Content-Type': 'application/json',
+      };
+    }
     
     // Si ya hay un signal en options, usar ese (React Query lo proporciona)
     const controller = options.signal ? null : new AbortController();
@@ -84,9 +94,12 @@ const makeRequest = async <T>(
     const signal = options.signal || controller?.signal;
     
     const response = await fetch(url, {
-      headers,
-      signal,
       ...options,
+      headers: {
+        ...headers,
+        ...(options.headers || {}),
+      },
+      signal,
     });
     
     if (timeoutId) {
@@ -135,6 +148,22 @@ export class InvoiceService {
     requestOptions?: { signal?: AbortSignal }
   ): Promise<ApiResponse<Invoice>> {
     return makeRequest<Invoice>(`/api/invoices/${id}`, {
+      method: 'GET',
+      signal: requestOptions?.signal,
+    });
+  }
+
+  /**
+   * Obtener factura por token de compartir (público, sin autenticación)
+   */
+  static async getInvoiceByShareToken(
+    shareToken: string,
+    requestOptions?: { signal?: AbortSignal }
+  ): Promise<ApiResponse<Invoice>> {
+    const endpoint = `/api/invoices/public/${shareToken}`;
+    
+    // Esta ruta es pública, no requiere autenticación
+    return makeRequest<Invoice>(endpoint, {
       method: 'GET',
       signal: requestOptions?.signal,
     });

@@ -109,7 +109,7 @@ export default function InvoicePage() {
   }
 
   return (
-    <div className="w-full h-full">
+    <div className="invoice-print-container w-full h-full">
       {/* Mobile Layout */}
       {isMobile && (
         <div className="w-full">
