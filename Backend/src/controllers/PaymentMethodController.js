@@ -24,6 +24,15 @@ class PaymentMethodController {
       const { storeId } = req.params;
       const { activeOnly } = req.query;
       
+      // Validar que storeId sea un UUID válido
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (!storeId || !uuidRegex.test(storeId)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: 'El storeId debe ser un UUID válido'
+        });
+      }
+      
       const options = {
         activeOnly: activeOnly === 'true'
       };
@@ -86,6 +95,15 @@ class PaymentMethodController {
       const { storeId } = req.params;
       const userId = req.user?.userId;
       const userRole = req.user?.role;
+
+      // Validar que storeId sea un UUID válido
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (!storeId || !uuidRegex.test(storeId)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: 'El storeId debe ser un UUID válido'
+        });
+      }
 
       if (!userId) {
         return res.status(HTTP_STATUS.UNAUTHORIZED).json({

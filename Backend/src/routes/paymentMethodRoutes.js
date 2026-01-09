@@ -42,7 +42,9 @@ const { validateUUID } = require('../middleware/validation');
  *       500:
  *         description: Error interno del servidor
  */
-router.get('/store/:storeId', validateUUID('storeId'), paymentMethodController.getPaymentMethodsByStoreId);
+// CRÍTICO: Esta ruta debe estar ANTES de /:id para evitar conflictos
+// Express evalúa rutas en orden, por lo que las rutas más específicas deben ir primero
+router.get('/store/:storeId', paymentMethodController.getPaymentMethodsByStoreId);
 
 /**
  * @swagger
@@ -126,7 +128,7 @@ router.get('/store/:storeId', validateUUID('storeId'), paymentMethodController.g
  *       500:
  *         description: Error interno del servidor
  */
-router.post('/store/:storeId', authMiddleware, validateUUID('storeId'), paymentMethodController.createPaymentMethod);
+router.post('/store/:storeId', authMiddleware, paymentMethodController.createPaymentMethod);
 
 /**
  * @swagger
@@ -159,6 +161,8 @@ router.post('/store/:storeId', authMiddleware, validateUUID('storeId'), paymentM
  *       500:
  *         description: Error interno del servidor
  */
+// Ruta genérica: debe estar DESPUÉS de todas las rutas específicas
+// El middleware validateUUID asegurará que solo acepte UUIDs válidos
 router.get('/:id', validateUUID('id'), paymentMethodController.getPaymentMethodById);
 
 /**
