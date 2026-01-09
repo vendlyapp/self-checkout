@@ -4,7 +4,7 @@ import ServiceCard from "@/components/dashboard/store/ServiceCard";
 import SystemSettingsList from "@/components/dashboard/store/SystemSettingsList";
 import ContactCard from "@/components/dashboard/store/ContactCard";
 import { SearchInput } from "@/components/ui/search-input";
-import { User, Percent, QrCode, CreditCard, Store } from "lucide-react";
+import { User, Percent, QrCode, CreditCard, Store, FileText } from "lucide-react";
 import Link from "next/link";
 
 const services = [
@@ -32,6 +32,12 @@ const services = [
     subtitle: "verwalten",
     href: "/store/payment-methods",
   },
+  {
+    icon: <FileText className="w-6 h-6" />,
+    title: "Rechnungen",
+    subtitle: "ansehen",
+    href: "/store/invoice",
+  },
 ];
 
 const StoreDashboard = () => (
@@ -45,8 +51,8 @@ const StoreDashboard = () => (
         <StoreHeaderCard />
 
         {/* Search Bar */}
-        <div>
-          <SearchInput placeholder="Einstellungen durchsuchen..." esHome={false} />
+        <div className="w-full" >
+          <SearchInput placeholder="Einstellungen durchsuchen..." esHome={false} className="w-full h-[48px]" />
         </div>
 
          {/* Mi Tienda Card */}

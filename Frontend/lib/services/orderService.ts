@@ -50,6 +50,8 @@ interface OrderResponse {
   createdAt: string;
   updatedAt: string;
   items: OrderItemResponse[];
+  invoiceId?: string | null;
+  invoiceNumber?: string | null;
 }
 
 interface ApiResponse<T> {

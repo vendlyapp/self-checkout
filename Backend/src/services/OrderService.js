@@ -1,5 +1,7 @@
 const { query, transaction } = require('../../lib/database');
 const discountCodeService = require('./DiscountCodeService');
+const invoiceService = require('./InvoiceService');
+const storeService = require('./StoreService');
 
 class OrderService {
 
@@ -185,11 +187,119 @@ class OrderService {
       return { order, items: orderItems, discountCodeUpdated };
     });
 
+    // Crear factura automáticamente después de crear la orden
+    let createdInvoice = null;
+    try {
+      // Obtener productos con sus nombres y SKUs para la factura
+      const productIds = result.items.map(item => item.productId);
+      const productsQuery = `
+        SELECT id, name, sku, price
+        FROM "Product"
+        WHERE id = ANY($1)
+      `;
+      const productsResult = await query(productsQuery, [productIds]);
+      const productsMap = new Map(
+        productsResult.rows.map(p => [p.id, { name: p.name, sku: p.sku, price: Number(p.price) }])
+      );
+
+      // Preparar items de la factura
+      const invoiceItems = result.items.map(item => {
+        const product = productsMap.get(item.productId);
+        return {
+          productId: item.productId,
+          productName: product?.name || 'Producto',
+          productSku: product?.sku || '',
+          quantity: item.quantity,
+          price: Number(item.price),
+          subtotal: Number(item.price) * item.quantity,
+        };
+      });
+
+      // Obtener datos de la tienda si existe
+      let storeInfo = null;
+      if (storeId) {
+        try {
+          const storeResult = await storeService.getById(storeId);
+          if (storeResult.success && storeResult.data) {
+            storeInfo = storeResult.data;
+          }
+        } catch (storeError) {
+          console.error('Error al obtener datos de la tienda para la factura:', storeError);
+        }
+      }
+
+      // Parsear metadata para obtener totales y datos del cliente
+      let parsedMetadata = {};
+      try {
+        if (result.order.metadata && typeof result.order.metadata === 'string') {
+          parsedMetadata = JSON.parse(result.order.metadata);
+        } else if (result.order.metadata && typeof result.order.metadata === 'object') {
+          parsedMetadata = result.order.metadata;
+        }
+      } catch (parseError) {
+        console.error('Error al parsear metadata:', parseError);
+      }
+
+      // Calcular totales desde metadata si están disponibles
+      const subtotal = parsedMetadata.totalBeforeVAT || finalTotal;
+      const discountAmount = parsedMetadata.discountAmount || 0;
+      const taxAmount = parsedMetadata.totalWithVAT ? (parsedMetadata.totalWithVAT - subtotal + discountAmount) : 0;
+      const invoiceTotal = parsedMetadata.totalWithVAT || finalTotal;
+
+      // Preparar datos del cliente desde metadata
+      const customerData = parsedMetadata.customer || parsedMetadata.customerData || {};
+
+      // Crear la factura
+      const invoiceData = {
+        orderId: result.order.id,
+        customerName: customerData.name || null,
+        customerEmail: customerData.email || null,
+        customerAddress: customerData.address || null,
+        customerCity: null,
+        customerPostalCode: null,
+        customerPhone: customerData.phone || null,
+        storeId: storeId || null,
+        storeName: storeInfo?.name || parsedMetadata.storeName || null,
+        storeAddress: storeInfo?.address || null,
+        storePhone: storeInfo?.phone || null,
+        storeEmail: storeInfo?.email || null,
+        items: invoiceItems,
+        subtotal: Number(subtotal),
+        discountAmount: Number(discountAmount),
+        taxAmount: Number(taxAmount),
+        total: Number(invoiceTotal),
+        paymentMethod: paymentMethod || null,
+        metadata: {
+          ...parsedMetadata,
+          autoCreated: true,
+          createdAt: new Date().toISOString(),
+        },
+      };
+
+      const invoiceResult = await invoiceService.create(invoiceData);
+      if (invoiceResult.success && invoiceResult.data) {
+        createdInvoice = invoiceResult.data;
+        console.log('✅ Factura creada automáticamente:', {
+          invoiceId: createdInvoice.id,
+          invoiceNumber: createdInvoice.invoiceNumber,
+          orderId: result.order.id,
+        });
+      } else {
+        console.error('❌ Error al crear factura - respuesta sin éxito:', invoiceResult);
+      }
+    } catch (invoiceError) {
+      // No fallar la orden si hay error al crear la factura
+      console.error('❌ Error al crear factura automáticamente:', invoiceError);
+      console.error('❌ Stack trace:', invoiceError.stack);
+    }
+
     return {
       success: true,
       data: {
         ...result.order,
         items: result.items,
+        invoiceId: createdInvoice?.id || null,
+        invoiceNumber: createdInvoice?.invoiceNumber || null,
       },
       message: 'Orden creada exitosamente',
     };
@@ -613,11 +723,107 @@ class OrderService {
       return { order, items: orderItems, discountCodeUpdated };
     });
 
+    // Crear factura automáticamente después de crear la orden
+    let createdInvoice = null;
+    try {
+      // Obtener productos con sus nombres y SKUs para la factura
+      const productIds = result.items.map(item => item.productId);
+      const productsQuery = `
+        SELECT id, name, sku, price
+        FROM "Product"
+        WHERE id = ANY($1)
+      `;
+      const productsResult = await query(productsQuery, [productIds]);
+      const productsMap = new Map(
+        productsResult.rows.map(p => [p.id, { name: p.name, sku: p.sku, price: Number(p.price) }])
+      );
+
+      // Preparar items de la factura
+      const invoiceItems = result.items.map(item => {
+        const product = productsMap.get(item.productId);
+        return {
+          productId: item.productId,
+          productName: product?.name || 'Producto',
+          productSku: product?.sku || '',
+          quantity: item.quantity,
+          price: Number(item.price),
+          subtotal: Number(item.price) * item.quantity,
+        };
+      });
+
+      // Obtener datos de la tienda si existe
+      let storeInfo = null;
+      if (orderData.storeId) {
+        try {
+          const storeResult = await storeService.getById(orderData.storeId);
+          if (storeResult.success && storeResult.data) {
+            storeInfo = storeResult.data;
+          }
+        } catch (storeError) {
+          console.error('Error al obtener datos de la tienda para la factura:', storeError);
+        }
+      }
+
+      // Calcular totales desde metadata si están disponibles
+      const subtotal = metadata.totalBeforeVAT || finalTotal;
+      const discountAmount = metadata.discountAmount || 0;
+      const taxAmount = metadata.totalWithVAT ? (metadata.totalWithVAT - subtotal + discountAmount) : 0;
+      const invoiceTotal = metadata.totalWithVAT || finalTotal;
+
+      // Preparar datos del cliente desde metadata
+      const customerData = metadata.customer || metadata.customerData || {};
+
+      // Crear la factura
+      const invoiceData = {
+        orderId: result.order.id,
+        customerName: customerData.name || null,
+        customerEmail: customerData.email || null,
+        customerAddress: customerData.address || null,
+        customerCity: null,
+        customerPostalCode: null,
+        customerPhone: customerData.phone || null,
+        storeId: orderData.storeId || null,
+        storeName: storeInfo?.name || metadata.storeName || null,
+        storeAddress: storeInfo?.address || null,
+        storePhone: storeInfo?.phone || null,
+        storeEmail: storeInfo?.email || null,
+        items: invoiceItems,
+        subtotal: Number(subtotal),
+        discountAmount: Number(discountAmount),
+        taxAmount: Number(taxAmount),
+        total: Number(invoiceTotal),
+        paymentMethod: orderData.paymentMethod || null,
+        metadata: {
+          ...metadata,
+          autoCreated: true,
+          createdAt: new Date().toISOString(),
+        },
+      };
+
+      const invoiceResult = await invoiceService.create(invoiceData);
+      if (invoiceResult.success && invoiceResult.data) {
+        createdInvoice = invoiceResult.data;
+        console.log('✅ Factura creada automáticamente:', {
+          invoiceId: createdInvoice.id,
+          invoiceNumber: createdInvoice.invoiceNumber,
+          orderId: result.order.id,
+        });
+      } else {
+        console.error('❌ Error al crear factura - respuesta sin éxito:', invoiceResult);
+      }
+    } catch (invoiceError) {
+      // No fallar la orden si hay error al crear la factura
+      console.error('❌ Error al crear factura automáticamente:', invoiceError);
+      console.error('❌ Stack trace:', invoiceError.stack);
+    }
+
     return {
       success: true,
       data: {
         ...result.order,
-        items: result.items
+        items: result.items,
+        invoiceId: createdInvoice?.id || null,
+        invoiceNumber: createdInvoice?.invoiceNumber || null,
       },
       message: 'Orden creada exitosamente'
     };

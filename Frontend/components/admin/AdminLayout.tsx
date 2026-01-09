@@ -14,6 +14,8 @@ import CartSummary from '@/components/dashboard/charge/CartSummary';
 import FooterContinue from '@/components/dashboard/charge/FooterContinue';
 import HeaderNav from '@/components/navigation/HeaderNav';
 import Filter_Busqueda from '@/components/dashboard/products_list/Filter_Busqueda';
+import InvoiceActionsFooter from '@/components/dashboard/invoice/InvoiceActionsFooter';
+import { InvoiceService, Invoice } from '@/lib/services/invoiceService';
 import { useChargeContext } from '@/app/charge/contexts';
 import { useProductsList } from '@/components/dashboard/products_list/ProductsListContext';
 import LoadingProductsModal from '@/components/dashboard/home/LoadingProductsModal';
@@ -72,8 +74,51 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   // Determinar si estamos en la ruta de payment-methods
   const isPaymentMethodsRoute = pathname?.startsWith('/store/payment-methods');
   
+  // Determinar si estamos en la ruta de invoice
+  const isInvoiceRoute = pathname?.startsWith('/store/invoice');
+  
+  // Determinar si estamos en el detalle de una factura (tiene ID)
+  const isInvoiceDetailRoute = pathname?.match(/\/store\/invoice\/[^\/]+/);
+  
+  // Extraer invoiceId del pathname para el HeaderNav
+  const invoiceId = pathname?.match(/\/store\/invoice\/([^\/]+)/)?.[1];
+  
+  // Estado para el invoice (para mostrar el número en el HeaderNav)
+  const [invoiceForHeader, setInvoiceForHeader] = useState<Invoice | null>(null);
+  
+  // Obtener invoice para el HeaderNav
+  useEffect(() => {
+    const fetchInvoiceForHeader = async () => {
+      if (!invoiceId || !isInvoiceDetailRoute) {
+        setInvoiceForHeader(null);
+        return;
+      }
+
+      try {
+        // Intentar obtener por ID primero
+        let result = await InvoiceService.getInvoiceById(invoiceId);
+        
+        // Si no se encuentra por ID, intentar por número de factura
+        if (!result.success && !result.data) {
+          result = await InvoiceService.getInvoiceByNumber(invoiceId);
+        }
+
+        if (result.success && result.data) {
+          setInvoiceForHeader(result.data);
+        } else {
+          setInvoiceForHeader(null);
+        }
+      } catch (err) {
+        console.error('Error loading invoice for header:', err);
+        setInvoiceForHeader(null);
+      }
+    };
+
+    fetchInvoiceForHeader();
+  }, [invoiceId, isInvoiceDetailRoute]);
+  
   // Rutas que ocultan el navbar/sidebar
-  const isStoreSubRoute = isDiscountsRoute || isPaymentMethodsRoute;
+  const isStoreSubRoute = isDiscountsRoute || isPaymentMethodsRoute || isInvoiceRoute;
   
   // Determinar si estamos en modo edición (edit o view)
   const isEditMode = pathname?.includes('/products_list/edit/') || pathname?.includes('/products_list/view/');
@@ -343,13 +388,23 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </>
         )}
 
+        {/* Header de invoice detail - Solo en móvil y en detalle de factura */}
+        {isMobile && isInvoiceDetailRoute && (
+          <HeaderNav 
+            title={invoiceForHeader?.invoiceNumber || 'Rechnung'} 
+            closeDestination="/store/invoice"
+            isFixed={true} 
+          />
+        )}
+
         {/* Contenido principal */}
         <main
           ref={scrollContainerRef}
           className={clsx(
             "flex-1 overflow-y-auto overflow-x-hidden",
             isMobile ? "ios-scroll-fix" : "scroll-smooth",
-            shouldShowCartSummary && "pb-24" // Padding para el CartSummary fixed
+            shouldShowCartSummary && "pb-24", // Padding para el CartSummary fixed
+            isMobile && isInvoiceDetailRoute && "pb-24 pt-[calc(70px+env(safe-area-inset-top))]" // Padding para ResponsiveHeader (~85px) + HeaderNav fixed (~70px) y InvoiceActionsFooter fixed
           )}
         >
           <div className={clsx(
@@ -360,9 +415,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </div>
         </main>
 
-        {/* Footer móvil - Solo en móvil y NO en rutas de charge, products_list, categories, discounts o payment-methods */}
+        {/* Footer móvil - Solo en móvil y NO en rutas de charge, products_list, categories, discounts, payment-methods o invoice */}
         {isMobile && !isProductsListRoute && !isChargeRoute && !isCategoriesRoute && !isAddCategoryPage && !isStoreSubRoute && (
           <ResponsiveFooterNav />
+        )}
+
+        {/* Invoice Actions Footer - Solo en móvil y en detalle de factura */}
+        {isMobile && isInvoiceDetailRoute && (
+          <InvoiceActionsFooter />
         )}
 
         {/* FooterAddProduct - Solo en móvil y en la ruta de productos */}

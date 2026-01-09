@@ -28,6 +28,8 @@ import { useCreateOrder } from "@/hooks/mutations";
 import { createPortal } from "react-dom";
 import { usePaymentMethods } from "@/hooks/queries/usePaymentMethods";
 import { lightHaptic, mediumHaptic, successHaptic, errorHaptic } from "@/lib/utils/hapticFeedback";
+import { InvoiceService } from "@/lib/services/invoiceService";
+import { toast } from "sonner";
 
 interface PaymentMethodDisplay {
   id: string;
@@ -63,7 +65,20 @@ interface PaymentModalProps {
   };
   cartItems?: Array<{ product: { id: string; name: string; price: number }; quantity: number }>;
   onBackToMethods?: () => void;
-  onInvoiceComplete?: () => void;
+  onInvoiceComplete?: (invoiceData?: {
+    option: 'none' | 'print' | 'email' | 'phone' | 'full';
+    email?: string;
+    phone?: string;
+    fullData?: {
+      name: string;
+      email: string;
+      address: string;
+      city: string;
+      postalCode: string;
+      phone: string;
+    };
+    saveDataForFuture?: boolean;
+  }) => void;
   onSkipInvoice?: () => void;
   onStepChange?: (step: PaymentStep) => void;
   personalData?: {
@@ -74,6 +89,7 @@ interface PaymentModalProps {
   };
   setPersonalData?: (data: { name: string; email: string; address: string; phone: string }) => void;
   onSaveCustomerData?: (data: { name: string; email: string; address: string; phone: string }) => void;
+  createdInvoiceId?: string | null;
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -99,6 +115,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   personalData: externalPersonalData,
   setPersonalData: setExternalPersonalData,
   onSaveCustomerData,
+  createdInvoiceId,
 }) => {
   const [modalContainer, setModalContainer] = useState<HTMLElement | null>(null);
   const [invoiceOption, setInvoiceOption] = useState<'none' | 'print' | 'email' | 'phone' | 'full'>('none');
@@ -390,6 +407,21 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               <p className="text-sm text-gray-600 text-center mb-6">
                 Ihre Bestellung wurde erfolgreich verarbeitet
               </p>
+
+              {/* Botón para ver factura si existe */}
+              {createdInvoiceId && (
+                <button
+                  onClick={() => {
+                    mediumHaptic();
+                    const invoiceUrl = `/invoice/${createdInvoiceId}`;
+                    window.open(invoiceUrl, '_blank');
+                  }}
+                  className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-[#25D076] text-[#25D076] font-semibold rounded-xl hover:bg-[#25D076]/5 active:bg-[#25D076]/10 transition-all duration-200 shadow-md active:scale-[0.98] touch-target"
+                >
+                  <FileText className="w-5 h-5" />
+                  Rechnung anzeigen
+                </button>
+              )}
             </div>
           </>
         )}
@@ -748,7 +780,13 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   if (invoiceOption === 'none' || invoiceOption === 'print') {
                     onSkipInvoice?.();
                   } else {
-                    onInvoiceComplete?.();
+                    onInvoiceComplete?.({
+                      option: invoiceOption,
+                      email: invoiceEmail || personalData.email,
+                      phone: invoicePhone || personalData.phone,
+                      fullData: invoiceOption === 'full' ? invoiceData : undefined,
+                      saveDataForFuture: saveDataForFuture,
+                    });
                   }
                 }}
                 className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-xl py-3.5 text-base transition-all duration-200 shadow-lg shadow-[#25D076]/20 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] active:shadow-md touch-target"
@@ -813,42 +851,74 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               </div>
 
               {/* Rechnung - Grid compacto 2x2 */}
-              <div className="w-full max-w-sm mb-6">
-                <h4 className="text-sm font-semibold text-gray-800 mb-2 text-center">
-                  Rechnung
-                </h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <button 
-                    onClick={async () => {
-                      const invoiceData = {
-                        orderId: Math.random().toString(36).substring(2, 12).toUpperCase(),
-                        date: new Date().toLocaleDateString('de-DE'),
-                        items: cartItems,
-                        total: totalAmount,
-                        personalData: personalData,
-                      };
-                      console.log('Generating PDF:', invoiceData);
-                      alert('PDF wird generiert...');
-                    }}
-                    className="flex flex-col items-center gap-1.5 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-[#25D076]/30 transition-all group"
-                  >
-                    <Download className="w-5 h-5 text-gray-600 group-hover:text-[#25D076] transition-colors" />
-                    <span className="text-xs font-medium text-gray-700">PDF</span>
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const email = personalData.email || invoiceEmail || invoiceData.email;
-                      if (email) {
-                        window.location.href = `mailto:${email}?subject=Rechnung`;
-                      } else {
-                        alert('Bitte geben Sie eine E-Mail-Adresse ein');
-                      }
-                    }}
-                    className="flex flex-col items-center gap-1.5 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-[#25D076]/30 transition-all group"
-                  >
-                    <Mail className="w-5 h-5 text-gray-600 group-hover:text-[#25D076] transition-colors" />
-                    <span className="text-xs font-medium text-gray-700">E-Mail</span>
-                  </button>
+              {createdInvoiceId && (
+                <div className="w-full max-w-sm mb-6">
+                  <h4 className="text-sm font-semibold text-gray-800 mb-2 text-center">
+                    Rechnung
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button 
+                      onClick={() => {
+                        mediumHaptic();
+                        const invoiceUrl = `/invoice/${createdInvoiceId}`;
+                        window.open(invoiceUrl, '_blank');
+                      }}
+                      className="flex flex-col items-center gap-1.5 p-3 border-2 border-[#25D076] bg-[#25D076]/5 rounded-lg hover:bg-[#25D076]/10 hover:border-[#25D076] transition-all group touch-target"
+                    >
+                      <FileText className="w-5 h-5 text-[#25D076] group-hover:scale-110 transition-transform" />
+                      <span className="text-xs font-semibold text-[#25D076]">Anzeigen</span>
+                    </button>
+                    <button 
+                      onClick={async () => {
+                        mediumHaptic();
+                        toast.info('PDF-Download wird in Kürze verfügbar sein');
+                      }}
+                      className="flex flex-col items-center gap-1.5 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-[#25D076]/30 transition-all group"
+                    >
+                      <Download className="w-5 h-5 text-gray-600 group-hover:text-[#25D076] transition-colors" />
+                      <span className="text-xs font-medium text-gray-700">PDF</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+              {/* Rechnung - Grid compacto 2x2 - Solo si no hay factura creada */}
+              {!createdInvoiceId && (
+                <div className="w-full max-w-sm mb-6">
+                  <h4 className="text-sm font-semibold text-gray-800 mb-2 text-center">
+                    Rechnung
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button 
+                      onClick={async () => {
+                        const invoiceData = {
+                          orderId: Math.random().toString(36).substring(2, 12).toUpperCase(),
+                          date: new Date().toLocaleDateString('de-DE'),
+                          items: cartItems,
+                          total: totalAmount,
+                          personalData: personalData,
+                        };
+                        console.log('Generating PDF:', invoiceData);
+                        alert('PDF wird generiert...');
+                      }}
+                      className="flex flex-col items-center gap-1.5 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-[#25D076]/30 transition-all group"
+                    >
+                      <Download className="w-5 h-5 text-gray-600 group-hover:text-[#25D076] transition-colors" />
+                      <span className="text-xs font-medium text-gray-700">PDF</span>
+                    </button>
+                    <button 
+                      onClick={() => {
+                        const email = personalData.email || invoiceEmail;
+                        if (email) {
+                          window.location.href = `mailto:${email}?subject=Rechnung`;
+                        } else {
+                          alert('Bitte geben Sie eine E-Mail-Adresse ein');
+                        }
+                      }}
+                      className="flex flex-col items-center gap-1.5 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-[#25D076]/30 transition-all group touch-target"
+                    >
+                      <Mail className="w-5 h-5 text-gray-600 group-hover:text-[#25D076] transition-colors" />
+                      <span className="text-xs font-medium text-gray-700">E-Mail</span>
+                    </button>
                   <button 
                     onClick={() => {
                       const invoiceLink = `${window.location.origin}/invoice/${Math.random().toString(36).substring(2, 12)}`;
@@ -868,7 +938,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     <span className="text-xs font-medium text-gray-700">Drucken</span>
                   </button>
                 </div>
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Botón final fijo */}
@@ -985,6 +1056,8 @@ export default function PaymentP() {
   };
 
   const [personalData, setPersonalData] = useState(loadSavedCustomerData());
+  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
+  const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
   const router = useRouter();
   
   // Usar mutation de React Query para crear órdenes
@@ -1098,7 +1171,7 @@ export default function PaymentP() {
         : undefined;
 
       // Usar mutation de React Query
-      await createOrderMutation.mutateAsync({
+      const orderResult = await createOrderMutation.mutateAsync({
         items: orderItems,
         paymentMethod: selectedPaymentMethod,
         total: payableTotal,
@@ -1118,6 +1191,15 @@ export default function PaymentP() {
           customerData: customerData,
         },
       });
+
+      // Guardar el ID de la orden y factura creada automáticamente
+      if (orderResult?.id) {
+        setCreatedOrderId(orderResult.id);
+      }
+      // Si la factura se creó automáticamente, guardar su ID
+      if (orderResult?.invoiceId) {
+        setCreatedInvoiceId(orderResult.invoiceId);
+      }
 
       // IMPORTANTE: La compra ya se completó correctamente aquí
       // El carrito se limpiará cuando se cierre el modal o se complete el flujo
@@ -1145,7 +1227,140 @@ export default function PaymentP() {
     }
   };
 
-  const handleInvoiceComplete = () => {
+  const handleInvoiceComplete = async (modalInvoiceData?: {
+    option: 'none' | 'print' | 'email' | 'phone' | 'full';
+    email?: string;
+    phone?: string;
+    fullData?: {
+      name: string;
+      email: string;
+      address: string;
+      city: string;
+      postalCode: string;
+      phone: string;
+    };
+    saveDataForFuture?: boolean;
+  }) => {
+    if (!createdOrderId) {
+      // Si no hay orderId, simplemente continuar
+      setPaymentStep("additional");
+      return;
+    }
+
+    if (!modalInvoiceData) {
+      setPaymentStep("additional");
+      return;
+    }
+
+    try {
+      // Obtener datos de factura según la opción seleccionada
+      const invoicePayload: {
+        orderId: string;
+        customerName?: string;
+        customerEmail?: string;
+        customerAddress?: string;
+        customerCity?: string;
+        customerPostalCode?: string;
+        customerPhone?: string;
+        saveCustomerData?: boolean;
+      } = {
+        orderId: createdOrderId,
+      };
+
+      // Determinar qué datos usar según la opción seleccionada
+      if (modalInvoiceData.option === 'email') {
+        invoicePayload.customerEmail = modalInvoiceData.email || personalData.email || undefined;
+        invoicePayload.customerName = personalData.name || undefined;
+        invoicePayload.customerAddress = personalData.address || undefined;
+        invoicePayload.customerPhone = personalData.phone || undefined;
+      } else if (modalInvoiceData.option === 'phone') {
+        invoicePayload.customerPhone = modalInvoiceData.phone || personalData.phone || undefined;
+        invoicePayload.customerName = personalData.name || undefined;
+        invoicePayload.customerEmail = personalData.email || undefined;
+        invoicePayload.customerAddress = personalData.address || undefined;
+      } else if (modalInvoiceData.option === 'full' && modalInvoiceData.fullData) {
+        invoicePayload.customerName = modalInvoiceData.fullData.name || personalData.name || undefined;
+        invoicePayload.customerEmail = modalInvoiceData.fullData.email || personalData.email || undefined;
+        invoicePayload.customerAddress = modalInvoiceData.fullData.address || personalData.address || undefined;
+        invoicePayload.customerCity = modalInvoiceData.fullData.city || undefined;
+        invoicePayload.customerPostalCode = modalInvoiceData.fullData.postalCode || undefined;
+        invoicePayload.customerPhone = modalInvoiceData.fullData.phone || personalData.phone || undefined;
+        invoicePayload.saveCustomerData = modalInvoiceData.saveDataForFuture;
+      } else if (modalInvoiceData.option === 'print') {
+        // Para imprimir, usar datos básicos si están disponibles
+        invoicePayload.customerName = personalData.name || undefined;
+        invoicePayload.customerEmail = personalData.email || undefined;
+        invoicePayload.customerAddress = personalData.address || undefined;
+        invoicePayload.customerPhone = personalData.phone || undefined;
+      }
+
+      // Si ya existe una factura creada automáticamente, actualizarla
+      // Si no, crear una nueva
+      let result;
+      if (createdInvoiceId) {
+        // Actualizar la factura existente con los datos adicionales
+        result = await InvoiceService.updateInvoice(createdInvoiceId, {
+          customerName: invoicePayload.customerName,
+          customerEmail: invoicePayload.customerEmail,
+          customerAddress: invoicePayload.customerAddress,
+          customerCity: invoicePayload.customerCity,
+          customerPostalCode: invoicePayload.customerPostalCode,
+          customerPhone: invoicePayload.customerPhone,
+          metadata: {
+            saveCustomerData: invoicePayload.saveCustomerData,
+            updatedAt: new Date().toISOString(),
+          },
+        });
+      } else {
+        // Crear una nueva factura si no existe
+        result = await InvoiceService.createInvoice(invoicePayload);
+      }
+
+      if (result.success && result.data) {
+        // Guardar el ID de la factura para poder compartirla después
+        const invoiceId = result.data.id;
+        const invoiceNumber = result.data.invoiceNumber;
+        
+        // Guardar el invoiceId en el estado para mostrar el botón
+        setCreatedInvoiceId(invoiceId);
+        
+        // Mostrar mensaje de éxito
+        toast.success(`Rechnung ${invoiceNumber} wurde erstellt`);
+        
+        // Si el usuario quiere guardar datos para el futuro, guardarlos
+        if (invoicePayload.saveCustomerData && invoicePayload.customerEmail) {
+          saveCustomerDataToLocalStorage({
+            name: invoicePayload.customerName || '',
+            email: invoicePayload.customerEmail || '',
+            address: invoicePayload.customerAddress || '',
+            phone: invoicePayload.customerPhone || '',
+          });
+        }
+
+        // Si es email o phone, mostrar mensaje adicional
+        if (modalInvoiceData.option === 'email' && invoicePayload.customerEmail) {
+          toast.info(`Rechnung wurde an ${invoicePayload.customerEmail} gesendet`);
+        } else if (modalInvoiceData.option === 'phone' && invoicePayload.customerPhone) {
+          toast.info(`Rechnung wurde an ${invoicePayload.customerPhone} gesendet`);
+        }
+
+        // Guardar el link de la factura para compartir después si es necesario
+        if (invoiceId) {
+          const invoiceUrl = `${window.location.origin}/invoice/${invoiceId}`;
+          // Opcional: guardar en localStorage para acceso rápido
+          localStorage.setItem('lastInvoiceUrl', invoiceUrl);
+        }
+      } else {
+        // Si falla la creación de la factura, continuar de todas formas
+        console.error('Error al crear factura:', result.error);
+        toast.warning('Rechnung konnte nicht erstellt werden, aber die Bestellung wurde erfolgreich abgeschlossen');
+      }
+    } catch (error) {
+      // Si hay error, continuar de todas formas
+      console.error('Error al crear factura:', error);
+      toast.warning('Rechnung konnte nicht erstellt werden, aber die Bestellung wurde erfolgreich abgeschlossen');
+    }
+
     // Pasar a la pantalla de opciones adicionales
     setPaymentStep("additional");
   };
@@ -1501,6 +1716,7 @@ export default function PaymentP() {
         personalData={personalData}
         setPersonalData={setPersonalData}
         onSaveCustomerData={saveCustomerDataToLocalStorage}
+        createdInvoiceId={createdInvoiceId}
       />
     </div>
   );
