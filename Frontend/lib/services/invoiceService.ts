@@ -34,7 +34,7 @@ export interface Invoice {
   status: 'issued' | 'paid' | 'cancelled';
   issuedAt: string;
   paidAt?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
   orderDate?: string;
@@ -249,7 +249,7 @@ export class InvoiceService {
       customerCity?: string;
       customerPostalCode?: string;
       customerPhone?: string;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
     },
     requestOptions?: { signal?: AbortSignal }
   ): Promise<ApiResponse<Invoice>> {

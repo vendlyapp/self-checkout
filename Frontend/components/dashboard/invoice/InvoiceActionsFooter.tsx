@@ -78,7 +78,7 @@ export default function InvoiceActionsFooter() {
     }
 
     // Generar o usar el shareToken
-    let shareToken = invoice.shareToken;
+    const shareToken = invoice.shareToken;
     
     // Si no tiene shareToken, generarlo en el backend
     if (!shareToken) {
@@ -150,7 +150,7 @@ export default function InvoiceActionsFooter() {
       
       // Crear un estilo global que fuerce todos los colores a RGB
       const styleId = 'pdf-color-fix';
-      let existingStyle = document.getElementById(styleId);
+      const existingStyle = document.getElementById(styleId);
       if (existingStyle) {
         existingStyle.remove();
       }
@@ -244,7 +244,7 @@ export default function InvoiceActionsFooter() {
                  element.classList?.contains('fixed') ||
                  element.tagName === 'BUTTON';
         },
-        onclone: (clonedDoc, element) => {
+        onclone: (clonedDoc) => {
           // Agregar estilos que fuerzan RGB para todos los elementos
           const style = clonedDoc.createElement('style');
           style.textContent = `
