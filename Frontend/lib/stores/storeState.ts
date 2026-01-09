@@ -91,18 +91,28 @@ export const useStoreState = create<StoreState>()(
             if (response.status === 404) {
               console.warn('No se encontró una tienda asociada al usuario');
               // No establecer error para 404, solo mantener el estado actual
-              set({ error: null });
+              set({ error: null, isLoading: false });
               return;
             }
 
             // Si es 401, el usuario no está autenticado
             if (response.status === 401) {
               console.warn('Usuario no autenticado');
-              set({ error: 'No autenticado' });
+              set({ error: null, isLoading: false });
               return;
             }
 
-            throw new Error(errorMessage);
+            // Si es 500, podría ser un error temporal del backend
+            if (response.status === 500) {
+              console.warn('Error del servidor al obtener estado de la tienda, manteniendo estado actual');
+              set({ error: null, isLoading: false });
+              return;
+            }
+
+            // Para otros errores, solo registrar sin bloquear la UI
+            console.warn('Error al obtener estado de la tienda:', errorMessage);
+            set({ error: null, isLoading: false });
+            return;
           }
 
           const data = await response.json();
@@ -112,6 +122,7 @@ export const useStoreState = create<StoreState>()(
               isStoreOpen: data.data.isOpen,
               lastUpdated: new Date().toISOString(),
               error: null,
+              isLoading: false,
             });
           } else if (data.data?.isOpen !== undefined) {
             // Si la respuesta no tiene success pero tiene data.isOpen, usarlo igual
@@ -119,18 +130,35 @@ export const useStoreState = create<StoreState>()(
               isStoreOpen: data.data.isOpen,
               lastUpdated: new Date().toISOString(),
               error: null,
+              isLoading: false,
             });
+          } else {
+            console.warn('Datos de tienda inválidos, manteniendo estado actual');
+            set({ error: null, isLoading: false });
           }
         } catch (error) {
           console.error('Error al obtener estado de la tienda:', error);
-          // Solo establecer error si no es un error de red esperado
-          if (error instanceof TypeError && error.message.includes('fetch')) {
-            set({ error: 'Error de conexión. Verifique su conexión a internet.' });
-          } else {
-            set({ error: error instanceof Error ? error.message : 'Error desconocido' });
+          const errorMessage = error instanceof Error 
+            ? error.message 
+            : 'Error al obtener el estado de la tienda';
+          
+          // Si es un error de conexión o backend no disponible, no mostrar error crítico
+          if (
+            error instanceof TypeError ||
+            errorMessage.includes('Failed to fetch') ||
+            errorMessage.includes('NetworkError') ||
+            errorMessage.includes('ERR_CONNECTION_REFUSED') ||
+            errorMessage.includes('ERR_NETWORK') ||
+            errorMessage.includes('Backend no disponible')
+          ) {
+            console.warn('Backend no disponible, manteniendo estado actual');
+            set({ error: null, isLoading: false });
+            return;
           }
-        } finally {
-          set({ isLoading: false });
+          
+          // Para otros errores, solo registrar sin bloquear la UI
+          console.warn('Error al obtener estado de la tienda:', errorMessage);
+          set({ error: null, isLoading: false });
         }
       },
 

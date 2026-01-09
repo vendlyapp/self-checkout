@@ -369,7 +369,16 @@ class ProductService {
     };
   }
 
-  async getStats() {
+  async getStats(ownerId = null) {
+    let whereClause = '';
+    const params = [];
+
+    // Filtrar por ownerId si se proporciona (para obtener estadísticas de una tienda específica)
+    if (ownerId) {
+      whereClause = 'WHERE "ownerId" = $1';
+      params.push(ownerId);
+    }
+
     const statsQuery = `
       SELECT
         COUNT(*) as total,
@@ -378,19 +387,20 @@ class ProductService {
         COUNT(*) FILTER (WHERE "stock" = 0) as outOfStock,
         COUNT(*) FILTER (WHERE "isActive" = false) as unavailable
       FROM "Product"
+      ${whereClause}
     `;
 
-    const result = await query(statsQuery);
+    const result = await query(statsQuery, params);
     const stats = result.rows[0];
 
     return {
       success: true,
       data: {
-        total: parseInt(stats.total),
-        available: parseInt(stats.available),
-        lowStock: parseInt(stats.lowstock),
-        outOfStock: parseInt(stats.outofstock),
-        unavailable: parseInt(stats.unavailable)
+        total: parseInt(stats.total) || 0,
+        available: parseInt(stats.available) || 0,
+        lowStock: parseInt(stats.lowstock) || 0,
+        outOfStock: parseInt(stats.outofstock) || 0,
+        unavailable: parseInt(stats.unavailable) || 0
       }
     };
   }

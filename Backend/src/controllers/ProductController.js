@@ -251,18 +251,23 @@ class ProductController {
    * Retorna conteo total, bajo stock, sin stock, etc.
    * @route GET /api/products/stats
    * @param {Object} req - Request object de Express
+   * @param {Object} req.user - Usuario autenticado (inyectado por middleware)
+   * @param {string} req.user.userId - ID del usuario autenticado
    * @param {Object} res - Response object de Express
    * @returns {Promise<void>} JSON con estadísticas de productos
    * @throws {500} Si hay error en el servidor
    */
   async getStats(req, res) {
     try {
-      const result = await productService.getStats();
+      // Obtener estadísticas solo de los productos del usuario autenticado
+      const ownerId = req.user?.userId || null;
+      const result = await productService.getStats(ownerId);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
+      console.error('Error al obtener estadísticas de productos:', error);
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
-        error: error.message
+        error: error.message || 'Error al obtener estadísticas de productos'
       });
     }
   }

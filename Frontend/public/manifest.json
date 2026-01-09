@@ -4,8 +4,8 @@
     "description": "Digital checkout for Swiss farm shops",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#FAFAFA",
-    "theme_color": "#22C55F",
+    "background_color": "#25D076",
+    "theme_color": "#25D076",
     "orientation": "portrait",
     "icons": [
       {

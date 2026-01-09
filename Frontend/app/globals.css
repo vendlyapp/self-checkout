@@ -254,6 +254,11 @@
     padding-right: env(safe-area-inset-right);
   }
 
+  /* Safe area backgrounds - Color visible en iPhone arriba y abajo */
+  .safe-area-bg {
+    background-color: #254845;
+  }
+
   /* Altura completa móvil optimizada */
   .h-mobile {
     height: 100vh;
@@ -1426,6 +1431,8 @@
     /* Soporte para dispositivos con notch */
     -webkit-viewport-fit: cover;
     viewport-fit: cover;
+    /* Color de fondo verde para safe areas de iPhone */
+    background-color: #25D076;
   }
 
   body {
@@ -1435,6 +1442,8 @@
     /* Prevenir problemas de layout en Safari iOS */
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+    /* Color de fondo base verde para safe areas (visible en iPhone arriba y abajo) */
+    background-color: #25D076;
   }
 
   /* Mejorar soporte para el notch de iPhone */

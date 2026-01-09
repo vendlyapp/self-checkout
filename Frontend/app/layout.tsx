@@ -26,7 +26,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#F2EDE8",
+  themeColor: "#25D076",
   colorScheme: "light",
 };
 
@@ -40,20 +40,29 @@ export default function RootLayout({
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="apple-touch-fullscreen" content="yes" />
+        <meta name="theme-color" content="#25D076" />
       </head>
       <body className={`${inter.className} h-responsive antialiased tap-highlight-transparent`} suppressHydrationWarning>
         <QueryProvider>
           <AuthProvider>
             <UserProvider>
               <SessionTimeoutManager />
-              {/* Container principal responsive */}
-              <div className="h-responsive w-full relative bg-[#F2EDE8] overflow-hidden">
-                {/* Contenedor interno responsive */}
-                <div className="h-responsive w-full overflow-y-auto overflow-x-hidden no-scrollbar">
+              {/* Container principal responsive - fondo verde visible en safe areas de iPhone */}
+              <div className="h-responsive w-full relative bg-[#25D076] overflow-hidden">
+                {/* Contenedor interno responsive - fondo claro para el contenido con padding para safe areas */}
+                <div 
+                  className="h-responsive w-full overflow-y-auto overflow-x-hidden no-scrollbar bg-[#F2EDE8]" 
+                  style={{
+                    paddingTop: 'env(safe-area-inset-top, 0px)',
+                    paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+                    paddingLeft: 'env(safe-area-inset-left, 0px)',
+                    paddingRight: 'env(safe-area-inset-right, 0px)',
+                  }}
+                >
                   {children}
                 </div>
               </div>
