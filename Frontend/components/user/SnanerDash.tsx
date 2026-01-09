@@ -5,9 +5,48 @@ import { CheckCircle, ScanBarcode, XCircle, Camera } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Html5Qrcode, Html5QrcodeScanType } from "html5-qrcode";
 import { useCartStore } from "@/lib/stores/cartStore";
-import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
+import { useScannedStoreStore, type StoreInfo } from "@/lib/stores/scannedStoreStore";
 import { buildApiUrl } from "@/lib/config/api";
 import { Product } from "@/components/dashboard/products_list/data/mockProducts";
+
+// Type for product with store information
+interface ProductWithStore extends Product {
+  store: StoreInfo;
+}
+
+// Type for API product data response (raw structure from backend)
+interface ProductApiResponse {
+  id: string;
+  name: string;
+  description?: string;
+  price: number | string;
+  originalPrice?: number | string;
+  promotionalPrice?: number | string;
+  category?: string;
+  categoryId?: string;
+  stock: number | string;
+  sku?: string;
+  barcode?: string;
+  qrCode?: string;
+  image?: string;
+  images?: string[];
+  isActive?: boolean;
+  isPromotional?: boolean;
+  isOnSale?: boolean;
+  isNew?: boolean;
+  isPopular?: boolean;
+  currency?: string;
+  tags?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+  store: {
+    id: string;
+    name: string;
+    slug: string;
+    logo?: string | null;
+    isOpen?: boolean;
+  };
+}
 
 const SnanerDash = () => {
   const [isScanning, setIsScanning] = useState(false);
@@ -15,7 +54,7 @@ const SnanerDash = () => {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [showCameraPermissionModal, setShowCameraPermissionModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [scannedProduct, setScannedProduct] = useState<Product | null>(null);
+  const [scannedProduct, setScannedProduct] = useState<ProductWithStore | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scanContainerRef = useRef<HTMLDivElement>(null);
   const isCleaningUpRef = useRef(false);
@@ -261,22 +300,22 @@ const SnanerDash = () => {
   };
 
   // Función auxiliar para procesar los datos del producto
-  const processProductData = async (productData: any) => {
+  const processProductData = async (productData: ProductApiResponse) => {
     // Convertir el producto al formato correcto
     const product: Product = {
       id: productData.id,
       name: productData.name,
       description: productData.description || "",
-      price: parseFloat(productData.price) || 0,
+      price: parseFloat(String(productData.price)) || 0,
       originalPrice: productData.originalPrice
-        ? parseFloat(productData.originalPrice)
+        ? parseFloat(String(productData.originalPrice))
         : undefined,
       promotionalPrice: productData.promotionalPrice
-        ? parseFloat(productData.promotionalPrice)
+        ? parseFloat(String(productData.promotionalPrice))
         : undefined,
       category: productData.category || "",
       categoryId: productData.categoryId || "",
-      stock: parseInt(productData.stock) || 0,
+      stock: parseInt(String(productData.stock)) || 0,
       sku: productData.sku || "",
       barcode: productData.barcode,
       qrCode: productData.qrCode,
@@ -305,25 +344,25 @@ const SnanerDash = () => {
     }
 
     // Guardar la tienda en el store global
-    const storeData = {
+    const storeData: StoreInfo = {
       id: storeInfo.id,
       name: storeInfo.name,
       slug: storeInfo.slug,
-      logo: storeInfo.logo,
+      logo: storeInfo.logo || null,
       isOpen: storeInfo.isOpen ?? true,
     };
     setStore(storeData);
     setCurrentStore(storeInfo.slug);
 
     // Guardar información de la tienda en el producto para uso en el modal
-    const productWithStore = {
+    const productWithStore: ProductWithStore = {
       ...product,
-      store: storeInfo
+      store: storeData
     };
 
     // Agregar el producto al carrito
     addToCart(product, 1);
-    setScannedProduct(productWithStore as any);
+    setScannedProduct(productWithStore);
     
     // Mostrar modal de éxito antes de redirigir
     setShowSuccessModal(true);
@@ -433,9 +472,9 @@ const SnanerDash = () => {
                 ? `${scannedProduct.name} wurde zum Warenkorb hinzugefügt`
                 : "Produkt erfolgreich gescannt"}
             </p>
-            {scannedProduct && (scannedProduct as any).store && (
+            {scannedProduct && scannedProduct.store && (
               <p className="text-sm text-gray-500 mb-4">
-                Weiterleitung zu {(scannedProduct as any).store.name}...
+                Weiterleitung zu {scannedProduct.store.name}...
               </p>
             )}
 
@@ -457,8 +496,8 @@ const SnanerDash = () => {
                 onClick={() => {
                   handleCloseModal();
                   // Siempre usar la tienda del producto escaneado, que ya está guardada en el store
-                  if (scannedProduct && (scannedProduct as any).store?.slug) {
-                    router.push(`/store/${(scannedProduct as any).store.slug}/cart`);
+                  if (scannedProduct && scannedProduct.store?.slug) {
+                    router.push(`/store/${scannedProduct.store.slug}/cart`);
                   } else if (store?.slug) {
                     router.push(`/store/${store.slug}/cart`);
                   } else {
