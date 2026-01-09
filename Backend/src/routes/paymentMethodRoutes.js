@@ -42,7 +42,7 @@ const { validateUUID } = require('../middleware/validation');
  *       500:
  *         description: Error interno del servidor
  */
-router.get('/store/:storeId', paymentMethodController.getPaymentMethodsByStoreId);
+router.get('/store/:storeId', validateUUID('storeId'), paymentMethodController.getPaymentMethodsByStoreId);
 
 /**
  * @swagger
@@ -126,7 +126,7 @@ router.get('/store/:storeId', paymentMethodController.getPaymentMethodsByStoreId
  *       500:
  *         description: Error interno del servidor
  */
-router.post('/store/:storeId', authMiddleware, paymentMethodController.createPaymentMethod);
+router.post('/store/:storeId', authMiddleware, validateUUID('storeId'), paymentMethodController.createPaymentMethod);
 
 /**
  * @swagger
@@ -159,7 +159,7 @@ router.post('/store/:storeId', authMiddleware, paymentMethodController.createPay
  *       500:
  *         description: Error interno del servidor
  */
-router.get('/:id', paymentMethodController.getPaymentMethodById);
+router.get('/:id', validateUUID('id'), paymentMethodController.getPaymentMethodById);
 
 /**
  * @swagger
@@ -226,7 +226,7 @@ router.get('/:id', paymentMethodController.getPaymentMethodById);
  *       500:
  *         description: Error interno del servidor
  */
-router.put('/:id', authMiddleware, paymentMethodController.updatePaymentMethod);
+router.put('/:id', authMiddleware, validateUUID('id'), paymentMethodController.updatePaymentMethod);
 
 /**
  * @swagger
@@ -266,6 +266,6 @@ router.put('/:id', authMiddleware, paymentMethodController.updatePaymentMethod);
  *       500:
  *         description: Error interno del servidor
  */
-router.delete('/:id', authMiddleware, paymentMethodController.deletePaymentMethod);
+router.delete('/:id', authMiddleware, validateUUID('id'), paymentMethodController.deletePaymentMethod);
 
 module.exports = router;
