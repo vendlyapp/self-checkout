@@ -8,14 +8,12 @@ import { ChevronRight, ShoppingCart, X } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { formatSwissPriceWithCHF } from "@/lib/utils";
 import { usePromoLogic } from "@/hooks";
-import { useStoreData } from "@/hooks/data/useStoreData";
 
 export default function StoreCartPage() {
   const router = useRouter();
   const params = useParams();
   const slug = params.slug as string;
   const { cartItems, updateQuantity } = useCartStore();
-  const { store } = useStoreData({ slug, autoLoad: true });
   const [showPromoInput, setShowPromoInput] = useState(false);
 
   const {
@@ -39,19 +37,33 @@ export default function StoreCartPage() {
       {/* Lista de productos */}
       <div className="flex-1 px-4 pt-4 pb-48 mt-4">
         {cartItems.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full mt-16">
-            <ShoppingCart className="w-20 h-20 text-[#766B6A] mb-4" />
-            <p className="text-2xl font-bold mb-2">Warenkorb ist leer</p>
-            <p className="text-gray-500 mb-4">
-              Fügen Sie Produkte hinzu um zu beginnen
-            </p>
-            <button
-              className="bg-[#25D076] text-white px-4 py-2 font-semibold rounded-full mt-4 w-65 h-12 flex items-center justify-center gap-2"
-              onClick={() => router.push(`/store/${slug}`)}
-            >
-              Produkte anzeigen{" "}
-              <ChevronRight className="w-5 h-5 text-white font-semibold" />
-            </button>
+          <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 -mt-20">
+            <div className="text-center max-w-md">
+              {/* Icono de carrito vacío */}
+              <div className="w-32 h-32 mx-auto mb-6 flex items-center justify-center">
+                <div className="w-24 h-24 bg-[#25D076]/10 rounded-full flex items-center justify-center">
+                  <ShoppingCart className="w-12 h-12 text-[#25D076]" strokeWidth={1.5} />
+                </div>
+              </div>
+              
+              <h2 className="text-3xl font-bold text-[#373F49] mb-3">
+                Warenkorb ist leer
+              </h2>
+              <p className="text-lg text-[#6E7996] mb-8">
+                Fügen Sie Produkte hinzu, um fortzufahren
+              </p>
+              
+              {/* Botón para volver a la tienda */}
+              {slug && (
+                <button
+                  onClick={() => router.push(`/store/${slug}`)}
+                  className="inline-flex items-center gap-2 bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-xl px-6 py-3 transition-all duration-200 shadow-lg shadow-[#25D076]/20 active:scale-[0.98] touch-target"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                  Produkte anzeigen
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           <div className="space-y-4">

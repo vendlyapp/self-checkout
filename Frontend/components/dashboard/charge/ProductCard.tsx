@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { Plus, Minus, ChevronDown, Package, Percent } from 'lucide-react'
 import { Product } from '../products_list/data/mockProducts';
@@ -13,7 +13,7 @@ interface ProductCardProps {
   isCartView?: boolean // Versión simplificada para el carrito
 }
 
-export default function ProductCard({ product, onAddToCart, isCartView = false }: ProductCardProps) {
+const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCartView = false }: ProductCardProps) {
   const { cartItems } = useCartStore()
   const [showVariantOptions, setShowVariantOptions] = useState(false)
   // Por defecto, null = producto padre seleccionado
@@ -533,4 +533,6 @@ export default function ProductCard({ product, onAddToCart, isCartView = false }
       )}
     </div>
   )
-}
+});
+
+export default ProductCard;

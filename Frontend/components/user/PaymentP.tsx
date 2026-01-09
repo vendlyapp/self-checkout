@@ -11,15 +11,12 @@ import {
   X,
   CheckCircle,
   ArrowLeft,
-  ChevronDown,
-  ChevronUp,
   FileText,
   Download,
   Mail,
-  Share2,
-  Copy,
   Link2,
   Printer,
+  ShoppingCart,
 } from "lucide-react";
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
@@ -30,6 +27,7 @@ import { usePromoLogic } from "@/hooks";
 import { useCreateOrder } from "@/hooks/mutations";
 import { createPortal } from "react-dom";
 import { usePaymentMethods } from "@/hooks/queries/usePaymentMethods";
+import { lightHaptic, mediumHaptic, successHaptic, errorHaptic } from "@/lib/utils/hapticFeedback";
 
 interface PaymentMethodDisplay {
   id: string;
@@ -42,7 +40,7 @@ interface PaymentMethodDisplay {
   methodData?: { id: string; name: string; displayName: string; code: string; bgColor?: string | null; textColor?: string | null; [key: string]: unknown };
 }
 
-type PaymentStep = "confirm" | "processing" | "success" | "askData" | "personal" | "invoice" | "additional";
+type PaymentStep = "confirm" | "processing" | "success" | "askData" | "personal" | "invoice" | "additional" | "completing";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -168,15 +166,35 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   };
 
   const modalContent = (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4" style={{ pointerEvents: 'auto' }}>
-      <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+    <div 
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
+      style={{ pointerEvents: 'auto' }}
+      onClick={(e) => {
+        // Cerrar al hacer clic fuera del modal (solo si no está en estados críticos)
+        if (e.target === e.currentTarget && paymentStep !== "processing" && paymentStep !== "completing") {
+          lightHaptic();
+          onClose();
+        }
+      }}
+    >
+      <div 
+        className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         {paymentStep === "confirm" && (
           <>
             {/* Header con flecha atrás */}
             <div className="flex items-center gap-3 p-4 border-b border-gray-200 bg-white sticky top-0 z-10">
               <button
-                onClick={onBackToMethods || onClose}
-                className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
+                onClick={() => {
+                  lightHaptic();
+                  if (onBackToMethods) {
+                    onBackToMethods();
+                  } else {
+                    onClose();
+                  }
+                }}
+                className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 rounded-full transition-all duration-150 active:scale-95 touch-target"
                 aria-label="Zurück"
               >
                 <ArrowLeft className="w-6 h-6 text-gray-700" />
@@ -185,8 +203,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 Zahlung bestätigen
               </h2>
               <button
-                onClick={onClose}
-                className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
+                onClick={() => {
+                  lightHaptic();
+                  onClose();
+                }}
+                className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 rounded-full transition-all duration-150 active:scale-95 touch-target"
                 aria-label="Schließen"
               >
                 <X className="w-5 h-5 text-gray-700" />
@@ -227,7 +248,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
               {/* Resumen de Compra */}
               <div className="bg-white border border-gray-200 rounded-xl p-5 mb-4">
-                <h3 className="text-base font-semibold text-gray-900 mb-4">
+                <h3 className="text-base font-semibold text-gray-900 mb-2">
                   Bestellübersicht
                 </h3>
                 <div className="space-y-3 mb-4 max-h-64 overflow-y-auto pr-2">
@@ -242,7 +263,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     </div>
                   ))}
                 </div>
-                <div className="border-t border-gray-200 pt-4 space-y-2.5">
+                <div className="border-t border-gray-200 pt-2 space-y-2.5">
                   {promoApplied && (
                     <>
                       <div className="flex justify-between items-center text-sm">
@@ -282,30 +303,34 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
               {errorMessage && (
                 <div
-                  className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
+                  className="mb-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
                   role="alert"
                   aria-live="polite"
                 >
                   {errorMessage}
                 </div>
               )}
-
-              {/* Trust Badge */}
-              <div className="flex items-center justify-center gap-2 mb-6 text-xs text-gray-500">
-                <Lock className="w-4 h-4 text-[#25D076]" />
-                <span>Sichere Zahlung mit SSL-Verschlüsselung</span>
-              </div>
             </div>
 
             {/* Botón CTA Principal - Fixed en la parte inferior */}
-            <div className="p-6 border-t border-gray-200 bg-white sticky bottom-0">
+            <div className="p-4 border-t border-gray-200 bg-white sticky bottom-0">
               <button
-                onClick={onConfirm}
+                onClick={() => {
+                  mediumHaptic();
+                  onConfirm();
+                }}
                 disabled={isProcessing}
-                className="w-full bg-[#25D076] hover:bg-[#20B865] text-white font-semibold rounded-xl py-4 text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#25D076]/20"
+                className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-xl py-4 text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#25D076]/20 active:scale-[0.98] active:shadow-md touch-target"
                 style={{ minHeight: '56px' }}
               >
-                ZAHLEN CHF {formatPrice(totalAmount)}
+                {isProcessing ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Verarbeitung...
+                  </span>
+                ) : (
+                  `ZAHLEN CHF ${formatPrice(totalAmount)}`
+                )}
               </button>
             </div>
           </>
@@ -314,7 +339,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         {paymentStep === "processing" && (
           <>
             <div className="flex-1 flex flex-col items-center justify-center py-12 px-6">
-              {/* Animación de loading mejorada */}
+              {/* Animación de loading */}
               <div className="relative w-32 h-32 mx-auto mb-6">
                 <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
                 <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#25D076] animate-spin"></div>
@@ -335,8 +360,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               
               {/* Progress bar */}
               <div className="w-4/5 max-w-xs mb-6">
-                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-[#25D076] via-[#20B865] to-[#25D076] animate-pulse" style={{ width: '100%', backgroundSize: '200% 100%', animation: 'shimmer 2s infinite' }}></div>
+                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-[#25D076] via-[#20B865] to-[#25D076] rounded-full w-full"></div>
                 </div>
               </div>
               
@@ -351,9 +376,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         {paymentStep === "success" && (
           <>
             <div className="flex-1 flex flex-col items-center justify-center py-12 px-6">
-              <div className="w-20 h-20 bg-[#25D076] rounded-full flex items-center justify-center mb-4 animate-scale-in shadow-lg shadow-[#25D076]/20">
+              {/* Icono de éxito */}
+              <div className="w-20 h-20 bg-[#25D076] rounded-full flex items-center justify-center shadow-lg shadow-[#25D076]/30 mb-6">
                 <CheckCircle className="w-12 h-12 text-white" strokeWidth={2.5} />
               </div>
+              
               <h3 className="text-2xl font-semibold text-gray-800 mb-2">
                 Zahlung erfolgreich!
               </h3>
@@ -383,18 +410,21 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               
               <div className="w-full max-w-xs space-y-3">
                 <button
-                  onClick={() => onStepChange?.("personal")}
-                  className="w-full bg-[#25D076] hover:bg-[#20B865] text-white font-semibold rounded-xl py-4 text-base transition-colors shadow-lg shadow-[#25D076]/20"
+                  onClick={() => {
+                    mediumHaptic();
+                    onStepChange?.("personal");
+                  }}
+                  className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-xl py-4 text-base transition-all duration-200 shadow-lg shadow-[#25D076]/20 active:scale-[0.98] active:shadow-md touch-target"
                   style={{ minHeight: '56px' }}
                 >
                   Ja, gerne
                 </button>
                 <button
                   onClick={() => {
-                    // Ir directamente a opciones adicionales sin pedir datos
+                    lightHaptic();
                     onStepChange?.("additional");
                   }}
-                  className="w-full bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-xl py-4 text-base transition-colors border-2 border-gray-200"
+                  className="w-full bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 font-semibold rounded-xl py-4 text-base transition-all duration-200 border-2 border-gray-200 active:scale-[0.98] active:border-gray-300 touch-target"
                   style={{ minHeight: '56px' }}
                 >
                   Weiter ohne Daten
@@ -436,10 +466,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     onChange={(e) => {
                       const newData = {...personalData, name: e.target.value};
                       setPersonalData(newData);
-                      // Guardar automáticamente mientras el usuario escribe (opcional, solo si quiere guardar)
                     }}
                     placeholder="Max Mustermann"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white transition-colors"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white transition-all duration-200 hover:border-gray-300"
                   />
                 </div>
                 <div>
@@ -451,7 +480,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     value={personalData.email}
                     onChange={(e) => setPersonalData({...personalData, email: e.target.value})}
                     placeholder="max@example.com"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white transition-colors"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white transition-all duration-200 hover:border-gray-300"
                   />
                 </div>
                 <div>
@@ -463,7 +492,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     value={personalData.address}
                     onChange={(e) => setPersonalData({...personalData, address: e.target.value})}
                     placeholder="Bahnhofstrasse 1, 8001 Zürich"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white transition-colors"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white transition-all duration-200 hover:border-gray-300"
                   />
                 </div>
                 <div>
@@ -475,7 +504,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     value={personalData.phone}
                     onChange={(e) => setPersonalData({...personalData, phone: e.target.value})}
                     placeholder="+41 79 123 45 67"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white transition-colors"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white transition-all duration-200 hover:border-gray-300"
                   />
                 </div>
               </div>
@@ -483,8 +512,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
             <div className="p-6 border-t border-gray-200 bg-white">
               <button
-                onClick={() => onStepChange?.("invoice")}
-                className="w-full bg-[#25D076] hover:bg-[#20B865] text-white font-semibold rounded-xl py-4 text-base transition-colors shadow-lg shadow-[#25D076]/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => {
+                  mediumHaptic();
+                  onStepChange?.("invoice");
+                }}
+                className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-xl py-4 text-base transition-all duration-200 shadow-lg shadow-[#25D076]/20 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] active:shadow-md touch-target"
                 style={{ minHeight: '56px' }}
                 disabled={!personalData.name || !personalData.email || !personalData.address || !personalData.phone}
               >
@@ -712,13 +744,14 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <div className="p-4 border-t border-gray-200 bg-white">
               <button
                 onClick={() => {
+                  mediumHaptic();
                   if (invoiceOption === 'none' || invoiceOption === 'print') {
                     onSkipInvoice?.();
                   } else {
                     onInvoiceComplete?.();
                   }
                 }}
-                className="w-full bg-[#25D076] hover:bg-[#20B865] text-white font-semibold rounded-xl py-3.5 text-base transition-colors shadow-lg shadow-[#25D076]/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-xl py-3.5 text-base transition-all duration-200 shadow-lg shadow-[#25D076]/20 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] active:shadow-md touch-target"
                 disabled={
                   (invoiceOption === 'email' && !invoiceEmail && !personalData.email) ||
                   (invoiceOption === 'phone' && !invoicePhone && !personalData.phone) ||
@@ -854,12 +887,43 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     // Aquí se enviarían las preferencias al backend si es necesario
                   }
                   
-                  onClose();
+                  // Mostrar paso "completing" antes de cerrar
+                  onStepChange?.("completing");
                 }}
-                className="w-full bg-[#25D076] hover:bg-[#20B865] text-white font-semibold rounded-xl py-3.5 text-base transition-colors shadow-lg shadow-[#25D076]/20"
+                className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-xl py-3.5 text-base transition-all duration-200 shadow-lg shadow-[#25D076]/20 active:scale-[0.98] active:shadow-md touch-target"
               >
                 ABSCHLIESSEN
               </button>
+            </div>
+          </>
+        )}
+
+        {/* Paso final: Completando compra */}
+        {paymentStep === "completing" && (
+          <>
+            <div className="flex-1 flex flex-col items-center justify-center py-12 px-6">
+              {/* Animación de loading */}
+              <div className="relative w-32 h-32 mx-auto mb-6">
+                <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+                <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#25D076] animate-spin"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <CheckCircle className="w-12 h-12 text-[#25D076]" strokeWidth={2.5} />
+                </div>
+              </div>
+              
+              <h3 className="text-2xl font-semibold text-gray-800 mb-2 text-center">
+                Bestellung wird abgeschlossen...
+              </h3>
+              <p className="text-base text-gray-600 text-center mb-6 max-w-sm">
+                Vielen Dank für Ihren Einkauf. Wir leiten Sie gleich weiter.
+              </p>
+              
+              {/* Progress bar */}
+              <div className="w-4/5 max-w-xs mb-6">
+                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-[#25D076] via-[#20B865] to-[#25D076] animate-pulse w-full"></div>
+                </div>
+              </div>
             </div>
           </>
         )}
@@ -959,6 +1023,18 @@ export default function PaymentP() {
     }
   }, []); // Sin dependencias para ejecutar solo una vez
 
+  // Manejar el paso "completing" automáticamente
+  useEffect(() => {
+    if (paymentStep === "completing") {
+      // Esperar 2 segundos mostrando "completing" y luego redirigir
+      const timer = setTimeout(() => {
+        handlePaymentSuccess();
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [paymentStep]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Calcular totales reales del carrito usando las funciones del store
   // Solo calcular después de montar para evitar hydration mismatch
   const totalItems = mounted ? getTotalItems() : 0;
@@ -971,6 +1047,7 @@ export default function PaymentP() {
   const payableTotal = Number(totalAfterDiscount.toFixed(2));
 
   const handlePaymentMethodSelect = (method: string) => {
+    mediumHaptic(); // Feedback háptico al seleccionar método
     setSelectedPaymentMethod(method);
     setPaymentStep("confirm");
     setOrderError(null);
@@ -978,7 +1055,13 @@ export default function PaymentP() {
   };
 
   const handleModalClose = () => {
+    // No permitir cerrar durante processing o completing
     if (createOrderMutation.isPending && paymentStep === "processing") {
+      return;
+    }
+
+    // No permitir cerrar durante completing (se está redirigiendo)
+    if (paymentStep === "completing") {
       return;
     }
 
@@ -1040,6 +1123,9 @@ export default function PaymentP() {
       // El carrito se limpiará cuando se cierre el modal o se complete el flujo
       // Los productos ya se descontaron y el código promocional ya se usó
       
+      // Feedback háptico de éxito
+      successHaptic();
+      
       setPaymentStep("success");
 
       // Después de 1.5 segundos, preguntar si quiere dar datos
@@ -1047,6 +1133,9 @@ export default function PaymentP() {
         setPaymentStep("askData");
       }, 1500);
     } catch (error) {
+      // Feedback háptico de error
+      errorHaptic();
+      
       const message =
         error instanceof Error
           ? error.message
@@ -1076,16 +1165,21 @@ export default function PaymentP() {
     // El carrito ya se limpió automáticamente cuando se procesó la orden
     clearCart();
     setSelectedPaymentMethod("");
+    setOrderError(null);
+    
+    // Cerrar el modal con una transición suave
     setIsModalOpen(false);
     setPaymentStep("confirm");
-    setOrderError(null);
-    // Redirigir a la página principal de la tienda
+    
+    // Redirigir a la página principal de la tienda después de una pequeña pausa
     const storeSlug = store?.slug;
-    if (storeSlug) {
-      router.push(`/store/${storeSlug}`);
-    } else {
-      router.push("/user");
-    }
+    setTimeout(() => {
+      if (storeSlug) {
+        router.push(`/store/${storeSlug}`);
+      } else {
+        router.push("/user");
+      }
+    }, 300); // Pequeña pausa para transición suave
   };
   
   // isProcessing viene de la mutation
@@ -1135,16 +1229,51 @@ export default function PaymentP() {
     };
   }) || [];
 
-  // Mostrar mensaje si el carrito está vacío (solo después de montar para evitar hydration mismatch)
+  // Redirigir automáticamente si el carrito está vacío (después de completar compra)
+  useEffect(() => {
+    if (mounted && totalItems === 0 && store?.slug) {
+      // Pequeño delay para evitar redirección inmediata durante la transición
+      const redirectTimer = setTimeout(() => {
+        router.push(`/store/${store.slug}`);
+      }, 500);
+
+      return () => clearTimeout(redirectTimer);
+    }
+  }, [mounted, totalItems, store?.slug, router]);
+
+  // Mostrar mensaje amigable si el carrito está vacío (solo después de montar para evitar hydration mismatch)
   if (mounted && totalItems === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] bg-[#F9F6F4]">
-        <div className="text-center">
-          <p className="text-2xl font-semibold text-[#373F49] mb-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#F9F6F4] px-4 -mt-20">
+        <div className="text-center max-w-md">
+          {/* Icono de carrito vacío */}
+          <div className="w-32 h-32 mx-auto mb-6 flex items-center justify-center">
+            <div className="w-24 h-24 bg-[#25D076]/10 rounded-full flex items-center justify-center">
+              <ShoppingCart className="w-12 h-12 text-[#25D076]" strokeWidth={1.5} />
+            </div>
+          </div>
+          
+          <h2 className="text-3xl font-bold text-[#373F49] mb-3">
             Ihr Warenkorb ist leer
-          </p>
-          <p className="text-[#6E7996]">
+          </h2>
+          <p className="text-lg text-[#6E7996] mb-8">
             Fügen Sie Produkte hinzu, um fortzufahren
+          </p>
+          
+          {/* Botón para volver a la tienda */}
+          {store?.slug && (
+            <button
+              onClick={() => router.push(`/store/${store.slug}`)}
+              className="inline-flex items-center gap-2 bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-xl px-6 py-3 transition-all duration-200 shadow-lg shadow-[#25D076]/20 active:scale-[0.98] touch-target"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Zurück zum Shop
+            </button>
+          )}
+          
+          {/* Mensaje de redirección automática */}
+          <p className="text-sm text-[#6E7996] mt-6">
+            Sie werden automatisch weitergeleitet...
           </p>
         </div>
       </div>
@@ -1172,7 +1301,7 @@ export default function PaymentP() {
           {store?.name ?? "Gastbestellung"}
         </p>
         <p className="text-5xl font-bold">
-          CHF {formatSwissPriceWithCHF(payableTotal)}
+          {formatSwissPriceWithCHF(payableTotal)}
         </p>
         <p className="text-lg font-semibold text-[#373F49]">
           inkl. MwSt • {totalItems} {totalItems === 1 ? "Artikel" : "Artikel"}
@@ -1282,7 +1411,7 @@ export default function PaymentP() {
           </div>
         ) : (
           <div className="space-y-3">
-            {paymentMethods.map((method, index) => {
+            {paymentMethods.map((method) => {
             const isSelected = selectedPaymentMethod === method.id;
             
             return (
@@ -1292,16 +1421,14 @@ export default function PaymentP() {
                 className={`
                   px-4 py-4 w-[345px] h-[50px] text-sm rounded-full
                   flex items-center justify-center gap-2
-                  ${isSelected ? "ring-4 ring-brand-300 ring-opacity-50" : ""}
-                  hover:opacity-90 active:scale-95 touch-target tap-highlight-transparent
-                  relative
+                  ${isSelected ? "ring-4 ring-brand-300 ring-opacity-50 shadow-lg scale-105" : "shadow-md"}
+                  hover:opacity-90 active:scale-[0.97] touch-target tap-highlight-transparent
+                  relative transition-all duration-200 ease-out
                 `}
                 style={{ 
                   backgroundColor: method.bgColor, // Usar color directamente desde la DB
                   color: method.textColor, // Usar color de texto directamente desde la DB
-                  minHeight: "50px",
-                  animationDelay: `${index * 0.1}s`,
-                  animationFillMode: 'both'
+                  minHeight: "50px"
                 }}
                 aria-label={`${method.name} auswählen`}
               >
@@ -1342,8 +1469,11 @@ export default function PaymentP() {
         isOpen={isModalOpen}
         onClose={() => {
           // Si el pago ya se completó, limpiar y redirigir
-          if (paymentStep === "additional" || paymentStep === "success") {
-            handlePaymentSuccess();
+          if (paymentStep === "additional" || paymentStep === "success" || paymentStep === "completing") {
+            // Si está en "completing", ya se está procesando la redirección
+            if (paymentStep !== "completing") {
+              handlePaymentSuccess();
+            }
           } else {
             handleModalClose();
           }

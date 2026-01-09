@@ -179,6 +179,17 @@ class OrderController {
 
       let resolvedUserId = userId;
 
+      // Si hay un userId, verificar si es el dueño de la tienda
+      // Si es el dueño, NO usar ese userId, sino crear un usuario invitado con los datos del formulario
+      if (resolvedUserId && storeId) {
+        const isStoreOwner = await this.isStoreOwner(resolvedUserId, storeId);
+        if (isStoreOwner) {
+          // El usuario logueado es el dueño de la tienda, crear usuario invitado con datos del formulario
+          resolvedUserId = null; // Forzar creación de usuario invitado
+        }
+      }
+
+      // Si no hay userId o era el dueño, crear usuario invitado con datos del formulario
       if (!resolvedUserId) {
         try {
           resolvedUserId = await this.resolveGuestUserId({
@@ -217,16 +228,68 @@ class OrderController {
     }
   }
 
+  /**
+   * Verifica si un usuario es el dueño de una tienda
+   * @param {string} userId - ID del usuario
+   * @param {string} storeId - ID de la tienda
+   * @returns {Promise<boolean>} True si es el dueño
+   */
+  async isStoreOwner(userId, storeId) {
+    try {
+      const store = await this.findStore(null, storeId);
+      if (!store) {
+        return false;
+      }
+      return store.ownerId === userId;
+    } catch (error) {
+      console.error('Error verificando dueño de tienda:', error);
+      return false;
+    }
+  }
+
   async resolveGuestUserId(context = {}) {
     const { storeSlug, storeId, customer } = context;
 
     const normalizedEmail = customer?.email?.trim().toLowerCase();
-    const displayName = await this.buildGuestName(customer?.name, storeSlug, storeId);
+    const hasCustomerData = customer && (customer.name || customer.email);
+    
+    // Determinar el nombre a usar
+    let displayName = null;
+    
+    if (hasCustomerData && customer.name && customer.name.trim().length > 0) {
+      // Si el cliente llenó el formulario con su nombre, usar ese nombre real
+      displayName = customer.name.trim();
+    } else if (hasCustomerData && normalizedEmail) {
+      // Si hay email pero no nombre, usar la parte del email antes del @
+      displayName = normalizedEmail.split('@')[0];
+    } else {
+      // Si NO hay datos del formulario (cliente eligió "Weiter ohne Daten"), usar "Invitado de X tienda"
+      const store = await this.findStore(storeSlug, storeId);
+      if (store?.name) {
+        displayName = `Invitado de ${store.name}`;
+      } else {
+        displayName = 'Invitado';
+      }
+    }
 
+    // Si hay email del formulario, buscar usuario existente o crear uno nuevo
     if (normalizedEmail) {
       try {
         const existingUser = await userService.findByEmail(normalizedEmail);
         if (existingUser?.data?.id) {
+          // Si el usuario existe, actualizar su nombre si tenemos uno mejor del formulario
+          if (hasCustomerData && customer.name && customer.name.trim().length > 0) {
+            const currentName = existingUser.data.name || '';
+            if (currentName !== customer.name.trim()) {
+              try {
+                await userService.update(existingUser.data.id, {
+                  name: customer.name.trim()
+                });
+              } catch (updateError) {
+                console.warn('No se pudo actualizar el nombre del usuario:', updateError.message);
+              }
+            }
+          }
           return existingUser.data.id;
         }
       } catch (error) {
@@ -236,40 +299,23 @@ class OrderController {
       }
     }
 
+    // Generar email si no hay uno del formulario
     const generatedEmail = normalizedEmail || this.generateGuestEmail(storeSlug, storeId);
     const password = randomUUID();
 
-    // Crear usuario con datos del cliente si están disponibles
+    // Crear usuario con los datos disponibles
+    // Si hay datos del formulario, usar esos datos reales
+    // Si no hay datos, usar "Invitado de X tienda"
     const userData = {
       email: generatedEmail,
       password,
       name: displayName,
       role: 'CUSTOMER',
     };
-    
-    // Si hay datos adicionales del cliente (address, phone), guardarlos en metadata del usuario
-    // Nota: La tabla User puede no tener estos campos, así que los guardamos en metadata si existe
-    if (customer?.address || customer?.phone) {
-      // Estos datos se guardarán en la orden, no en el usuario
-      // El usuario solo tiene name y email
-    }
 
     const createdUser = await userService.create(userData);
 
     return createdUser.data.id;
-  }
-
-  async buildGuestName(providedName, storeSlug, storeId) {
-    if (providedName && providedName.trim().length > 0) {
-      return providedName.trim();
-    }
-
-    const store = await this.findStore(storeSlug, storeId);
-    if (store?.name) {
-      return `Invitado ${store.name}`;
-    }
-
-    return 'Cliente invitado';
   }
 
   async findStore(storeSlug, storeId) {

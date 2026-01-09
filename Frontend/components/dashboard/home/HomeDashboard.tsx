@@ -116,7 +116,7 @@ const HomeDashboard: React.FC = () => {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-600 mt-1">Willkommen zurück, Peter! Hier ist dein Überblick für heute.</p>
+              <p className="text-gray-600 mt-1">Willkommen zurück! Hier ist dein Überblick für heute.</p>
             </div>
             <div className="w-full lg:w-[500px]">
               <SearchInput

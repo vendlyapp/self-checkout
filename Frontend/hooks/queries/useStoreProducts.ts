@@ -42,12 +42,14 @@ export const useStoreProducts = ({ slug, enabled = true }: UseStoreProductsOptio
       return normalizedProducts;
     },
     enabled: enabled && !!slug,
-    staleTime: 10 * 60 * 1000, // 10 minutos - los productos no cambian frecuentemente
-    gcTime: 30 * 60 * 1000, // 30 minutos en cache
+    staleTime: 15 * 60 * 1000, // 15 minutos - los productos no cambian frecuentemente
+    gcTime: 60 * 60 * 1000, // 1 hora en cache (productos cambian raramente)
     refetchOnWindowFocus: false, // No recargar al cambiar de ventana
     refetchOnMount: false, // No recargar al montar si hay datos en cache
     refetchOnReconnect: false, // No recargar al reconectar
     retry: 2, // Reintentar 2 veces en caso de error
+    // Usar placeholderData para mostrar datos en cache mientras se actualiza
+    placeholderData: (previousData) => previousData,
   });
 };
 

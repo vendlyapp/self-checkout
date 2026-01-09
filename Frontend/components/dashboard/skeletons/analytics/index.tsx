@@ -134,7 +134,6 @@ export const CartGaugeSkeletonLoader: React.FC = () => (
 // ===== FULL ANALYTICS DASHBOARD SKELETON =====
 export const AnalyticsDashboardSkeletonLoader: React.FC = () => (
   <div className="p-4 space-y-5 bg-background min-h-screen">
-    <AnalyticsHeaderSkeletonLoader />
     <SearchSkeletonLoader />
     <ActiveCustomersSkeletonLoader />
     <SalesChartSkeletonLoader />

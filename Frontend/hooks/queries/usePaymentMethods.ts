@@ -76,11 +76,13 @@ export const usePaymentMethods = (options: UsePaymentMethodsOptions) => {
       }
     },
     enabled: !!storeId,
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    gcTime: 10 * 60 * 1000, // 10 minutos
+    staleTime: 15 * 60 * 1000, // 15 minutos - métodos de pago cambian raramente
+    gcTime: 30 * 60 * 1000, // 30 minutos en cache
     retry: 2,
     retryDelay: 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false, // No recargar si hay datos en cache
+    refetchOnReconnect: false,
   });
 };
 

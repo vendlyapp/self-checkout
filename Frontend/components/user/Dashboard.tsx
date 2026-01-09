@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { useEffect, useCallback, useMemo, useRef } from "react";
 import ProductsList from "../dashboard/charge/ProductsList";
 import { Product } from "../dashboard/products_list/data/mockProducts";
 import { useCartStore } from "@/lib/stores/cartStore";
@@ -14,10 +14,10 @@ interface DashboardUserProps {
   onLoadingChange?: (isLoading: boolean) => void;
 }
 
-const DashboardUser = ({ onLoadingChange }: DashboardUserProps = {}) => {
+const DashboardUser = React.memo(({ onLoadingChange }: DashboardUserProps = {}) => {
   const { addToCart } = useCartStore();
   const { store } = useScannedStoreStore();
-  const { searchQuery, selectedFilters, setCategoryFilters, onScanQR } = useStoreContext();
+  const { searchQuery, selectedFilters, setCategoryFilters, onScanQR, onSearch, onFilterChange } = useStoreContext();
 
   // Obtener categorías reales de la API
   const { data: categoriesData = [] } = useCategories();
@@ -181,7 +181,7 @@ const DashboardUser = ({ onLoadingChange }: DashboardUserProps = {}) => {
               Scannen Sie den QR-Code eines Geschäfts, um die Produkte anzuzeigen
             </p>
             <button
-              onClick={handleScanQR}
+              onClick={onScanQR}
               className="flex items-center gap-3 px-6 py-3 bg-brand-500 text-white rounded-xl font-semibold"
             >
               <ScanBarcode className="w-5 h-5" />
@@ -237,8 +237,8 @@ const DashboardUser = ({ onLoadingChange }: DashboardUserProps = {}) => {
             {(searchQuery || (selectedFilters.length > 0 && !selectedFilters.includes('all'))) && (
               <button
                 onClick={() => {
-                  setSearchQuery("");
-                  setSelectedFilters(['all']);
+                  onSearch("");
+                  onFilterChange(['all']);
                 }}
                 className="px-4 py-2 bg-brand-500 text-white rounded-lg text-sm font-medium"
               >
@@ -260,6 +260,8 @@ const DashboardUser = ({ onLoadingChange }: DashboardUserProps = {}) => {
       </div>
     </div>
   );
-};
+});
+
+DashboardUser.displayName = 'DashboardUser';
 
 export default DashboardUser;

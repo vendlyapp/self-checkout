@@ -17,8 +17,11 @@ export const useCategories = () => {
       }
       return (response.data || []) as Category[];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    gcTime: 10 * 60 * 1000, // 10 minutos
+    staleTime: 30 * 60 * 1000, // 30 minutos - categorías cambian muy raramente
+    gcTime: 60 * 60 * 1000, // 1 hora en cache
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
     retry: (failureCount, error) => {
       if (error instanceof Error && (error.message === 'CANCELLED' || error.name === 'AbortError')) {
         return false;

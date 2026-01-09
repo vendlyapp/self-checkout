@@ -23,6 +23,16 @@ async function addOrderStatusColumn() {
 
     if (checkColumn.rows[0].exists) {
       console.log('⚠️  La columna status ya existe en la tabla Order');
+      console.log('🔄 Actualizando todas las órdenes existentes a "completed"...');
+      
+      // Actualizar todas las órdenes existentes a 'completed' (todas son compras reales completadas)
+      const updateResult = await query(`
+        UPDATE "Order"
+        SET status = 'completed'
+        WHERE status IS NULL OR status != 'completed'
+      `);
+      
+      console.log(`✅ ${updateResult.rowCount} órdenes actualizadas a "completed"`);
     } else {
       // Agregar columna status con valor por defecto 'completed'
       await query(`
@@ -32,11 +42,13 @@ async function addOrderStatusColumn() {
       `);
 
       // Actualizar todas las órdenes existentes sin status a 'completed'
-      await query(`
+      const updateResult = await query(`
         UPDATE "Order"
         SET status = 'completed'
         WHERE status IS NULL
       `);
+      
+      console.log(`✅ ${updateResult.rowCount} órdenes actualizadas a "completed"`);
 
       // Crear índice para mejorar las consultas por status
       await query(`
@@ -45,6 +57,18 @@ async function addOrderStatusColumn() {
 
       console.log('✅ Columna status agregada exitosamente');
     }
+    
+    // Verificar el estado final
+    const statusCount = await query(`
+      SELECT status, COUNT(*) as count
+      FROM "Order"
+      GROUP BY status
+    `);
+    
+    console.log('\n📊 Estado actual de las órdenes:');
+    statusCount.rows.forEach(row => {
+      console.log(`   - ${row.status || 'NULL'}: ${row.count} órdenes`);
+    });
 
     console.log('✅ Migración completada exitosamente');
   } catch (error) {

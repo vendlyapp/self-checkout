@@ -74,7 +74,11 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
   const activeProducts = products.filter(p => p.isActive).length;
   const lowStockProducts = products.filter(p => p.stock < 10 && p.stock > 0).length;
   const outOfStockProducts = products.filter(p => p.stock === 0).length;
-  const totalValue = products.reduce((sum, p) => sum + (p.price * p.stock), 0);
+  const totalValue = products.reduce((sum, p) => {
+    const price = typeof p.price === 'string' ? parseFloat(p.price) : (p.price || 0);
+    const stock = p.stock || 0;
+    return sum + (isNaN(price) ? 0 : price * stock);
+  }, 0);
 
   if (loading) {
     return (

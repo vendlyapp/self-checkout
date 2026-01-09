@@ -12,7 +12,7 @@ interface ProductsListProps {
   className?: string;
 }
 
-export default function ProductsList({
+const ProductsList = React.memo(function ProductsList({
   products,
   onAddToCart,
   loading = false,
@@ -74,4 +74,8 @@ export default function ProductsList({
       </div>
     </div>
   );
-}
+});
+
+ProductsList.displayName = 'ProductsList';
+
+export default ProductsList;

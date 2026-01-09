@@ -3,6 +3,7 @@
 import { Clock, Sun } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useStoreState } from '@/lib/stores';
+import { useUser } from '@/lib/contexts/UserContext';
 import type { GreetingSectionProps } from '../types';
 
 const GreetingSection = ({
@@ -14,42 +15,114 @@ const GreetingSection = ({
     isLoading,
     fetchStoreStatus 
   } = useStoreState();
+  const { profile } = useUser();
   const [currentTime, setCurrentTime] = useState<string>('');
+  const [currentDate, setCurrentDate] = useState<string>('');
   const [weather, setWeather] = useState<string>('');
+
+  // Get user's first name or fallback
+  const getUserName = () => {
+    if (profile?.name) {
+      // Extract first name if full name is provided
+      const firstName = profile.name.split(' ')[0];
+      return firstName;
+    }
+    return 'Willkommen'; // Fallback greeting
+  };
 
   // Fetch store status when component mounts
   useEffect(() => {
     fetchStoreStatus();
   }, [fetchStoreStatus]);
 
-  // Update time every second
+  // Update time and date every second
   useEffect(() => {
-    const updateTime = () => {
+    const updateDateTime = () => {
       const now = new Date();
+      
+      // Update time
       const timeString = now.toLocaleTimeString('de-DE', {
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        second: '2-digit'
       });
       setCurrentTime(timeString);
+      
+      // Update date
+      const dateString = now.toLocaleDateString('de-DE', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+      setCurrentDate(dateString);
     };
 
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
+    updateDateTime();
+    const interval = setInterval(updateDateTime, 1000);
 
     return () => clearInterval(interval);
   }, []);
 
-  // Simple weather simulation (you can replace this with a real API)
+  // Fetch real weather data
   useEffect(() => {
     const getWeather = async () => {
       try {
-        // For demo purposes, using a simple weather simulation
-        // In production, you would use a real weather API like OpenWeatherMap
-        const temperatures = [18, 20, 22, 19, 21, 23];
-        const randomTemp = temperatures[Math.floor(Math.random() * temperatures.length)];
-        setWeather(`${randomTemp}°C`);
-      } catch {
-        setWeather('18°C'); // Fallback
+        // Try to get user's location, fallback to Zurich, Switzerland
+        const getLocationWeather = async (lat: number, lon: number) => {
+          const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
+          
+          if (!apiKey) {
+            // If no API key, use a fallback temperature based on time of day
+            const hour = new Date().getHours();
+            const baseTemp = hour >= 6 && hour < 18 ? 22 : 15; // Day: 22°C, Night: 15°C
+            const variation = Math.floor(Math.random() * 5) - 2; // ±2°C variation
+            setWeather(`${baseTemp + variation}°C`);
+            return;
+          }
+
+          try {
+            const response = await fetch(
+              `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=de`
+            );
+            
+            if (response.ok) {
+              const data = await response.json();
+              const temp = Math.round(data.main.temp);
+              setWeather(`${temp}°C`);
+            } else {
+              throw new Error('Weather API error');
+            }
+          } catch (apiError) {
+            // Fallback if API fails
+            const hour = new Date().getHours();
+            const baseTemp = hour >= 6 && hour < 18 ? 22 : 15;
+            const variation = Math.floor(Math.random() * 5) - 2;
+            setWeather(`${baseTemp + variation}°C`);
+          }
+        };
+
+        // Try to get user's geolocation
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              getLocationWeather(position.coords.latitude, position.coords.longitude);
+            },
+            () => {
+              // If geolocation fails, use Zurich, Switzerland as default
+              getLocationWeather(47.3769, 8.5417);
+            },
+            { timeout: 5000 }
+          );
+        } else {
+          // No geolocation support, use Zurich
+          getLocationWeather(47.3769, 8.5417);
+        }
+      } catch (error) {
+        // Final fallback
+        const hour = new Date().getHours();
+        const baseTemp = hour >= 6 && hour < 18 ? 22 : 15;
+        setWeather(`${baseTemp}°C`);
       }
     };
 
@@ -64,7 +137,7 @@ const GreetingSection = ({
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1 flex items-center">
             <h1 className="text-2xl font-bold text-gray-900 leading-tight">
-              Hoi Peter
+              Hoi {getUserName()}
               <span className="ml-2">👋</span>
             </h1>
           </div>
@@ -122,17 +195,13 @@ const GreetingSection = ({
           <div className="flex items-center gap-1.5">
             <Sun className="w-4 h-4 text-yellow-500" />
             <span className="text-sm text-gray-600">
-              {weather} • {new Date().toLocaleDateString('de-DE', {
-                weekday: 'short',
-                day: 'numeric',
-                month: 'long'
-              })}
+              {weather} • {currentDate}
             </span>
           </div>
           <div className="flex items-center gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
-              <span>seit {currentTime} Uhr</span>
+              <span>{currentTime}</span>
             </div>
           </div>
         </div>
@@ -143,25 +212,21 @@ const GreetingSection = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold text-gray-900">
-              Hoi Peter
+              Hoi {getUserName()}
               <span className="ml-2">👋</span>
             </h1>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Sun className="w-4 h-4 text-yellow-500" />
               <span>{weather}</span>
               <span>•</span>
-              <span>{new Date().toLocaleDateString('de-DE', {
-                weekday: 'short',
-                day: 'numeric',
-                month: 'long'
-              })}</span>
+              <span>{currentDate}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Clock className="w-4 h-4" />
-              <span>seit {currentTime} Uhr</span>
+              <span>{currentTime}</span>
             </div>
 
             {/* Store Status Toggle - más compacto en desktop */}

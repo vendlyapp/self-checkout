@@ -13,10 +13,10 @@ export const QueryProvider = ({ children }: QueryProviderProps) => {
       new QueryClient({
         defaultOptions: {
           queries: {
-            // Cache por 5 minutos
-            staleTime: 5 * 60 * 1000,
-            // Cache en memoria por 10 minutos
-            gcTime: 10 * 60 * 1000,
+            // Cache por 10 minutos por defecto (las queries específicas pueden sobrescribir)
+            staleTime: 10 * 60 * 1000,
+            // Cache en memoria por 30 minutos
+            gcTime: 30 * 60 * 1000,
             // Reintentar 2 veces en caso de error
             retry: (failureCount, error) => {
               // No reintentar si es un error de cancelación
@@ -29,10 +29,12 @@ export const QueryProvider = ({ children }: QueryProviderProps) => {
               }
               return failureCount < 2;
             },
-            // Refetch cuando la ventana recupera el foco
+            // No refetch cuando la ventana recupera el foco (mejor rendimiento)
             refetchOnWindowFocus: false,
-            // No refetch automático en reconexión
-            refetchOnReconnect: true,
+            // No refetch automático en reconexión (evitar recargas innecesarias)
+            refetchOnReconnect: false,
+            // No refetch en mount si hay datos frescos en cache
+            refetchOnMount: false,
             // No loggear errores de cancelación
             throwOnError: (error) => {
               // No lanzar errores de cancelación

@@ -776,7 +776,8 @@ class SuperAdminService {
           o.id,
           o."userId",
           o.total,
-          'pending' as status,
+          COALESCE(o.status, 'completed') as status,
+          o."paymentMethod",
           o."createdAt",
           u.name as "customerName",
           u.email as "customerEmail"
@@ -785,7 +786,7 @@ class SuperAdminService {
         INNER JOIN "Product" p ON oi."productId" = p.id
         LEFT JOIN "User" u ON o."userId" = u.id
         WHERE p."ownerId" = $1
-        GROUP BY o.id, o."userId", o.total, o."createdAt", u.name, u.email
+        GROUP BY o.id, o."userId", o.total, o.status, o."paymentMethod", o."createdAt", u.name, u.email
         ORDER BY o."createdAt" DESC
         LIMIT $2 OFFSET $3
       `;
@@ -807,8 +808,10 @@ class SuperAdminService {
         // Generate orderNumber from order id (first 8 chars)
         order.orderNumber = `ORD-${order.id.substring(0, 8).toUpperCase()}`;
         
-        // Get payment method (mock for now - would need payment method in Order table)
-        order.paymentMethod = 'Tarjeta';
+        // Use payment method from Order table, fallback to 'Tarjeta' if not available
+        if (!order.paymentMethod) {
+          order.paymentMethod = 'Tarjeta';
+        }
       }
 
       // Count total
