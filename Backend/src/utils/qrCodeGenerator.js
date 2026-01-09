@@ -1,9 +1,17 @@
 const QRCode = require('qrcode');
 
 class QRCodeGenerator {
-  async generateQRCode(productId, productName) {
+  /**
+   * Genera un QR code para un producto con URL completa
+   * @param {string} productId - ID del producto (UUID)
+   * @param {string} productName - Nombre del producto (opcional)
+   * @param {string} url - URL completa que debe contener el QR (opcional, si no se proporciona usa solo el ID)
+   * @returns {Promise<string>} Data URL del QR code
+   */
+  async generateQRCode(productId, productName, url = null) {
     try {
-      const qrData = productId;
+      // Si se proporciona una URL, usarla. Si no, usar solo el productId (compatibilidad hacia atrás)
+      const qrData = url || productId;
 
       const qrCodeDataURL = await QRCode.toDataURL(qrData, {
         errorCorrectionLevel: 'L',
@@ -24,9 +32,17 @@ class QRCodeGenerator {
     }
   }
 
-  async generateQRCodeBuffer(productId, productName) {
+  /**
+   * Genera un QR code buffer para un producto con URL completa
+   * @param {string} productId - ID del producto (UUID)
+   * @param {string} productName - Nombre del producto (opcional)
+   * @param {string} url - URL completa que debe contener el QR (opcional, si no se proporciona usa solo el ID)
+   * @returns {Promise<Buffer>} Buffer del QR code
+   */
+  async generateQRCodeBuffer(productId, productName, url = null) {
     try {
-      const qrData = productId;
+      // Si se proporciona una URL, usarla. Si no, usar solo el productId (compatibilidad hacia atrás)
+      const qrData = url || productId;
 
       const buffer = await QRCode.toBuffer(qrData, {
         errorCorrectionLevel: 'L',

@@ -303,8 +303,9 @@ class AuthService {
    */
   async requestPasswordReset(email) {
     try {
+      const frontendUrl = process.env.FRONTEND_URL || 'https://self-checkout-kappa.vercel.app';
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${process.env.FRONTEND_URL}/reset-password`
+        redirectTo: `${frontendUrl}/reset-password`
       });
 
       if (error) {

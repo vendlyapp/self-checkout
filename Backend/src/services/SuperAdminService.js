@@ -247,7 +247,7 @@ class SuperAdminService {
       // Regenerate QR code if slug or name changed
       if ((slug !== undefined || name !== undefined) && updatedStore.slug) {
         const qrCodeGenerator = require('../utils/qrCodeGenerator');
-        const qrUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/store/${updatedStore.slug}`;
+        const qrUrl = `${process.env.FRONTEND_URL || 'https://self-checkout-kappa.vercel.app'}/store/${updatedStore.slug}`;
         const qrCode = await qrCodeGenerator.generateQRCode(qrUrl, updatedStore.name);
         
         const qrUpdateQuery = 'UPDATE "Store" SET "qrCode" = $1 WHERE "id" = $2 RETURNING *';
@@ -852,7 +852,7 @@ class SuperAdminService {
       const store = storeResult.data;
 
       // Generate new QR code with the full URL
-      const qrUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/store/${store.slug}`;
+      const qrUrl = `${process.env.FRONTEND_URL || 'https://self-checkout-kappa.vercel.app'}/store/${store.slug}`;
       const qrCode = await qrCodeGenerator.generateQRCode(qrUrl, store.name);
 
       // Update QR code in database

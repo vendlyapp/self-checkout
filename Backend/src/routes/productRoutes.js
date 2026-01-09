@@ -137,6 +137,49 @@ router.get('/available', productController.getAvailableProducts);
 
 /**
  * @swagger
+ * /api/products/qr/{qrCode}:
+ *   get:
+ *     summary: Obtener producto por código QR
+ *     description: Retorna la información de un producto específico usando su código QR (ID del producto). Incluye información de la tienda. Endpoint público.
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: qrCode
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID del producto (UUID) contenido en el código QR
+ *     responses:
+ *       200:
+ *         description: Producto encontrado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Product'
+ *       404:
+ *         description: Producto no encontrado o no disponible
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+// IMPORTANTE: Esta ruta debe estar ANTES de /:id para evitar conflictos
+router.get('/qr/:qrCode', productController.getProductByQR);
+
+/**
+ * @swagger
  * /api/products/{id}:
  *   get:
  *     summary: Obtener producto por ID

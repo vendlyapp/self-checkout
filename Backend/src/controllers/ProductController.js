@@ -266,6 +266,55 @@ class ProductController {
       });
     }
   }
+
+  /**
+   * Obtiene un producto por su código QR (ID del producto)
+   * Endpoint público para clientes - incluye información de la tienda
+   * @route GET /api/products/qr/:qrCode
+   * @param {Object} req - Request object de Express
+   * @param {Object} req.params - Parámetros de ruta
+   * @param {string} req.params.qrCode - ID del producto (UUID) contenido en el QR
+   * @param {Object} res - Response object de Express
+   * @returns {Promise<void>} JSON con el producto y su tienda
+   * @throws {404} Si el producto no existe o no está disponible
+   * @throws {500} Si hay error en el servidor
+   */
+  async getProductByQR(req, res) {
+    try {
+      const { qrCode } = req.params;
+      
+      // Validar que el qrCode sea un UUID válido
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(qrCode)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: 'Código QR inválido'
+        });
+      }
+
+      // Buscar producto con información de la tienda
+      const result = await productService.findByIdWithStore(qrCode);
+
+      // Verificar que el producto tenga stock y esté disponible
+      if (result.data.stock <= 0) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({
+          success: false,
+          error: 'Producto no disponible'
+        });
+      }
+
+      res.status(HTTP_STATUS.OK).json(result);
+    } catch (error) {
+      const statusCode = error.message.includes('no encontrado') || error.message.includes('no disponible')
+        ? HTTP_STATUS.NOT_FOUND
+        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
+
+      res.status(statusCode).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = new ProductController();

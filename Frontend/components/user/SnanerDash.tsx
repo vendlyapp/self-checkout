@@ -21,8 +21,8 @@ const SnanerDash = () => {
   const isCleaningUpRef = useRef(false);
   const [scannerId] = useState(() => 'qr-reader-scanner');
   const router = useRouter();
-  const { addToCart } = useCartStore();
-  const { store } = useScannedStoreStore();
+  const { addToCart, setCurrentStore } = useCartStore();
+  const { store, setStore } = useScannedStoreStore();
 
   // Limpiar el escáner cuando el componente se desmonte
   useEffect(() => {
@@ -174,7 +174,37 @@ const SnanerDash = () => {
       // Detener el escáner
       await stopScanning();
 
-      // Buscar el producto por código QR
+      // Verificar si el código escaneado es una URL completa
+      // Si es una URL que contiene /product/, extraer el productId o redirigir directamente
+      if (qrCode.includes('/product/')) {
+        // Es una URL completa, extraer el productId o redirigir directamente
+        const productIdMatch = qrCode.match(/\/product\/([a-f0-9-]+)/i);
+        if (productIdMatch && productIdMatch[1]) {
+          // Extraer el productId y usar el endpoint
+          const productId = productIdMatch[1];
+          const url = buildApiUrl(`/api/products/qr/${encodeURIComponent(productId)}`);
+          const response = await fetch(url);
+          
+          if (!response.ok) {
+            throw new Error("Produkt nicht gefunden");
+          }
+
+          const result = await response.json();
+          if (!result.success || !result.data) {
+            throw new Error("Produkt nicht gefunden");
+          }
+
+          await processProductData(result.data);
+          return;
+        } else {
+          // Si no podemos extraer el ID, redirigir directamente a la URL
+          window.location.href = qrCode;
+          return;
+        }
+      }
+
+      // Si no es una URL, asumir que es un productId (UUID) - compatibilidad hacia atrás
+      // Buscar el producto por código QR (incluye información de la tienda)
       const url = buildApiUrl(`/api/products/qr/${encodeURIComponent(qrCode)}`);
       const response = await fetch(url);
 
@@ -188,47 +218,7 @@ const SnanerDash = () => {
         throw new Error("Produkt nicht gefunden");
       }
 
-      // Convertir el producto al formato correcto
-      const productData = result.data;
-      const product: Product = {
-        id: productData.id,
-        name: productData.name,
-        description: productData.description || "",
-        price: parseFloat(productData.price) || 0,
-        originalPrice: productData.originalPrice
-          ? parseFloat(productData.originalPrice)
-          : undefined,
-        promotionalPrice: productData.promotionalPrice
-          ? parseFloat(productData.promotionalPrice)
-          : undefined,
-        category: productData.category || "",
-        categoryId: productData.categoryId || "",
-        stock: parseInt(productData.stock) || 0,
-        sku: productData.sku || "",
-        barcode: productData.barcode,
-        qrCode: productData.qrCode,
-        image: productData.image,
-        images: productData.images,
-        isActive: productData.isActive ?? true,
-        isPromotional: productData.isPromotional || false,
-        isOnSale: productData.isOnSale || false,
-        isNew: productData.isNew || false,
-        isPopular: productData.isPopular || false,
-        currency: productData.currency || "CHF",
-        tags: productData.tags || [],
-        createdAt: productData.createdAt || new Date().toISOString(),
-        updatedAt: productData.updatedAt || new Date().toISOString(),
-      };
-
-      // Verificar si el producto está disponible
-      if (!product.isActive || product.stock <= 0) {
-        throw new Error("Producto no disponible");
-      }
-
-      // Agregar al carrito
-      addToCart(product, 1);
-      setScannedProduct(product);
-      setShowSuccessModal(true);
+      await processProductData(result.data);
     } catch (error) {
       console.error("Error al procesar el código QR:", error);
       setErrorMessage(
@@ -268,6 +258,81 @@ const SnanerDash = () => {
     } else {
       startScanning();
     }
+  };
+
+  // Función auxiliar para procesar los datos del producto
+  const processProductData = async (productData: any) => {
+    // Convertir el producto al formato correcto
+    const product: Product = {
+      id: productData.id,
+      name: productData.name,
+      description: productData.description || "",
+      price: parseFloat(productData.price) || 0,
+      originalPrice: productData.originalPrice
+        ? parseFloat(productData.originalPrice)
+        : undefined,
+      promotionalPrice: productData.promotionalPrice
+        ? parseFloat(productData.promotionalPrice)
+        : undefined,
+      category: productData.category || "",
+      categoryId: productData.categoryId || "",
+      stock: parseInt(productData.stock) || 0,
+      sku: productData.sku || "",
+      barcode: productData.barcode,
+      qrCode: productData.qrCode,
+      image: productData.image,
+      images: productData.images,
+      isActive: productData.isActive ?? true,
+      isPromotional: productData.isPromotional || false,
+      isOnSale: productData.isOnSale || false,
+      isNew: productData.isNew || false,
+      isPopular: productData.isPopular || false,
+      currency: productData.currency || "CHF",
+      tags: productData.tags || [],
+      createdAt: productData.createdAt || new Date().toISOString(),
+      updatedAt: productData.updatedAt || new Date().toISOString(),
+    };
+
+    // Verificar si el producto está disponible
+    if (!product.isActive || product.stock <= 0) {
+      throw new Error("Producto no disponible");
+    }
+
+    // Obtener información de la tienda del producto
+    const storeInfo = productData.store;
+    if (!storeInfo || !storeInfo.slug) {
+      throw new Error("Tienda no encontrada para este producto");
+    }
+
+    // Guardar la tienda en el store global
+    const storeData = {
+      id: storeInfo.id,
+      name: storeInfo.name,
+      slug: storeInfo.slug,
+      logo: storeInfo.logo,
+      isOpen: storeInfo.isOpen ?? true,
+    };
+    setStore(storeData);
+    setCurrentStore(storeInfo.slug);
+
+    // Guardar información de la tienda en el producto para uso en el modal
+    const productWithStore = {
+      ...product,
+      store: storeInfo
+    };
+
+    // Agregar el producto al carrito
+    addToCart(product, 1);
+    setScannedProduct(productWithStore as any);
+    
+    // Mostrar modal de éxito antes de redirigir
+    setShowSuccessModal(true);
+    
+    // Redirigir a la tienda del producto después de un breve delay
+    setTimeout(() => {
+      handleCloseModal();
+      router.push(`/store/${storeInfo.slug}`);
+    }, 2500);
   };
 
   return (
@@ -363,11 +428,16 @@ const SnanerDash = () => {
               <CheckCircle className="w-8 h-8 text-white" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Erfolgreich!</h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 mb-2">
               {scannedProduct
                 ? `${scannedProduct.name} wurde zum Warenkorb hinzugefügt`
                 : "Produkt erfolgreich gescannt"}
             </p>
+            {scannedProduct && (scannedProduct as any).store && (
+              <p className="text-sm text-gray-500 mb-4">
+                Weiterleitung zu {(scannedProduct as any).store.name}...
+              </p>
+            )}
 
             {/* Dos botones */}
             <div className="flex flex-col gap-3">
@@ -386,8 +456,15 @@ const SnanerDash = () => {
               <button
                 onClick={() => {
                   handleCloseModal();
-                  const targetRoute = store?.slug ? `/store/${store.slug}/cart` : '/user/cart';
-                  router.push(targetRoute);
+                  // Siempre usar la tienda del producto escaneado, que ya está guardada en el store
+                  if (scannedProduct && (scannedProduct as any).store?.slug) {
+                    router.push(`/store/${(scannedProduct as any).store.slug}/cart`);
+                  } else if (store?.slug) {
+                    router.push(`/store/${store.slug}/cart`);
+                  } else {
+                    // Fallback: redirigir a la página principal
+                    router.push('/');
+                  }
                 }}
                 className="bg-white text-[#25D076] border-2 border-[#25D076] px-6 py-4 rounded-full font-semibold 
                          hover:bg-[#25D076] hover:text-white w-full 

@@ -83,7 +83,8 @@ class StoreService {
       const store = result.rows[0];
 
       // Generar QR code para la tienda con la URL completa
-      const qrUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/store/${slug}`;
+      // Usar URL de producción por defecto para que los QR codes funcionen en producción
+      const qrUrl = `${process.env.FRONTEND_URL || 'https://self-checkout-kappa.vercel.app'}/store/${slug}`;
       const qrCode = await qrCodeGenerator.generateQRCode(qrUrl, store.name);
 
       // Actualizar con QR
@@ -308,7 +309,7 @@ class StoreService {
 
       // Regenerar QR code si el slug cambió o si no existe
       if (!updatedStore.qrCode || (name !== undefined && name !== updatedStore.name)) {
-        const qrUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/store/${updatedStore.slug}`;
+        const qrUrl = `${process.env.FRONTEND_URL || 'https://self-checkout-kappa.vercel.app'}/store/${updatedStore.slug}`;
         const qrCode = await qrCodeGenerator.generateQRCode(qrUrl, updatedStore.name);
         
         // Actualizar QR code
@@ -376,7 +377,7 @@ class StoreService {
       }
 
       // Generar nuevo QR code con la URL completa
-      const qrUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/store/${store.slug}`;
+      const qrUrl = `${process.env.FRONTEND_URL || 'https://self-checkout-kappa.vercel.app'}/store/${store.slug}`;
       const qrCode = await qrCodeGenerator.generateQRCode(qrUrl, store.name);
 
       // Actualizar QR code en la base de datos

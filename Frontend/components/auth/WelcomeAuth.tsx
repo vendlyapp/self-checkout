@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogIn, QrCode, Store } from 'lucide-react';
+import { LogIn, QrCode, Store, ScanBarcode } from 'lucide-react';
 import { QRScannerModal } from '@/components/user/QRScannerModal';
 
 const WelcomeAuth: React.FC = () => {
@@ -47,7 +47,7 @@ const WelcomeAuth: React.FC = () => {
               Willkommen!
             </h2>
             <p className="text-gray-500">
-              Als Händler anmelden oder Geschäft scannen
+              Als Händler anmelden, Geschäft oder Produkt scannen
             </p>
           </div>
 
@@ -93,13 +93,39 @@ const WelcomeAuth: React.FC = () => {
             Geschäft scannen
           </button>
 
+          {/* Separador */}
+          <div className="relative py-2">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-white px-4 text-sm text-gray-500">oder</span>
+            </div>
+          </div>
+
+          {/* Botón de Escanear Producto */}
+          <button
+            type="button"
+            onClick={() => router.push('/scan')}
+            className="w-full bg-white hover:bg-gray-50 text-gray-900 rounded-2xl px-6 py-4 
+                     font-semibold text-lg flex items-center justify-center gap-3 
+                     transition-all duration-200 border-2 border-gray-200 hover:border-[#25D076]
+                     hover:scale-[1.02] active:scale-[0.98]
+                     focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:ring-offset-2"
+            aria-label="Produkt scannen"
+            tabIndex={0}
+          >
+            <ScanBarcode className="w-6 h-6" strokeWidth={2.5} />
+            Produkt scannen
+          </button>
+
           {/* Información adicional */}
           <div className="mt-8 pt-6 border-t border-gray-100 text-center space-y-2">
             <p className="text-sm text-gray-600 font-medium">
               💼 Händler? Melde dich an
             </p>
             <p className="text-xs text-gray-500">
-              🛍️ Kunde? Scanne den QR-Code deines Geschäfts
+              🛍️ Kunde? Scanne den QR-Code deines Geschäfts oder Produkts
             </p>
           </div>
         </div>

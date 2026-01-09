@@ -1,6 +1,7 @@
 const { query } = require('../../lib/database');
 const qrCodeGenerator = require('../utils/qrCodeGenerator');
 const barcodeGenerator = require('../utils/barcodeGenerator');
+const storeService = require('./StoreService');
 
 class ProductService {
 
@@ -123,9 +124,19 @@ class ProductService {
     const result = await query(insertQuery, values);
     const product = result.rows[0];
 
-    // Generar QR code y código de barras
+    // Obtener la tienda para generar URL completa del QR
+    const store = await storeService.getByOwnerId(ownerId);
+    // Usar URL de producción por defecto para que los QR codes funcionen en producción
+    // En desarrollo local, configurar FRONTEND_URL en .env
+    const frontendUrl = process.env.FRONTEND_URL || 'https://self-checkout-kappa.vercel.app';
+    
+    // Generar URL completa para el producto
+    // La URL será: /product/[productId] que manejará agregar al carrito y redirigir
+    const productUrl = `${frontendUrl}/product/${product.id}`;
+
+    // Generar QR code con URL completa y código de barras
     const [qrCode, barcodeImage] = await Promise.all([
-      qrCodeGenerator.generateQRCode(product.id, product.name),
+      qrCodeGenerator.generateQRCode(product.id, product.name, productUrl),
       barcodeGenerator.generateBarcode(product.id, product.name)
     ]);
     
@@ -217,6 +228,48 @@ class ProductService {
     return {
       success: true,
       data: result.rows[0]
+    };
+  }
+
+  /**
+   * Busca un producto por ID e incluye información de la tienda
+   * @param {string} id - ID del producto (UUID)
+   * @returns {Promise<Object>} Producto con información de la tienda
+   */
+  async findByIdWithStore(id) {
+    const selectQuery = `
+      SELECT 
+        p.*,
+        s.id as "storeId",
+        s.name as "storeName",
+        s.slug as "storeSlug",
+        s.logo as "storeLogo",
+        s."isOpen" as "storeIsOpen"
+      FROM "Product" p
+      INNER JOIN "Store" s ON p."ownerId" = s."ownerId"
+      WHERE p.id = $1 AND p."isActive" = true AND s."isActive" = true
+    `;
+    const result = await query(selectQuery, [id]);
+
+    if (result.rows.length === 0) {
+      throw new Error('Producto no encontrado o no disponible');
+    }
+
+    const product = result.rows[0];
+    
+    // Formatear la respuesta para incluir información de la tienda
+    return {
+      success: true,
+      data: {
+        ...product,
+        store: {
+          id: product.storeId,
+          name: product.storeName,
+          slug: product.storeSlug,
+          logo: product.storeLogo,
+          isOpen: product.storeIsOpen
+        }
+      }
     };
   }
 
