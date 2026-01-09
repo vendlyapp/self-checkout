@@ -40,14 +40,17 @@ export default function StorePromotionPage() {
   }
 
   return (
-    <div>
+    <div className="w-full">
+      {/* Slider - scroll horizontal independiente, no afecta scroll vertical */}
       {products.length > 0 && (
-        <div className="w-full mt-4">
+        <div className="w-full mt-4 mb-6" style={{ touchAction: 'pan-x', overscrollBehaviorX: 'contain' }}>
           <SliderP products={products} />
         </div>
       )}
-      <div className="mb-24">
-        <h5 className="text-xl text-start ml-4 mt-4 font-semibold">Alle Aktionen</h5>
+      
+      {/* Lista de productos - scroll vertical independiente del slider */}
+      <div className="mb-24 px-4 promotion-products-list">
+        <h5 className="text-xl text-start mt-6 mb-4 font-semibold text-gray-900">Alle Aktionen</h5>
         {!loading && products.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center px-4">
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">

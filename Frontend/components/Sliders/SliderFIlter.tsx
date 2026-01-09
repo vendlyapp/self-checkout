@@ -55,11 +55,11 @@ export function FilterSlider({
   }, [onFilterChange])
 
   return (
-    <div className={cn("relative border-b border-gray-100", className)}>
+    <div className={cn("relative", className)}>
       {/* Contenedor de filtros con scroll */}
       <div
         ref={scrollContainerRef}
-        className="flex gap-2 overflow-x-auto scrollbar-hide px-4 py-3"
+        className="flex gap-2 overflow-x-auto scrollbar-hide px-4 py-1"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         role="listbox"
         aria-label="Filteroptionen"

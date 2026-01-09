@@ -10,7 +10,15 @@ export default function StoreScanPage() {
   useStoreData({ slug, autoLoad: true })
 
   return (
-    <div>
+    <div 
+      className="w-full flex items-center justify-center"
+      style={{
+        height: '100%',
+        minHeight: 0,
+        maxHeight: '100%',
+        overflow: 'hidden',
+      }}
+    >
       <SnanerDash />
     </div>
   )

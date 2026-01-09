@@ -173,7 +173,7 @@ export default function SearchUser() {
             value={searchTerm}
             onChange={handleInputChange}
             onSearch={handleSearch}
-            className=""
+            className="h-[48px] sm:h-[50px]"
           />
         </div>
 

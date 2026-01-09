@@ -27,44 +27,29 @@ const PromotionSlider: React.FC<PromotionSliderProps> = ({
   const shouldLoop = safeItems.length > 2;
 
   return (
-    <div className={clsx("w-full", className)}>
+    <div className={clsx("w-full promotion-slider", className)}>
       <Swiper
         modules={[Autoplay, FreeMode]}
-        spaceBetween={8}
-        slidesPerView={1.6}
-        centeredSlides={true}
+        spaceBetween={12}
+        slidesPerView="auto"
         freeMode={{
           enabled: true,
           momentum: true,
-          momentumRatio: 0.25,
+          momentumRatio: 0.5,
           momentumVelocityRatio: 0.5,
           sticky: false,
+          minimumVelocity: 0.02,
         }}
         autoplay={
           safeItems.length > 1
             ? {
-                delay: 3000,
+                delay: 4000,
                 disableOnInteraction: false,
-                pauseOnMouseEnter: true,
+                pauseOnMouseEnter: false,
                 stopOnLastSlide: false,
               }
             : false
         }
-        breakpoints={{
-          320: {
-            slidesPerView: 1.6,
-          },
-          380: {
-            slidesPerView: 1.6,
-          },
-          480: {
-            slidesPerView: 1.7,
-          },
-          640: {
-            slidesPerView: 1.7,
-          },
-        }}
-        loop={shouldLoop}
         grabCursor={true}
         touchRatio={1}
         resistance={true}
@@ -73,13 +58,15 @@ const PromotionSlider: React.FC<PromotionSliderProps> = ({
         preventClicks={false}
         preventClicksPropagation={false}
         watchOverflow={true}
-        className="w-full"
       >
         {safeItems.map((props, idx) => (
-          <SwiperSlide key={`promo-${idx}-${props.name}`}>
-            <div className="flex justify-center">
-              <PromotionCard {...props} />
-            </div>
+          <SwiperSlide
+            key={`promo-${idx}-${props.name}`}
+            style={{
+              width: "220px",
+            }}
+          >
+            <PromotionCard {...props} />
           </SwiperSlide>
         ))}
       </Swiper>

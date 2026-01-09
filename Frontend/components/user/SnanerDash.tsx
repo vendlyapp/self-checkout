@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { CheckCircle, ScanBarcode, XCircle, Camera } from "lucide-react";
+import { CheckCircle, ScanBarcode, XCircle, Camera, ShoppingCart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Html5Qrcode, Html5QrcodeScanType } from "html5-qrcode";
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useScannedStoreStore, type StoreInfo } from "@/lib/stores/scannedStoreStore";
 import { buildApiUrl } from "@/lib/config/api";
 import { Product } from "@/components/dashboard/products_list/data/mockProducts";
+import Image from "next/image";
 
 // Type for product with store information
 interface ProductWithStore extends Product {
@@ -364,45 +365,42 @@ const SnanerDash = () => {
     addToCart(product, 1);
     setScannedProduct(productWithStore);
     
-    // Mostrar modal de éxito antes de redirigir
+    // Mostrar modal de éxito (sin redirección automática)
     setShowSuccessModal(true);
-    
-    // Redirigir a la tienda del producto después de un breve delay
-    setTimeout(() => {
-      handleCloseModal();
-      router.push(`/store/${storeInfo.slug}`);
-    }, 2500);
   };
 
   return (
-    <div>
-      <div className="flex-1 flex flex-col items-center justify-center ml-16 mr-16 pb-24 pt-20">
-        <div className="relative w-[280px] h-[280px]">
+    <div className="w-full flex items-center justify-center" style={{ height: '100%', minHeight: 0, maxHeight: '100%' }}>
+      <div className="flex flex-col items-center justify-center w-full max-w-md px-4" style={{ maxHeight: '100%', overflow: 'hidden' }}>
+        {/* Scanner Container - Centrado y mejorado */}
+        <div className="relative w-full max-w-[280px] sm:max-w-[320px] aspect-square mb-6 sm:mb-8 flex-shrink-0">
           {/* Main scanner container - La cámara se renderiza aquí */}
           <div
             id={scannerId}
             ref={scanContainerRef}
-            className="absolute inset-0 bg-black/50 rounded-2xl shadow-2xl overflow-hidden"
+            className="absolute inset-0 bg-black/50 rounded-3xl shadow-2xl overflow-hidden"
             style={{ zIndex: 1 }}
           ></div>
 
           {/* Overlay con decoraciones y contenido - Solo cuando NO está escaneando */}
           {!isScanning && (
             <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-              <div className="absolute inset-0 bg-white/90 rounded-3xl"></div>
-              <div className="relative z-30 text-center">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/95 to-gray-50/95 backdrop-blur-sm rounded-3xl border-2 border-gray-100"></div>
+              <div className="relative z-30 text-center px-6">
                 {/* Barcode icon with better styling */}
                 <div className="relative mb-6">
-                  <ScanBarcode
-                    className="w-20 h-20 text-gray-600 mx-auto"
-                    strokeWidth={1.5}
-                  />
-                  <div className="justify-center items-center text-[10px] W-[100px] text-gray-600 font-medium">
+                  <div className="w-24 h-24 mx-auto mb-3 bg-gradient-to-br from-[#25D076]/10 to-[#25D076]/5 rounded-3xl flex items-center justify-center">
+                    <ScanBarcode
+                      className="w-12 h-12 text-[#25D076]"
+                      strokeWidth={2}
+                    />
+                  </div>
+                  <div className="text-center text-xs text-gray-500 font-semibold tracking-wider uppercase">
                     QR CODE / BARCODE
                   </div>
                 </div>
 
-                <p className="text-gray-800 font-bold text-lg mb-2">
+                <p className="text-gray-900 font-bold text-xl mb-2">
                   Produkt positionieren
                 </p>
                 <p className="text-gray-600 text-sm font-medium">
@@ -415,27 +413,31 @@ const SnanerDash = () => {
           {/* Corner markers - Siempre visibles cuando está escaneando */}
           {isScanning && (
             <>
-              <div className="absolute top-6 left-6 w-12 h-12 z-30 pointer-events-none">
-                <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-[#25D076] to-transparent rounded-tl-2xl"></div>
-                <div className="absolute top-0 left-0 w-3 h-full bg-gradient-to-b from-[#25D076] to-transparent rounded-tl-2xl"></div>
+              {/* Top Left Corner */}
+              <div className="absolute top-4 left-4 w-16 h-16 z-30 pointer-events-none">
+                <div className="absolute top-0 left-0 w-full h-4 bg-gradient-to-r from-[#25D076] to-transparent rounded-tl-3xl"></div>
+                <div className="absolute top-0 left-0 w-4 h-full bg-gradient-to-b from-[#25D076] to-transparent rounded-tl-3xl"></div>
               </div>
-              <div className="absolute top-6 right-6 w-12 h-12 z-30 pointer-events-none">
-                <div className="absolute top-0 right-0 w-full h-3 bg-gradient-to-l from-[#25D076] to-transparent rounded-tr-2xl"></div>
-                <div className="absolute top-0 right-0 w-3 h-full bg-gradient-to-b from-[#25D076] to-transparent rounded-tr-2xl"></div>
+              {/* Top Right Corner */}
+              <div className="absolute top-4 right-4 w-16 h-16 z-30 pointer-events-none">
+                <div className="absolute top-0 right-0 w-full h-4 bg-gradient-to-l from-[#25D076] to-transparent rounded-tr-3xl"></div>
+                <div className="absolute top-0 right-0 w-4 h-full bg-gradient-to-b from-[#25D076] to-transparent rounded-tr-3xl"></div>
               </div>
-              <div className="absolute bottom-6 left-6 w-12 h-12 z-30 pointer-events-none">
-                <div className="absolute bottom-0 left-0 w-full h-3 bg-gradient-to-r from-[#25D076] to-transparent rounded-bl-2xl"></div>
-                <div className="absolute bottom-0 left-0 w-3 h-full bg-gradient-to-t from-[#25D076] to-transparent rounded-bl-2xl"></div>
+              {/* Bottom Left Corner */}
+              <div className="absolute bottom-4 left-4 w-16 h-16 z-30 pointer-events-none">
+                <div className="absolute bottom-0 left-0 w-full h-4 bg-gradient-to-r from-[#25D076] to-transparent rounded-bl-3xl"></div>
+                <div className="absolute bottom-0 left-0 w-4 h-full bg-gradient-to-t from-[#25D076] to-transparent rounded-bl-3xl"></div>
               </div>
-              <div className="absolute bottom-6 right-6 w-12 h-12 z-30 pointer-events-none">
-                <div className="absolute bottom-0 right-0 w-full h-3 bg-gradient-to-l from-[#25D076] to-transparent rounded-br-2xl"></div>
-                <div className="absolute bottom-0 right-0 w-3 h-full bg-gradient-to-t from-[#25D076] to-transparent rounded-br-2xl"></div>
+              {/* Bottom Right Corner */}
+              <div className="absolute bottom-4 right-4 w-16 h-16 z-30 pointer-events-none">
+                <div className="absolute bottom-0 right-0 w-full h-4 bg-gradient-to-l from-[#25D076] to-transparent rounded-br-3xl"></div>
+                <div className="absolute bottom-0 right-0 w-4 h-full bg-gradient-to-t from-[#25D076] to-transparent rounded-br-3xl"></div>
               </div>
 
-              {/* Status indicator */}
-              <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-auto z-30">
-                <div className="flex items-center space-x-2 bg-black/95 px-4 py-2 rounded-full shadow-lg">
-                  <div className="w-2 h-2 bg-[#25D076] rounded-full"></div>
+              {/* Status indicator - Mejorado */}
+              <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 pointer-events-auto z-30">
+                <div className="flex items-center space-x-2.5 bg-black/90 backdrop-blur-md px-5 py-2.5 rounded-full shadow-xl border border-[#25D076]/20">
+                  <div className="w-2.5 h-2.5 bg-[#25D076] rounded-full animate-pulse"></div>
                   <span className="text-[#25D076] text-sm font-semibold">
                     Analysiert...
                   </span>
@@ -445,53 +447,73 @@ const SnanerDash = () => {
           )}
         </div>
 
+        {/* Button - Mejorado y centrado */}
         <button
           onClick={handleStartScan}
-          className="bg-[#25D076] text-white px-6 py-4 justify-center w-[305px] rounded-full mt-10 font-bold text-lg 
-                   disabled:opacity-50 shadow-lg flex items-center space-x-3 touch-target tap-highlight-transparent"
+          className="bg-[#25D076] text-white px-8 py-4 rounded-full font-bold text-base 
+                   disabled:opacity-50 flex items-center justify-center space-x-3 
+                   touch-target tap-highlight-transparent hover:bg-[#25D076]/90 active:scale-95 
+                   transition-all duration-200 w-full max-w-[320px]"
           style={{ minHeight: '56px' }}
           aria-label={isScanning ? "Escaneo detener" : "Produkt scannen"}
         >
-          <ScanBarcode className="w-5 h-5" />
-          <span className="text-white font-semibold text-[16px]">
+          <ScanBarcode className="w-5 h-5 flex-shrink-0" />
+          <span className="text-white font-semibold text-base">
             {isScanning ? "Escaneo stoppen" : "Produkt scannen"}
           </span>
         </button>
       </div>
 
-      {/* Success Modal */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl">
-            <div className="w-16 h-16 bg-[#25D076] rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-white" />
+      {/* Success Modal - Mejorado */}
+      {showSuccessModal && scannedProduct && (
+        <div 
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999]"
+          onClick={(e) => {
+            // Cerrar al hacer click fuera del modal
+            if (e.target === e.currentTarget) {
+              handleCloseModal();
+            }
+          }}
+        >
+          <div className="bg-white rounded-3xl p-6 max-w-sm mx-4 text-center shadow-2xl w-full">
+            {/* Icono de éxito animado */}
+            <div className="w-20 h-20 bg-gradient-to-br from-[#25D076] to-[#20B869] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <CheckCircle className="w-10 h-10 text-white" strokeWidth={2.5} />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Erfolgreich!</h3>
-            <p className="text-gray-600 mb-2">
-              {scannedProduct
-                ? `${scannedProduct.name} wurde zum Warenkorb hinzugefügt`
-                : "Produkt erfolgreich gescannt"}
-            </p>
-            {scannedProduct && scannedProduct.store && (
-              <p className="text-sm text-gray-500 mb-4">
-                Weiterleitung zu {scannedProduct.store.name}...
-              </p>
+
+            {/* Título */}
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">Erfolgreich!</h3>
+
+            {/* Imagen del producto */}
+            {scannedProduct.image && (
+              <div className="relative w-32 h-32 mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-gray-100 shadow-md">
+                <Image
+                  src={scannedProduct.image}
+                  alt={scannedProduct.name}
+                  fill
+                  className="object-cover"
+                  sizes="128px"
+                />
+              </div>
             )}
 
-            {/* Dos botones */}
+            {/* Nombre del producto */}
+            <p className="text-lg font-semibold text-gray-900 mb-2 px-2">
+              {scannedProduct.name}
+            </p>
+            <p className="text-sm text-gray-600 mb-1">
+              wurde zum Warenkorb hinzugefügt
+            </p>
+
+            {/* Precio */}
+            <div className="mb-6">
+              <span className="text-xl font-bold text-[#25D076]">
+                CHF {typeof scannedProduct.price === 'number' ? scannedProduct.price.toFixed(2) : scannedProduct.price}
+              </span>
+            </div>
+
+            {/* Botones */}
             <div className="flex flex-col gap-3">
-              <button
-                onClick={() => {
-                  handleCloseModal();
-                  handleStartScan();
-                }}
-                className="bg-[#25D076] text-white px-6 py-4 rounded-full font-semibold hover:bg-[#25D076]/90 
-                         w-full touch-target tap-highlight-transparent"
-                style={{ minHeight: '48px' }}
-                aria-label="Weiter scannen"
-              >
-                Weiter scannen
-              </button>
               <button
                 onClick={() => {
                   handleCloseModal();
@@ -505,13 +527,36 @@ const SnanerDash = () => {
                     router.push('/');
                   }
                 }}
-                className="bg-white text-[#25D076] border-2 border-[#25D076] px-6 py-4 rounded-full font-semibold 
-                         hover:bg-[#25D076] hover:text-white w-full 
-                         touch-target tap-highlight-transparent"
-                style={{ minHeight: '48px' }}
+                className="bg-[#25D076] text-white px-6 py-4 rounded-full font-semibold hover:bg-[#25D076]/90 
+                         active:scale-95 transition-all duration-200 w-full touch-target tap-highlight-transparent
+                         flex items-center justify-center gap-2"
+                style={{ minHeight: '52px' }}
                 aria-label="Warenkorb anzeigen"
               >
-                Warenkorb anzeigen
+                <ShoppingCart className="w-5 h-5" />
+                <span>Zum Warenkorb</span>
+              </button>
+              <button
+                onClick={() => {
+                  handleCloseModal();
+                  // Redirigir a la tienda del producto escaneado para seguir escaneando
+                  if (scannedProduct && scannedProduct.store?.slug) {
+                    router.push(`/store/${scannedProduct.store.slug}/scan`);
+                  } else if (store?.slug) {
+                    router.push(`/store/${store.slug}/scan`);
+                  } else {
+                    // Si no hay tienda, reiniciar el escáner en la misma página
+                    handleStartScan();
+                  }
+                }}
+                className="bg-white text-[#25D076] border-2 border-[#25D076] px-6 py-4 rounded-full font-semibold 
+                         hover:bg-[#25D076]/5 active:scale-95 transition-all duration-200 w-full 
+                         touch-target tap-highlight-transparent flex items-center justify-center gap-2"
+                style={{ minHeight: '52px' }}
+                aria-label="Weiter scannen"
+              >
+                <ScanBarcode className="w-5 h-5" />
+                <span>Weiter scannen</span>
               </button>
             </div>
           </div>

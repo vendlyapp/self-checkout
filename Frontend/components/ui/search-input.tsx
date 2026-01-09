@@ -210,8 +210,8 @@ export function SearchInput({
 
   // Estilo original para Analytics Dashboard
   return (
-    <div className={clsx("relative w-full", className)}>
-      <div className="relative flex items-center h-14 bg-white rounded-full border border-gray-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all duration-200">
+    <div ref={containerRef} className={clsx("relative w-full", className)}>
+      <div className="relative flex items-center h-full bg-white rounded-full border border-gray-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all duration-200">
         {/* Icono de búsqueda */}
         <Search className="absolute left-4 w-5 h-5 text-gray-400 pointer-events-none" />
 
@@ -222,6 +222,11 @@ export function SearchInput({
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
+          onFocus={() => {
+            setIsFocused(true);
+            setShowSuggestions(value.length > 0 || recentSearches.length > 0);
+          }}
+          onBlur={() => setIsFocused(false)}
           placeholder={placeholder}
           className="w-full h-full pl-12 pr-12 text-sm text-gray-900 placeholder-gray-400 bg-transparent focus:outline-none"
         />

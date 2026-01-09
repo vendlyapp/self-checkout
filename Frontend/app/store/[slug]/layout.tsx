@@ -32,6 +32,9 @@ function StoreLayoutContent({ children }: StoreLayoutContentProps) {
   // Determinar si estamos en la página principal de productos (no en cart, payment, etc.)
   const isMainProductsPage = pathname === `/store/${slug}` || pathname === `/store/${slug}/`
   
+  // Determinar si estamos en la página de scan
+  const isScanPage = pathname?.includes('/scan')
+  
   // Determinar el título del HeaderNav según la ruta (solo para páginas que no son la principal)
   const getHeaderNavTitle = (): string | null => {
     if (isMainProductsPage) return null
@@ -46,7 +49,7 @@ function StoreLayoutContent({ children }: StoreLayoutContentProps) {
   }
   
   const headerNavTitle = getHeaderNavTitle()
-  const shouldShowHeaderNav = !isMainProductsPage && headerNavTitle !== null && !pathname?.includes('/scan')
+  const shouldShowHeaderNav = !isMainProductsPage && headerNavTitle !== null && !isScanPage
   
   // Si la tienda está cerrada, ocultar navbar y footer
   const isStoreClosed = store?.isOpen === false
@@ -87,21 +90,21 @@ function StoreLayoutContent({ children }: StoreLayoutContentProps) {
     }
   }, [])
 
-  // Calcular altura total de headers fijos:
+  // Calcular altura total de headers fijos (optimizado para móvil):
   // Solo en la página principal de productos:
   // - HeaderUser: ~85px (con safe area)
-  // - StoreInfoHeader (título tienda + Kontakt): ~60px
-  // - Barra de búsqueda: ~85px (54px + padding)
-  // - Filtros de categorías: ~70px (altura variable)
+  // - StoreInfoHeader (título tienda + Kontakt): ~65px (py-2.5 = 10px + contenido ~55px)
+  // - Barra de búsqueda: ~60px (44px altura input/botón + py-2 = 16px padding total)
+  // - Filtros de categorías: ~60px (altura variable, padding responsive)
   // En otras páginas:
   // - HeaderUser: ~85px (con safe area)
   // - HeaderNav: ~60px (con flecha de navegación)
   const fixedHeadersHeight = isMainProductsPage && store && store.isOpen !== false && storeContext.categoryFilters.length > 0
-    ? 'calc(85px + env(safe-area-inset-top) + 60px + 85px + 70px)'
+    ? 'calc(85px + env(safe-area-inset-top) + 65px + 60px + 60px)'
     : isMainProductsPage && store && store.isOpen !== false
-    ? 'calc(85px + env(safe-area-inset-top) + 60px + 85px)'
+    ? 'calc(85px + env(safe-area-inset-top) + 65px + 60px)'
     : isMainProductsPage && store
-    ? 'calc(85px + env(safe-area-inset-top) + 60px)'
+    ? 'calc(85px + env(safe-area-inset-top) + 65px)'
     : shouldShowHeaderNav
     ? 'calc(85px + env(safe-area-inset-top) + 60px)'
     : 'calc(85px + env(safe-area-inset-top))'
@@ -147,16 +150,20 @@ function StoreLayoutContent({ children }: StoreLayoutContentProps) {
           </div>
         )}
 
-        {/* Contenido principal optimizado para PWA iOS */}
+        {/* Contenido principal optimizado para PWA iOS y móvil */}
         <main
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto overflow-x-hidden relative no-scrollbar ios-scroll-fix"
+          className={`flex-1 overflow-x-hidden relative no-scrollbar ios-scroll-fix ${
+            isScanPage ? 'overflow-y-hidden' : 'overflow-y-auto'
+          }`}
           style={{
-            paddingTop: isStoreClosed ? 0 : fixedHeadersHeight,
-            paddingBottom: isStoreClosed ? 0 : 'calc(100px + env(safe-area-inset-bottom))'
+            paddingTop: isStoreClosed || isScanPage ? 0 : fixedHeadersHeight,
+            paddingBottom: isStoreClosed || isScanPage ? 0 : 'calc(100px + env(safe-area-inset-bottom))',
+            paddingLeft: 'env(safe-area-inset-left, 0px)',
+            paddingRight: 'env(safe-area-inset-right, 0px)',
           }}
         >
-          <div className="w-full">{children}</div>
+          <div className="w-full max-w-full" style={isScanPage ? { height: '100%' } : {}}>{children}</div>
         </main>
 
         {/* Footer de navegación fijo con safe area - ocultar si tienda cerrada */}

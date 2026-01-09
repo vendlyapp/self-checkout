@@ -1847,4 +1847,61 @@
   [id*="qr-reader"] [id*="scan_region"] video {
     border-radius: 1.5rem;
   }
+
+  /* Promotion Slider - Native App Feel */
+  .promotion-slider .swiper-wrapper {
+    display: flex;
+    align-items: stretch;
+  }
+
+  .promotion-slider .swiper-slide {
+    height: auto;
+    display: flex;
+    align-items: stretch;
+  }
+
+  .promotion-slider .swiper-slide > * {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Smooth scrolling for native feel */
+  .promotion-slider {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    /* Solo permite scroll horizontal, no vertical */
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
+  }
+
+  .promotion-slider .swiper {
+    overflow: visible !important;
+    /* Prevenir que el scroll vertical afecte el slider */
+    touch-action: pan-x;
+  }
+
+  .promotion-slider .swiper-wrapper {
+    transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  /* Contenedor de lista de productos - scroll vertical independiente */
+  .promotion-products-list {
+    touch-action: pan-y;
+    overscroll-behavior-y: auto;
+  }
+
+  /* Scan Page - Perfect Centering */
+  .min-h-screen-safe {
+    min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+
+  /* Scanner container improvements */
+  #qr-reader-scanner {
+    border-radius: 1.5rem;
+  }
+
+  #qr-reader-scanner video {
+    border-radius: 1.5rem;
+    object-fit: cover;
+  }
 }
