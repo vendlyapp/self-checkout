@@ -122,9 +122,24 @@ class AuthController {
    */
   async getProfile(req, res) {
     try {
+      console.log(`📋 Obteniendo perfil para usuario: ${req.user?.userId}`);
       const result = await authService.getProfile(req.user.userId);
+      
+      // Agregar storeId si está disponible en req.user
+      if (req.user?.storeId && result.data?.user) {
+        result.data.user.storeId = req.user.storeId;
+      }
+      
+      console.log(`✅ Perfil obtenido exitosamente para: ${req.user?.userId}`);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
+      console.error('❌ Error en getProfile:', {
+        message: error.message,
+        code: error.code,
+        userId: req.user?.userId,
+        stack: error.stack
+      });
+      
       const statusCode = 
         error.message.includes('no encontrado')
           ? HTTP_STATUS.NOT_FOUND

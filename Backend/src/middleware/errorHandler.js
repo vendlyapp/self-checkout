@@ -3,7 +3,16 @@
 const { HTTP_STATUS } = require('../types');
 
 const errorHandler = (err, req, res, next) => {
-  console.error('Error:', err);
+  // Log detallado del error
+  console.error('❌ Error capturado por errorHandler:', {
+    message: err.message,
+    code: err.code,
+    detail: err.detail,
+    name: err.name,
+    stack: err.stack,
+    path: req.path,
+    method: req.method
+  });
 
   // Error de validación
   if (err.name === 'ValidationError') {
@@ -18,16 +27,25 @@ const errorHandler = (err, req, res, next) => {
   if (err.code) {
     // Errores de integridad (23xxx) y sintaxis (42xxx)
     if (err.code.startsWith('23') || err.code.startsWith('42')) {
+      console.error('❌ Error de integridad/sintaxis PostgreSQL:', {
+        code: err.code,
+        message: err.message,
+        detail: err.detail
+      });
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
         error: 'Error de base de datos',
-        details: err.message
+        details: process.env.NODE_ENV === 'development' ? err.message : undefined
       });
     }
     
     // Error fatal de PostgreSQL (XX000) - Internal error
     if (err.code === 'XX000' || err.code === '57P01') {
-      console.error('❌ Error fatal de PostgreSQL:', err.message);
+      console.error('❌ Error fatal de PostgreSQL:', {
+        code: err.code,
+        message: err.message,
+        detail: err.detail
+      });
       return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         error: 'Error de conexión a la base de datos. Por favor, intente nuevamente.',
@@ -37,7 +55,10 @@ const errorHandler = (err, req, res, next) => {
     
     // Error de conexión
     if (err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT') {
-      console.error('❌ Error de conexión:', err.message);
+      console.error('❌ Error de conexión:', {
+        code: err.code,
+        message: err.message
+      });
       return res.status(HTTP_STATUS.SERVICE_UNAVAILABLE).json({
         success: false,
         error: 'Servicio de base de datos no disponible. Por favor, intente nuevamente más tarde.',
@@ -55,9 +76,16 @@ const errorHandler = (err, req, res, next) => {
   }
 
   // Error por defecto
+  console.error('❌ Error no manejado específicamente:', {
+    message: err.message,
+    name: err.name,
+    stack: err.stack
+  });
+  
   res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
     success: false,
-    error: 'Error interno del servidor'
+    error: 'Error interno del servidor',
+    details: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 };
 

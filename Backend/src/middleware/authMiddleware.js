@@ -27,6 +27,8 @@ const supabaseAdmin = createClient(
  */
 const authMiddleware = async (req, res, next) => {
   try {
+    console.log(`🔐 authMiddleware llamado para: ${req.method} ${req.path}`);
+    
     // Obtener token del header Authorization
     const authHeader = req.headers.authorization;
 
@@ -55,6 +57,23 @@ const authMiddleware = async (req, res, next) => {
     let userRole = 'ADMIN'; // Por defecto ADMIN para nuevos usuarios
     let userName = data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'Usuario';
 
+    // Validar que tenemos los datos necesarios
+    if (!data.user.id) {
+      console.error('❌ Error: data.user.id es null o undefined');
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: 'Error al verificar autenticación: ID de usuario no disponible'
+      });
+    }
+
+    if (!data.user.email) {
+      console.error('❌ Error: data.user.email es null o undefined');
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: 'Error al verificar autenticación: Email de usuario no disponible'
+      });
+    }
+
     try {
       const userResult = await query(
         'SELECT name, role FROM "User" WHERE id = $1',
@@ -72,29 +91,89 @@ const authMiddleware = async (req, res, next) => {
         // Obtener role del user_metadata si existe
         const metadataRole = data.user.user_metadata?.role || 'ADMIN';
         
-        await query(
-          `INSERT INTO "User" (id, email, name, role, password) 
-           VALUES ($1, $2, $3, $4, $5) 
-           ON CONFLICT (id) DO NOTHING`,
-          [data.user.id, data.user.email, userName, metadataRole, 'oauth']
-        );
+        // Validar que userName no esté vacío
+        if (!userName || userName.trim() === '') {
+          userName = data.user.email.split('@')[0] || 'Usuario';
+        }
+        
+        console.log(`📝 Creando usuario en BD: id=${data.user.id}, email=${data.user.email}, name=${userName}, role=${metadataRole}`);
+        
+        try {
+          await query(
+            `INSERT INTO "User" (id, email, name, role, password) 
+             VALUES ($1, $2, $3, $4, $5) 
+             ON CONFLICT (id) DO NOTHING`,
+            [data.user.id, data.user.email, userName.trim(), metadataRole, 'oauth']
+          );
+          console.log(`✅ Usuario creado exitosamente en BD: ${data.user.id}`);
+        } catch (insertError) {
+          console.error('❌ Error al insertar usuario en BD:', {
+            message: insertError.message,
+            code: insertError.code,
+            detail: insertError.detail,
+            constraint: insertError.constraint,
+            stack: insertError.stack,
+            userId: data.user.id,
+            email: data.user.email,
+            userName: userName
+          });
+          
+          // Si es un error de duplicado (race condition), continuar
+          if (insertError.code === '23505' || insertError.message.includes('duplicate')) {
+            console.log('⚠️ Usuario ya existe (posible race condition), continuando...');
+            // Intentar obtener el usuario que ya existe
+            try {
+              const existingUser = await query(
+                'SELECT name, role FROM "User" WHERE id = $1',
+                [data.user.id]
+              );
+              if (existingUser.rows.length > 0) {
+                userName = existingUser.rows[0].name;
+                userRole = existingUser.rows[0].role;
+              }
+            } catch (lookupError) {
+              console.error('❌ Error al buscar usuario existente:', lookupError.message);
+            }
+          } else {
+            // Para otros errores (NOT NULL, etc.), re-lanzar para que falle la request
+            throw insertError;
+          }
+        }
 
         userRole = metadataRole;
 
         // Si es ADMIN, crear tienda automáticamente
         if (metadataRole === 'ADMIN') {
           try {
+            console.log(`🏪 Creando tienda para usuario ADMIN: ${data.user.id}`);
             await storeService.create(data.user.id, {
               name: `${userName}'s Store`,
               logo: null
             });
+            console.log(`✅ Tienda creada exitosamente para usuario: ${data.user.id}`);
           } catch (storeError) {
-            console.error('Error al crear tienda:', storeError.message);
+            console.error('❌ Error al crear tienda:', {
+              message: storeError.message,
+              code: storeError.code,
+              detail: storeError.detail,
+              stack: storeError.stack,
+              userId: data.user.id
+            });
+            // No lanzar error, continuar sin tienda (se puede crear después)
           }
         }
       }
     } catch (dbError) {
-      console.error('Error al obtener/crear datos del usuario:', dbError.message);
+      console.error('❌ Error crítico al obtener/crear datos del usuario:', {
+        message: dbError.message,
+        code: dbError.code,
+        detail: dbError.detail,
+        stack: dbError.stack,
+        userId: data.user.id,
+        email: data.user.email
+      });
+      // Re-lanzar el error para que sea manejado por el error handler
+      throw dbError;
     }
 
     // Agregar información del usuario al request
@@ -125,10 +204,27 @@ const authMiddleware = async (req, res, next) => {
     // Continuar con la siguiente función
     next();
   } catch (error) {
-    console.error('Error en authMiddleware:', error);
+    console.error('❌ Error crítico en authMiddleware:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      stack: error.stack,
+      name: error.name
+    });
+    
+    // Si es un error de base de datos relacionado con constraints, proporcionar más información
+    if (error.code && (error.code.startsWith('23') || error.code.startsWith('42'))) {
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: 'Error de base de datos al procesar autenticación',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+    
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
-      error: 'Error al verificar autenticación'
+      error: 'Error al verificar autenticación',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
@@ -173,6 +269,15 @@ const optionalAuth = async (req, res, next) => {
         let userRole = 'ADMIN';
         let userName = data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'Usuario';
 
+        // Validar datos necesarios
+        if (!data.user.id || !data.user.email) {
+          console.error('❌ Error en optionalAuth: datos de usuario incompletos', {
+            hasId: !!data.user.id,
+            hasEmail: !!data.user.email
+          });
+          return next(); // Continuar sin usuario
+        }
+
         try {
           const userResult = await query(
             'SELECT name, role FROM "User" WHERE id = $1',
@@ -186,12 +291,28 @@ const optionalAuth = async (req, res, next) => {
             // Crear usuario si no existe (igual que en authMiddleware)
             const metadataRole = data.user.user_metadata?.role || 'ADMIN';
             
-            await query(
-              `INSERT INTO "User" (id, email, name, role, password) 
-               VALUES ($1, $2, $3, $4, $5) 
-               ON CONFLICT (id) DO NOTHING`,
-              [data.user.id, data.user.email, userName, metadataRole, 'oauth']
-            );
+            // Validar que userName no esté vacío
+            if (!userName || userName.trim() === '') {
+              userName = data.user.email.split('@')[0] || 'Usuario';
+            }
+            
+            try {
+              await query(
+                `INSERT INTO "User" (id, email, name, role, password) 
+                 VALUES ($1, $2, $3, $4, $5) 
+                 ON CONFLICT (id) DO NOTHING`,
+                [data.user.id, data.user.email, userName.trim(), metadataRole, 'oauth']
+              );
+            } catch (insertError) {
+              // En optionalAuth, solo loggear errores pero no fallar
+              if (insertError.code !== '23505' && !insertError.message.includes('duplicate')) {
+                console.error('❌ Error al insertar usuario en optionalAuth:', {
+                  message: insertError.message,
+                  code: insertError.code,
+                  userId: data.user.id
+                });
+              }
+            }
 
             userRole = metadataRole;
 
@@ -202,12 +323,17 @@ const optionalAuth = async (req, res, next) => {
                   logo: null
                 });
               } catch (storeError) {
-                console.error('Error al crear tienda:', storeError.message);
+                console.error('❌ Error al crear tienda en optionalAuth:', storeError.message);
               }
             }
           }
         } catch (dbError) {
-          console.error('Error al obtener/crear datos del usuario:', dbError.message);
+          // En optionalAuth, solo loggear pero continuar
+          console.error('❌ Error al obtener/crear datos del usuario en optionalAuth:', {
+            message: dbError.message,
+            code: dbError.code,
+            userId: data.user.id
+          });
         }
 
         const userPayload = {

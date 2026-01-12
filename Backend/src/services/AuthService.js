@@ -212,16 +212,19 @@ class AuthService {
    */
   async getProfile(userId) {
     try {
+      console.log(`🔍 Buscando perfil en BD para userId: ${userId}`);
       const result = await query(
         'SELECT id, email, name, role, "createdAt", "updatedAt" FROM "User" WHERE id = $1',
         [userId]
       );
 
       if (result.rows.length === 0) {
+        console.error(`❌ Usuario no encontrado en BD: ${userId}`);
         throw new Error('Usuario no encontrado');
       }
 
       const user = result.rows[0];
+      console.log(`✅ Usuario encontrado en BD: ${user.email}, role: ${user.role}`);
 
       return {
         success: true,
@@ -237,6 +240,12 @@ class AuthService {
         }
       };
     } catch (error) {
+      console.error('❌ Error en getProfile service:', {
+        message: error.message,
+        code: error.code,
+        userId: userId,
+        stack: error.stack
+      });
       throw error;
     }
   }
