@@ -128,7 +128,7 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
       )}
 
       {/* Configuración General */}
-      <Card className="bg-card rounded-2xl border border-border/50 transition-all duration-200 hover:shadow-md">
+      <Card className="bg-card rounded-2xl border border-border/50 transition-ios hover:shadow-md">
         <CardHeader className="pb-6">
           <CardTitle className="flex items-center gap-2 text-lg lg:text-xl mb-2 mt-4">
             <Settings className="w-5 h-5 text-brand-600 dark:text-brand-400" />

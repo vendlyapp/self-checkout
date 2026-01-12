@@ -132,7 +132,7 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
   if (!mounted) {
     return (
       <aside className={clsx(
-        "bg-white border-r border-gray-200 transition-all duration-300",
+        "bg-white border-r border-gray-200 transition-ios-slow",
         isMobile ? "fixed inset-y-0 left-0 z-50 w-64" : "relative",
         isCollapsed && !isMobile ? "w-16" : "w-64"
       )}>
@@ -156,7 +156,7 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
       <LogoutModal isOpen={isLoggingOut} />
       
       <aside className={clsx(
-        "bg-white border-r border-gray-200 transition-all duration-300 flex flex-col",
+        "bg-white border-r border-gray-200 transition-ios-slow flex flex-col",
         isMobile ? "fixed inset-y-0 left-0 z-50 w-64" : "relative w-80"
       )}>
       {/* Header del Sidebar */}
@@ -197,7 +197,7 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
                 key={item.id}
                 href={item.href}
                 className={clsx(
-                  "flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200",
+                  "flex items-center gap-4 px-4 py-4 rounded-xl transition-ios",
                   "bg-brand-500 hover:bg-brand-600 text-white font-semibold",
                   "shadow-lg hover:shadow-xl transform hover:scale-105",
                   item.isPressed && "scale-95"
@@ -222,7 +222,7 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
               key={item.id}
               href={item.href}
               className={clsx(
-                "flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200",
+                "flex items-center gap-4 px-4 py-4 rounded-xl transition-ios",
                 "hover:bg-gray-100 hover:shadow-sm",
                 item.isActive && "bg-brand-50 text-brand-700 border-2 border-brand-200 shadow-sm",
                 item.isPressed && "scale-95"
@@ -271,7 +271,7 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
                 key={item.id}
                 href={item.href}
                 className={clsx(
-                  "flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 relative",
+                  "flex items-center gap-3 px-3 py-3 rounded-lg transition-ios relative",
                   "hover:bg-gray-50 hover:shadow-sm",
                   isActive && "bg-brand-50 text-brand-700 border border-brand-200 shadow-sm",
                   isPressed && "scale-95"

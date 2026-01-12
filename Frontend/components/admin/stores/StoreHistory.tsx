@@ -96,7 +96,7 @@ export default function StoreHistory({ store }: StoreHistoryProps) {
   };
 
   return (
-    <Card className="bg-card rounded-2xl border border-border/50 transition-all duration-200 hover:shadow-md">
+    <Card className="bg-card rounded-2xl border border-border/50 transition-ios hover:shadow-md">
       <CardHeader className="px-6 pt-6 pb-4">
         <CardTitle className="flex items-center gap-2 text-lg lg:text-xl mb-2">
           <History className="w-5 h-5 text-brand-600 dark:text-brand-400" />

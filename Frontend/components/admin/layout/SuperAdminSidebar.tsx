@@ -139,7 +139,7 @@ const AppSidebar: React.FC = () => {
               )}
               {(isExpanded || isHovered || isMobileOpen) && (
                   <ChevronDown
-                  className={`ml-auto w-5 h-5 transition-transform duration-200 ${
+                  className={`ml-auto w-5 h-5 transition-ios ${
                     openSubmenu?.type === "main" &&
                     openSubmenu?.index === index
                       ? "rotate-180 text-brand-600"
@@ -176,7 +176,7 @@ const AppSidebar: React.FC = () => {
               ref={(el) => {
                 subMenuRefs.current[`main-${index}`] = el;
               }}
-              className="overflow-hidden transition-all duration-300"
+              className="overflow-hidden transition-ios-slow"
               style={{
                 height:
                   openSubmenu?.type === "main" && openSubmenu?.index === index
@@ -209,7 +209,7 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-ios-slow z-50 border-r border-gray-200 
         ${
           isExpanded || isMobileOpen
             ? "w-[290px]"

@@ -102,7 +102,7 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
               {data.map((method, index) => (
                 <div
                   key={method.type}
-                  className={`h-full transition-all duration-300 hover:opacity-80 ${
+                  className={`h-full transition-ios-slow hover:opacity-80 ${
                     index === 0 ? 'rounded-l-lg' : ''
                   } ${
                     index === data.length - 1 ? 'rounded-r-lg' : ''
@@ -122,7 +122,7 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
             {data.map((method) => (
               <div 
                 key={method.type} 
-                className="flex items-center justify-between group hover:bg-muted/30 -mx-3 px-3 py-3 rounded-xl transition-all duration-200"
+                className="flex items-center justify-between group hover:bg-muted/30 -mx-3 px-3 py-3 rounded-xl transition-ios"
               >
                 <div className="flex items-center gap-4">
                   {/* Rectangular Color indicator */}

@@ -54,7 +54,7 @@ const QuickMetricsWidget = ({ className = '' }: QuickMetricsWidgetProps) => {
       {/* Metrics Grid */}
       <div className="grid grid-cols-2 gap-3">
         {metrics.map((metric, index) => (
-          <div key={index} className="p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors duration-200">
+          <div key={index} className="p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-ios-fast">
             <div className="flex items-start justify-between mb-2">
               <div className={`p-1.5 rounded-lg ${metric.color}`}>
                 <metric.icon className="w-3 h-3" />

@@ -99,7 +99,7 @@ export function SearchInput({
     return (
       <div ref={containerRef} className={clsx("relative w-full", className)}>
         <div className={clsx(
-          "relative flex items-center bg-white rounded-full border transition-all duration-200",
+          "relative flex items-center bg-white rounded-full border transition-ios",
           "focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20",
           isFocused ? "shadow-lg" : "shadow-sm",
           "h-12 lg:h-14"
@@ -131,7 +131,7 @@ export function SearchInput({
           {showFilters && onFilterClick && (
             <button
               onClick={onFilterClick}
-              className="hidden lg:flex absolute right-16 items-center gap-1 px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-150"
+              className="hidden lg:flex absolute right-16 items-center gap-1 px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-ios-fast"
               aria-label="Filter"
             >
               <Filter className="w-3 h-3" />
@@ -143,7 +143,7 @@ export function SearchInput({
           {value && (
             <button
               onClick={handleClear}
-              className="absolute right-12 lg:right-16 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-150"
+              className="absolute right-12 lg:right-16 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-ios-fast"
               aria-label="Suche löschen"
             >
               <X className="w-4 h-4 lg:w-5 lg:h-5" />
@@ -154,7 +154,7 @@ export function SearchInput({
           <button
             onClick={handleSearch}
             className={clsx(
-              "absolute right-2 w-8 h-8 lg:w-10 lg:h-10 bg-brand-500 hover:bg-brand-600 rounded-full flex items-center justify-center transition-all duration-200",
+              "absolute right-2 w-8 h-8 lg:w-10 lg:h-10 bg-brand-500 hover:bg-brand-600 rounded-full flex items-center justify-center transition-ios",
               "shadow-md hover:shadow-lg hover:scale-105"
             )}
             aria-label="Suchen"
@@ -178,7 +178,7 @@ export function SearchInput({
                     <button
                       key={index}
                       onClick={() => handleSuggestionClick(search)}
-                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-150"
+                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-ios-fast"
                     >
                       {search}
                     </button>
@@ -211,7 +211,7 @@ export function SearchInput({
   // Estilo original para Analytics Dashboard
   return (
     <div ref={containerRef} className={clsx("relative w-full", className)}>
-      <div className="relative flex items-center h-full bg-white rounded-full border border-gray-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all duration-200">
+      <div className="relative flex items-center h-full bg-white rounded-full border border-gray-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-ios">
         {/* Icono de búsqueda */}
         <Search className="absolute left-4 w-5 h-5 text-gray-400 pointer-events-none" />
 
@@ -235,7 +235,7 @@ export function SearchInput({
         {value && (
           <button
             onClick={handleClear}
-            className="absolute right-4 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-150"
+            className="absolute right-4 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-ios-fast"
             aria-label="Limpiar búsqueda"
           >
             <X className="w-5 h-5" />

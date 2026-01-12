@@ -39,7 +39,7 @@ const FooterAddCategory: React.FC<FooterAddCategoryProps> = ({
       <div className="p-4">
         <button
           type="button"
-          className={`w-full font-semibold rounded-lg py-3 text-[18px] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all duration-150 ${
+          className={`w-full font-semibold rounded-lg py-3 text-[18px] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-ios-fast ${
             pressed ? "scale-95" : ""
           } ${buttonColorClass}`}
           aria-label={buttonText}

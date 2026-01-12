@@ -39,8 +39,8 @@ export default function ProductsList() {
           {/* Header Section */}
           <div className="flex items-center justify-between gap-6 animate-stagger-1">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight transition-interactive">Produktverwaltung</h1>
-              <p className="text-gray-500 mt-2 text-base transition-interactive">Verwalten Sie Ihre Produkte, Kategorien und Aktionen</p>
+              <h1 className="text-3xl font-bold text-gray-900 tracking-tight transition-ios">Produktverwaltung</h1>
+              <p className="text-gray-500 mt-2 text-base transition-ios">Verwalten Sie Ihre Produkte, Kategorien und Aktionen</p>
             </div>
             <div className="flex items-center gap-4 w-full max-w-md animate-stagger-2">
               <input
@@ -48,20 +48,20 @@ export default function ProductsList() {
                 placeholder="Produkte durchsuchen..."
                 className="flex-1 px-5 py-3.5 bg-white border-2 border-gray-200 rounded-2xl 
                          focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent 
-                         transition-interactive text-base placeholder:text-gray-400
+                         transition-ios text-base placeholder:text-gray-400
                          shadow-sm hover:border-gray-300 hover:shadow-md gpu-accelerated"
               />
               <button
                 onClick={onOpenFilterModal}
                 className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-white border-2 border-gray-200 
-                         hover:border-brand-500 hover:bg-brand-50 transition-interactive gpu-accelerated 
+                         hover:border-brand-500 hover:bg-brand-50 transition-ios gpu-accelerated 
                          active:scale-95 shadow-sm hover:shadow-md"
                 aria-label="Filter öffnen"
               >
-                <SlidersHorizontal className="w-5 h-5 text-gray-700 transition-interactive" />
+                <SlidersHorizontal className="w-5 h-5 text-gray-700 transition-ios" />
                 {activeFiltersCount > 0 && (
                   <div className="absolute -top-1 -right-1 w-5 h-5 bg-brand-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-sm
-                                animate-bounce-in transition-interactive">
+                                animate-bounce-in transition-ios">
                     {activeFiltersCount > 9 ? "9+" : activeFiltersCount}
                   </div>
                 )}

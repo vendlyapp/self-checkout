@@ -92,11 +92,13 @@ class OrderService {
       ? Number(orderPayload.total)
       : total;
 
+    // Extraer storeId y paymentMethod antes de la transacción para usarlos después
+    const storeId = orderPayload.storeId || null;
+    const paymentMethod = orderPayload.paymentMethod || null;
+
     const result = await transaction(async (client) => {
       // Establecer status como 'completed' por defecto ya que el pago se procesa inmediatamente
       const orderStatus = orderPayload.status || 'completed';
-      const paymentMethod = orderPayload.paymentMethod || null;
-      const storeId = orderPayload.storeId || null;
       
       // Preparar metadata como JSONB, incluyendo datos del cliente si están disponibles
       let metadataJson = '{}';
@@ -188,7 +190,15 @@ class OrderService {
     });
 
     // Crear factura automáticamente después de crear la orden
+    console.log('🚀 [OrderService.create] Orden creada exitosamente. Iniciando creación automática de factura...', {
+      orderId: result.order.id,
+      itemsCount: result.items.length,
+      storeId: storeId,
+      total: finalTotal,
+    });
+    
     let createdInvoice = null;
+    let invoiceData = null; // Declarar fuera del try para que esté disponible en el catch
     try {
       // Obtener productos con sus nombres y SKUs para la factura
       const productIds = result.items.map(item => item.productId);
@@ -248,49 +258,33 @@ class OrderService {
 
       // Preparar datos del cliente desde metadata
       const customerData = parsedMetadata.customer || parsedMetadata.customerData || {};
+      
+      console.log('📋 [OrderService.create] Datos del cliente extraídos:', {
+        hasCustomerData: !!customerData && Object.keys(customerData).length > 0,
+        customerName: customerData.name || 'No proporcionado',
+        customerEmail: customerData.email || 'No proporcionado',
+        parsedMetadataKeys: Object.keys(parsedMetadata),
+      });
 
-      // Crear la factura
-      const invoiceData = {
-        orderId: result.order.id,
-        customerName: customerData.name || null,
-        customerEmail: customerData.email || null,
-        customerAddress: customerData.address || null,
-        customerCity: null,
-        customerPostalCode: null,
-        customerPhone: customerData.phone || null,
-        storeId: storeId || null,
-        storeName: storeInfo?.name || parsedMetadata.storeName || null,
-        storeAddress: storeInfo?.address || null,
-        storePhone: storeInfo?.phone || null,
-        storeEmail: storeInfo?.email || null,
-        items: invoiceItems,
-        subtotal: Number(subtotal),
-        discountAmount: Number(discountAmount),
-        taxAmount: Number(taxAmount),
-        total: Number(invoiceTotal),
-        paymentMethod: paymentMethod || null,
-        metadata: {
-          ...parsedMetadata,
-          autoCreated: true,
-          createdAt: new Date().toISOString(),
-        },
-      };
-
-      const invoiceResult = await invoiceService.create(invoiceData);
-      if (invoiceResult.success && invoiceResult.data) {
-        createdInvoice = invoiceResult.data;
-        console.log('✅ Factura creada automáticamente:', {
-          invoiceId: createdInvoice.id,
-          invoiceNumber: createdInvoice.invoiceNumber,
-          orderId: result.order.id,
-        });
-      } else {
-        console.error('❌ Error al crear factura - respuesta sin éxito:', invoiceResult);
-      }
+      // NO crear la factura automáticamente aquí
+      // La factura se creará desde el frontend después de que el usuario decida sobre sus datos
+      console.log('ℹ️ [OrderService.create] Factura se creará desde el frontend después de que el usuario decida sobre sus datos');
+      
+      // Mantener invoiceData como null para indicar que no se creó automáticamente
+      invoiceData = null;
     } catch (invoiceError) {
       // No fallar la orden si hay error al crear la factura
-      console.error('❌ Error al crear factura automáticamente:', invoiceError);
-      console.error('❌ Stack trace:', invoiceError.stack);
+      console.error('❌ [OrderService.create] Error al crear factura automáticamente:', invoiceError);
+      console.error('❌ [OrderService.create] Mensaje de error:', invoiceError.message);
+      console.error('❌ [OrderService.create] Stack trace:', invoiceError.stack);
+      if (invoiceData) {
+        console.error('❌ [OrderService.create] Datos de factura que causaron el error:', JSON.stringify({
+          orderId: invoiceData.orderId,
+          storeId: invoiceData.storeId,
+          customerName: invoiceData.customerName,
+          itemsCount: invoiceData.items?.length,
+        }, null, 2));
+      }
     }
 
     return {
@@ -300,6 +294,7 @@ class OrderService {
         items: result.items,
         invoiceId: createdInvoice?.id || null,
         invoiceNumber: createdInvoice?.invoiceNumber || null,
+        invoiceShareToken: createdInvoice?.shareToken || null, // Agregar shareToken para acceso público
       },
       message: 'Orden creada exitosamente',
     };
@@ -725,6 +720,7 @@ class OrderService {
 
     // Crear factura automáticamente después de crear la orden
     let createdInvoice = null;
+    let invoiceData = null; // Declarar fuera del try para que esté disponible en el catch
     try {
       // Obtener productos con sus nombres y SKUs para la factura
       const productIds = result.items.map(item => item.productId);
@@ -773,10 +769,11 @@ class OrderService {
       // Preparar datos del cliente desde metadata
       const customerData = metadata.customer || metadata.customerData || {};
 
-      // Crear la factura
-      const invoiceData = {
+      // SIEMPRE crear la factura, incluso sin datos del cliente
+      // Si no hay datos del cliente, usar "Gast" (cliente invitado)
+      invoiceData = {
         orderId: result.order.id,
-        customerName: customerData.name || null,
+        customerName: customerData.name || 'Gast', // Cliente invitado si no hay datos
         customerEmail: customerData.email || null,
         customerAddress: customerData.address || null,
         customerCity: null,
@@ -796,25 +793,20 @@ class OrderService {
         metadata: {
           ...metadata,
           autoCreated: true,
+          isGuest: !customerData.name && !customerData.email, // Marcar como invitado si no hay datos
           createdAt: new Date().toISOString(),
         },
       };
 
-      const invoiceResult = await invoiceService.create(invoiceData);
-      if (invoiceResult.success && invoiceResult.data) {
-        createdInvoice = invoiceResult.data;
-        console.log('✅ Factura creada automáticamente:', {
-          invoiceId: createdInvoice.id,
-          invoiceNumber: createdInvoice.invoiceNumber,
-          orderId: result.order.id,
-        });
-      } else {
-        console.error('❌ Error al crear factura - respuesta sin éxito:', invoiceResult);
-      }
+      // NO crear la factura automáticamente aquí
+      // La factura se creará desde el frontend después de que el usuario decida sobre sus datos
+      console.log('ℹ️ [OrderService.createSimple] Factura se creará desde el frontend después de que el usuario decida sobre sus datos');
+      
+      // Mantener invoiceData como null para indicar que no se creó automáticamente
+      invoiceData = null;
     } catch (invoiceError) {
       // No fallar la orden si hay error al crear la factura
-      console.error('❌ Error al crear factura automáticamente:', invoiceError);
-      console.error('❌ Stack trace:', invoiceError.stack);
+      console.error('❌ [OrderService.createSimple] Error:', invoiceError);
     }
 
     return {
@@ -824,6 +816,7 @@ class OrderService {
         items: result.items,
         invoiceId: createdInvoice?.id || null,
         invoiceNumber: createdInvoice?.invoiceNumber || null,
+        invoiceShareToken: createdInvoice?.shareToken || null, // Agregar shareToken para acceso público
       },
       message: 'Orden creada exitosamente'
     };

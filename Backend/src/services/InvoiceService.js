@@ -26,6 +26,13 @@ class InvoiceService {
    * Crea una nueva factura
    */
   async create(invoiceData) {
+    console.log('📝 [InvoiceService.create] Iniciando creación de factura...', {
+      hasOrderId: !!invoiceData?.orderId,
+      orderId: invoiceData?.orderId,
+      itemsCount: invoiceData?.items?.length || 0,
+      customerName: invoiceData?.customerName || 'Gast',
+    });
+    
     const {
       orderId,
       customerName,
@@ -49,10 +56,12 @@ class InvoiceService {
     } = invoiceData;
 
     if (!orderId) {
+      console.error('❌ [InvoiceService.create] Error: El ID de la orden es requerido');
       throw new Error('El ID de la orden es requerido');
     }
 
     if (!items || !Array.isArray(items) || items.length === 0) {
+      console.error('❌ [InvoiceService.create] Error: Los items de la factura son requeridos');
       throw new Error('Los items de la factura son requeridos');
     }
 
@@ -150,6 +159,13 @@ class InvoiceService {
       ]);
 
       return invoiceResult.rows[0];
+    });
+
+    console.log('✅ [InvoiceService.create] Factura creada exitosamente en la base de datos:', {
+      invoiceId: result.id,
+      invoiceNumber: result.invoiceNumber,
+      orderId: result.orderId,
+      storeId: result.storeId,
     });
 
     return {

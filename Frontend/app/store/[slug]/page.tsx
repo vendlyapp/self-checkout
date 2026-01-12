@@ -12,7 +12,9 @@ export default function StoreProductsPage() {
   return (
     <>
       {store && (
-        <DashboardUser />
+        <div className="animate-fade-in gpu-accelerated">
+          <DashboardUser />
+        </div>
       )}
     </>
   )

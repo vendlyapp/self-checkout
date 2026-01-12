@@ -22,7 +22,7 @@ export default function ScanProductPage() {
         onClick={() => router.push('/')}
         className="fixed top-4 left-4 z-50 w-12 h-12 flex items-center justify-center 
                  bg-white rounded-full shadow-lg hover:bg-gray-50 active:scale-95 
-                 transition-all duration-200 touch-target tap-highlight-transparent"
+                 transition-ios touch-target tap-highlight-transparent"
         style={{
           top: 'calc(16px + env(safe-area-inset-top))',
           left: 'calc(16px + env(safe-area-inset-left))',

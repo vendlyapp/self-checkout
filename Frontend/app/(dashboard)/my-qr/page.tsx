@@ -115,18 +115,18 @@ export default function MyQRPage() {
         <div className="p-4 space-y-6 max-w-2xl mx-auto">
           {/* Header */}
           <div className="flex items-center gap-3 animate-stagger-1">
-            <div className="w-14 h-14 bg-brand-500 rounded-2xl flex items-center justify-center transition-interactive gpu-accelerated">
+            <div className="w-14 h-14 bg-brand-500 rounded-2xl flex items-center justify-center transition-ios gpu-accelerated">
               <QrCode className="w-8 h-8 text-white" strokeWidth={2} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 transition-interactive">Mein QR-Code</h1>
-              <p className="text-sm text-gray-500 transition-interactive">Teilen Sie Ihr Geschäft</p>
+              <h1 className="text-2xl font-bold text-gray-900 transition-ios">Mein QR-Code</h1>
+              <p className="text-sm text-gray-500 transition-ios">Teilen Sie Ihr Geschäft</p>
             </div>
           </div>
 
           {/* QR Code Card - Prioridad en móvil */}
           <div className="bg-white rounded-2xl shadow-lg p-6 animate-stagger-2 animate-fade-in-scale">
-            <h2 className="text-lg font-bold text-gray-900 mb-4 transition-interactive">Ihr QR-Code</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4 transition-ios">Ihr QR-Code</h2>
 
             {store.qrCode ? (
               <div className="space-y-4">
@@ -197,7 +197,7 @@ export default function MyQRPage() {
           {/* Store Info Card */}
           <div className="bg-white rounded-2xl shadow-lg p-6 animate-stagger-3 animate-fade-in-scale">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-900 transition-interactive">Geschäftsinfo</h2>
+              <h2 className="text-lg font-bold text-gray-900 transition-ios">Geschäftsinfo</h2>
               {!editing && (
                 <button
                   onClick={() => setEditing(true)}
@@ -296,7 +296,7 @@ export default function MyQRPage() {
 
           {/* Link público */}
           <div className="bg-white rounded-2xl shadow-lg p-6 animate-stagger-4 animate-fade-in-scale">
-            <h2 className="text-lg font-bold text-gray-900 mb-4 transition-interactive">Öffentlicher Link</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4 transition-ios">Öffentlicher Link</h2>
             <div className="bg-gray-50 rounded-xl p-3 font-mono text-xs truncate mb-3" title={getStoreUrl()} suppressHydrationWarning>
               {truncateText(getStoreUrl(), 50)}
             </div>
@@ -313,12 +313,12 @@ export default function MyQRPage() {
           {/* Header */}
           <div className="mb-8 animate-stagger-1">
             <div className="flex items-center gap-4 mb-2">
-              <div className="w-16 h-16 bg-brand-500 rounded-2xl flex items-center justify-center transition-interactive gpu-accelerated">
+              <div className="w-16 h-16 bg-brand-500 rounded-2xl flex items-center justify-center transition-ios gpu-accelerated">
                 <QrCode className="w-9 h-9 text-white" strokeWidth={2} />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 transition-interactive">Mein QR-Code</h1>
-                <p className="text-gray-500 transition-interactive">Verwalten Sie Ihr Geschäft und QR-Code</p>
+                <h1 className="text-3xl font-bold text-gray-900 transition-ios">Mein QR-Code</h1>
+                <p className="text-gray-500 transition-ios">Verwalten Sie Ihr Geschäft und QR-Code</p>
               </div>
             </div>
           </div>
@@ -435,7 +435,7 @@ export default function MyQRPage() {
 
             {/* QR Code */}
             <div className="bg-white rounded-2xl shadow-lg p-6 animate-stagger-3 animate-fade-in-scale">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 transition-interactive">QR-Code</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-6 transition-ios">QR-Code</h2>
 
               {store.qrCode ? (
                 <div className="space-y-6">
@@ -508,7 +508,7 @@ export default function MyQRPage() {
           {/* Link-Vorschau */}
           <div className="bg-white rounded-2xl shadow-lg p-6 animate-stagger-4 animate-fade-in-scale">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900 transition-interactive">Öffentlicher Link</h2>
+              <h2 className="text-xl font-bold text-gray-900 transition-ios">Öffentlicher Link</h2>
               <button
                 onClick={copyStoreUrl}
                 className="flex items-center gap-2 px-4 py-2 text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"

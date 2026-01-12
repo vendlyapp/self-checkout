@@ -75,7 +75,7 @@ const SystemSettingsList = () => (
       <h3 className="font-semibold text-gray-900 mb-4 lg:mb-6 text-lg lg:text-xl">System-Einstellungen</h3>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {settings.map((item) => (
-          <div key={item.title} className="bg-white rounded-xl p-4 lg:p-5 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200">
+          <div key={item.title} className="bg-white rounded-xl p-4 lg:p-5 shadow-sm border border-gray-200 hover:shadow-md transition-ios">
             <NavigationItem
               icon={item.icon}
               title={item.title}

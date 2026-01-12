@@ -145,7 +145,7 @@ export default function ProductsDashboard() {
               value={searchQuery}
               onChange={setSearchQuery}
               onSearch={() => {}}
-              className="w-full"
+              className="w-full h-[54px]"
             />
           </div>
           {/* Tarjetas de Estadísticas */}

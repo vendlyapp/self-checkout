@@ -24,7 +24,7 @@ const ServiceCard = ({ icon, title, subtitle, href }: ServiceCardProps) => {
   return (
     <button
       onClick={handleClick}
-      className={`group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md p-4 lg:p-5 flex flex-col items-start justify-between min-h-[110px] lg:min-h-[120px] focus-visible:ring-2 focus-visible:ring-brand-500 transition-all duration-200 ${pressed ? 'scale-95' : ''}`}
+      className={`group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md p-4 lg:p-5 flex flex-col items-start justify-between min-h-[110px] lg:min-h-[120px] focus-visible:ring-2 focus-visible:ring-brand-500 transition-ios ${pressed ? 'scale-95' : ''}`}
       tabIndex={0}
       aria-label={title}
       type="button"

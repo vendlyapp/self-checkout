@@ -120,10 +120,10 @@ export default function ProductQRPage() {
   // Pantalla de carga
   if (loading && !error) {
     return (
-      <div className="min-h-screen bg-[#F9F6F4] flex items-center justify-center p-4">
-        <div className="text-center">
+      <div className="min-h-screen bg-[#F9F6F4] flex items-center justify-center p-4 animate-fade-in">
+        <div className="text-center animate-scale-in">
           <Loader2 className="w-12 h-12 text-[#25D076] animate-spin mx-auto mb-4" />
-          <p className="text-gray-700 font-medium">Cargando producto...</p>
+          <p className="text-gray-700 font-medium transition-ios">Cargando producto...</p>
         </div>
       </div>
     )
@@ -132,16 +132,16 @@ export default function ProductQRPage() {
   // Pantalla de error
   if (error) {
     return (
-      <div className="min-h-screen bg-[#F9F6F4] flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl">
-          <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+      <div className="min-h-screen bg-[#F9F6F4] flex items-center justify-center p-4 animate-fade-in">
+        <div className="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl animate-scale-in">
+          <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-spring-bounce">
             <XCircle className="w-8 h-8 text-white" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Error</h3>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <h3 className="text-xl font-bold text-gray-900 mb-2 transition-ios">Error</h3>
+          <p className="text-gray-600 mb-6 transition-ios">{error}</p>
           <button
             onClick={() => router.push('/')}
-            className="bg-[#25D076] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#25D076]/90 w-full"
+            className="bg-[#25D076] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#25D076]/90 w-full transition-ios active:scale-95 touch-target"
           >
             Volver al inicio
           </button>
@@ -153,16 +153,16 @@ export default function ProductQRPage() {
   // Pantalla de éxito (se muestra brevemente antes de redirigir)
   if (product) {
     return (
-      <div className="min-h-screen bg-[#F9F6F4] flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl">
-          <div className="w-16 h-16 bg-[#25D076] rounded-full flex items-center justify-center mx-auto mb-4">
+      <div className="min-h-screen bg-[#F9F6F4] flex items-center justify-center p-4 animate-fade-in">
+        <div className="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl animate-spring-bounce">
+          <div className="w-16 h-16 bg-[#25D076] rounded-full flex items-center justify-center mx-auto mb-4 animate-spring-bounce">
             <CheckCircle className="w-8 h-8 text-white" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">¡Éxito!</h3>
-          <p className="text-gray-600 mb-2">
+          <h3 className="text-xl font-bold text-gray-900 mb-2 transition-ios">¡Éxito!</h3>
+          <p className="text-gray-600 mb-2 transition-ios">
             {product.name} fue agregado al carrito
           </p>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-gray-500 mb-4 transition-ios">
             Redirigiendo a la tienda...
           </p>
         </div>

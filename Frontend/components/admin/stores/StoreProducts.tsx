@@ -188,7 +188,7 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
       </div>
 
       {/* Products List */}
-      <Card className="bg-card rounded-2xl border border-border/50 transition-all duration-200 hover:shadow-md">
+      <Card className="bg-card rounded-2xl border border-border/50 transition-ios hover:shadow-md">
         <CardHeader className="px-6 pt-6 pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -242,7 +242,7 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
               {filteredProducts.map((product) => (
                 <div
                   key={product.id}
-                  className="group flex items-center gap-4 p-5 border border-border rounded-xl hover:bg-muted/30 hover:border-brand-300/50 dark:hover:border-brand-500/30 transition-all duration-200"
+                  className="group flex items-center gap-4 p-5 border border-border rounded-xl hover:bg-muted/30 hover:border-brand-300/50 dark:hover:border-brand-500/30 transition-ios"
                 >
                   {/* Product Image */}
                   <div className="flex-shrink-0">

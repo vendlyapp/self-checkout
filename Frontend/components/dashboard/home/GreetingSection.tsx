@@ -152,7 +152,7 @@ const GreetingSection = ({
               disabled={isLoading}
               className={`
                 relative inline-flex h-8 items-center rounded-full
-                transition-all duration-200 ease-in-out
+                transition-ios
                 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2
                 disabled:opacity-50 disabled:cursor-not-allowed
                 ${globalStoreOpen ? 'bg-brand-500' : 'bg-gray-300'}
@@ -166,7 +166,7 @@ const GreetingSection = ({
             >
               <span
                 className={`
-                  absolute left-4 text-xs font-medium text-white transition-all duration-200 ease-in-out
+                  absolute left-4 text-xs font-medium text-white transition-ios
                   ${globalStoreOpen ? 'opacity-100' : 'opacity-0'}
                 `}
               >
@@ -174,7 +174,7 @@ const GreetingSection = ({
               </span>
               <span
                 className={`
-                  absolute right-4 text-xs font-medium text-gray-600 transition-all duration-200 ease-in-out
+                  absolute right-4 text-xs font-medium text-gray-600 transition-ios
                   ${globalStoreOpen ? 'opacity-0' : 'opacity-100'}
                 `}
               >
@@ -240,7 +240,7 @@ const GreetingSection = ({
                 disabled={isLoading}
                 className={`
                   relative inline-flex h-8 items-center rounded-full
-                  transition-all duration-200 ease-in-out
+                  transition-ios
                   focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2
                   disabled:opacity-50 disabled:cursor-not-allowed
                   ${globalStoreOpen ? 'bg-brand-500' : 'bg-gray-300'}
@@ -254,7 +254,7 @@ const GreetingSection = ({
               >
                 <span
                   className={`
-                    absolute left-3 text-xs font-medium text-white transition-all duration-200 ease-in-out
+                    absolute left-3 text-xs font-medium text-white transition-ios
                     ${globalStoreOpen ? 'opacity-100' : 'opacity-0'}
                   `}
                 >
@@ -262,7 +262,7 @@ const GreetingSection = ({
                 </span>
                 <span
                   className={`
-                    absolute right-3 text-xs font-medium text-gray-600 transition-all duration-200 ease-in-out
+                    absolute right-3 text-xs font-medium text-gray-600 transition-ios
                     ${globalStoreOpen ? 'opacity-0' : 'opacity-100'}
                   `}
                 >

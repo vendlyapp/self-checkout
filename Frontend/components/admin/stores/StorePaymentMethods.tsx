@@ -194,7 +194,7 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
                     <button
                       onClick={() => !updatePaymentMethod.isPending && handleToggle(method.id)}
                       disabled={updatePaymentMethod.isPending}
-                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-ios-slow focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
                         method.isActive 
                           ? 'bg-emerald-500 shadow-sm shadow-emerald-500/30' 
                           : 'bg-gray-300 dark:bg-gray-600'
@@ -204,7 +204,7 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
                       aria-label={`Toggle ${method.name}`}
                     >
                       <span
-                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-all duration-300 ease-out ${
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-ios-slow ${
                           method.isActive 
                             ? 'translate-x-6' 
                             : 'translate-x-1'
@@ -243,7 +243,7 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
                     <button
                       onClick={() => !updatePaymentMethod.isPending && handleToggle(method.id)}
                       disabled={updatePaymentMethod.isPending}
-                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-ios-slow focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
                         method.isActive 
                           ? 'bg-emerald-500 shadow-sm shadow-emerald-500/30' 
                           : 'bg-gray-300 dark:bg-gray-600'
@@ -253,7 +253,7 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
                       aria-label={`Toggle ${method.name}`}
                     >
                       <span
-                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-all duration-300 ease-out ${
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-ios-slow ${
                           method.isActive 
                             ? 'translate-x-6' 
                             : 'translate-x-1'

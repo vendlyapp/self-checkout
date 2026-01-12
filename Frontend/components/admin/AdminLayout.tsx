@@ -334,7 +334,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* Contenido principal */}
       <div className={clsx(
-        "flex flex-col flex-1 overflow-hidden transition-all duration-300",
+        "flex flex-col flex-1 overflow-hidden transition-ios-slow",
         isMobile ? "ml-0" : ""
       )}>
         {/* Header - Siempre visible (incluye logo) */}

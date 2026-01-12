@@ -54,7 +54,7 @@ const RecentSalesSection = ({ sales }: RecentSalesSectionProps) => {
         <div className="mt-4 pt-4 border-t border-gray-100">
           <button
             onClick={() => setShowAll(!showAll)}
-            className="flex items-center justify-center gap-2 w-full text-sm text-brand-600 hover:text-brand-700 font-medium transition-colors duration-200 py-2 rounded-lg hover:bg-gray-50"
+            className="flex items-center justify-center gap-2 w-full text-sm text-brand-600 hover:text-brand-700 font-medium transition-ios-fast py-2 rounded-lg hover:bg-gray-50"
           >
             <span>
               {showAll 
@@ -74,7 +74,7 @@ const RecentSalesSection = ({ sales }: RecentSalesSectionProps) => {
       {/* Footer con acción para desktop - solo si no hay botón "Ver más" */}
       {!hasMoreSales && (
         <div className="hidden lg:block mt-4 pt-4 border-t border-gray-100">
-          <button className="flex items-center gap-2 text-sm text-brand-600 hover:text-brand-700 font-medium transition-colors duration-200">
+          <button className="flex items-center gap-2 text-sm text-brand-600 hover:text-brand-700 font-medium transition-ios-fast">
             <span>Alle Verkäufe anzeigen</span>
             <ChevronRight className="w-4 h-4" />
           </button>

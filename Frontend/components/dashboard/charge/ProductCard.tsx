@@ -213,7 +213,7 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
     }
 
     return (
-      <div className="bg-white rounded-xl p-3 flex items-center gap-3 shadow-sm">
+      <div className="bg-white rounded-xl p-3 flex items-center gap-3 shadow-sm transition-ios hover:shadow-md active:scale-[0.98]">
         {/* Imagen del producto */}
         <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-lg overflow-hidden bg-gray-50 flex-shrink-0">
           {product.image ? (
@@ -254,7 +254,7 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={() => handleQuantityChange(cartQuantity - 1)}
-            className="w-8 h-8 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-white flex items-center justify-center"
+            className="w-8 h-8 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-white flex items-center justify-center transition-ios-fast active:scale-90"
             disabled={cartQuantity <= 0}
           >
             <Minus className="w-4 h-4" strokeWidth={3.5} />
@@ -265,7 +265,7 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
           <button
             onClick={() => handleQuantityChange(cartQuantity + 1)}
             disabled={cartQuantity >= cartProduct.stock}
-            className="w-9 h-9 rounded-full bg-[#25D076] hover:bg-[#25D076]/80 disabled:bg-[#25D076]/50 disabled:cursor-not-allowed text-white flex items-center justify-center"
+            className="w-9 h-9 rounded-full bg-[#25D076] hover:bg-[#25D076]/80 disabled:bg-[#25D076]/50 disabled:cursor-not-allowed text-white flex items-center justify-center transition-ios-fast active:scale-90"
           >
             <Plus className="w-5 h-5" strokeWidth={3.5} />
           </button>
@@ -276,7 +276,7 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
 
   return (
     <div className="bg-white rounded-[20px] lg:rounded-xl h-[130px] lg:h-[140px] p-4 lg:p-4 relative 
-                    shadow-sm lg:border lg:border-gray-100">
+                    shadow-sm lg:border lg:border-gray-100 transition-ios hover:shadow-md active:scale-[0.98]">
       {/* Badge de precio - usar currentProduct para mostrar precio de la variante seleccionada */}
       <div className="absolute top-3 right-3 lg:top-3 lg:right-3">
         {currentProduct.originalPrice ? (
@@ -365,7 +365,7 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
                 <>
                   <button
                     onClick={() => handleQuantityChange(currentQuantity - 1)}
-                    className="w-8 h-8 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-white flex items-center justify-center transition-all duration-200"
+                    className="w-8 h-8 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-white flex items-center justify-center transition-ios"
                     disabled={currentQuantity <= 0}
                   >
                     <Minus className="w-4 h-4" strokeWidth={3.5} />
@@ -378,7 +378,7 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
               <button
                 onClick={() => handleQuantityChange(currentQuantity + 1)}
                 disabled={currentQuantity >= currentProduct.stock}
-                className="w-9 h-9 rounded-full bg-[#25D076] hover:bg-[#25D076]/80 disabled:bg-[#25D076]/50 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all duration-200 shadow-sm"
+                className="w-9 h-9 rounded-full bg-[#25D076] hover:bg-[#25D076]/80 disabled:bg-[#25D076]/50 disabled:cursor-not-allowed text-white flex items-center justify-center transition-ios shadow-sm"
               >
                 <Plus className="w-5 h-5 text-white font-bold" strokeWidth={3.5} />
               </button>
@@ -446,7 +446,7 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
                 <>
                   <button
                     onClick={() => handleQuantityChange(currentQuantity - 1)}
-                    className="w-8 h-8 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-white flex items-center justify-center transition-all duration-200"
+                    className="w-8 h-8 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-white flex items-center justify-center transition-ios-fast active:scale-90"
                     disabled={currentQuantity <= 0}
                   >
                     <Minus className="w-4 h-4" strokeWidth={3.5} />
@@ -459,7 +459,7 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
               <button
                 onClick={() => handleQuantityChange(currentQuantity + 1)}
                 disabled={currentQuantity >= currentProduct.stock}
-                className="w-9 h-9 rounded-full bg-[#25D076] hover:bg-[#25D076]/80 disabled:bg-[#25D076]/50 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all duration-200 shadow-sm"
+                className="w-9 h-9 rounded-full bg-[#25D076] hover:bg-[#25D076]/80 disabled:bg-[#25D076]/50 disabled:cursor-not-allowed text-white flex items-center justify-center transition-ios-fast active:scale-90 shadow-sm"
               >
                 <Plus className="w-5 h-5 text-white font-bold" strokeWidth={3.5} />
               </button>
@@ -472,7 +472,7 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
       {showVariantOptions && dropdownPosition && typeof window !== 'undefined' && createPortal(
         <div
           ref={isMobile ? dropdownRefMobile : dropdownRefDesktop}
-          className="fixed bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-[99999] min-w-[200px] max-w-[280px] lg:min-w-[220px] lg:max-w-[300px] max-h-48 overflow-y-auto"
+          className="fixed bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-[99999] min-w-[200px] max-w-[280px] lg:min-w-[220px] lg:max-w-[300px] max-h-48 overflow-y-auto animate-scale-in"
           style={{
             top: isMobile ? `${dropdownPosition.top}px` : `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,

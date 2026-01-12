@@ -75,7 +75,7 @@ const CartGauge: React.FC<CartGaugeProps> = ({
   const currentPeriodLabel = periodOptions.find(option => option.value === period)?.label || 'Heute';
 
   return (
-    <Card className="bg-card rounded-2xl border border-border/50 transition-all duration-200 hover:shadow-md">
+    <Card className="bg-card rounded-2xl border border-border/50 transition-ios hover:shadow-md">
       <CardContent className="p-5 lg:p-6">
         <div className="flex justify-between items-center mb-4 lg:mb-6">
           <h3 className="text-lg lg:text-xl font-semibold text-foreground">Ø Warenkorb</h3>
@@ -84,11 +84,11 @@ const CartGauge: React.FC<CartGaugeProps> = ({
           <div className="relative">
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-1 text-sm lg:text-base text-muted-foreground hover:text-foreground transition-all duration-200 px-2 py-1 lg:px-3 lg:py-2 rounded-lg hover:bg-muted tap-highlight-transparent"
+              className="flex items-center gap-1 text-sm lg:text-base text-muted-foreground hover:text-foreground transition-ios px-2 py-1 lg:px-3 lg:py-2 rounded-lg hover:bg-muted tap-highlight-transparent"
               aria-label="Zeitraum für Warenkorb ändern"
             >
               {currentPeriodLabel}
-              <ChevronDown className={`w-4 h-4 lg:w-5 lg:h-5 transition-all duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-4 h-4 lg:w-5 lg:h-5 transition-ios ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isDropdownOpen && (
@@ -97,7 +97,7 @@ const CartGauge: React.FC<CartGaugeProps> = ({
                   <button
                     key={option.value}
                     onClick={() => handlePeriodSelect(option.value)}
-                    className={`w-full text-left px-3 py-2 lg:px-4 lg:py-2.5 text-sm lg:text-base hover:bg-muted transition-all duration-200 ${
+                    className={`w-full text-left px-3 py-2 lg:px-4 lg:py-2.5 text-sm lg:text-base hover:bg-muted transition-ios ${
                       period === option.value ? 'text-primary font-medium' : 'text-foreground'
                     }`}
                   >

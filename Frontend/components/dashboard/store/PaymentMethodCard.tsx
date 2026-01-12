@@ -10,7 +10,7 @@ interface PaymentMethodCardProps {
 
 const PaymentMethodCard = ({ method, onToggle, isLoading = false }: PaymentMethodCardProps) => {
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 active:scale-[0.98] gpu-accelerated">
+    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-ios active:scale-[0.98] gpu-accelerated">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4 flex-1 min-w-0">
           {/* Icon */}
@@ -30,7 +30,7 @@ const PaymentMethodCard = ({ method, onToggle, isLoading = false }: PaymentMetho
         <button
           onClick={() => !isLoading && onToggle(method.id)}
           disabled={isLoading}
-          className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={`relative inline-flex h-7 w-12 items-center rounded-full transition-ios-slow focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
             method.isActive 
               ? 'bg-[#25D076] shadow-sm shadow-[#25D076]/30' 
               : 'bg-gray-300'
@@ -41,7 +41,7 @@ const PaymentMethodCard = ({ method, onToggle, isLoading = false }: PaymentMetho
           aria-disabled={isLoading}
         >
           <span
-            className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-all duration-300 ease-out ${
+            className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-ios-slow ${
               method.isActive 
                 ? 'translate-x-6 scale-100' 
                 : 'translate-x-1 scale-100'

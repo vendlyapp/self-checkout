@@ -125,7 +125,7 @@ export default function Slider() {
         >
           {sliderData.map((item, index) => (
             <SwiperSlide key={index}>
-              <div className="bg-white rounded-2xl p-3 transition-all duration-300 cursor-pointer transform active:scale-95 hover:scale-105 touch-manipulation w-[87px] h-[112px]">
+              <div className="bg-white rounded-2xl p-3 transition-ios-slow cursor-pointer transform active:scale-95 hover:scale-105 touch-manipulation w-[87px] h-[112px]">
                 <div className="flex flex-col items-center space-y-2">
                   <div
                     className={`${item.color} p-2 rounded-xl shadow-sm w-[48px] h-[48px] flex items-center justify-center`}
@@ -148,7 +148,7 @@ export default function Slider() {
           {sliderData.map((item, index) => (
             <div
               key={index}
-              className="group bg-white rounded-xl p-4 transition-all duration-300 cursor-pointer hover:shadow-md hover:scale-[1.02] border border-gray-100 hover:border-gray-200"
+              className="group bg-white rounded-xl p-4 transition-ios-slow cursor-pointer hover:shadow-md hover:scale-[1.02] border border-gray-100 hover:border-gray-200"
             >
               <div className="flex items-start gap-3">
                 {/* Icono */}
@@ -173,7 +173,7 @@ export default function Slider() {
               <div className="mt-3 flex items-center justify-between">
                 <div className="w-full bg-gray-100 rounded-full h-1">
                   <div
-                    className={`${item.color.replace('bg-', 'bg-').replace('-500', '-300')} h-1 rounded-full transition-all duration-300 group-hover:w-3/4`}
+                    className={`${item.color.replace('bg-', 'bg-').replace('-500', '-300')} h-1 rounded-full transition-ios-slow group-hover:w-3/4`}
                     style={{ width: '0%' }}
                   />
                 </div>

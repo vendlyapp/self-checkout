@@ -106,7 +106,7 @@ export default function SuperAdminPlatformOverview({
             <Link
               key={item.id}
               href={item.href}
-              className="group flex items-center justify-between py-2.5 px-3 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-all duration-200 dark:border-gray-800 dark:hover:border-gray-700 dark:hover:bg-gray-800/50 cursor-pointer"
+              className="group flex items-center justify-between py-2.5 px-3 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-ios dark:border-gray-800 dark:hover:border-gray-700 dark:hover:bg-gray-800/50 cursor-pointer"
             >
               <div className="flex items-center space-x-4">
                 <div

@@ -57,7 +57,7 @@ export default function StoreCartPage() {
               {slug && (
                 <button
                   onClick={() => router.push(`/store/${slug}`)}
-                  className="inline-flex items-center gap-2 bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-xl px-6 py-3 transition-all duration-200 shadow-lg shadow-[#25D076]/20 active:scale-[0.98] touch-target"
+                  className="inline-flex items-center gap-2 bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-xl px-6 py-3 transition-ios shadow-lg shadow-[#25D076]/20 active:scale-[0.98] touch-target"
                 >
                   <ChevronRight className="w-5 h-5" />
                   Produkte anzeigen

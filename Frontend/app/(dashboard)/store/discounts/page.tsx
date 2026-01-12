@@ -68,10 +68,10 @@ export default function DiscountsPage() {
       {isDesktop && (
         <div className="p-6 space-y-6 max-w-6xl mx-auto">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight transition-interactive">
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight transition-ios">
               Rabatte & Codes
             </h1>
-            <p className="text-gray-500 mt-2 text-base transition-interactive">
+            <p className="text-gray-500 mt-2 text-base transition-ios">
               Verwalten Sie Ihre Rabattcodes und Angebote
             </p>
           </div>

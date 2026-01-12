@@ -49,14 +49,14 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
   } = data;
 
   return (
-    <div className="bg-card border border-border/50 transition-all duration-200 hover:shadow-md w-full max-w-md lg:max-w-none rounded-xl">
+    <div className="bg-card border border-border/50 transition-ios hover:shadow-md w-full max-w-md lg:max-w-none rounded-xl">
       <div className="p-5 lg:p-6">
         <div className="flex justify-between items-center mb-4 lg:mb-6">
           <h3 className="text-lg lg:text-xl font-semibold text-foreground">
             Jetzt im Shop:
           </h3>
           <button
-            className="p-1 lg:p-2 rounded-lg hover:bg-muted transition-all duration-200 tap-highlight-transparent"
+            className="p-1 lg:p-2 rounded-lg hover:bg-muted transition-ios tap-highlight-transparent"
             aria-label="Mehr Details anzeigen"
           >
             <ChevronRight className="w-5 h-5 lg:w-6 lg:h-6 text-muted-foreground" />
@@ -75,7 +75,7 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
                 {activeCustomers.slice(0, 2).map((customer, idx) => (
                   <div
                     key={customer.id}
-                    className="w-10 h-10 lg:w-14 lg:h-14 rounded-full border-2 border-white bg-muted flex items-center justify-center text-sm lg:text-lg font-medium relative shadow-sm hover:shadow-md transition-shadow duration-200"
+                    className="w-10 h-10 lg:w-14 lg:h-14 rounded-full border-2 border-white bg-muted flex items-center justify-center text-sm lg:text-lg font-medium relative shadow-sm hover:shadow-md transition-ios"
                     style={{ zIndex: idx + 1 }}
                     title={customer.name}
                   >

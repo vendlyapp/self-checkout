@@ -48,7 +48,7 @@ const WelcomeAuth: React.FC = () => {
             onClick={handleLogin}
             className="w-full bg-brand-500 hover:bg-brand-600 text-white rounded-xl sm:rounded-2xl px-5 sm:px-6 py-3 sm:py-4 
                      font-semibold text-base sm:text-lg flex items-center justify-center gap-2 sm:gap-3 
-                     transition-all duration-200 shadow-lg shadow-brand-500/30 hover:shadow-xl
+                     transition-ios shadow-lg shadow-brand-500/30 hover:shadow-xl
                      hover:scale-[1.02] active:scale-[0.98]
                      focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
             aria-label="Anmelden"
@@ -74,7 +74,7 @@ const WelcomeAuth: React.FC = () => {
             onClick={() => router.push('/scan')}
             className="w-full bg-white hover:bg-gray-50 text-gray-900 rounded-xl sm:rounded-2xl px-5 sm:px-6 py-3 sm:py-4 
                      font-semibold text-base sm:text-lg flex items-center justify-center gap-2 sm:gap-3 
-                     transition-all duration-200 border-2 border-gray-200 hover:border-[#25D076]
+                     transition-ios border-2 border-gray-200 hover:border-[#25D076]
                      hover:scale-[1.02] active:scale-[0.98]
                      focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:ring-offset-2"
             aria-label="Produkt scannen"

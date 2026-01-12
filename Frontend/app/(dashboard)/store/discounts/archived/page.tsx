@@ -78,10 +78,10 @@ export default function ArchivedDiscountsPage() {
               <ArrowLeft className="w-5 h-5" />
               <span>Zurück zu Rabatte & Codes</span>
             </button>
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight transition-interactive">
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight transition-ios">
               Archivierte Codes
             </h1>
-            <p className="text-gray-500 mt-2 text-base transition-interactive">
+            <p className="text-gray-500 mt-2 text-base transition-ios">
               Verwalten Sie Ihre archivierten Rabattcodes
             </p>
           </div>

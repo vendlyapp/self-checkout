@@ -42,7 +42,7 @@ interface PaymentMethodDisplay {
   methodData?: { id: string; name: string; displayName: string; code: string; bgColor?: string | null; textColor?: string | null; [key: string]: unknown };
 }
 
-type PaymentStep = "confirm" | "processing" | "success" | "askData" | "personal" | "invoice" | "additional" | "completing";
+type PaymentStep = "confirm" | "processing" | "success" | "askData" | "personal" | "viewInvoice" | "completing";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -90,6 +90,11 @@ interface PaymentModalProps {
   setPersonalData?: (data: { name: string; email: string; address: string; phone: string }) => void;
   onSaveCustomerData?: (data: { name: string; email: string; address: string; phone: string }) => void;
   createdInvoiceId?: string | null;
+  createdInvoiceShareToken?: string | null;
+  createdOrderId?: string | null;
+  onViewInvoice?: () => void;
+  onSkipViewInvoice?: () => void;
+  onCreateInvoice?: (data?: { name: string; email: string; address: string; phone: string }) => Promise<void>;
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -116,6 +121,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   setPersonalData: setExternalPersonalData,
   onSaveCustomerData,
   createdInvoiceId,
+  createdInvoiceShareToken,
+  createdOrderId,
+  onViewInvoice,
+  onSkipViewInvoice,
+  onCreateInvoice,
 }) => {
   const [modalContainer, setModalContainer] = useState<HTMLElement | null>(null);
   const [invoiceOption, setInvoiceOption] = useState<'none' | 'print' | 'email' | 'phone' | 'full'>('none');
@@ -146,6 +156,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         document.body.appendChild(container);
       }
       setModalContainer(container);
+      
+      // Cleanup: no remover el contenedor, solo limpiar cuando el componente se desmonte
+      return () => {
+        // No hacer nada aquí - el contenedor se mantiene para otros modales
+      };
     }
   }, []);
 
@@ -195,13 +210,13 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       }}
     >
       <div 
-        className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+        className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden gpu-accelerated"
         onClick={(e) => e.stopPropagation()}
       >
         {paymentStep === "confirm" && (
           <>
-            {/* Header con flecha atrás */}
-            <div className="flex items-center gap-3 p-4 border-b border-gray-200 bg-white sticky top-0 z-10">
+            {/* Header unificado con diseño consistente */}
+            <div className="flex items-center gap-3 p-5 border-b border-gray-200 bg-white sticky top-0 z-10">
               <button
                 onClick={() => {
                   lightHaptic();
@@ -211,12 +226,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     onClose();
                   }
                 }}
-                className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 rounded-full transition-all duration-150 active:scale-95 touch-target"
+                className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 rounded-full transition-ios-fast active:scale-95 touch-target"
                 aria-label="Zurück"
               >
                 <ArrowLeft className="w-6 h-6 text-gray-700" />
               </button>
-              <h2 className="text-xl font-semibold text-gray-800 flex-1">
+              <h2 className="text-xl font-bold text-gray-900 flex-1">
                 Zahlung bestätigen
               </h2>
               <button
@@ -224,10 +239,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   lightHaptic();
                   onClose();
                 }}
-                className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 rounded-full transition-all duration-150 active:scale-95 touch-target"
+                className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 rounded-full transition-ios-fast active:scale-95 touch-target"
                 aria-label="Schließen"
               >
-                <X className="w-5 h-5 text-gray-700" />
+                <X className="w-6 h-6 text-gray-700" />
               </button>
             </div>
 
@@ -329,20 +344,20 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               )}
             </div>
 
-            {/* Botón CTA Principal - Fixed en la parte inferior */}
-            <div className="p-4 border-t border-gray-200 bg-white sticky bottom-0">
+            {/* Botón CTA Principal - Estilo unificado */}
+            <div className="p-5 border-t border-gray-200 bg-white sticky bottom-0">
               <button
                 onClick={() => {
                   mediumHaptic();
                   onConfirm();
                 }}
                 disabled={isProcessing}
-                className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-xl py-4 text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#25D076]/20 active:scale-[0.98] active:shadow-md touch-target"
+                className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-2xl py-4 text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#25D076]/25 active:scale-[0.97] active:shadow-md touch-target"
                 style={{ minHeight: '56px' }}
               >
                 {isProcessing ? (
                   <span className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Verarbeitung...
                   </span>
                 ) : (
@@ -355,9 +370,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
         {paymentStep === "processing" && (
           <>
-            <div className="flex-1 flex flex-col items-center justify-center py-12 px-6">
-              {/* Animación de loading */}
-              <div className="relative w-32 h-32 mx-auto mb-6">
+            <div className="flex-1 flex flex-col items-center justify-center py-16 px-6">
+              {/* Animación de loading - Más sutil */}
+              <div className="relative w-28 h-28 mx-auto mb-8">
                 <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
                 <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#25D076] animate-spin"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -368,95 +383,109 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 </div>
               </div>
               
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">
+              <h3 className="text-2xl font-bold text-gray-900 mb-3 text-center">
                 Zahlung wird verarbeitet...
               </h3>
               <p className="text-2xl font-bold text-[#25D076] mb-6">
                 CHF {formatPrice(totalAmount)}
               </p>
               
-              {/* Progress bar */}
-              <div className="w-4/5 max-w-xs mb-6">
+              {/* Progress bar - Sin animación de pulso */}
+              <div className="w-4/5 max-w-xs mb-8">
                 <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                   <div className="h-full bg-gradient-to-r from-[#25D076] via-[#20B865] to-[#25D076] rounded-full w-full"></div>
                 </div>
               </div>
               
-              <p className="text-sm text-gray-500 text-center">
+              <p className="text-base text-gray-600 text-center max-w-xs">
                 Bitte schließen Sie dieses Fenster nicht
               </p>
             </div>
           </>
         )}
 
-        {/* Paso 3: Éxito - Solo muestra confirmación breve */}
+        {/* Paso 3: Éxito - Diseño unificado */}
         {paymentStep === "success" && (
           <>
-            <div className="flex-1 flex flex-col items-center justify-center py-12 px-6">
-              {/* Icono de éxito */}
-              <div className="w-20 h-20 bg-[#25D076] rounded-full flex items-center justify-center shadow-lg shadow-[#25D076]/30 mb-6">
+            <div className="flex-1 flex flex-col items-center justify-center py-16 px-6">
+              {/* Icono de éxito - Sin animación excesiva */}
+              <div className="w-28 h-28 bg-gradient-to-br from-[#25D076] to-[#20B865] rounded-3xl flex items-center justify-center shadow-lg shadow-[#25D076]/25 mb-8">
                 <CheckCircle className="w-12 h-12 text-white" strokeWidth={2.5} />
               </div>
               
-              <h3 className="text-2xl font-semibold text-gray-800 mb-2">
+              <h3 className="text-2xl font-bold text-gray-900 mb-3 text-center">
                 Zahlung erfolgreich!
               </h3>
-              <p className="text-xl font-bold text-[#25D076] mb-4">
+              <p className="text-2xl font-bold text-[#25D076] mb-2">
                 CHF {formatPrice(totalAmount)}
               </p>
-              <p className="text-sm text-gray-600 text-center mb-6">
+              <p className="text-base text-gray-600 text-center mb-8 max-w-xs">
                 Ihre Bestellung wurde erfolgreich verarbeitet
               </p>
 
-              {/* Botón para ver factura si existe */}
-              {createdInvoiceId && (
+              {/* Botón para continuar - El usuario debe hacer clic */}
+              <div className="w-full max-w-xs">
                 <button
                   onClick={() => {
                     mediumHaptic();
-                    const invoiceUrl = `/invoice/${createdInvoiceId}`;
-                    window.open(invoiceUrl, '_blank');
+                    onStepChange?.("askData");
                   }}
-                  className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-[#25D076] text-[#25D076] font-semibold rounded-xl hover:bg-[#25D076]/5 active:bg-[#25D076]/10 transition-all duration-200 shadow-md active:scale-[0.98] touch-target"
+                  className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-2xl py-4 text-base transition-colors shadow-lg shadow-[#25D076]/25 active:scale-[0.97] active:shadow-md touch-target"
+                  style={{ minHeight: '56px' }}
                 >
-                  <FileText className="w-5 h-5" />
-                  Rechnung anzeigen
+                  Weiter
                 </button>
-              )}
+              </div>
             </div>
           </>
         )}
 
-        {/* Paso 3.5: ¿Quiere dar sus datos? */}
+        {/* Paso 3.5: ¿Quiere dar sus datos? - Diseño unificado */}
         {paymentStep === "askData" && (
           <>
-            <div className="flex-1 flex flex-col items-center justify-center py-12 px-6">
-              <div className="w-20 h-20 bg-[#25D076] rounded-full flex items-center justify-center mb-6 shadow-lg shadow-[#25D076]/20">
-                <CheckCircle className="w-12 h-12 text-white" strokeWidth={2.5} />
+            <div className="flex-1 flex flex-col items-center justify-center py-16 px-6">
+              {/* Icono - Sin animación excesiva */}
+              <div className="w-28 h-28 bg-gradient-to-br from-[#25D076]/20 to-[#20B865]/10 rounded-3xl flex items-center justify-center mb-8 shadow-lg shadow-[#25D076]/10">
+                <CheckCircle className="w-12 h-12 text-[#25D076]" strokeWidth={2.5} />
               </div>
-              <h3 className="text-2xl font-semibold text-gray-800 mb-3 text-center">
+              
+              <h3 className="text-2xl font-bold text-gray-900 mb-3 text-center">
                 Möchten Sie Ihre Daten angeben?
               </h3>
-              <p className="text-base text-gray-600 text-center mb-8 max-w-sm">
+              <p className="text-base text-gray-600 text-center mb-8 max-w-xs">
                 Ihre Daten helfen uns, Ihnen bessere Service zu bieten und Ihre Rechnung zu erstellen.
               </p>
               
+              {/* Botones - Sin animaciones de entrada */}
               <div className="w-full max-w-xs space-y-3">
                 <button
                   onClick={() => {
                     mediumHaptic();
                     onStepChange?.("personal");
                   }}
-                  className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-xl py-4 text-base transition-all duration-200 shadow-lg shadow-[#25D076]/20 active:scale-[0.98] active:shadow-md touch-target"
+                  className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-2xl py-4 text-base transition-colors shadow-lg shadow-[#25D076]/25 active:scale-[0.97] active:shadow-md touch-target"
                   style={{ minHeight: '56px' }}
                 >
                   Ja, gerne
                 </button>
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     lightHaptic();
-                    onStepChange?.("additional");
+                    
+                    // Crear factura como invitado (sin datos del cliente)
+                    if (onCreateInvoice) {
+                      try {
+                        await onCreateInvoice();
+                      } catch (error) {
+                        console.error('Error al crear factura:', error);
+                        // Continuar de todas formas
+                      }
+                    }
+                    
+                    // Ir al paso final de ver factura
+                    onStepChange?.("viewInvoice");
                   }}
-                  className="w-full bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 font-semibold rounded-xl py-4 text-base transition-all duration-200 border-2 border-gray-200 active:scale-[0.98] active:border-gray-300 touch-target"
+                  className="w-full bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 font-semibold rounded-2xl py-4 text-base transition-colors border-2 border-gray-200 active:scale-[0.97] active:border-gray-300 touch-target"
                   style={{ minHeight: '56px' }}
                 >
                   Weiter ohne Daten
@@ -466,18 +495,18 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           </>
         )}
 
-        {/* Paso 4: Datos Personales */}
+        {/* Paso 4: Datos Personales - Header unificado */}
         {paymentStep === "personal" && (
           <>
-            <div className="flex items-center gap-3 p-4 border-b border-gray-200 bg-white">
+            <div className="flex items-center gap-3 p-5 border-b border-gray-200 bg-white sticky top-0 z-10">
               <button
                 onClick={() => onStepChange?.("askData")}
-                className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
+                className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 rounded-full transition-ios-fast active:scale-95 touch-target"
                 aria-label="Zurück"
               >
-                <ArrowLeft className="w-5 h-5 text-gray-700" />
+                <ArrowLeft className="w-6 h-6 text-gray-700" />
               </button>
-              <h2 className="text-xl font-semibold text-gray-800 flex-1">
+              <h2 className="text-xl font-bold text-gray-900 flex-1">
                 Ihre Kontaktdaten
               </h2>
             </div>
@@ -487,9 +516,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 Bitte geben Sie Ihre Kontaktdaten ein
               </p>
 
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
                     Name *
                   </label>
                   <input
@@ -500,11 +529,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       setPersonalData(newData);
                     }}
                     placeholder="Max Mustermann"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white transition-all duration-200 hover:border-gray-300"
+                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-2xl text-base focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white transition-colors hover:border-gray-300 ios-input-fix"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
                     E-Mail *
                   </label>
                   <input
@@ -512,11 +541,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     value={personalData.email}
                     onChange={(e) => setPersonalData({...personalData, email: e.target.value})}
                     placeholder="max@example.com"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white transition-all duration-200 hover:border-gray-300"
+                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-2xl text-base focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white transition-colors hover:border-gray-300 ios-input-fix"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
                     Adresse *
                   </label>
                   <input
@@ -524,11 +553,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     value={personalData.address}
                     onChange={(e) => setPersonalData({...personalData, address: e.target.value})}
                     placeholder="Bahnhofstrasse 1, 8001 Zürich"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white transition-all duration-200 hover:border-gray-300"
+                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-2xl text-base focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white transition-colors hover:border-gray-300 ios-input-fix"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
                     Telefon *
                   </label>
                   <input
@@ -536,19 +565,36 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     value={personalData.phone}
                     onChange={(e) => setPersonalData({...personalData, phone: e.target.value})}
                     placeholder="+41 79 123 45 67"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white transition-all duration-200 hover:border-gray-300"
+                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-2xl text-base focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white transition-colors hover:border-gray-300 ios-input-fix"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="p-6 border-t border-gray-200 bg-white">
+            <div className="p-5 border-t border-gray-200 bg-white sticky bottom-0">
               <button
-                onClick={() => {
+                onClick={async () => {
                   mediumHaptic();
-                  onStepChange?.("invoice");
+                  
+                  // Guardar datos del cliente en localStorage si se proporcionaron
+                  if (personalData.name && personalData.email) {
+                    onSaveCustomerData?.(personalData);
+                  }
+                  
+                  // Crear la factura con los datos del cliente
+                  if (onCreateInvoice) {
+                    try {
+                      await onCreateInvoice(personalData);
+                    } catch (error) {
+                      console.error('Error al crear factura:', error);
+                      // Continuar de todas formas
+                    }
+                  }
+                  
+                  // Ir al paso final de ver factura
+                  onStepChange?.("viewInvoice");
                 }}
-                className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-xl py-4 text-base transition-all duration-200 shadow-lg shadow-[#25D076]/20 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] active:shadow-md touch-target"
+                className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-2xl py-4 text-base transition-colors shadow-lg shadow-[#25D076]/25 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.97] active:shadow-md touch-target"
                 style={{ minHeight: '56px' }}
                 disabled={!personalData.name || !personalData.email || !personalData.address || !personalData.phone}
               >
@@ -558,423 +604,62 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           </>
         )}
 
-        {/* Paso 4: ¿Rechnung benötigt? */}
-        {paymentStep === "invoice" && (
+        {/* Pasos "invoice" y "additional" eliminados - La factura se crea automáticamente */}
+
+        {/* Paso final: ¿Ver factura? - Aparece al final del flujo */}
+        {paymentStep === "viewInvoice" && (
           <>
-            <div className="flex items-center gap-3 p-4 border-b border-gray-200 bg-white">
-              <button
-                onClick={() => onStepChange?.("personal")}
-                className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
-                aria-label="Zurück"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-700" />
-              </button>
-              <h2 className="text-xl font-semibold text-gray-800 flex-1">
-                Rechnung benötigt?
-              </h2>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="flex flex-col items-center mb-6">
-                <FileText className="w-16 h-16 text-gray-300 mb-4" />
-                <p className="text-base text-gray-600 text-center mb-6">
-                  Wie möchten Sie die Rechnung erhalten?
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <label className="flex items-center gap-3 cursor-pointer p-4 border-2 border-gray-200 rounded-xl hover:border-[#25D076] transition-colors">
-                  <input
-                    type="radio"
-                    name="invoice"
-                    value="none"
-                    checked={invoiceOption === 'none'}
-                    onChange={() => {
-                      setInvoiceOption('none');
-                      setShowFullInvoiceForm(false);
-                    }}
-                    className="w-5 h-5 text-[#25D076] focus:ring-[#25D076]"
-                  />
-                  <div className="flex-1">
-                    <p className="text-base font-medium text-gray-800">Nein, danke</p>
-                    <p className="text-sm text-gray-500 mt-1">Keine Rechnung benötigt</p>
-                  </div>
-                </label>
-
-                <label className="flex items-center gap-3 cursor-pointer p-4 border-2 border-gray-200 rounded-xl hover:border-[#25D076] transition-colors">
-                  <input
-                    type="radio"
-                    name="invoice"
-                    value="print"
-                    checked={invoiceOption === 'print'}
-                    onChange={() => {
-                      setInvoiceOption('print');
-                      setShowFullInvoiceForm(false);
-                    }}
-                    className="w-5 h-5 text-[#25D076] focus:ring-[#25D076]"
-                  />
-                  <div className="flex-1">
-                    <p className="text-base font-medium text-gray-800">Drucken (ohne Daten)</p>
-                    <p className="text-sm text-gray-500 mt-1">Für Selbstbedienungskassen</p>
-                  </div>
-                </label>
-
-                <label className="flex items-start gap-3 cursor-pointer p-4 border-2 border-gray-200 rounded-xl hover:border-[#25D076] transition-colors">
-                  <input
-                    type="radio"
-                    name="invoice"
-                    value="email"
-                    checked={invoiceOption === 'email'}
-                    onChange={() => {
-                      setInvoiceOption('email');
-                      setShowFullInvoiceForm(false);
-                    }}
-                    className="mt-0.5 w-5 h-5 text-[#25D076] focus:ring-[#25D076] flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-base font-medium text-gray-800 mb-2">Per E-Mail senden</p>
-                    {invoiceOption === 'email' && (
-                      <input
-                        type="email"
-                        value={invoiceEmail || personalData.email}
-                        onChange={(e) => setInvoiceEmail(e.target.value)}
-                        placeholder={personalData.email || "deine@email.com"}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] mt-2"
-                        autoFocus
-                      />
-                    )}
-                  </div>
-                </label>
-
-                <label className="flex items-start gap-3 cursor-pointer p-4 border-2 border-gray-200 rounded-xl hover:border-[#25D076] transition-colors">
-                  <input
-                    type="radio"
-                    name="invoice"
-                    value="phone"
-                    checked={invoiceOption === 'phone'}
-                    onChange={() => {
-                      setInvoiceOption('phone');
-                      setShowFullInvoiceForm(false);
-                    }}
-                    className="mt-0.5 w-5 h-5 text-[#25D076] focus:ring-[#25D076] flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-base font-medium text-gray-800 mb-2">Per Telefon senden</p>
-                    {invoiceOption === 'phone' && (
-                      <input
-                        type="tel"
-                        value={invoicePhone || personalData.phone}
-                        onChange={(e) => setInvoicePhone(e.target.value)}
-                        placeholder={personalData.phone || "+41 79 123 45 67"}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] mt-2"
-                        autoFocus
-                      />
-                    )}
-                  </div>
-                </label>
-
-                <label className="flex items-start gap-3 cursor-pointer p-4 border-2 border-gray-200 rounded-xl hover:border-[#25D076] transition-colors">
-                  <input
-                    type="radio"
-                    name="invoice"
-                    value="full"
-                    checked={invoiceOption === 'full'}
-                    onChange={() => {
-                      setInvoiceOption('full');
-                      setShowFullInvoiceForm(true);
-                    }}
-                    className="mt-0.5 w-5 h-5 text-[#25D076] focus:ring-[#25D076] flex-shrink-0"
-                  />
-                  <div className="flex-1">
-                    <p className="text-base font-medium text-gray-800">Mit Steuerdaten</p>
-                    <p className="text-sm text-gray-500 mt-1">Für Unternehmen oder Steuerzwecke</p>
-                  </div>
-                </label>
-              </div>
-
-              {showFullInvoiceForm && invoiceOption === 'full' && (
-                <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-4">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Steuerdaten</h4>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Name oder Firmenname *
-                    </label>
-                    <input
-                      type="text"
-                      value={invoiceData.name}
-                      onChange={(e) => setInvoiceData({...invoiceData, name: e.target.value})}
-                      placeholder="Max Mustermann"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] bg-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      E-Mail *
-                    </label>
-                    <input
-                      type="email"
-                      value={invoiceData.email || personalData.email}
-                      onChange={(e) => setInvoiceData({...invoiceData, email: e.target.value})}
-                      placeholder={personalData.email || "max@example.com"}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] bg-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Telefon *
-                    </label>
-                    <input
-                      type="tel"
-                      value={invoiceData.phone || personalData.phone}
-                      onChange={(e) => setInvoiceData({...invoiceData, phone: e.target.value})}
-                      placeholder={personalData.phone || "+41 79 123 45 67"}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] bg-white"
-                    />
-                  </div>
-                  <div className="flex gap-3">
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Stadt *
-                      </label>
-                      <input
-                        type="text"
-                        value={invoiceData.city}
-                        onChange={(e) => setInvoiceData({...invoiceData, city: e.target.value})}
-                        placeholder="Zürich"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] bg-white"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Postleitzahl *
-                      </label>
-                      <input
-                        type="text"
-                        value={invoiceData.postalCode}
-                        onChange={(e) => setInvoiceData({...invoiceData, postalCode: e.target.value})}
-                        placeholder="8000"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] bg-white"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Adresse *
-                    </label>
-                    <input
-                      type="text"
-                      value={invoiceData.address}
-                      onChange={(e) => setInvoiceData({...invoiceData, address: e.target.value})}
-                      placeholder="Bahnhofstrasse 1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#25D076] bg-white"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="p-4 border-t border-gray-200 bg-white">
-              <button
-                onClick={() => {
-                  mediumHaptic();
-                  if (invoiceOption === 'none' || invoiceOption === 'print') {
-                    onSkipInvoice?.();
-                  } else {
-                    onInvoiceComplete?.({
-                      option: invoiceOption,
-                      email: invoiceEmail || personalData.email,
-                      phone: invoicePhone || personalData.phone,
-                      fullData: invoiceOption === 'full' ? invoiceData : undefined,
-                      saveDataForFuture: saveDataForFuture,
-                    });
-                  }
-                }}
-                className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-xl py-3.5 text-base transition-all duration-200 shadow-lg shadow-[#25D076]/20 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] active:shadow-md touch-target"
-                disabled={
-                  (invoiceOption === 'email' && !invoiceEmail && !personalData.email) ||
-                  (invoiceOption === 'phone' && !invoicePhone && !personalData.phone) ||
-                  (invoiceOption === 'full' && (!invoiceData.name || !invoiceData.email || !invoiceData.address || !invoiceData.city || !invoiceData.postalCode))
-                }
-              >
-                WEITER
-              </button>
-            </div>
-          </>
-        )}
-
-        {/* Paso 5: Opciones adicionales - Simplificado y sin scroll */}
-        {paymentStep === "additional" && (
-          <>
-            <div className="flex items-center justify-end p-4 border-b border-gray-200 bg-white">
-              <button
-                onClick={onClose}
-                className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
-                aria-label="Schließen"
-              >
-                <X className="w-5 h-5 text-gray-700" />
-              </button>
-            </div>
-
-            <div className="flex flex-col items-center justify-center py-8 px-6 min-h-[400px]">
-              {/* Icono de éxito */}
-              <div className="w-16 h-16 bg-[#25D076] rounded-full flex items-center justify-center mb-4 shadow-lg shadow-[#25D076]/20">
-                <CheckCircle className="w-10 h-10 text-white" strokeWidth={2.5} />
+            <div className="flex-1 flex flex-col items-center justify-center py-16 px-6">
+              {/* Icono - Sin animación excesiva */}
+              <div className="w-28 h-28 bg-gradient-to-br from-[#25D076]/20 to-[#20B865]/10 rounded-3xl flex items-center justify-center mb-8 shadow-lg shadow-[#25D076]/10">
+                <FileText className="w-12 h-12 text-[#25D076]" strokeWidth={2.5} />
               </div>
               
-              <h3 className="text-xl font-semibold text-gray-800 mb-2 text-center">
-                Vielen Dank!
+              <h3 className="text-2xl font-bold text-gray-900 mb-3 text-center">
+                Ihre Rechnung ist bereit
               </h3>
-              <p className="text-sm text-gray-600 text-center mb-6">
-                Ihre Bestellung wurde erfolgreich verarbeitet
+              <p className="text-base text-gray-600 text-center mb-8 max-w-xs">
+                Möchten Sie Ihre Rechnung jetzt ansehen, herunterladen oder drucken?
               </p>
 
-              {/* Opciones compactas en grid */}
-              <div className="w-full max-w-sm space-y-2 mb-6">
-                <label className="flex items-center gap-2 p-3 bg-[#F9FAFB] rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={saveDataForFuture}
-                    onChange={(e) => setSaveDataForFuture(e.target.checked)}
-                    className="w-4 h-4 text-[#25D076] focus:ring-[#25D076] rounded border-gray-300"
-                  />
-                  <span className="text-sm text-gray-700">Daten für zukünftige Einkäufe speichern</span>
-                </label>
-                <label className="flex items-center gap-2 p-3 bg-[#F9FAFB] rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={receiveOffers}
-                    onChange={(e) => setReceiveOffers(e.target.checked)}
-                    className="w-4 h-4 text-[#25D076] focus:ring-[#25D076] rounded border-gray-300"
-                  />
-                  <span className="text-sm text-gray-700">Exklusive Angebote erhalten</span>
-                </label>
+              {/* Botones - Opciones finales */}
+              <div className="w-full max-w-xs space-y-3">
+                {createdInvoiceShareToken ? (
+                  <button
+                    onClick={onViewInvoice}
+                    className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-2xl py-4 text-base transition-colors shadow-lg shadow-[#25D076]/25 active:scale-[0.97] active:shadow-md touch-target"
+                    style={{ minHeight: '56px' }}
+                  >
+                    Rechnung anzeigen
+                  </button>
+                ) : (
+                  <p className="text-sm text-gray-500 text-center mb-4">
+                    Rechnung wird vorbereitet...
+                  </p>
+                )}
+                <button
+                  onClick={onSkipViewInvoice}
+                  className="w-full bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 font-semibold rounded-2xl py-4 text-base transition-colors border-2 border-gray-200 active:scale-[0.97] active:border-gray-300 touch-target"
+                  style={{ minHeight: '56px' }}
+                >
+                  Zurück zur Tienda
+                </button>
               </div>
 
-              {/* Rechnung - Grid compacto 2x2 */}
-              {createdInvoiceId && (
-                <div className="w-full max-w-sm mb-6">
-                  <h4 className="text-sm font-semibold text-gray-800 mb-2 text-center">
-                    Rechnung
-                  </h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button 
-                      onClick={() => {
-                        mediumHaptic();
-                        const invoiceUrl = `/invoice/${createdInvoiceId}`;
-                        window.open(invoiceUrl, '_blank');
-                      }}
-                      className="flex flex-col items-center gap-1.5 p-3 border-2 border-[#25D076] bg-[#25D076]/5 rounded-lg hover:bg-[#25D076]/10 hover:border-[#25D076] transition-all group touch-target"
-                    >
-                      <FileText className="w-5 h-5 text-[#25D076] group-hover:scale-110 transition-transform" />
-                      <span className="text-xs font-semibold text-[#25D076]">Anzeigen</span>
-                    </button>
-                    <button 
-                      onClick={async () => {
-                        mediumHaptic();
-                        toast.info('PDF-Download wird in Kürze verfügbar sein');
-                      }}
-                      className="flex flex-col items-center gap-1.5 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-[#25D076]/30 transition-all group"
-                    >
-                      <Download className="w-5 h-5 text-gray-600 group-hover:text-[#25D076] transition-colors" />
-                      <span className="text-xs font-medium text-gray-700">PDF</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-              {/* Rechnung - Grid compacto 2x2 - Solo si no hay factura creada */}
-              {!createdInvoiceId && (
-                <div className="w-full max-w-sm mb-6">
-                  <h4 className="text-sm font-semibold text-gray-800 mb-2 text-center">
-                    Rechnung
-                  </h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button 
-                      onClick={async () => {
-                        const invoiceData = {
-                          orderId: Math.random().toString(36).substring(2, 12).toUpperCase(),
-                          date: new Date().toLocaleDateString('de-DE'),
-                          items: cartItems,
-                          total: totalAmount,
-                          personalData: personalData,
-                        };
-                        console.log('Generating PDF:', invoiceData);
-                        alert('PDF wird generiert...');
-                      }}
-                      className="flex flex-col items-center gap-1.5 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-[#25D076]/30 transition-all group"
-                    >
-                      <Download className="w-5 h-5 text-gray-600 group-hover:text-[#25D076] transition-colors" />
-                      <span className="text-xs font-medium text-gray-700">PDF</span>
-                    </button>
-                    <button 
-                      onClick={() => {
-                        const email = personalData.email || invoiceEmail;
-                        if (email) {
-                          window.location.href = `mailto:${email}?subject=Rechnung`;
-                        } else {
-                          alert('Bitte geben Sie eine E-Mail-Adresse ein');
-                        }
-                      }}
-                      className="flex flex-col items-center gap-1.5 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-[#25D076]/30 transition-all group touch-target"
-                    >
-                      <Mail className="w-5 h-5 text-gray-600 group-hover:text-[#25D076] transition-colors" />
-                      <span className="text-xs font-medium text-gray-700">E-Mail</span>
-                    </button>
-                  <button 
-                    onClick={() => {
-                      const invoiceLink = `${window.location.origin}/invoice/${Math.random().toString(36).substring(2, 12)}`;
-                      navigator.clipboard.writeText(invoiceLink);
-                      alert('Link kopiert!');
-                    }}
-                    className="flex flex-col items-center gap-1.5 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-[#25D076]/30 transition-all group"
-                  >
-                    <Link2 className="w-5 h-5 text-gray-600 group-hover:text-[#25D076] transition-colors" />
-                    <span className="text-xs font-medium text-gray-700">Link</span>
-                  </button>
-                  <button 
-                    onClick={() => window.print()}
-                    className="flex flex-col items-center gap-1.5 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-[#25D076]/30 transition-all group"
-                  >
-                    <Printer className="w-5 h-5 text-gray-600 group-hover:text-[#25D076] transition-colors" />
-                    <span className="text-xs font-medium text-gray-700">Drucken</span>
-                  </button>
-                </div>
-                </div>
-              )}
-            </div>
-
-            {/* Botón final fijo */}
-            <div className="p-4 border-t border-gray-200 bg-white">
-              <button
-                onClick={() => {
-                  // Si el usuario quiere guardar sus datos, guardarlos en localStorage
-                  if (saveDataForFuture && personalData.name && personalData.email) {
-                    onSaveCustomerData?.(personalData);
-                    console.log('Customer data saved to localStorage:', personalData);
-                  }
-                  
-                  // Guardar preferencias si están seleccionadas
-                  if (saveDataForFuture || receiveOffers) {
-                    console.log('Saving preferences:', { saveDataForFuture, receiveOffers, personalData });
-                    // Aquí se enviarían las preferencias al backend si es necesario
-                  }
-                  
-                  // Mostrar paso "completing" antes de cerrar
-                  onStepChange?.("completing");
-                }}
-                className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-xl py-3.5 text-base transition-all duration-200 shadow-lg shadow-[#25D076]/20 active:scale-[0.98] active:shadow-md touch-target"
-              >
-                ABSCHLIESSEN
-              </button>
+              {/* Nota informativa */}
+              <p className="text-xs text-gray-500 text-center mt-8 max-w-xs">
+                Sie können Ihre Rechnung jederzeit über den Link in Ihrer E-Mail aufrufen
+              </p>
             </div>
           </>
         )}
 
-        {/* Paso final: Completando compra */}
+        {/* Paso final: Completando compra - Diseño unificado */}
         {paymentStep === "completing" && (
           <>
-            <div className="flex-1 flex flex-col items-center justify-center py-12 px-6">
-              {/* Animación de loading */}
-              <div className="relative w-32 h-32 mx-auto mb-6">
+            <div className="flex-1 flex flex-col items-center justify-center py-16 px-6">
+              {/* Animación - Solo el spinner, sin otras animaciones */}
+              <div className="relative w-28 h-28 mx-auto mb-8">
                 <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
                 <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#25D076] animate-spin"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -982,17 +667,17 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 </div>
               </div>
               
-              <h3 className="text-2xl font-semibold text-gray-800 mb-2 text-center">
+              <h3 className="text-2xl font-bold text-gray-900 mb-3 text-center">
                 Bestellung wird abgeschlossen...
               </h3>
-              <p className="text-base text-gray-600 text-center mb-6 max-w-sm">
+              <p className="text-base text-gray-600 text-center mb-8 max-w-xs">
                 Vielen Dank für Ihren Einkauf. Wir leiten Sie gleich weiter.
               </p>
               
-              {/* Progress bar */}
-              <div className="w-4/5 max-w-xs mb-6">
-                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-[#25D076] via-[#20B865] to-[#25D076] animate-pulse w-full"></div>
+              {/* Progress bar - Sin animación de pulso */}
+              <div className="w-4/5 max-w-xs">
+                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-[#25D076] via-[#20B865] to-[#25D076] w-full"></div>
                 </div>
               </div>
             </div>
@@ -1058,6 +743,7 @@ export default function PaymentP() {
   const [personalData, setPersonalData] = useState(loadSavedCustomerData());
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
   const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
+  const [createdInvoiceShareToken, setCreatedInvoiceShareToken] = useState<string | null>(null);
   const router = useRouter();
   
   // Usar mutation de React Query para crear órdenes
@@ -1192,14 +878,11 @@ export default function PaymentP() {
         },
       });
 
-      // Guardar el ID de la orden y factura creada automáticamente
+      // Guardar el ID de la orden (la factura se creará después cuando el usuario decida)
       if (orderResult?.id) {
         setCreatedOrderId(orderResult.id);
       }
-      // Si la factura se creó automáticamente, guardar su ID
-      if (orderResult?.invoiceId) {
-        setCreatedInvoiceId(orderResult.invoiceId);
-      }
+      // NO guardar invoiceId ni invoiceShareToken aquí - se crearán después
 
       // IMPORTANTE: La compra ya se completó correctamente aquí
       // El carrito se limpiará cuando se cierre el modal o se complete el flujo
@@ -1210,10 +893,7 @@ export default function PaymentP() {
       
       setPaymentStep("success");
 
-      // Después de 1.5 segundos, preguntar si quiere dar datos
-      setTimeout(() => {
-        setPaymentStep("askData");
-      }, 1500);
+      // NO cambiar automáticamente - el usuario debe hacer clic para avanzar
     } catch (error) {
       // Feedback háptico de error
       errorHaptic();
@@ -1242,13 +922,14 @@ export default function PaymentP() {
     saveDataForFuture?: boolean;
   }) => {
     if (!createdOrderId) {
-      // Si no hay orderId, simplemente continuar
-      setPaymentStep("additional");
+      // Si no hay orderId, ir directamente a preguntar si quiere ver la factura
+      setPaymentStep("viewInvoice");
       return;
     }
 
     if (!modalInvoiceData) {
-      setPaymentStep("additional");
+      // Si no hay datos de factura, ir directamente a preguntar si quiere ver la factura
+      setPaymentStep("viewInvoice");
       return;
     }
 
@@ -1361,13 +1042,97 @@ export default function PaymentP() {
       toast.warning('Rechnung konnte nicht erstellt werden, aber die Bestellung wurde erfolgreich abgeschlossen');
     }
 
-    // Pasar a la pantalla de opciones adicionales
-    setPaymentStep("additional");
+    // Después de actualizar/crear factura, preguntar si quiere verla
+    setPaymentStep("viewInvoice");
   };
 
-  const handleSkipInvoice = () => {
-    // Si no quiere factura o quiere imprimir, ir directamente a opciones adicionales
-    setPaymentStep("additional");
+  const handleViewInvoice = () => {
+    // Si tiene shareToken, redirigir a la página pública de la factura
+    if (createdInvoiceShareToken) {
+      router.push(`/invoice/public/${createdInvoiceShareToken}`);
+      // Cerrar el modal después de redirigir
+      setTimeout(() => {
+        setIsModalOpen(false);
+        clearCart();
+      }, 300);
+    } else {
+      // Si no tiene shareToken pero tiene invoiceId, intentar obtenerlo
+      // Por ahora, mostrar mensaje de error
+      toast.error('Rechnung konnte nicht geladen werden');
+    }
+  };
+
+  const handleSkipViewInvoice = () => {
+    // Si no quiere ver la factura, cerrar el modal y redirigir
+    handlePaymentSuccess();
+  };
+
+  // Función para crear la factura después de que el usuario decida sobre sus datos
+  const handleCreateInvoice = async (customerData?: { name: string; email: string; address: string; phone: string }) => {
+    if (!createdOrderId) {
+      console.error('No hay orderId para crear la factura');
+      return;
+    }
+
+    try {
+      // Crear la factura con los datos del cliente (o como invitado si no hay datos)
+      const invoicePayload = {
+        orderId: createdOrderId,
+        customerName: customerData?.name || 'Gast',
+        customerEmail: customerData?.email || undefined,
+        customerAddress: customerData?.address || undefined,
+        customerPhone: customerData?.phone || undefined,
+        saveCustomerData: !!customerData?.name && !!customerData?.email,
+      };
+
+      const result = await InvoiceService.createInvoice(invoicePayload);
+
+      if (result.success && result.data) {
+        setCreatedInvoiceId(result.data.id);
+        if (result.data.shareToken) {
+          setCreatedInvoiceShareToken(result.data.shareToken);
+        }
+        console.log('✅ Factura creada:', result.data.invoiceNumber);
+      } else {
+        console.error('Error al crear factura:', result.error);
+        throw new Error(result.error || 'Error al crear factura');
+      }
+    } catch (error) {
+      console.error('Error al crear factura:', error);
+      throw error;
+    }
+  };
+
+  // Función para actualizar la factura con los datos del cliente (si ya existe)
+  const handleUpdateInvoiceWithData = async (data: { name: string; email: string; address: string; phone: string }) => {
+    if (!createdInvoiceId || !createdOrderId) {
+      // Si no existe factura, crearla
+      return handleCreateInvoice(data);
+    }
+
+    try {
+      const result = await InvoiceService.updateInvoice(createdInvoiceId, {
+        customerName: data.name || undefined,
+        customerEmail: data.email || undefined,
+        customerAddress: data.address || undefined,
+        customerPhone: data.phone || undefined,
+        metadata: {
+          saveCustomerData: true,
+          updatedAt: new Date().toISOString(),
+        },
+      });
+
+      if (result.success && result.data) {
+        // Actualizar el shareToken si se actualizó
+        if (result.data.shareToken) {
+          setCreatedInvoiceShareToken(result.data.shareToken);
+        }
+        console.log('✅ Factura actualizada con datos del cliente');
+      }
+    } catch (error) {
+      console.error('Error al actualizar factura:', error);
+      throw error;
+    }
   };
 
   const handleStepChange = (step: PaymentStep) => {
@@ -1479,7 +1244,7 @@ export default function PaymentP() {
           {store?.slug && (
             <button
               onClick={() => router.push(`/store/${store.slug}`)}
-              className="inline-flex items-center gap-2 bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-xl px-6 py-3 transition-all duration-200 shadow-lg shadow-[#25D076]/20 active:scale-[0.98] touch-target"
+              className="inline-flex items-center gap-2 bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-xl px-6 py-3 transition-ios shadow-lg shadow-[#25D076]/20 active:scale-[0.98] touch-target"
             >
               <ArrowLeft className="w-5 h-5" />
               Zurück zum Shop
@@ -1638,7 +1403,7 @@ export default function PaymentP() {
                   flex items-center justify-center gap-2
                   ${isSelected ? "ring-4 ring-brand-300 ring-opacity-50 shadow-lg scale-105" : "shadow-md"}
                   hover:opacity-90 active:scale-[0.97] touch-target tap-highlight-transparent
-                  relative transition-all duration-200 ease-out
+                  relative transition-ios
                 `}
                 style={{ 
                   backgroundColor: method.bgColor, // Usar color directamente desde la DB
@@ -1684,7 +1449,7 @@ export default function PaymentP() {
         isOpen={isModalOpen}
         onClose={() => {
           // Si el pago ya se completó, limpiar y redirigir
-          if (paymentStep === "additional" || paymentStep === "success" || paymentStep === "completing") {
+          if (paymentStep === "success" || paymentStep === "completing" || paymentStep === "viewInvoice") {
             // Si está en "completing", ya se está procesando la redirección
             if (paymentStep !== "completing") {
               handlePaymentSuccess();
@@ -1711,12 +1476,16 @@ export default function PaymentP() {
           setPaymentStep("confirm");
         }}
         onInvoiceComplete={handleInvoiceComplete}
-        onSkipInvoice={handleSkipInvoice}
         onStepChange={handleStepChange}
         personalData={personalData}
         setPersonalData={setPersonalData}
         onSaveCustomerData={saveCustomerDataToLocalStorage}
         createdInvoiceId={createdInvoiceId}
+        createdInvoiceShareToken={createdInvoiceShareToken}
+        createdOrderId={createdOrderId}
+        onViewInvoice={handleViewInvoice}
+        onSkipViewInvoice={handleSkipViewInvoice}
+        onCreateInvoice={handleCreateInvoice}
       />
     </div>
   );

@@ -44,7 +44,7 @@ export const GoogleLoginButton = () => {
     <button
       onClick={handleGoogleLogin}
       disabled={loading}
-      className="w-full flex items-center justify-center gap-3 px-6 py-3.5 bg-white border-2 border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full flex items-center justify-center gap-3 px-6 py-3.5 bg-white border-2 border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-ios disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {loading ? (
         <Loader2 className="w-5 h-5 animate-spin text-gray-600" />

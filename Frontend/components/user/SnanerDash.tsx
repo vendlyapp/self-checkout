@@ -453,7 +453,7 @@ const SnanerDash = () => {
           className="bg-[#25D076] text-white px-8 py-4 rounded-full font-bold text-base 
                    disabled:opacity-50 flex items-center justify-center space-x-3 
                    touch-target tap-highlight-transparent hover:bg-[#25D076]/90 active:scale-95 
-                   transition-all duration-200 w-full max-w-[320px]"
+                   transition-ios w-full max-w-[320px]"
           style={{ minHeight: '56px' }}
           aria-label={isScanning ? "Escaneo detener" : "Produkt scannen"}
         >
@@ -528,7 +528,7 @@ const SnanerDash = () => {
                   }
                 }}
                 className="bg-[#25D076] text-white px-6 py-4 rounded-full font-semibold hover:bg-[#25D076]/90 
-                         active:scale-95 transition-all duration-200 w-full touch-target tap-highlight-transparent
+                         active:scale-95 transition-ios w-full touch-target tap-highlight-transparent
                          flex items-center justify-center gap-2"
                 style={{ minHeight: '52px' }}
                 aria-label="Warenkorb anzeigen"
@@ -550,7 +550,7 @@ const SnanerDash = () => {
                   }
                 }}
                 className="bg-white text-[#25D076] border-2 border-[#25D076] px-6 py-4 rounded-full font-semibold 
-                         hover:bg-[#25D076]/5 active:scale-95 transition-all duration-200 w-full 
+                         hover:bg-[#25D076]/5 active:scale-95 transition-ios w-full 
                          touch-target tap-highlight-transparent flex items-center justify-center gap-2"
                 style={{ minHeight: '52px' }}
                 aria-label="Weiter scannen"

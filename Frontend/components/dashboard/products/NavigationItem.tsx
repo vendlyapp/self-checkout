@@ -19,7 +19,7 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
   return (
     <button
       onClick={onClick}
-      className="btn-tap w-full bg-card rounded-2xl p-5 lg:p-6 flex items-center justify-between hover:bg-muted hover:shadow-md transition-all duration-200 group"
+      className="btn-tap w-full bg-card rounded-2xl p-5 lg:p-6 flex items-center justify-between hover:bg-muted hover:shadow-md transition-ios group"
     >
       <div className="flex items-center gap-4 lg:gap-5">
         <div className="w-10 h-10 lg:w-12 lg:h-12 bg-muted rounded-xl flex items-center justify-center">

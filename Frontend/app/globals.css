@@ -1174,11 +1174,13 @@
   }
 
   .sidebar-tablet {
-    @apply relative w-64 transition-all duration-300;
+    @apply relative w-64;
+    transition: all 350ms cubic-bezier(0.4, 0.0, 0.2, 1);
   }
 
   .sidebar-desktop {
-    @apply relative w-64 transition-all duration-300;
+    @apply relative w-64;
+    transition: all 350ms cubic-bezier(0.4, 0.0, 0.2, 1);
   }
 
   .sidebar-desktop.collapsed {
@@ -1357,11 +1359,13 @@
 
 @layer components {
   .sidebar {
-    @apply bg-white border-r border-gray-200 transition-all duration-300;
+    @apply bg-white border-r border-gray-200;
+    transition: all 350ms cubic-bezier(0.4, 0.0, 0.2, 1);
   }
 
   .sidebar-item {
-    @apply flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-gray-100;
+    @apply flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-100;
+    transition: all 250ms cubic-bezier(0.4, 0.0, 0.2, 1);
   }
 
   .sidebar-item.active {
@@ -1373,7 +1377,8 @@
   }
 
   .sidebar-main-button {
-    @apply flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 bg-brand-500 hover:bg-brand-600 text-white font-medium shadow-sm hover:shadow-md;
+    @apply flex items-center gap-3 px-3 py-3 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-medium shadow-sm hover:shadow-md;
+    transition: all 250ms cubic-bezier(0.4, 0.0, 0.2, 1);
   }
 
   .sidebar-main-button.collapsed {
@@ -1387,7 +1392,8 @@
 
 @layer components {
   .header-responsive {
-    @apply bg-white border-b border-gray-200 transition-all duration-300;
+    @apply bg-white border-b border-gray-200;
+    transition: all 350ms cubic-bezier(0.4, 0.0, 0.2, 1);
   }
 
   .header-mobile {
@@ -1645,115 +1651,125 @@
   }
 }
 
-/* Animaciones suaves para transiciones */
+/* ============================================
+   SISTEMA UNIFICADO DE ANIMACIONES iOS
+   ============================================ */
+
+/* Clases de transición unificadas - Usar estas en lugar de las antiguas */
 @layer utilities {
+  /* Transiciones estándar - Reemplazan transition-smooth, transition-fast, etc. */
+  .transition-ios {
+    transition: all 250ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  }
+
+  .transition-ios-fast {
+    transition: all 150ms cubic-bezier(0.2, 0.0, 0, 1);
+  }
+
+  .transition-ios-slow {
+    transition: all 350ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  }
+
+  .transition-ios-spring {
+    transition: all 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Compatibilidad con clases antiguas - Deprecadas, usar transition-ios* */
   .transition-smooth {
-    transition: all 0.2s var(--ease-smooth);
+    transition: all 250ms cubic-bezier(0.4, 0.0, 0.2, 1);
   }
 
   .transition-fast {
-    transition: all 0.15s var(--ease-smooth);
+    transition: all 150ms cubic-bezier(0.2, 0.0, 0, 1);
   }
 
   .transition-slow {
-    transition: all 0.3s var(--ease-smooth);
+    transition: all 350ms cubic-bezier(0.4, 0.0, 0.2, 1);
   }
 
   .transition-page {
-    transition: all var(--transition-page);
+    transition: all 350ms cubic-bezier(0.4, 0.0, 0.2, 1);
   }
 
-  /* Clases de animación para páginas */
+  .transition-interactive {
+    transition: all 250ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  }
+
+  /* Clases de animación unificadas - Usar estas en lugar de las antiguas */
   .animate-page-enter {
-    animation: page-enter var(--transition-page) forwards;
+    animation: slide-in-up 300ms cubic-bezier(0.0, 0.0, 0.2, 1) forwards;
   }
 
   .animate-page-exit {
-    animation: page-exit var(--transition-page) forwards;
-  }
-
-  .animate-slide-in-right {
-    animation: slide-in-right var(--transition-page) forwards;
-  }
-
-  .animate-slide-in-left {
-    animation: slide-in-left var(--transition-page) forwards;
-  }
-
-  .animate-scale-in {
-    animation: scale-in var(--transition-normal) forwards;
+    animation: slide-out-down 250ms cubic-bezier(0.4, 0.0, 1, 1) forwards;
   }
 
   .animate-fade-in-scale {
-    animation: fade-in-scale var(--transition-normal) forwards;
-  }
-
-  .animate-fade-in {
-    animation: fade-in var(--transition-normal) forwards;
+    animation: scale-in 250ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   }
 
   .animate-slide-up-fade {
-    animation: slide-up-fade var(--transition-slow) forwards;
+    animation: slide-in-up 300ms cubic-bezier(0.0, 0.0, 0.2, 1) forwards;
   }
 
   .animate-bounce-in {
-    animation: bounce-in var(--transition-spring) forwards;
+    animation: spring-bounce 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   }
 
   .animate-slide-down {
-    animation: slide-down var(--transition-normal) forwards;
+    animation: slide-in-down 300ms cubic-bezier(0.0, 0.0, 0.2, 1) forwards;
   }
 
-  /* Animaciones de entrada escalonada */
+  /* Animaciones de entrada escalonada - Usar animate-stagger-fade-in en su lugar */
   .animate-stagger-1 {
-    animation: slide-up-fade var(--transition-slow) forwards;
-    animation-delay: 0.05s;
+    animation: stagger-fade-in 300ms cubic-bezier(0.0, 0.0, 0.2, 1) forwards;
+    animation-delay: 50ms;
     opacity: 0;
   }
 
   .animate-stagger-2 {
-    animation: slide-up-fade var(--transition-slow) forwards;
-    animation-delay: 0.1s;
+    animation: stagger-fade-in 300ms cubic-bezier(0.0, 0.0, 0.2, 1) forwards;
+    animation-delay: 100ms;
     opacity: 0;
   }
 
   .animate-stagger-3 {
-    animation: slide-up-fade var(--transition-slow) forwards;
-    animation-delay: 0.15s;
+    animation: stagger-fade-in 300ms cubic-bezier(0.0, 0.0, 0.2, 1) forwards;
+    animation-delay: 150ms;
     opacity: 0;
   }
 
   .animate-stagger-4 {
-    animation: slide-up-fade var(--transition-slow) forwards;
-    animation-delay: 0.2s;
+    animation: stagger-fade-in 300ms cubic-bezier(0.0, 0.0, 0.2, 1) forwards;
+    animation-delay: 200ms;
     opacity: 0;
   }
 
   /* Efecto shimmer para loading */
   .animate-shimmer {
-    animation: shimmer 2s infinite;
+    animation: shimmer 2s infinite linear;
     background: linear-gradient(
       to right,
-      #f6f7f8 0%,
-      #edeef1 20%,
-      #f6f7f8 40%,
-      #f6f7f8 100%
+      #f0f0f0 0%,
+      #e0e0e0 20%,
+      #f0f0f0 40%,
+      #f0f0f0 100%
     );
     background-size: 1000px 100%;
   }
 
   /* Float animation */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
   .animate-float {
-    animation: float 3s ease-in-out infinite;
-  }
-
-  /* Transiciones suaves para elementos interactivos */
-  .transition-interactive {
-    transition: all var(--transition-normal) var(--ease-smooth);
-  }
-
-  .transition-interactive:hover {
-    transition: all var(--transition-fast) var(--ease-smooth);
+    animation: float 3s cubic-bezier(0.4, 0.0, 0.6, 1) infinite;
   }
 
   /* Optimización para GPU */
@@ -1977,4 +1993,300 @@
   #invoice-content th {
     display: table-cell !important;
   }
+}
+
+/* ============================================
+   ANIMACIONES NATIVAS iOS
+   ============================================ */
+
+/* Respetar preferencias de movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Keyframes para Fade In/Out */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Keyframes para Slide In/Out */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-down {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-out-right {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes slide-out-left {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes slide-out-up {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+}
+
+@keyframes slide-out-down {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+}
+
+/* Keyframes para Scale In/Out */
+@keyframes scale-in {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes scale-out {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+}
+
+/* Keyframes para Spring Bounce (tipo iOS) */
+@keyframes spring-bounce {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Clases de animación */
+.animate-fade-in {
+  animation: fade-in 250ms cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+}
+
+.animate-fade-out {
+  animation: fade-out 200ms cubic-bezier(0.4, 0.0, 1, 1) forwards;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 350ms cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 350ms cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+}
+
+.animate-slide-in-up {
+  animation: slide-in-up 300ms cubic-bezier(0.0, 0.0, 0.2, 1) forwards;
+}
+
+.animate-slide-in-down {
+  animation: slide-in-down 300ms cubic-bezier(0.0, 0.0, 0.2, 1) forwards;
+}
+
+.animate-slide-out-right {
+  animation: slide-out-right 300ms cubic-bezier(0.4, 0.0, 1, 1) forwards;
+}
+
+.animate-slide-out-left {
+  animation: slide-out-left 300ms cubic-bezier(0.4, 0.0, 1, 1) forwards;
+}
+
+.animate-slide-out-up {
+  animation: slide-out-up 250ms cubic-bezier(0.4, 0.0, 1, 1) forwards;
+}
+
+.animate-slide-out-down {
+  animation: slide-out-down 250ms cubic-bezier(0.4, 0.0, 1, 1) forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 250ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-scale-out {
+  animation: scale-out 200ms cubic-bezier(0.4, 0.0, 1, 1) forwards;
+}
+
+.animate-spring-bounce {
+  animation: spring-bounce 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Utilidades para transiciones suaves */
+.transition-ios {
+  transition: all 250ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.transition-ios-fast {
+  transition: all 150ms cubic-bezier(0.2, 0.0, 0, 1);
+}
+
+.transition-ios-slow {
+  transition: all 350ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.transition-ios-spring {
+  transition: all 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Animación de entrada escalonada para listas */
+@keyframes stagger-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-stagger-fade-in {
+  animation: stagger-fade-in 300ms cubic-bezier(0.0, 0.0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+/* Mejora de scroll momentum para iOS */
+.ios-scroll-smooth {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+/* Animación de pulso suave para elementos interactivos */
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s cubic-bezier(0.4, 0.0, 0.6, 1) infinite;
+}
+
+/* Animación de shimmer para loading states */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(
+    to right,
+    #f0f0f0 0%,
+    #e0e0e0 20%,
+    #f0f0f0 40%,
+    #f0f0f0 100%
+  );
+  background-size: 1000px 100%;
 }

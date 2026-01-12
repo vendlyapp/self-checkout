@@ -153,7 +153,7 @@ function StoreLayoutContent({ children }: StoreLayoutContentProps) {
         {/* Contenido principal optimizado para PWA iOS y móvil */}
         <main
           ref={scrollContainerRef}
-          className={`flex-1 overflow-x-hidden relative no-scrollbar ios-scroll-fix ${
+          className={`flex-1 overflow-x-hidden relative no-scrollbar ios-scroll-fix ios-scroll-smooth ${
             isScanPage ? 'overflow-y-hidden' : 'overflow-y-auto'
           }`}
           style={{
@@ -163,7 +163,13 @@ function StoreLayoutContent({ children }: StoreLayoutContentProps) {
             paddingRight: 'env(safe-area-inset-right, 0px)',
           }}
         >
-          <div className="w-full max-w-full" style={isScanPage ? { height: '100%' } : {}}>{children}</div>
+          <div 
+            className="w-full max-w-full animate-fade-in" 
+            style={isScanPage ? { height: '100%' } : {}}
+            key={pathname}
+          >
+            {children}
+          </div>
         </main>
 
         {/* Footer de navegación fijo con safe area - ocultar si tienda cerrada */}

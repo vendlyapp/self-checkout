@@ -259,7 +259,7 @@ function LoginForm() {
         onClick={() => router.push('/')}
         className="fixed top-4 left-4 z-50 w-12 h-12 flex items-center justify-center 
                  bg-white rounded-full shadow-lg hover:bg-gray-50 active:scale-95 
-                 transition-all duration-200 touch-target tap-highlight-transparent"
+                 transition-ios touch-target tap-highlight-transparent"
         style={{
           top: 'calc(16px + env(safe-area-inset-top))',
           left: 'calc(16px + env(safe-area-inset-left))',
@@ -318,7 +318,7 @@ function LoginForm() {
                   disabled={loading}
                   className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 md:py-3.5 border-2 border-gray-200 rounded-lg sm:rounded-xl 
                            focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
-                           transition-all duration-200 text-sm sm:text-base disabled:bg-gray-50 disabled:cursor-not-allowed"
+                           transition-ios text-sm sm:text-base disabled:bg-gray-50 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -341,7 +341,7 @@ function LoginForm() {
                   disabled={loading}
                   className="w-full pl-10 sm:pl-12 pr-12 sm:pr-14 py-2.5 sm:py-3 md:py-3.5 border-2 border-gray-200 rounded-lg sm:rounded-xl 
                            focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
-                           transition-all duration-200 text-sm sm:text-base disabled:bg-gray-50 disabled:cursor-not-allowed"
+                           transition-ios text-sm sm:text-base disabled:bg-gray-50 disabled:cursor-not-allowed"
                 />
                 <button
                   type="button"
@@ -376,7 +376,7 @@ function LoginForm() {
               disabled={loading || !email || !password}
               className="w-full bg-brand-500 hover:bg-brand-600 text-white rounded-xl sm:rounded-2xl px-5 sm:px-6 py-3 sm:py-3.5 md:py-4 
                        font-semibold text-sm sm:text-base md:text-lg flex items-center justify-center gap-2 sm:gap-3 
-                       transition-all duration-200 shadow-lg shadow-brand-500/30 hover:shadow-xl
+                       transition-ios shadow-lg shadow-brand-500/30 hover:shadow-xl
                        disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-500
                        focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2
                        touch-target tap-highlight-transparent"

@@ -455,7 +455,7 @@ export default function SuperAdminProducts() {
               <button
                 key={store.name}
                 onClick={() => setSelectedStore(store)}
-                className="text-left rounded-xl border border-gray-200 bg-white p-5 hover:shadow-md transition-all duration-200 dark:border-gray-800 dark:bg-white/[0.03] cursor-pointer"
+                className="text-left rounded-xl border border-gray-200 bg-white p-5 hover:shadow-md transition-ios dark:border-gray-800 dark:bg-white/[0.03] cursor-pointer"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3 flex-1 min-w-0">

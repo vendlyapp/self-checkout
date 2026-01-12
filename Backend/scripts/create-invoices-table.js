@@ -30,6 +30,7 @@ async function createInvoicesTable() {
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
         "orderId" TEXT NOT NULL,
         "invoiceNumber" TEXT NOT NULL UNIQUE,
+        "shareToken" TEXT UNIQUE,
         "customerName" TEXT,
         "customerEmail" TEXT,
         "customerAddress" TEXT,
@@ -79,6 +80,10 @@ async function createInvoicesTable() {
 
     await query(`
       CREATE INDEX "idx_Invoice_customerEmail" ON "Invoice"("customerEmail")
+    `);
+
+    await query(`
+      CREATE INDEX "idx_Invoice_shareToken" ON "Invoice"("shareToken")
     `);
 
     console.log('✅ Tabla Invoice creada exitosamente');

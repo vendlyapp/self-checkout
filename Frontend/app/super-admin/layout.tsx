@@ -101,7 +101,7 @@ function SuperAdminLayoutContent({ children }: { children: React.ReactNode }) {
       <Backdrop />
       
       {/* Main Content Area */}
-      <div className={`flex-1 transition-all duration-300 ease-in-out ${mainContentMargin}`}>
+      <div className={`flex-1 transition-ios-slow ${mainContentMargin}`}>
         {/* Header */}
         <SuperAdminHeader />
         

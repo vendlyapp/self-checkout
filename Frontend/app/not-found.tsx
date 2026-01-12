@@ -40,7 +40,7 @@ export default function NotFound() {
           {/* Botón volver */}
           <button
             onClick={() => router.back()}
-            className="inline-flex items-center gap-3 px-6 py-3.5 bg-white border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-semibold shadow-sm"
+            className="inline-flex items-center gap-3 px-6 py-3.5 bg-white border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-ios font-semibold shadow-sm"
           >
             <ArrowLeft className="w-5 h-5" />
             Zurück
@@ -49,7 +49,7 @@ export default function NotFound() {
           {/* Botón inicio */}
           <Link
             href="/"
-            className="inline-flex items-center gap-3 px-6 py-3.5 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all duration-200 font-semibold shadow-lg shadow-brand-500/30"
+            className="inline-flex items-center gap-3 px-6 py-3.5 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-ios font-semibold shadow-lg shadow-brand-500/30"
           >
             <Home className="w-5 h-5" />
             Zur Startseite
@@ -62,25 +62,25 @@ export default function NotFound() {
           <div className="flex flex-wrap gap-3 justify-center">
             <Link
               href="/dashboard"
-              className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:border-brand-300 hover:text-brand-600 transition-colors"
+              className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:border-brand-300 hover:text-brand-600 transition-ios-fast"
             >
               Dashboard
             </Link>
             <Link
               href="/products"
-              className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:border-brand-300 hover:text-brand-600 transition-colors"
+              className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:border-brand-300 hover:text-brand-600 transition-ios-fast"
             >
               Produkte
             </Link>
             <Link
               href="/sales"
-              className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:border-brand-300 hover:text-brand-600 transition-colors"
+              className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:border-brand-300 hover:text-brand-600 transition-ios-fast"
             >
               Verkäufe
             </Link>
             <Link
               href="/login"
-              className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:border-brand-300 hover:text-brand-600 transition-colors"
+              className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:border-brand-300 hover:text-brand-600 transition-ios-fast"
             >
               Anmelden
             </Link>

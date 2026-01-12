@@ -52,6 +52,7 @@ interface OrderResponse {
   items: OrderItemResponse[];
   invoiceId?: string | null;
   invoiceNumber?: string | null;
+  invoiceShareToken?: string | null;
 }
 
 interface ApiResponse<T> {

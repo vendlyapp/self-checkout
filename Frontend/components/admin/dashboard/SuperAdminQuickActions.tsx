@@ -96,7 +96,7 @@ export default function SuperAdminQuickActions() {
             <Link
               key={action.id}
               href={action.href}
-              className="group flex items-start gap-3 p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-200 dark:border-gray-800 dark:hover:border-gray-700 cursor-pointer"
+              className="group flex items-start gap-3 p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-md transition-ios dark:border-gray-800 dark:hover:border-gray-700 cursor-pointer"
             >
               <div
                 className={`${action.bgColor} p-2.5 rounded-lg group-hover:scale-110 transition-transform duration-200`}

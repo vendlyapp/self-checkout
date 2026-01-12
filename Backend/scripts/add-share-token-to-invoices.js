@@ -1,43 +1,27 @@
 /**
- * Script para agregar campo shareToken a la tabla Invoice
+ * Script para agregar el campo shareToken a la tabla Invoice si no existe
  * Ejecutar: node scripts/add-share-token-to-invoices.js
  */
 
 const { query } = require('../lib/database');
-const crypto = require('crypto');
 
-async function addShareTokenToInvoices() {
+async function addShareTokenColumn() {
   try {
-    console.log('📄 Agregando campo shareToken a Invoice...');
+    console.log('📄 Verificando campo shareToken en tabla Invoice...');
 
     // Verificar si la columna ya existe
     const checkColumn = await query(`
-      SELECT column_name
-      FROM information_schema.columns
-      WHERE table_name = 'Invoice'
-      AND column_name = 'shareToken'
+      SELECT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+        AND table_name = 'Invoice'
+        AND column_name = 'shareToken'
+      )
     `);
 
-    if (checkColumn.rows.length > 0) {
-      console.log('⚠️  La columna shareToken ya existe');
-      
-      // Generar tokens para facturas que no tienen
-      const invoicesWithoutToken = await query(`
-        SELECT id FROM "Invoice" WHERE "shareToken" IS NULL
-      `);
-      
-      if (invoicesWithoutToken.rows.length > 0) {
-        console.log(`📝 Generando tokens para ${invoicesWithoutToken.rows.length} facturas...`);
-        for (const invoice of invoicesWithoutToken.rows) {
-          const token = crypto.randomBytes(32).toString('hex');
-          await query(
-            `UPDATE "Invoice" SET "shareToken" = $1 WHERE id = $2`,
-            [token, invoice.id]
-          );
-        }
-        console.log('✅ Tokens generados exitosamente');
-      }
-      
+    if (checkColumn.rows[0].exists) {
+      console.log('✅ El campo shareToken ya existe en la tabla Invoice');
       return;
     }
 
@@ -47,33 +31,21 @@ async function addShareTokenToInvoices() {
       ADD COLUMN "shareToken" TEXT UNIQUE
     `);
 
-    // Crear índice para búsquedas rápidas
+    // Crear índice para shareToken
     await query(`
       CREATE INDEX "idx_Invoice_shareToken" ON "Invoice"("shareToken")
     `);
 
-    // Generar tokens para facturas existentes
-    const invoices = await query(`SELECT id FROM "Invoice"`);
-    console.log(`📝 Generando tokens para ${invoices.rows.length} facturas existentes...`);
-    
-    for (const invoice of invoices.rows) {
-      const token = crypto.randomBytes(32).toString('hex');
-      await query(
-        `UPDATE "Invoice" SET "shareToken" = $1 WHERE id = $2`,
-        [token, invoice.id]
-      );
-    }
-
-    console.log('✅ Campo shareToken agregado exitosamente');
+    console.log('✅ Campo shareToken agregado exitosamente a la tabla Invoice');
   } catch (error) {
-    console.error('❌ Error al agregar shareToken:', error);
+    console.error('❌ Error al agregar campo shareToken:', error);
     throw error;
   }
 }
 
 // Ejecutar si se llama directamente
 if (require.main === module) {
-  addShareTokenToInvoices()
+  addShareTokenColumn()
     .then(() => {
       console.log('✅ Script completado');
       process.exit(0);
@@ -84,5 +56,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { addShareTokenToInvoices };
-
+module.exports = { addShareTokenColumn };

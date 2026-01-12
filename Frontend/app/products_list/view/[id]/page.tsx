@@ -26,13 +26,13 @@ function ViewProductContent({ productId }: { productId: string }) {
         <div className="p-6">
           <div className="flex items-center justify-between mb-6 animate-stagger-1">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 transition-interactive">Produktdetails</h1>
-              <p className="text-gray-600 mt-1 transition-interactive">Bearbeiten Sie alle Details Ihres Produkts</p>
+              <h1 className="text-2xl font-bold text-gray-900 transition-ios">Produktdetails</h1>
+              <p className="text-gray-600 mt-1 transition-ios">Bearbeiten Sie alle Details Ihres Produkts</p>
             </div>
             <button
               onClick={() => window.history.back()}
               className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 
-                       transition-interactive gpu-accelerated
+                       transition-ios gpu-accelerated
                        hover:bg-gray-100 rounded-lg active:scale-95"
             >
               <span>← Zurück</span>

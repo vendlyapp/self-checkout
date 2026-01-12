@@ -78,7 +78,7 @@ const PaymentMethodSettings = ({ paymentMethods, onConfigure }: PaymentMethodSet
                 className="w-full block group"
               >
                 <div 
-                  className={`px-4 py-4 hover:bg-gray-50 transition-all duration-200 active:scale-[0.98] gpu-accelerated ${
+                  className={`px-4 py-4 hover:bg-gray-50 transition-ios active:scale-[0.98] gpu-accelerated ${
                     index !== settingsItems.length - 1 ? 'border-b border-gray-200' : ''
                   } ${!item.method || item.isSpecial ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                   style={{

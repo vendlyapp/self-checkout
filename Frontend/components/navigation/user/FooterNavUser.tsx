@@ -164,8 +164,8 @@ export default function FooterNav() {
       )}
 
       {/* Footer Nav con borde y sombra para separación visual */}
-      <div className="rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.12)] bg-white overflow-hidden">
-        <nav className="bg-white rounded-t-3xl safe-area-bottom border-t border-[#E5E6F8]" style={{ borderTopWidth: '0.5px' }}>
+      <div className="rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.12)] bg-white overflow-hidden transition-ios">
+        <nav className="bg-white rounded-t-3xl safe-area-bottom border-t border-[#E5E6F8] transition-ios" style={{ borderTopWidth: '0.5px' }}>
           <div className="flex items-center justify-between w-full px-6 max-w-[430px] mx-auto pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2">
         {processedItems.map((item) => {
           const Icon = item.icon;
@@ -219,7 +219,7 @@ export default function FooterNav() {
                 {/* Circle with Lucide Icon */}
                 <div
                   className={clsx(
-                    "relative w-[49px] h-[49px] bg-[#766B6A] rounded-full flex items-center justify-center shadow-lg text-white",
+                    "relative w-[49px] h-[49px] bg-[#766B6A] rounded-full flex items-center justify-center shadow-lg text-white transition-ios-spring",
                     item.isActive && "bg-white text-[#25D076]"
                   )}
                 >
@@ -242,7 +242,7 @@ export default function FooterNav() {
               href={item.href}
               prefetch={true}
               className={clsx(
-                "nav-item transition-opacity active:opacity-70",
+                "nav-item transition-ios active:opacity-70",
                 item.isActive && "nav-item-active"
               )}
               onTouchStart={() => handlePress(item.id)}

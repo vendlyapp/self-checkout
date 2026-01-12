@@ -61,7 +61,7 @@ const MainActionCards = () => {
           <ActionCard
             key={action.title}
             {...action}
-            className={`${pressedIndex === idx ? 'scale-95 transition-transform duration-150' : 'transition-transform duration-150'} lg:aspect-[2/1] lg:h-[200px] lg:justify-center lg:items-center lg:flex lg:p-12 lg:text-2xl cursor-pointer`}
+            className={`${pressedIndex === idx ? 'scale-95 transition-ios-fast' : 'transition-ios-fast'} lg:aspect-[2/1] lg:h-[200px] lg:justify-center lg:items-center lg:flex lg:p-12 lg:text-2xl cursor-pointer`}
             onTouchStart={() => setPressedIndex(idx)}
             onTouchEnd={() => setPressedIndex(null)}
             onMouseDown={() => setPressedIndex(idx)}

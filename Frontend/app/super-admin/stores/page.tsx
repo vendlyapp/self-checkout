@@ -175,7 +175,7 @@ export default function SuperAdminStores() {
             <div
               key={store.id}
               onClick={() => handleStoreClick(store.id)}
-              className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] hover:shadow-md transition-all duration-200 cursor-pointer group"
+              className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] hover:shadow-md transition-ios cursor-pointer group"
             >
               {/* Header */}
               <div className="flex items-start justify-between mb-4">

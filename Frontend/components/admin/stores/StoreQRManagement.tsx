@@ -171,7 +171,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
   return (
     <div className="space-y-6">
       {/* QR Code Card */}
-      <Card className="bg-card rounded-2xl border border-border/50 transition-all duration-200 hover:shadow-md">
+      <Card className="bg-card rounded-2xl border border-border/50 transition-ios hover:shadow-md">
         <CardHeader className="px-6 pt-6 pb-4">
           <CardTitle className="flex items-center gap-2 text-lg lg:text-xl mb-2">
             <QrCode className="w-5 h-5 text-brand-600 dark:text-brand-400" />
@@ -250,7 +250,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
       </Card>
 
       {/* Store Info Card */}
-      <Card className="bg-card rounded-2xl border border-border/50 transition-all duration-200 hover:shadow-md">
+      <Card className="bg-card rounded-2xl border border-border/50 transition-ios hover:shadow-md">
         <CardHeader className="px-6 pt-6 pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="min-w-0 flex-1">
@@ -356,7 +356,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
       </Card>
 
       {/* Public Link Card */}
-      <Card className="bg-card rounded-2xl border border-border/50 transition-all duration-200 hover:shadow-md">
+      <Card className="bg-card rounded-2xl border border-border/50 transition-ios hover:shadow-md">
         <CardHeader className="px-6 pt-6 pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="min-w-0 flex-1">

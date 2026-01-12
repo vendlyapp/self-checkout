@@ -42,7 +42,7 @@ const DailyGoalCard = ({
             Tagesziel
           </h2>
         </div>
-        <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors duration-200 tap-highlight-transparent">
+        <button className="p-1 hover:bg-gray-100 rounded-lg transition-ios-fast tap-highlight-transparent">
           <ChevronRight className="w-5 h-5 lg:w-5 lg:h-5 text-gray-500" />
         </button>
       </div>

@@ -13,7 +13,7 @@ const PlanCard = () => (
       </div>
     </div>
     <button
-      className="ml-4 px-4 py-2 lg:px-5 lg:py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-sm lg:text-base font-semibold rounded-xl shadow hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500"
+      className="ml-4 px-4 py-2 lg:px-5 lg:py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-sm lg:text-base font-semibold rounded-xl shadow hover:shadow-md transition-ios focus:outline-none focus:ring-2 focus:ring-brand-500"
       tabIndex={0}
       aria-label="Upgrade Plan"
     >

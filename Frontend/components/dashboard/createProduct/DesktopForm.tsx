@@ -126,7 +126,7 @@ export default function DesktopForm(props: SharedFormProps) {
               {/* Botón principal */}
               <button
                 onClick={handleModalClose}
-                className="w-full bg-gradient-to-r from-[#25D076] to-[#20BA68] text-white py-5 px-8 rounded-2xl font-semibold hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 text-lg flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full bg-gradient-to-r from-[#25D076] to-[#20BA68] text-white py-5 px-8 rounded-2xl font-semibold hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-ios text-lg flex items-center justify-center gap-2 cursor-pointer"
                 style={{ pointerEvents: 'auto' }}
               >
                 <CheckCircle className="w-6 h-6" />
@@ -627,7 +627,7 @@ export default function DesktopForm(props: SharedFormProps) {
             <button
               onClick={handleSave}
               disabled={false}
-              className="w-full bg-gradient-to-r from-[#25D076] to-[#20BA68] text-white py-4 px-6 rounded-xl font-semibold hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 text-base flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-[#25D076] to-[#20BA68] text-white py-4 px-6 rounded-xl font-semibold hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-ios text-base flex items-center justify-center gap-2"
             >
               <CheckCircle className="w-5 h-5" />
               <span>{props.isEditMode ? 'Änderungen speichern' : 'Produkt speichern'}</span>

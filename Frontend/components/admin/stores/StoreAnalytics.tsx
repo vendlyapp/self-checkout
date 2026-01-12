@@ -210,7 +210,7 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
   return (
     <div className="space-y-6">
       {/* Gráfico 1: Ventas (Últimos 7 días) */}
-      <Card className="bg-card rounded-2xl border border-border/50 transition-all duration-200 hover:shadow-md">
+      <Card className="bg-card rounded-2xl border border-border/50 transition-ios hover:shadow-md">
         <CardHeader className="px-6 pt-6 pb-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg lg:text-xl font-semibold text-foreground">Ventas</h3>
@@ -286,7 +286,7 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
       </Card>
 
       {/* Gráfico 2: Revenue Trend */}
-      <Card className="bg-card rounded-2xl border border-border/50 transition-all duration-200 hover:shadow-md">
+      <Card className="bg-card rounded-2xl border border-border/50 transition-ios hover:shadow-md">
         <CardHeader className="px-6 pt-6 pb-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg lg:text-xl font-semibold text-foreground">Revenue Trend</h3>
@@ -338,7 +338,7 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
       </Card>
 
       {/* Gráfico 3: Productos por Categoría */}
-      <Card className="bg-card rounded-2xl border border-border/50 transition-all duration-200 hover:shadow-md">
+      <Card className="bg-card rounded-2xl border border-border/50 transition-ios hover:shadow-md">
         <CardHeader className="px-6 pt-6 pb-4">
           <h3 className="text-lg lg:text-xl font-semibold text-foreground">Productos por Categoría</h3>
         </CardHeader>
@@ -394,7 +394,7 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
       </Card>
 
       {/* Gráfico 4: Órdenes por Estado */}
-      <Card className="bg-card rounded-2xl border border-border/50 transition-all duration-200 hover:shadow-md">
+      <Card className="bg-card rounded-2xl border border-border/50 transition-ios hover:shadow-md">
         <CardHeader className="px-6 pt-6 pb-4">
           <h3 className="text-lg lg:text-xl font-semibold text-foreground">Órdenes por Estado</h3>
         </CardHeader>

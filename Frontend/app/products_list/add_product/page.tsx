@@ -27,10 +27,10 @@ export default function AddProduct() {
         <div className="p-6 space-y-6">
           <div className="animate-stagger-1">
             <div className="mb-6">
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight transition-interactive">
+              <h1 className="text-3xl font-bold text-gray-900 tracking-tight transition-ios">
                 Neues Produkt erstellen
               </h1>
-              <p className="text-gray-500 mt-2 text-base transition-interactive">
+              <p className="text-gray-500 mt-2 text-base transition-ios">
                 Füllen Sie das Formular aus, um ein neues Produkt hinzuzufügen
               </p>
             </div>

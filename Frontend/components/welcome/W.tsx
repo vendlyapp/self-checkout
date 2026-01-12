@@ -41,7 +41,7 @@ const WelcomeScreen: React.FC = () => {
             tabIndex={0}
             onClick={handleNavigateToDashboard}
             onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleNavigateToDashboard(); }}
-            className="w-full bg-primary text-primary-foreground rounded-xl px-6 py-4 font-medium hover:opacity-90 active:scale-[0.98] transition-all duration-150 inline-flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="w-full bg-primary text-primary-foreground rounded-xl px-6 py-4 font-medium hover:opacity-90 active:scale-[0.98] transition-ios-fast inline-flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           >
             Zum Dashboard
             <ArrowRight className="w-4 h-4" />
@@ -52,7 +52,7 @@ const WelcomeScreen: React.FC = () => {
             tabIndex={0}
             onClick={handleNavigateToUser}
             onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleNavigateToUser(); }}
-            className="w-full bg-secondary text-secondary-foreground rounded-xl px-6 py-4 font-medium hover:opacity-90 active:scale-[0.98] transition-all duration-150 inline-flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2"
+            className="w-full bg-secondary text-secondary-foreground rounded-xl px-6 py-4 font-medium hover:opacity-90 active:scale-[0.98] transition-ios-fast inline-flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2"
           >
             Zum User
             <ArrowRight className="w-4 h-4" />

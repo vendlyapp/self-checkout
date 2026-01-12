@@ -47,7 +47,7 @@ const StatCardWithBars: React.FC<StatCardProps> = ({
             return (
               <div
                 key={idx}
-                className="flex-1 bg-muted rounded-t-sm transition-all duration-300 hover:opacity-80"
+                className="flex-1 bg-muted rounded-t-sm transition-ios-slow hover:opacity-80"
                 style={{
                   height: `${height}%`,
                   background: isLast 

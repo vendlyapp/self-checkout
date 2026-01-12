@@ -163,7 +163,7 @@ export default function RegisterPage() {
                   disabled={loading}
                   className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl 
                            focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
-                           transition-all duration-200 text-base disabled:bg-gray-50 disabled:cursor-not-allowed"
+                           transition-ios text-base disabled:bg-gray-50 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -186,7 +186,7 @@ export default function RegisterPage() {
                   disabled={loading}
                   className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl 
                            focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
-                           transition-all duration-200 text-base disabled:bg-gray-50 disabled:cursor-not-allowed"
+                           transition-ios text-base disabled:bg-gray-50 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -210,7 +210,7 @@ export default function RegisterPage() {
                   disabled={loading}
                   className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl 
                            focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
-                           transition-all duration-200 text-base disabled:bg-gray-50 disabled:cursor-not-allowed"
+                           transition-ios text-base disabled:bg-gray-50 disabled:cursor-not-allowed"
                 />
               </div>
               <p className="mt-1.5 text-xs text-gray-500">
@@ -237,7 +237,7 @@ export default function RegisterPage() {
                   disabled={loading}
                   className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl 
                            focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
-                           transition-all duration-200 text-base disabled:bg-gray-50 disabled:cursor-not-allowed"
+                           transition-ios text-base disabled:bg-gray-50 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -248,7 +248,7 @@ export default function RegisterPage() {
               disabled={loading || !formData.email || !formData.password || !formData.name}
               className="w-full bg-brand-500 hover:bg-brand-600 text-white rounded-2xl px-6 py-4 
                        font-semibold text-lg flex items-center justify-center gap-3 
-                       transition-all duration-200 shadow-lg shadow-brand-500/30 hover:shadow-xl
+                       transition-ios shadow-lg shadow-brand-500/30 hover:shadow-xl
                        disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-500
                        focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
             >
