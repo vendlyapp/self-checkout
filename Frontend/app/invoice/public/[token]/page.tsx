@@ -203,7 +203,7 @@ export default function PublicInvoicePage() {
       
       // Capturar el contenido como imagen con configuración que evita errores de color
       const canvas = await html2canvas(invoiceElement, {
-        scale: 2,
+        scale: 1.5, // Reducir scale para que la imagen no sea tan grande
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
@@ -298,22 +298,52 @@ export default function PublicInvoicePage() {
         colorFixStyle.parentNode.removeChild(colorFixStyle);
       }
       
+      // Crear PDF con mejor cálculo de dimensiones
       const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
       
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
       
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      // Calcular dimensiones manteniendo la proporción
+      // Dejar márgenes de 10mm en cada lado
+      const margin = 10;
+      const availableWidth = pdfWidth - (margin * 2);
+      const availableHeight = pdfHeight - (margin * 2);
+      
+      // Calcular ratio para ajustar la imagen al ancho disponible
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = availableWidth / imgWidth;
+      const imgScaledWidth = imgWidth * ratio;
+      const imgScaledHeight = imgHeight * ratio;
+      
+      // Centrar horizontalmente
+      const xOffset = (pdfWidth - imgScaledWidth) / 2;
+      
+      // Si la imagen cabe en una página, usar solo una página
+      if (imgScaledHeight <= pdfHeight) {
+        // Centrar verticalmente si es más pequeña que la página
+        const yOffset = imgScaledHeight < pdfHeight ? (pdfHeight - imgScaledHeight) / 2 : 0;
+        pdf.addImage(imgData, 'PNG', xOffset, yOffset, imgScaledWidth, imgScaledHeight);
+      } else {
+        // Si es más grande, dividir en múltiples páginas
+        let heightLeft = imgScaledHeight;
+        let position = 0;
+        
+        pdf.addImage(imgData, 'PNG', xOffset, position, imgScaledWidth, imgScaledHeight);
+        heightLeft -= pdfHeight;
+        
+        while (heightLeft > 0) {
+          position = heightLeft - imgScaledHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', xOffset, position, imgScaledWidth, imgScaledHeight);
+          heightLeft -= pdfHeight;
+        }
       }
       
       pdf.save(`Rechnung-${invoice?.invoiceNumber || 'invoice'}.pdf`);
