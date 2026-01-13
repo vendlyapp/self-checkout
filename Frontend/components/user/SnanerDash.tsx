@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { CheckCircle, ScanBarcode, XCircle, Camera, ShoppingCart } from "lucide-react";
+import { CheckCircle, ScanBarcode, XCircle, Camera, ShoppingCart, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Html5Qrcode, Html5QrcodeScanType } from "html5-qrcode";
 import { useCartStore } from "@/lib/stores/cartStore";
@@ -464,10 +464,10 @@ const SnanerDash = () => {
         </button>
       </div>
 
-      {/* Success Modal - Mejorado */}
+      {/* Success Modal - Optimizado para móvil */}
       {showSuccessModal && scannedProduct && (
         <div 
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999]"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center z-[9999] safe-area-bottom"
           onClick={(e) => {
             // Cerrar al hacer click fuera del modal
             if (e.target === e.currentTarget) {
@@ -475,45 +475,60 @@ const SnanerDash = () => {
             }
           }}
         >
-          <div className="bg-white rounded-3xl p-6 max-w-sm mx-4 text-center shadow-2xl w-full">
-            {/* Icono de éxito animado */}
-            <div className="w-20 h-20 bg-gradient-to-br from-[#25D076] to-[#20B869] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <CheckCircle className="w-10 h-10 text-white" strokeWidth={2.5} />
-            </div>
+          <div 
+            className="bg-white rounded-t-3xl sm:rounded-3xl p-4 sm:p-6 max-w-sm mx-0 sm:mx-4 text-center shadow-2xl w-full max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-slide-in-up-from-bottom sm:animate-slide-in-up relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Botón de cerrar - Solo en desktop */}
+            <button
+              onClick={handleCloseModal}
+              className="hidden sm:flex absolute top-4 right-4 w-8 h-8 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 active:scale-95 transition-ios z-10"
+              aria-label="Cerrar modal"
+            >
+              <X className="w-4 h-4 text-gray-600" />
+            </button>
 
-            {/* Título */}
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">Erfolgreich!</h3>
-
-            {/* Imagen del producto */}
-            {scannedProduct.image && (
-              <div className="relative w-32 h-32 mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-gray-100 shadow-md">
-                <Image
-                  src={scannedProduct.image}
-                  alt={scannedProduct.name}
-                  fill
-                  className="object-cover"
-                  sizes="128px"
-                />
+            {/* Contenedor con scroll si es necesario */}
+            <div className="flex-1 overflow-y-auto no-scrollbar px-1">
+              {/* Icono de éxito animado - Más pequeño */}
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-[#25D076] to-[#20B869] rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg flex-shrink-0">
+                <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 text-white" strokeWidth={2.5} />
               </div>
-            )}
 
-            {/* Nombre del producto */}
-            <p className="text-lg font-semibold text-gray-900 mb-2 px-2">
-              {scannedProduct.name}
-            </p>
-            <p className="text-sm text-gray-600 mb-1">
-              wurde zum Warenkorb hinzugefügt
-            </p>
+              {/* Título - Más compacto */}
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Erfolgreich!</h3>
 
-            {/* Precio */}
-            <div className="mb-6">
-              <span className="text-xl font-bold text-[#25D076]">
-                CHF {typeof scannedProduct.price === 'number' ? scannedProduct.price.toFixed(2) : scannedProduct.price}
-              </span>
+              {/* Imagen del producto - Más pequeña */}
+              {scannedProduct.image && (
+                <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-3 sm:mb-4 rounded-xl sm:rounded-2xl overflow-hidden border-2 border-gray-100 shadow-md flex-shrink-0">
+                  <Image
+                    src={scannedProduct.image}
+                    alt={scannedProduct.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 96px, 128px"
+                  />
+                </div>
+              )}
+
+              {/* Nombre del producto - Texto más compacto */}
+              <p className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2 px-2 line-clamp-2">
+                {scannedProduct.name}
+              </p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">
+                wurde zum Warenkorb hinzugefügt
+              </p>
+
+              {/* Precio - Más compacto */}
+              <div className="mb-4 sm:mb-6">
+                <span className="text-lg sm:text-xl font-bold text-[#25D076]">
+                  CHF {typeof scannedProduct.price === 'number' ? scannedProduct.price.toFixed(2) : scannedProduct.price}
+                </span>
+              </div>
             </div>
 
-            {/* Botones */}
-            <div className="flex flex-col gap-3">
+            {/* Botones - Fijos en la parte inferior */}
+            <div className="flex flex-col gap-2 sm:gap-3 pt-2 sm:pt-0 flex-shrink-0 border-t border-gray-100 sm:border-0 mt-2 sm:mt-0">
               <button
                 onClick={() => {
                   handleCloseModal();
@@ -527,14 +542,14 @@ const SnanerDash = () => {
                     router.push('/');
                   }
                 }}
-                className="bg-[#25D076] text-white px-6 py-4 rounded-full font-semibold hover:bg-[#25D076]/90 
+                className="bg-[#25D076] text-white px-5 sm:px-6 py-3 sm:py-4 rounded-full font-semibold hover:bg-[#25D076]/90 
                          active:scale-95 transition-ios w-full touch-target tap-highlight-transparent
                          flex items-center justify-center gap-2"
-                style={{ minHeight: '52px' }}
+                style={{ minHeight: '48px' }}
                 aria-label="Warenkorb anzeigen"
               >
-                <ShoppingCart className="w-5 h-5" />
-                <span>Zum Warenkorb</span>
+                <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                <span className="text-sm sm:text-base">Zum Warenkorb</span>
               </button>
               <button
                 onClick={() => {
@@ -549,14 +564,14 @@ const SnanerDash = () => {
                     handleStartScan();
                   }
                 }}
-                className="bg-white text-[#25D076] border-2 border-[#25D076] px-6 py-4 rounded-full font-semibold 
+                className="bg-white text-[#25D076] border-2 border-[#25D076] px-5 sm:px-6 py-3 sm:py-4 rounded-full font-semibold 
                          hover:bg-[#25D076]/5 active:scale-95 transition-ios w-full 
                          touch-target tap-highlight-transparent flex items-center justify-center gap-2"
-                style={{ minHeight: '52px' }}
+                style={{ minHeight: '48px' }}
                 aria-label="Weiter scannen"
               >
-                <ScanBarcode className="w-5 h-5" />
-                <span>Weiter scannen</span>
+                <ScanBarcode className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                <span className="text-sm sm:text-base">Weiter scannen</span>
               </button>
             </div>
           </div>
