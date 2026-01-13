@@ -13,6 +13,7 @@ interface HeaderNavProps {
   closeDestination?: string;
   isFixed?: boolean;
   promotionCount?: number; // Número real de promociones
+  variant?: 'default' | 'subtle'; // Variante para diseño más sutil
 }
 
 export default function HeaderNav({
@@ -21,6 +22,7 @@ export default function HeaderNav({
   closeDestination = "/dashboard",
   isFixed = false,
   promotionCount, // Número real de promociones pasado como prop
+  variant = 'default', // Variante por defecto
 }: HeaderNavProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -40,17 +42,19 @@ export default function HeaderNav({
   // Usar promotionCount si está disponible, sino usar products.length del mock
   const displayCount = promotionCount !== undefined ? promotionCount : products.length;
 
+  const isSubtle = variant === 'subtle'
+  
   return (
-    <div className={`${isFixed ? 'fixed top-[80px]' : ''} flex justify-between items-center p-4 bg-white left-0 right-0 z-40 safe-area-top pt-[calc(1rem+env(safe-area-inset-top))]`}>
-      <div className="flex items-center gap-2 justify-between w-full pt-[10px] px-4 touch-target">
+    <div className={`${isFixed ? 'fixed top-[80px]' : ''} flex justify-between items-center ${isSubtle ? 'p-3' : 'p-4'} ${isSubtle ? 'bg-transparent' : 'bg-white'} left-0 right-0 z-40 safe-area-top ${isSubtle ? 'pt-[calc(0.5rem+env(safe-area-inset-top))]' : 'pt-[calc(1rem+env(safe-area-inset-top))]'}`}>
+      <div className={`flex items-center gap-2 justify-between w-full ${isSubtle ? 'pt-[5px]' : 'pt-[10px]'} ${isSubtle ? 'px-2' : 'px-4'} touch-target`}>
         <button
-          className="flex items-center gap-2 cursor-pointer"
+          className={`flex items-center gap-2 cursor-pointer ${isSubtle ? 'hover:bg-white/50 active:bg-white/70 rounded-full p-2 -ml-2 transition-ios' : ''}`}
           onClick={() => router.back()}
           aria-label="Zurück"
           tabIndex={0}
         >
-          <ArrowLeftIcon className="w-6 h-6" />
-          <span className="text-[18px] font-semibold">{title}</span>
+          <ArrowLeftIcon className={`${isSubtle ? 'w-5 h-5' : 'w-6 h-6'} ${isSubtle ? 'text-gray-800' : ''}`} />
+          {!isSubtle && <span className="text-[18px] font-semibold">{title}</span>}
         </button>
         <div className="flex items-center gap-2">
           {isCartPage && hasItems && (
@@ -87,7 +91,7 @@ export default function HeaderNav({
               </button>
             </div>
           )}
-          {!isCartPage && !showAddButton && !isPromotionPage && (
+          {!isCartPage && !showAddButton && !isPromotionPage && !isSubtle && (
             <button
               className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100"
               onClick={() => router.push(closeDestination)}
