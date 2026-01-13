@@ -45,8 +45,6 @@ const StoreDashboard = () => (
     {/* ===== MOBILE LAYOUT ===== */}
     <div className="block lg:hidden">
       <div className="p-4 space-y-6">
-       
-
         {/* Header Card */}
         <StoreHeaderCard />
 
@@ -119,7 +117,7 @@ const StoreDashboard = () => (
 
         {/* Mi Tienda Card */}
         <Link href="/store/settings" className="block">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow mb-6">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 rounded-lg bg-brand-100 flex items-center justify-center flex-shrink-0">
                 <Store className="w-10 h-10 text-brand-600" />

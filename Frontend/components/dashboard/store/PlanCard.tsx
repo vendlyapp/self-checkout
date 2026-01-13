@@ -1,7 +1,7 @@
 import { Crown } from 'lucide-react';
 
 const PlanCard = () => (
-  <div className="flex items-center bg-background-cream px-5 py-4 lg:px-6 lg:py-5 w-full h-full">
+  <div className="flex items-center bg-background-cream px-4 py-4 lg:px-6 lg:py-5 w-full h-full">
     <div className="flex items-center gap-3 lg:gap-4 flex-1">
       <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-white flex items-center justify-center">
         <Crown className="w-6 h-6 lg:w-7 lg:h-7" />

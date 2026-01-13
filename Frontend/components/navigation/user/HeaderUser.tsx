@@ -33,11 +33,14 @@ export default function HeaderUser({ isDarkMode = false }: HeaderUserProps) {
            {/* Logo de la tienda - 50% izquierda */}
           <div className="w-1/2 flex items-center justify-start p-2 rounded">
             {storeLogo ? (
-              <div className="relative max-w-[160px] sm:max-w-[180px] h-[65px] sm:h-[75px] p-2 overflow-hidden">
+              <div className="relative max-w-[160px] sm:max-w-[180px] h-[65px] sm:h-[75px] flex items-center justify-center bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <img
                   src={storeLogo}
                   alt={store?.name || "Store Logo"}
-                  className="w-full h-full object-cover rounded-lg"
+                  className="max-w-full max-h-full w-auto h-auto object-contain p-1.5"
+                  style={{ 
+                    imageRendering: '-webkit-optimize-contrast'
+                  }}
                   onError={() => {
                     // Si falla la carga, usar icono por defecto
                     setStoreLogo(null);

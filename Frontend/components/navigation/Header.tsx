@@ -89,10 +89,10 @@ export default function Header() {
               <Image
                 src="/logo.svg"
                 alt="Self-Checkout Logo"
-                width={32}
-                height={32}
+                width={30}
+                height={30}
                 priority
-                className="h-[32px] w-auto"
+                className="h-[30px] w-auto"
               />
           </Link>
 
