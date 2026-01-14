@@ -1,21 +1,53 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { fetchProducts, Product } from "../products_list/data/mockProducts";
+import { useMemo } from "react";
+import { Product, normalizeProductData } from "../products_list/data/mockProducts";
 import ProductsList from "./ProductsList";
 import { useCartStore } from "@/lib/stores/cartStore";
+import { useProducts } from "@/hooks/queries/useProducts";
 
 interface DashBoardChargeProps {
   searchQuery: string;
   selectedFilters: string[];
 }
 
+// Función para agrupar productos padre-hijo
+const groupProductsWithVariants = (products: Product[]): Product[] => {
+  // Separar productos padre (sin parentId) y variantes (con parentId)
+  const parentProducts: Product[] = [];
+  const variantsMap = new Map<string, Product[]>();
+
+  products.forEach(product => {
+    if (product.parentId) {
+      // Es una variante
+      if (!variantsMap.has(product.parentId)) {
+        variantsMap.set(product.parentId, []);
+      }
+      variantsMap.get(product.parentId)!.push(product);
+    } else {
+      // Es un producto padre
+      parentProducts.push(product);
+    }
+  });
+
+  // Agregar variantes a sus productos padre
+  return parentProducts.map(parent => {
+    const variants = variantsMap.get(parent.id) || [];
+    return {
+      ...parent,
+      variants: variants.length > 0 ? variants : undefined
+    };
+  });
+};
+
 export default function DashBoardCharge({
   searchQuery,
   selectedFilters,
 }: DashBoardChargeProps) {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(false);
+  // Usar el hook useProducts con React Query para obtener productos reales
+  const { data: rawProducts = [], isLoading, isFetching } = useProducts({ 
+    isActive: true 
+  });
 
   // Usar el store global
   const { addToCart } = useCartStore();
@@ -25,63 +57,51 @@ export default function DashBoardCharge({
     addToCart(product, quantity);
   };
 
-  // Cargar productos iniciales
-  useEffect(() => {
-    const loadInitialProducts = async () => {
-      setLoading(true);
-      try {
-        const initialProducts = await fetchProducts();
-        setProducts(initialProducts);
-      } catch {
-        // Error al cargar productos
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Procesar y filtrar productos usando useMemo para evitar recálculos innecesarios
+  const products = useMemo(() => {
+    if (!rawProducts || rawProducts.length === 0) {
+      return [];
+    }
 
-    loadInitialProducts();
-  }, []);
+    // Normalizar productos
+    const normalizedProducts = rawProducts.map(normalizeProductData);
+    
+    // Agrupar productos con variantes (solo mostrar productos padre)
+    const groupedProducts = groupProductsWithVariants(normalizedProducts);
 
-  // Aplicar filtros y búsqueda cuando cambien
-  useEffect(() => {
-    const applyFiltersAndSearch = async () => {
-      setLoading(true);
-      try {
-        // Si hay filtros seleccionados, usar todos (no solo el primero)
-        // Si no hay filtros o solo está "all", mostrar todos los productos
-        const categoryIds = selectedFilters.length > 0 && !selectedFilters.includes('all')
-          ? selectedFilters
-          : undefined; // undefined = mostrar todos
-        
-        const filteredProducts = await fetchProducts({
-          categoryId: categoryIds && categoryIds.length > 0 ? categoryIds[0] : "all", // Por compatibilidad con la API
-          searchTerm: searchQuery,
-        });
-        
-        // Si hay múltiples categorías seleccionadas, filtrar localmente
-        let finalProducts = filteredProducts;
-        if (categoryIds && categoryIds.length > 1) {
-          finalProducts = filteredProducts.filter((product: Product) =>
-            categoryIds.includes(product.categoryId)
-          );
-        } else if (categoryIds && categoryIds.length === 1) {
-          // Ya está filtrado por la API, pero asegurarse de que coincida
-          finalProducts = filteredProducts.filter((product: Product) =>
-            product.categoryId === categoryIds[0]
-          );
-        }
-        
-        setProducts(finalProducts);
-      } catch {
-        // Error al filtrar productos
-        setProducts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Aplicar filtros de categorías
+    let filteredProducts = groupedProducts;
+    const activeCategoryFilters = selectedFilters.filter(id => id !== 'all');
+    if (activeCategoryFilters.length > 0) {
+      filteredProducts = filteredProducts.filter((p: Product) =>
+        activeCategoryFilters.includes(p.categoryId)
+      );
+    }
 
-    applyFiltersAndSearch();
-  }, [selectedFilters, searchQuery]);
+    // Aplicar búsqueda
+    if (searchQuery && searchQuery.trim() !== "") {
+      const queryLower = searchQuery.toLowerCase().trim();
+      filteredProducts = filteredProducts.filter((p: Product) => {
+        // Buscar en nombre del producto padre
+        const matchesParent = p.name.toLowerCase().includes(queryLower) ||
+          (p.description && p.description.toLowerCase().includes(queryLower)) ||
+          (p.sku && p.sku.toLowerCase().includes(queryLower)) ||
+          (p.tags && p.tags.some(tag => tag.toLowerCase().includes(queryLower)));
+        
+        // Buscar en nombres de variantes
+        const matchesVariant = p.variants?.some(variant => 
+          variant.name.toLowerCase().includes(queryLower) ||
+          (variant.description && variant.description.toLowerCase().includes(queryLower))
+        );
+        
+        return matchesParent || matchesVariant;
+      });
+    }
+
+    return filteredProducts;
+  }, [rawProducts, selectedFilters, searchQuery]);
+
+  const loading = isLoading || isFetching;
 
   return (
     <>

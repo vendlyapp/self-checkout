@@ -7,6 +7,7 @@ import { useArchivedDiscountCodes } from '@/hooks/queries/useDiscountCodes'
 import { DiscountCode } from '@/components/dashboard/discounts/types'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { Loader } from '@/components/ui/Loader'
 
 export default function ArchivedDiscountsPage() {
   const { isDesktop } = useResponsive()
@@ -20,7 +21,7 @@ export default function ArchivedDiscountsPage() {
   if (isLoading) {
     return (
       <div className="w-full h-full flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#25D076]"></div>
+        <Loader size="md" />
       </div>
     )
   }

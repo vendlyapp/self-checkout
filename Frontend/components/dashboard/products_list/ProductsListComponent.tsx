@@ -11,6 +11,7 @@ import ProductCardList from "./ProductCardList";
 import FilterModal, { FilterState } from "./FilterModal";
 import { useProductsList } from "./ProductsListContext";
 import FixedHeaderContainer from "./FixedHeaderContainer";
+import { Loader } from "@/components/ui/Loader";
 
 interface ProductsListComponentProps {
   isStandalone?: boolean; // Si es true, es la página dedicada. Si es false, es parte del dashboard
@@ -414,7 +415,7 @@ export default function ProductsListComponent({
         <div className={`p-4 pb-32 lg:p-0 lg:pb-8 ${className}`}>
           {isLoading ? (
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-500 mx-auto"></div>
+              <Loader size="lg" className="mx-auto" />
               <p className="mt-4 text-base text-gray-500 font-medium">
                 Produkte werden geladen...
               </p>
@@ -483,7 +484,7 @@ export default function ProductsListComponent({
         <div className="p-4">
           {isLoading ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500 mx-auto"></div>
+              <Loader size="md" className="mx-auto" />
               <p className="mt-2 text-sm text-muted-foreground">
                 Produkte werden geladen...
               </p>

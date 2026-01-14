@@ -306,23 +306,111 @@ class OrderService {
     let whereClause = '';
     const params = [];
     let paramCount = 0;
+    let ownerId = null;
 
+    // Si se proporciona storeId, obtener el ownerId de la tienda
+    if (storeId) {
+      const storeService = require('./StoreService');
+      const store = await storeService.getById(storeId);
+      if (!store) {
+        // Si la tienda no existe, retornar lista vacía
+        return {
+          success: true,
+          data: [],
+          count: 0,
+          total: 0
+        };
+      }
+      if (store.ownerId) {
+        ownerId = store.ownerId;
+      } else {
+        // Si la tienda no tiene ownerId, retornar lista vacía
+        return {
+          success: true,
+          data: [],
+          count: 0,
+          total: 0
+        };
+      }
+    }
+
+    // Si tenemos ownerId, filtrar órdenes por productos de ese owner
+    if (ownerId) {
+      // Filtrar órdenes que tengan al menos un producto del owner
+      const selectQuery = `
+        SELECT DISTINCT o.*, u.name as userName, u.email as userEmail
+        FROM "Order" o
+        INNER JOIN "OrderItem" oi ON o.id = oi."orderId"
+        INNER JOIN "Product" p ON oi."productId" = p.id
+        LEFT JOIN "User" u ON o."userId" = u.id
+        WHERE p."ownerId" = $1
+        ${status ? `AND o.status = $2` : ''}
+        ORDER BY o."createdAt" DESC
+        LIMIT $${status ? 3 : 2} OFFSET $${status ? 4 : 3}
+      `;
+      
+      const queryParams = [ownerId];
+      if (status) {
+        queryParams.push(status);
+      }
+      queryParams.push(limit, offset);
+
+      const result = await query(selectQuery, queryParams);
+      const orders = result.rows;
+
+      // Obtener items para cada orden
+      for (const order of orders) {
+        const itemsQuery = `
+          SELECT oi.*, p.name as productName, p.sku as productSku
+          FROM "OrderItem" oi
+          LEFT JOIN "Product" p ON oi."productId" = p.id
+          WHERE oi."orderId" = $1
+        `;
+        const itemsResult = await query(itemsQuery, [order.id]);
+        order.items = itemsResult.rows;
+      }
+
+      // Contar total de órdenes para este owner
+      const countQuery = `
+        SELECT COUNT(DISTINCT o.id) as total
+        FROM "Order" o
+        INNER JOIN "OrderItem" oi ON o.id = oi."orderId"
+        INNER JOIN "Product" p ON oi."productId" = p.id
+        WHERE p."ownerId" = $1
+        ${status ? `AND o.status = $2` : ''}
+      `;
+      const countParams = [ownerId];
+      if (status) {
+        countParams.push(status);
+      }
+      const countResult = await query(countQuery, countParams);
+      const total = parseInt(countResult.rows[0].total);
+
+      return {
+        success: true,
+        data: orders,
+        count: orders.length,
+        total: total
+      };
+    }
+
+    // Si se proporcionó storeId pero no se obtuvo ownerId, retornar lista vacía
+    // (esto no debería pasar porque ya se validó arriba, pero por seguridad)
+    if (storeId) {
+      return {
+        success: true,
+        data: [],
+        count: 0,
+        total: 0
+      };
+    }
+
+    // Si no hay storeId, usar el filtro original (sin filtro por tienda)
     // Filtrar por status si se proporciona
     if (status) {
       paramCount++;
       whereClause = `WHERE o.status = $${paramCount}`;
       params.push(status);
-    }
-
-    // Filtrar por storeId si se proporciona
-    if (storeId) {
-      paramCount++;
-      if (whereClause) {
-        whereClause += ` AND o."storeId" = $${paramCount}`;
-      } else {
-        whereClause = `WHERE o."storeId" = $${paramCount}`;
-      }
-      params.push(storeId);
     }
 
     const selectQuery = `
@@ -351,7 +439,9 @@ class OrderService {
     }
 
     // Contar total
-    const countResult = await query('SELECT COUNT(*) FROM "Order"');
+    const countWhereClause = status ? `WHERE status = $1` : '';
+    const countParams = status ? [status] : [];
+    const countResult = await query(`SELECT COUNT(*) FROM "Order" ${countWhereClause}`, countParams);
     const total = parseInt(countResult.rows[0].count);
 
     return {
@@ -378,15 +468,24 @@ class OrderService {
 
     const order = result.rows[0];
 
-    // Obtener items
+    // Obtener items con información del producto
     const itemsQuery = `
-      SELECT oi.*, p.name as productName, p.sku as productSku
+      SELECT oi.*, p.name as "productName", p.sku as "productSku"
       FROM "OrderItem" oi
       LEFT JOIN "Product" p ON oi."productId" = p.id
       WHERE oi."orderId" = $1
     `;
     const itemsResult = await query(itemsQuery, [id]);
     order.items = itemsResult.rows;
+    
+    // Debug: verificar que los items tengan productName
+    const itemsWithoutName = order.items.filter(item => !item.productName);
+    if (itemsWithoutName.length > 0) {
+      console.warn('⚠️ [OrderService.findById] Items sin productName:', {
+        orderId: id,
+        itemsWithoutName: itemsWithoutName.map(i => ({ productId: i.productId, hasProductName: !!i.productName })),
+      });
+    }
 
     return {
       success: true,
@@ -439,13 +538,23 @@ class OrderService {
     let paramCount = 0;
 
     // Campos que se pueden actualizar
-    const updatableFields = ['total'];
+    const updatableFields = ['total', 'status'];
 
     for (const field of updatableFields) {
       if (orderData[field] !== undefined) {
         paramCount++;
-        updateFields.push(`"${field}" = $${paramCount}`);
-        values.push(parseFloat(orderData[field]));
+        if (field === 'status') {
+          // Validar status
+          const validStatuses = ['pending', 'processing', 'completed', 'cancelled'];
+          if (!validStatuses.includes(orderData[field])) {
+            throw new Error(`Estado inválido. Debe ser uno de: ${validStatuses.join(', ')}`);
+          }
+          updateFields.push(`"${field}" = $${paramCount}`);
+          values.push(orderData[field]);
+        } else {
+          updateFields.push(`"${field}" = $${paramCount}`);
+          values.push(parseFloat(orderData[field]));
+        }
       }
     }
 
@@ -467,11 +576,34 @@ class OrderService {
     const result = await query(updateQuery, values);
     const order = result.rows[0];
 
+    // Si se cancela la orden, también cancelar las facturas asociadas
+    if (orderData.status === 'cancelled') {
+      try {
+        const invoiceService = require('./InvoiceService');
+        const invoicesResult = await invoiceService.findByOrderId(id);
+        if (invoicesResult.success && invoicesResult.data) {
+          for (const invoice of invoicesResult.data) {
+            await invoiceService.updateStatus(invoice.id, 'cancelled');
+          }
+        }
+      } catch (error) {
+        console.error('Error al cancelar facturas asociadas:', error);
+        // No fallar la operación si hay error al cancelar facturas
+      }
+    }
+
     return {
       success: true,
       data: order,
       message: 'Orden actualizada exitosamente'
     };
+  }
+
+  /**
+   * Actualiza el estado de una orden
+   */
+  async updateStatus(id, status) {
+    return this.update(id, { status });
   }
 
   async delete(id) {
@@ -497,7 +629,48 @@ class OrderService {
 
   async getStats(options = {}) {
     const { date = null, ownerId = null } = options;
-    
+
+    // Si tenemos ownerId, filtrar órdenes por productos de ese owner
+    if (ownerId) {
+      // Usar subquery para filtrar órdenes que tengan productos del owner
+      let dateFilter = '';
+      const params = [ownerId];
+      
+      if (date) {
+        dateFilter = `AND o."createdAt"::date = $2::date`;
+        params.push(date);
+      }
+
+      const statsQuery = `
+        SELECT
+          COUNT(DISTINCT o.id) as totalOrders,
+          COALESCE(SUM(DISTINCT o.total), 0) as totalRevenue,
+          COALESCE(AVG(DISTINCT o.total), 0) as averageOrderValue,
+          COUNT(DISTINCT o.id) FILTER (WHERE o."createdAt" >= CURRENT_DATE - INTERVAL '30 days') as recentOrders,
+          COUNT(DISTINCT o."userId") as uniqueCustomers
+        FROM "Order" o
+        INNER JOIN "OrderItem" oi ON o.id = oi."orderId"
+        INNER JOIN "Product" p ON oi."productId" = p.id
+        WHERE p."ownerId" = $1
+        ${dateFilter}
+      `;
+
+      const result = await query(statsQuery, params);
+      const stats = result.rows[0];
+
+      return {
+        success: true,
+        data: {
+          totalOrders: parseInt(stats.totalorders) || 0,
+          totalRevenue: parseFloat(stats.totalrevenue) || 0,
+          averageOrderValue: parseFloat(stats.averageordervalue) || 0,
+          recentOrders: parseInt(stats.recentorders) || 0,
+          uniqueCustomers: parseInt(stats.uniquecustomers) || 0
+        }
+      };
+    }
+
+    // Si no hay ownerId, usar el filtro original (sin filtro por tienda)
     let whereClause = '';
     const params = [];
     let paramCount = 0;
@@ -508,17 +681,6 @@ class OrderService {
       // Usar CAST para mejor compatibilidad con Supabase
       whereClause = `WHERE "createdAt"::date = $${paramCount}::date`;
       params.push(date);
-    }
-
-    // Filtrar por ownerId si se proporciona (para obtener estadísticas de una tienda específica)
-    if (ownerId) {
-      paramCount++;
-      if (whereClause) {
-        whereClause += ` AND "userId" = $${paramCount}`;
-      } else {
-        whereClause = `WHERE "userId" = $${paramCount}`;
-      }
-      params.push(ownerId);
     }
 
     const statsQuery = `
@@ -547,7 +709,92 @@ class OrderService {
     };
   }
 
-  async getRecentOrders(limit = 10, status = null) {
+  async getRecentOrders(limit = 10, status = null, storeId = null) {
+    let ownerId = null;
+
+    // Si se proporciona storeId, obtener el ownerId de la tienda
+    if (storeId) {
+      const storeService = require('./StoreService');
+      const store = await storeService.getById(storeId);
+      if (!store) {
+        // Si la tienda no existe, retornar lista vacía
+        return {
+          success: true,
+          data: [],
+          count: 0
+        };
+      }
+      if (store.ownerId) {
+        ownerId = store.ownerId;
+      } else {
+        // Si la tienda no tiene ownerId, retornar lista vacía
+        return {
+          success: true,
+          data: [],
+          count: 0
+        };
+      }
+    }
+
+    // Si tenemos ownerId, filtrar órdenes por productos de ese owner
+    if (ownerId) {
+      let whereClause = 'WHERE p."ownerId" = $1';
+      const params = [ownerId];
+      let paramCount = 1;
+
+      // Filtrar por status si se proporciona
+      if (status) {
+        paramCount++;
+        whereClause += ` AND o.status = $${paramCount}`;
+        params.push(status);
+      }
+
+      paramCount++;
+      params.push(limit);
+
+      const selectQuery = `
+        SELECT DISTINCT o.*, u.name as userName, u.email as userEmail
+        FROM "Order" o
+        INNER JOIN "OrderItem" oi ON o.id = oi."orderId"
+        INNER JOIN "Product" p ON oi."productId" = p.id
+        LEFT JOIN "User" u ON o."userId" = u.id
+        ${whereClause}
+        ORDER BY o."createdAt" DESC
+        LIMIT $${paramCount}
+      `;
+
+      const result = await query(selectQuery, params);
+      const orders = result.rows;
+
+      // Obtener items para cada orden
+      for (const order of orders) {
+        const itemsQuery = `
+          SELECT oi.*, p.name as productName, p.sku as productSku
+          FROM "OrderItem" oi
+          LEFT JOIN "Product" p ON oi."productId" = p.id
+          WHERE oi."orderId" = $1
+        `;
+        const itemsResult = await query(itemsQuery, [order.id]);
+        order.items = itemsResult.rows;
+      }
+
+      return {
+        success: true,
+        data: orders,
+        count: orders.length
+      };
+    }
+
+    // Si se proporcionó storeId pero no se obtuvo ownerId, retornar lista vacía
+    if (storeId) {
+      return {
+        success: true,
+        data: [],
+        count: 0
+      };
+    }
+
+    // Si no hay storeId, usar el filtro original (sin filtro por tienda)
     let whereClause = '';
     const params = [];
     let paramCount = 0;

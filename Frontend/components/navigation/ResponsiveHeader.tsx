@@ -166,22 +166,7 @@ export default function ResponsiveHeader({
 
             {/* Actions */}
             <div className="header-actions">
-              {/* Search Button */}
-              <button
-                className={clsx(
-                  "header-action-button rounded-full touch-target",
-                  pressedButton === 'search' && "button-pressed"
-                )}
-                onTouchStart={() => handleButtonPress('search')}
-                onMouseDown={(e) => {
-                  handleButtonPress('search');
-                  handleValidInteraction(e);
-                }}
-                onClick={handleValidInteraction}
-                aria-label="Suchen"
-              >
-                <ChartNoAxesColumn className="header-icon" />
-              </button>
+             
 
               {/* Notifications Button */}
               <button

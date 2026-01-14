@@ -57,9 +57,12 @@ class OrderController {
    */
   async getAllOrders(req, res) {
     try {
-      const { limit } = req.query;
+      const { limit, offset, status, storeId } = req.query;
       const options = {};
       if (limit) options.limit = parseInt(limit);
+      if (offset) options.offset = parseInt(offset);
+      if (status) options.status = status;
+      if (storeId) options.storeId = storeId;
 
       const result = await orderService.findAll(options);
       res.status(HTTP_STATUS.OK).json(result);
@@ -388,14 +391,53 @@ class OrderController {
    */
   async getRecentOrders(req, res) {
     try {
-      const { limit, status } = req.query;
+      const { limit, status, storeId } = req.query;
       const result = await orderService.getRecentOrders(
         parseInt(limit) || 10,
-        status || null
+        status || null,
+        storeId || null
       );
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Actualiza el estado de una orden
+   * @route PATCH /api/orders/:id/status
+   */
+  async updateOrderStatus(req, res) {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      if (!status) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: 'El estado es requerido',
+        });
+      }
+
+      const validStatuses = ['pending', 'processing', 'completed', 'cancelled'];
+      if (!validStatuses.includes(status)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: `Estado inválido. Debe ser uno de: ${validStatuses.join(', ')}`,
+        });
+      }
+
+      const result = await orderService.updateStatus(id, status);
+      res.status(HTTP_STATUS.OK).json(result);
+    } catch (error) {
+      const statusCode = error.message.includes('no encontrada')
+        ? HTTP_STATUS.NOT_FOUND
+        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
+
+      res.status(statusCode).json({
         success: false,
         error: error.message
       });

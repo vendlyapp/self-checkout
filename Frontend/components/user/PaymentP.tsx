@@ -30,6 +30,7 @@ import { usePaymentMethods } from "@/hooks/queries/usePaymentMethods";
 import { lightHaptic, mediumHaptic, successHaptic, errorHaptic } from "@/lib/utils/hapticFeedback";
 import { InvoiceService } from "@/lib/services/invoiceService";
 import { toast } from "sonner";
+import { Loader } from "@/components/ui/Loader";
 
 interface PaymentMethodDisplay {
   id: string;
@@ -372,9 +373,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           <>
             <div className="flex-1 flex flex-col items-center justify-center py-16 px-6">
               {/* Animación de loading - Más sutil */}
-              <div className="relative w-28 h-28 mx-auto mb-8">
-                <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
-                <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#25D076] animate-spin"></div>
+              <div className="relative w-28 h-28 mx-auto mb-8 flex items-center justify-center">
+                <Loader size="xl" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <methodInfo.icon 
                     className="w-12 h-12" 
@@ -659,9 +659,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           <>
             <div className="flex-1 flex flex-col items-center justify-center py-16 px-6">
               {/* Animación - Solo el spinner, sin otras animaciones */}
-              <div className="relative w-28 h-28 mx-auto mb-8">
-                <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
-                <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#25D076] animate-spin"></div>
+              <div className="relative w-28 h-28 mx-auto mb-8 flex items-center justify-center">
+                <Loader size="xl" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <CheckCircle className="w-12 h-12 text-[#25D076]" strokeWidth={2.5} />
                 </div>

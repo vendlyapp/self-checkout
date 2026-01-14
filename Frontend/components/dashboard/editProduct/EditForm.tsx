@@ -3,7 +3,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
-import { Loader2 } from "lucide-react";
 import MobileForm from "../createProduct/MobileForm";
 import DesktopForm from "../createProduct/DesktopForm";
 import { CreatedProduct, ProductVariant, FormErrors, Category } from "../createProduct/types";
@@ -15,6 +14,7 @@ import { useCategories } from "@/hooks/queries/useCategories";
 import { useProducts } from "@/hooks/queries/useProducts";
 import { normalizeProductData } from "@/components/dashboard/products_list/data/mockProducts";
 import type { UpdateProductRequest, Product, CreateProductRequest } from "@/lib/services/productService";
+import { Loader } from "@/components/ui/Loader";
 
 interface EditFormProps {
   productId: string;
@@ -822,7 +822,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
           {/* Gradiente superior */}
           <div className="bg-gradient-to-br from-[#25D076] to-[#20BA68] rounded-t-3xl p-8 text-center">
             <div className="w-20 h-20 bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <Loader2 className="w-10 h-10 text-white animate-spin" strokeWidth={3} />
+              <Loader size="lg" color="white" />
             </div>
             <h3 className="text-2xl font-bold text-white mb-2">
               Guardando cambios
@@ -855,7 +855,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
     return (
       <div className="w-full h-auto min-h-[50vh] flex items-center justify-center">
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-brand-500 mx-auto" />
+          <Loader size="lg" className="mx-auto" />
           <p className="mt-4 text-base text-gray-600 font-medium">Produkt wird geladen...</p>
         </div>
       </div>

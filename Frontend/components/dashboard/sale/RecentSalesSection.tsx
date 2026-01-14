@@ -1,45 +1,47 @@
 'use client';
 
-import { useState } from 'react';
-import { ChevronRight, TrendingUp, Clock, DollarSign, ChevronDown } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ChevronRight, ShoppingCart } from 'lucide-react';
 import SaleCard from './SaleCard';
 import type { RecentSalesSectionProps } from '../types';
 
-const MAX_VISIBLE_SALES = 6;
+const MAX_VISIBLE_SALES = 4; // Mostrar máximo 4 ventas
 
 const RecentSalesSection = ({ sales }: RecentSalesSectionProps) => {
-  const [showAll, setShowAll] = useState(false);
+  const router = useRouter();
   const hasMoreSales = sales.length > MAX_VISIBLE_SALES;
-  const visibleSales = showAll ? sales : sales.slice(0, MAX_VISIBLE_SALES);
-  const remainingCount = sales.length - MAX_VISIBLE_SALES;
+  const visibleSales = sales.slice(0, MAX_VISIBLE_SALES);
+
+  // Si no hay ventas, mostrar mensaje
+  if (sales.length === 0) {
+    return (
+      <section className="mb-6">
+        <div className="flex items-center justify-between mb-4 lg:mb-6">
+          <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Letzte Verkäufe</h2>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+          <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-600 font-medium">Keine Verkäufe vorhanden</p>
+          <p className="text-sm text-gray-500 mt-1">Es wurden noch keine Bestellungen erstellt</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="mb-6">
-      {/* Header con estadísticas para desktop */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 lg:mb-6">
-        <div className="flex items-center justify-between lg:justify-start mb-3 lg:mb-0">
-          <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Letzte Verkäufe</h2>
-          <ChevronRight className="w-5 h-5 text-gray-400 lg:hidden" />
-        </div>
-
-        {/* Estadísticas rápidas para desktop */}
-        <div className="hidden lg:flex items-center gap-6">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <TrendingUp className="w-4 h-4 text-green-500" />
-            <span>+12% vs gestern</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Clock className="w-4 h-4 text-blue-500" />
-            <span>Letzte: {sales[0]?.time || 'N/A'}</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <DollarSign className="w-4 h-4 text-brand-500" />
-            <span>Total: CHF {sales.reduce((sum, sale) => {
-              const amount = typeof sale.amount === 'number' ? sale.amount : parseFloat(String(sale.amount)) || 0;
-              return sum + amount;
-            }, 0).toFixed(2)}</span>
-          </div>
-        </div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4 lg:mb-6">
+        <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Letzte Verkäufe</h2>
+        {hasMoreSales && (
+          <button
+            onClick={() => router.push('/sales/orders')}
+            className="hidden lg:flex items-center gap-2 text-sm text-[#25D076] hover:text-[#25D076]/80 font-medium transition-colors"
+          >
+            <span>Alle anzeigen</span>
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Lista de ventas - responsive */}
@@ -49,33 +51,16 @@ const RecentSalesSection = ({ sales }: RecentSalesSectionProps) => {
         ))}
       </div>
 
-      {/* Botón Ver más / Ver menos */}
+      {/* Botón "Ver más" - solo si hay más de MAX_VISIBLE_SALES */}
       {hasMoreSales && (
         <div className="mt-4 pt-4 border-t border-gray-100">
           <button
-            onClick={() => setShowAll(!showAll)}
-            className="flex items-center justify-center gap-2 w-full text-sm text-brand-600 hover:text-brand-700 font-medium transition-ios-fast py-2 rounded-lg hover:bg-gray-50"
+            onClick={() => router.push('/sales/orders')}
+            className="flex items-center justify-center gap-2 w-full text-sm text-[#25D076] hover:text-[#25D076]/80 font-medium transition-colors py-2.5 rounded-lg hover:bg-[#25D076]/5 touch-target"
           >
             <span>
-              {showAll 
-                ? 'Weniger anzeigen' 
-                : `${remainingCount} weitere Verkäufe anzeigen`
-              }
+              {sales.length - MAX_VISIBLE_SALES} weitere Verkäufe anzeigen
             </span>
-            {showAll ? (
-              <ChevronDown className="w-4 h-4" />
-            ) : (
-              <ChevronRight className="w-4 h-4" />
-            )}
-          </button>
-        </div>
-      )}
-
-      {/* Footer con acción para desktop - solo si no hay botón "Ver más" */}
-      {!hasMoreSales && (
-        <div className="hidden lg:block mt-4 pt-4 border-t border-gray-100">
-          <button className="flex items-center gap-2 text-sm text-brand-600 hover:text-brand-700 font-medium transition-ios-fast">
-            <span>Alle Verkäufe anzeigen</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>

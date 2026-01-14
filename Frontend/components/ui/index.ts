@@ -7,5 +7,6 @@ export {
   CardHeader,
   CardTitle,
 } from "./card";
-export { default as ModernSpinner } from "./ModernSpinner";
 export { default as InitialLoadingScreen } from "./InitialLoadingScreen";
+export { Loader, default as LoaderDefault } from "./Loader";
+export type { LoaderSize, LoaderVariant, LoaderColor } from "./Loader";

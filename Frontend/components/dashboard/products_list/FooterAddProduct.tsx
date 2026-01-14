@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
+import { Loader } from "@/components/ui/Loader";
 
 type FooterAddProductProps = {
   onAddProduct: () => void;
@@ -107,7 +108,7 @@ const FooterAddProduct: React.FC<FooterAddProductProps> = ({
         >
           {isLoading ? (
             <>
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              <Loader size="xs" color="white" />
               <span>Wird geladen...</span>
             </>
           ) : (

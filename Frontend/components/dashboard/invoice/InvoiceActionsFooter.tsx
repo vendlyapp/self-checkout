@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { InvoiceService, Invoice } from '@/lib/services/invoiceService';
+import { useInvoice } from '@/hooks/queries/useInvoice';
 import { Download, Share2, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
@@ -11,44 +10,13 @@ import html2canvas from 'html2canvas';
 
 export default function InvoiceActionsFooter() {
   const pathname = usePathname();
-  const [invoice, setInvoice] = useState<Invoice | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  // Extraer invoiceId del pathname (ej: /store/invoice/abc123 -> abc123)
-  const invoiceId = pathname?.match(/\/store\/invoice\/([^\/]+)/)?.[1];
+  // Extraer invoiceId del pathname (soporta ambas rutas: /store/invoice/abc123 o /sales/invoices/abc123)
+  const invoiceId = pathname?.match(/\/store\/invoice\/([^\/]+)/)?.[1] || 
+                    pathname?.match(/\/sales\/invoices\/([^\/]+)/)?.[1];
 
-  useEffect(() => {
-    const fetchInvoice = async () => {
-      if (!invoiceId) {
-        setInvoice(null);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        // Intentar obtener por ID primero
-        let result = await InvoiceService.getInvoiceById(invoiceId);
-        
-        // Si no se encuentra por ID, intentar por número de factura
-        if (!result.success && !result.data) {
-          result = await InvoiceService.getInvoiceByNumber(invoiceId);
-        }
-
-        if (result.success && result.data) {
-          setInvoice(result.data);
-        } else {
-          setInvoice(null);
-        }
-      } catch (err) {
-        console.error('Error loading invoice for actions:', err);
-        setInvoice(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInvoice();
-  }, [invoiceId]);
+  // Usar React Query hook para obtener invoice con cache (evita múltiples peticiones)
+  const { data: invoice, isLoading: loading } = useInvoice(invoiceId);
 
   const handlePrint = (e: React.MouseEvent<HTMLButtonElement>) => {
     lightFeedback(e.currentTarget);

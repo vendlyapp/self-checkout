@@ -18,6 +18,9 @@ export { useCategories } from './useCategories';
 // Order queries
 export { useOrderStats } from './useOrderStats';
 export { useRecentOrders } from './useRecentOrders';
+export { useOrders } from './useOrders';
+export type { UseOrdersOptions } from './useOrders';
+export { useOrder } from './useOrder';
 
 // Store queries
 export { useMyStore } from './useMyStore';
@@ -25,3 +28,9 @@ export { useMyStore } from './useMyStore';
 // Payment Method queries
 export { usePaymentMethods } from './usePaymentMethods';
 export type { PaymentMethod } from './usePaymentMethods';
+
+// Invoice queries
+export { useInvoices } from './useInvoices';
+export type { UseInvoicesOptions } from './useInvoices';
+export { useInvoice } from './useInvoice';
+export { useInvoicesByOrderId } from './useInvoicesByOrderId';

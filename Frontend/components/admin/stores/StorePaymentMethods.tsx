@@ -7,8 +7,8 @@ import { usePaymentMethods } from '@/hooks/queries/usePaymentMethods'
 import { useUpdatePaymentMethod } from '@/hooks/mutations/usePaymentMethodMutations'
 import { getPaymentMethodIcon, isSvgIcon } from '@/lib/utils/paymentMethodIcons'
 import Image from 'next/image'
-import { CreditCard, Loader2 } from 'lucide-react'
-import ModernSpinner from '@/components/ui/ModernSpinner'
+import { CreditCard } from 'lucide-react'
+import { Loader } from '@/components/ui/Loader'
 import type { PaymentMethod as ApiPaymentMethod } from '@/hooks/queries/usePaymentMethods'
 
 interface StorePaymentMethodsProps {
@@ -115,7 +115,7 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
       <Card className="bg-card rounded-2xl border border-border/50">
         <CardContent className="p-8">
           <div className="flex items-center justify-center gap-3">
-            <Loader2 className="w-5 h-5 animate-spin text-brand-600 dark:text-brand-400" />
+            <Loader size="sm" />
             <p className="text-sm text-muted-foreground">Cargando métodos de pago...</p>
           </div>
         </CardContent>
@@ -137,7 +137,7 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
           {/* Modal */}
           <div className="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl animate-scale-in gpu-accelerated">
             <div className="p-8 text-center">
-              <ModernSpinner size="lg" color="brand" className="mb-6" />
+              <Loader size="lg" className="mb-6" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 {updatingMethodName ? (
                   <>

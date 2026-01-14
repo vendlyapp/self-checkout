@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Save, X, Loader2, Store, Image as ImageIcon, MapPin, Phone, Mail, FileText, Upload, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Save, X, Store, Image as ImageIcon, MapPin, Phone, Mail, FileText, Upload, CheckCircle2, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { buildApiUrl, getAuthHeaders } from '@/lib/config/api'
+import { Loader } from '@/components/ui/Loader'
 
 interface StoreData {
   id: string
@@ -241,7 +242,7 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
     return (
       <div className="flex items-center justify-center py-20">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
+          <Loader size="lg" />
           <p className="text-gray-600 font-medium">Cargando configuración...</p>
         </div>
       </div>
@@ -343,7 +344,7 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
                 className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 bg-brand-500 text-white rounded-xl hover:bg-brand-600 active:scale-95 transition-ios font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base shadow-lg shadow-brand-500/20 touch-target"
               >
                 {saving ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader size="sm" />
                 ) : (
                   <CheckCircle2 className="w-4 h-4" />
                 )}

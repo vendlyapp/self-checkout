@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { UserPlus, Mail, Lock, User, ArrowLeft, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { Loader } from '@/components/ui/Loader';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -28,14 +29,7 @@ export default function RegisterPage() {
 
   // Mostrar loading mientras verifica autenticación
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-brand-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Wird geladen...</p>
-        </div>
-      </div>
-    );
+    return <Loader variant="fullscreen" message="Wird geladen..." />;
   }
 
   // No mostrar nada si ya está autenticado (evitar flash)

@@ -15,7 +15,8 @@ import FooterContinue from '@/components/dashboard/charge/FooterContinue';
 import HeaderNav from '@/components/navigation/HeaderNav';
 import Filter_Busqueda from '@/components/dashboard/products_list/Filter_Busqueda';
 import InvoiceActionsFooter from '@/components/dashboard/invoice/InvoiceActionsFooter';
-import { InvoiceService, Invoice } from '@/lib/services/invoiceService';
+import { useInvoice } from '@/hooks/queries/useInvoice';
+import { useOrder } from '@/hooks/queries/useOrder';
 import { useChargeContext } from '@/app/charge/contexts';
 import { useProductsList } from '@/components/dashboard/products_list/ProductsListContext';
 import LoadingProductsModal from '@/components/dashboard/home/LoadingProductsModal';
@@ -74,48 +75,35 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   // Determinar si estamos en la ruta de payment-methods
   const isPaymentMethodsRoute = pathname?.startsWith('/store/payment-methods');
   
-  // Determinar si estamos en la ruta de invoice
-  const isInvoiceRoute = pathname?.startsWith('/store/invoice');
+  // Determinar si estamos en la ruta de invoice (nueva ruta en /sales/invoices o antigua en /store/invoice)
+  const isInvoiceRoute = pathname?.startsWith('/store/invoice') || pathname?.startsWith('/sales/invoices');
   
   // Determinar si estamos en el detalle de una factura (tiene ID)
-  const isInvoiceDetailRoute = pathname?.match(/\/store\/invoice\/[^\/]+/);
+  const isInvoiceDetailRoute = pathname?.match(/\/store\/invoice\/[^\/]+/) || pathname?.match(/\/sales\/invoices\/[^\/]+/);
   
-  // Extraer invoiceId del pathname para el HeaderNav
-  const invoiceId = pathname?.match(/\/store\/invoice\/([^\/]+)/)?.[1];
+  // Extraer invoiceId del pathname para el HeaderNav (soporta ambas rutas)
+  const invoiceId = pathname?.match(/\/store\/invoice\/([^\/]+)/)?.[1] || pathname?.match(/\/sales\/invoices\/([^\/]+)/)?.[1];
   
-  // Estado para el invoice (para mostrar el número en el HeaderNav)
-  const [invoiceForHeader, setInvoiceForHeader] = useState<Invoice | null>(null);
+  // Determinar si estamos en la ruta de orders
+  const isOrderRoute = pathname?.startsWith('/sales/orders');
   
-  // Obtener invoice para el HeaderNav
-  useEffect(() => {
-    const fetchInvoiceForHeader = async () => {
-      if (!invoiceId || !isInvoiceDetailRoute) {
-        setInvoiceForHeader(null);
-        return;
-      }
-
-      try {
-        // Intentar obtener por ID primero
-        let result = await InvoiceService.getInvoiceById(invoiceId);
-        
-        // Si no se encuentra por ID, intentar por número de factura
-        if (!result.success && !result.data) {
-          result = await InvoiceService.getInvoiceByNumber(invoiceId);
-        }
-
-        if (result.success && result.data) {
-          setInvoiceForHeader(result.data);
-        } else {
-          setInvoiceForHeader(null);
-        }
-      } catch (err) {
-        console.error('Error loading invoice for header:', err);
-        setInvoiceForHeader(null);
-      }
-    };
-
-    fetchInvoiceForHeader();
-  }, [invoiceId, isInvoiceDetailRoute]);
+  // Determinar si estamos en el detalle de una orden (tiene ID)
+  const isOrderDetailRoute = pathname?.match(/\/sales\/orders\/[^\/]+/);
+  
+  // Extraer orderId del pathname para el HeaderNav
+  const orderId = pathname?.match(/\/sales\/orders\/([^\/]+)/)?.[1];
+  
+  // Usar React Query hook para obtener invoice (comparte cache con otros componentes)
+  // Solo obtener si estamos en una ruta de detalle de invoice
+  const { data: invoiceForHeader } = useInvoice(
+    isInvoiceDetailRoute && invoiceId ? invoiceId : null
+  );
+  
+  // Usar React Query hook para obtener order (comparte cache con otros componentes)
+  // Solo obtener si estamos en una ruta de detalle de order
+  const { data: orderForHeader } = useOrder(
+    isOrderDetailRoute && orderId ? orderId : null
+  );
   
   // Rutas que ocultan el navbar/sidebar
   const isStoreSubRoute = isDiscountsRoute || isPaymentMethodsRoute || isInvoiceRoute;
@@ -392,7 +380,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {isMobile && isInvoiceDetailRoute && (
           <HeaderNav 
             title={invoiceForHeader?.invoiceNumber || 'Rechnung'} 
-            closeDestination="/store/invoice"
+            closeDestination={pathname?.startsWith('/sales/invoices') ? "/sales/invoices" : "/store/invoice"}
+            isFixed={true} 
+          />
+        )}
+
+        {/* Header de order detail - Solo en móvil y en detalle de orden */}
+        {isMobile && isOrderDetailRoute && (
+          <HeaderNav 
+            title={orderForHeader ? `Bestellung #${orderForHeader.id.slice(-8).toUpperCase()}` : 'Bestellung'} 
+            closeDestination="/sales/orders"
             isFixed={true} 
           />
         )}
@@ -404,7 +401,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             "flex-1 overflow-y-auto overflow-x-hidden",
             isMobile ? "ios-scroll-fix" : "scroll-smooth",
             shouldShowCartSummary && "pb-24", // Padding para el CartSummary fixed
-            isMobile && isInvoiceDetailRoute && "pb-24 pt-[calc(70px+env(safe-area-inset-top))]" // Padding para ResponsiveHeader (~85px) + HeaderNav fixed (~70px) y InvoiceActionsFooter fixed
+            isMobile && isInvoiceDetailRoute && "pb-24 pt-[calc(70px+env(safe-area-inset-top))]", // Padding para ResponsiveHeader (~85px) + HeaderNav fixed (~70px) y InvoiceActionsFooter fixed
+            isMobile && isOrderDetailRoute && "pt-[calc(70px+env(safe-area-inset-top))]" // Padding para ResponsiveHeader (~85px) + HeaderNav fixed (~70px)
           )}
         >
           <div className={clsx(

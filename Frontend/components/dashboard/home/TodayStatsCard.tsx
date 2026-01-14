@@ -4,13 +4,18 @@ import { DollarSign, Users, TrendingUp, Clock } from 'lucide-react';
 import StatCard from './StatCard';
 import { useMemo } from 'react';
 import { useOrderStats } from '@/hooks/queries';
+import { useMyStore } from '@/hooks/queries/useMyStore';
 
 const TodayStatsCard = () => {
+  // Obtener store del usuario para filtrar estadísticas
+  const { data: store } = useMyStore();
+  const ownerId = store?.ownerId || store?.id;
+
   // Obtener fecha de hoy en formato YYYY-MM-DD
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
   
-  // Usar React Query para obtener estadísticas del día (con cache)
-  const { data: orderStats, isLoading: loading } = useOrderStats(today);
+  // Usar React Query para obtener estadísticas del día (con cache) - filtrado por tienda
+  const { data: orderStats, isLoading: loading } = useOrderStats(today, ownerId);
 
   // Calcular estadísticas desde los datos
   const stats = useMemo(() => {

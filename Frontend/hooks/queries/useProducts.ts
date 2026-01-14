@@ -32,17 +32,19 @@ export const useProducts = (options?: UseProductsOptions) => {
     gcTime: 10 * 60 * 1000, // 10 minutos
     // No refetch automático en window focus para productos
     refetchOnWindowFocus: false,
-    // Refetch en mount solo si los datos están stale (no hacer refetch si hay datos frescos)
-    refetchOnMount: 'always',
+    // Refetch en mount solo si los datos están stale (evitar múltiples peticiones)
+    refetchOnMount: false,
     // No refetch en reconnect
     refetchOnReconnect: false,
-    // Retry solo si no es un error de cancelación
+    // Retry con delay exponencial para evitar saturar el servidor
     retry: (failureCount, error) => {
       if (error instanceof Error && error.message === 'CANCELLED') {
         return false;
       }
+      // Solo reintentar 2 veces máximo
       return failureCount < 2;
     },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000), // Delay exponencial: 1s, 2s, max 3s
   });
 };
 

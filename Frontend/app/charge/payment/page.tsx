@@ -16,7 +16,7 @@ import HeaderNav from "@/components/navigation/HeaderNav";
 import PaymentModal from "@/components/dashboard/charge/PaymentModal";
 import { useMyStore } from "@/hooks/queries/useMyStore";
 import { usePaymentMethods } from "@/hooks/queries/usePaymentMethods";
-import { ModernSpinner } from "@/components/ui";
+import { Loader } from "@/components/ui/Loader";
 
 export default function PaymentPage() {
   const {
@@ -102,7 +102,7 @@ export default function PaymentPage() {
       <div className="w-full animate-page-enter gpu-accelerated">
         <div className="flex flex-col items-center justify-center min-h-screen">
           <div className="text-center">
-            <ModernSpinner size="lg" color="brand" className="mb-4" />
+            <Loader size="lg" className="mb-4" />
             <p className="text-xl font-semibold text-gray-900 mb-4">
               Wird geladen...
             </p>

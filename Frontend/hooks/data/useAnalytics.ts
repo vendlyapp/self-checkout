@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { AnalyticsData, TimePeriod, UseAnalyticsReturn, QuickAccessReturn } from '@/types';
 import {
   calculateTotalSales,
@@ -340,6 +341,8 @@ export const useAnalytics = (): UseAnalyticsReturn => {
 // QuickAccessReturn interface moved to @/types
 
 export const useQuickAccess = (): QuickAccessReturn => {
+  const router = useRouter();
+
   const handleViewSales = () => {
     // TODO: Implement navigation to sales page
     console.log('Navigate to sales page');
@@ -351,13 +354,11 @@ export const useQuickAccess = (): QuickAccessReturn => {
   };
 
   const handleViewReceipts = () => {
-    // TODO: Implement navigation to receipts page
-    console.log('Navigate to receipts page');
+    router.push('/sales/invoices');
   };
 
   const handleGoToCart = () => {
-    // TODO: Implement navigation to cart page
-    console.log('Navigate to cart page');
+    router.push('/sales/orders');
   };
 
   return {

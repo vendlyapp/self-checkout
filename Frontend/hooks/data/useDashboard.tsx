@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { Users, Flame, FileText, Tag, Calculator, ShoppingCart } from 'lucide-react';
 import type { SearchResult, DashboardData, UseDashboardReturn } from '@/types';
 import { useOrderStats, useRecentOrders } from '@/hooks/queries';
+import { useMyStore } from '@/hooks/queries/useMyStore';
 
 /**
  * Hook principal para gestión del dashboard
@@ -82,15 +83,19 @@ export const useDashboard = (): UseDashboardReturn => {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
+  // Obtener store del usuario para filtrar estadísticas
+  const { data: store } = useMyStore();
+  const ownerId = store?.ownerId || store?.id;
+
   // Obtener fecha de hoy en formato YYYY-MM-DD
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
 
-  // Usar React Query para obtener estadísticas del día (con cache)
+  // Usar React Query para obtener estadísticas del día (con cache) - filtrado por tienda
   const { 
     data: orderStats, 
     isLoading: statsLoading, 
     error: statsError 
-  } = useOrderStats(today);
+  } = useOrderStats(today, ownerId);
 
   // Usar React Query para obtener órdenes recientes (con cache)
   const { 
@@ -142,7 +147,7 @@ export const useDashboard = (): UseDashboardReturn => {
       goalAmount,
       percentage,
       quickAccessItems: mockDashboardData.quickAccessItems,
-      recentSales: recentSales.length > 0 ? recentSales : mockDashboardData.recentSales,
+      recentSales, // No usar mocks, mostrar solo ventas reales
     };
   }, [orderStats, recentOrders]);
 

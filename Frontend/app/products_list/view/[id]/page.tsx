@@ -3,6 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import EditForm from '@/components/dashboard/editProduct/EditForm';
 import HeaderNav from '@/components/navigation/HeaderNav';
+import { Loader } from '@/components/ui/Loader';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -62,7 +63,7 @@ export default function ViewProduct({ params }: PageProps) {
     return (
       <div className="w-full h-auto min-h-[50vh] flex items-center justify-center">
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-brand-500 mx-auto" />
+          <Loader size="lg" />
           <p className="mt-4 text-base text-gray-600 font-medium">Lade...</p>
         </div>
       </div>
@@ -73,7 +74,7 @@ export default function ViewProduct({ params }: PageProps) {
     <Suspense fallback={
       <div className="w-full h-auto min-h-[50vh] flex items-center justify-center">
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-brand-500 mx-auto" />
+          <Loader size="lg" />
           <p className="mt-4 text-base text-gray-600 font-medium">Produkt wird geladen...</p>
         </div>
       </div>

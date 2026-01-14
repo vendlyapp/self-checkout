@@ -32,12 +32,6 @@ const services = [
     subtitle: "verwalten",
     href: "/store/payment-methods",
   },
-  {
-    icon: <FileText className="w-6 h-6" />,
-    title: "Rechnungen",
-    subtitle: "ansehen",
-    href: "/store/invoice",
-  },
 ];
 
 const StoreDashboard = () => (

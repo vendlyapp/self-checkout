@@ -39,7 +39,7 @@ interface OrderItemResponse {
   updatedAt: string;
 }
 
-interface OrderResponse {
+export interface OrderResponse {
   id: string;
   userId: string;
   total: number;
@@ -267,11 +267,58 @@ export const OrderService = {
   /**
    * Obtener órdenes recientes
    * @param limit - Límite de órdenes a obtener
+   * @param storeId - ID de la tienda para filtrar (opcional)
    * @param requestOptions - Opciones adicionales incluyendo signal de React Query
    */
-  getRecentOrders: async (limit: number = 10, requestOptions?: { signal?: AbortSignal }): Promise<ApiResponse<RecentOrder[]>> => {
-    const endpoint = `${API_CONFIG.ENDPOINTS.ORDER_RECENT}?limit=${limit}`;
+  getRecentOrders: async (limit: number = 10, storeId?: string, requestOptions?: { signal?: AbortSignal }): Promise<ApiResponse<RecentOrder[]>> => {
+    const params = new URLSearchParams();
+    params.append('limit', limit.toString());
+    if (storeId) params.append('storeId', storeId);
+    
+    const endpoint = `${API_CONFIG.ENDPOINTS.ORDER_RECENT}?${params.toString()}`;
     return makeRequest<RecentOrder[]>(endpoint, requestOptions);
+  },
+
+  /**
+   * Obtener todas las órdenes (para admin)
+   * @param options - Opciones de filtrado (limit, offset, status, storeId)
+   * @param requestOptions - Opciones adicionales incluyendo signal de React Query
+   */
+  getAllOrders: async (options?: { limit?: number; offset?: number; status?: string; storeId?: string }, requestOptions?: { signal?: AbortSignal }): Promise<ApiResponse<RecentOrder[]>> => {
+    const params = new URLSearchParams();
+    if (options?.limit) params.append('limit', options.limit.toString());
+    if (options?.offset) params.append('offset', options.offset.toString());
+    if (options?.status) params.append('status', options.status);
+    if (options?.storeId) params.append('storeId', options.storeId);
+    
+    const queryString = params.toString();
+    const endpoint = queryString ? `${API_CONFIG.ENDPOINTS.ORDERS}?${queryString}` : API_CONFIG.ENDPOINTS.ORDERS;
+    return makeRequest<RecentOrder[]>(endpoint, requestOptions);
+  },
+
+  /**
+   * Obtener una orden por ID
+   * @param orderId - ID de la orden
+   * @param requestOptions - Opciones adicionales incluyendo signal de React Query
+   */
+  getOrderById: async (orderId: string, requestOptions?: { signal?: AbortSignal }): Promise<ApiResponse<RecentOrder>> => {
+    const endpoint = `${API_CONFIG.ENDPOINTS.ORDERS}/${orderId}`;
+    return makeRequest<RecentOrder>(endpoint, requestOptions);
+  },
+
+  /**
+   * Actualizar el estado de una orden
+   * @param orderId - ID de la orden
+   * @param status - Nuevo estado (pending, processing, completed, cancelled)
+   * @param requestOptions - Opciones adicionales incluyendo signal de React Query
+   */
+  updateOrderStatus: async (orderId: string, status: 'pending' | 'processing' | 'completed' | 'cancelled', requestOptions?: { signal?: AbortSignal }): Promise<ApiResponse<RecentOrder>> => {
+    const endpoint = `${API_CONFIG.ENDPOINTS.ORDERS}/${orderId}/status`;
+    return makeRequest<RecentOrder>(endpoint, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+      ...requestOptions,
+    });
   },
 };
 

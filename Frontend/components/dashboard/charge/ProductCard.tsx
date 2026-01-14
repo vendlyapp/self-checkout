@@ -49,6 +49,43 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
     return cartItem?.quantity || 0
   }, [cartItems, currentProduct.id])
 
+  // Obtener el nombre base del producto (sin la parte de la variante)
+  const getBaseProductName = useMemo(() => {
+    if (!product.name) return ''
+    
+    // Si no hay variantes, retornar el nombre completo
+    if (!product.variants || product.variants.length === 0) {
+      return product.name
+    }
+    
+    // Si hay variantes, encontrar el nombre base común
+    const firstVariant = product.variants[0]
+    if (firstVariant.name && product.name) {
+      // Encontrar el prefijo común entre el producto padre y la primera variante
+      const productWords = product.name.split(' ')
+      const variantWords = firstVariant.name.split(' ')
+      
+      // Encontrar palabras comunes al inicio (el nombre base del producto)
+      let commonPrefix = ''
+      const minLength = Math.min(productWords.length, variantWords.length)
+      for (let i = 0; i < minLength; i++) {
+        if (productWords[i] === variantWords[i]) {
+          commonPrefix += (commonPrefix ? ' ' : '') + productWords[i]
+        } else {
+          break
+        }
+      }
+      
+      // Si encontramos un prefijo común, usar ese como nombre base
+      if (commonPrefix) {
+        return commonPrefix
+      }
+    }
+    
+    // Si no se puede extraer, retornar el nombre completo
+    return product.name
+  }, [product.name, product.variants])
+
   // Extraer el nombre de la variante del nombre completo (ej: "Coca Cola 500g" -> "500g")
   const getVariantName = (variant: Product | null): string => {
     if (!variant) {
@@ -60,43 +97,27 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
       
       if (!product.name) return ''
       
-      // Si hay variantes, intentar encontrar el nombre base común
-      if (product.variants && product.variants.length > 0) {
-        const firstVariant = product.variants[0]
-        if (firstVariant.name && product.name) {
-          // Encontrar el prefijo común entre el producto padre y la primera variante
-          // Ambos deberían tener el formato "Nombre Base Variante"
-          const productWords = product.name.split(' ')
-          const variantWords = firstVariant.name.split(' ')
-          
-          // Encontrar palabras comunes al inicio (el nombre base del producto)
-          let commonPrefix = ''
-          const minLength = Math.min(productWords.length, variantWords.length)
-          for (let i = 0; i < minLength; i++) {
-            if (productWords[i] === variantWords[i]) {
-              commonPrefix += (commonPrefix ? ' ' : '') + productWords[i]
-            } else {
-              break
-            }
-          }
-          
-          // Si encontramos un prefijo común, extraer la parte de la variante del producto padre
-          if (commonPrefix && product.name.startsWith(commonPrefix)) {
-            const variantPart = product.name.substring(commonPrefix.length).trim()
-            return variantPart || ''
-          }
-        }
+      // Extraer la parte de la variante del nombre del producto padre
+      if (getBaseProductName && product.name.startsWith(getBaseProductName)) {
+        const variantPart = product.name.substring(getBaseProductName.length).trim()
+        return variantPart || ''
       }
       
-      // Si no se puede extraer, retornar cadena vacía (no mostrar nada)
       return ''
     }
     
-    if (!product.name || !variant.name) return variant.name || ''
-    // Si el nombre de la variante contiene el nombre del producto, extraer solo la parte de la variante
-    if (variant.name.startsWith(product.name)) {
+    if (!variant.name) return ''
+    
+    // Si el nombre de la variante contiene el nombre base, extraer solo la parte de la variante
+    if (getBaseProductName && variant.name.startsWith(getBaseProductName)) {
+      return variant.name.substring(getBaseProductName.length).trim()
+    }
+    
+    // Si el nombre de la variante contiene el nombre completo del producto padre, extraer solo la parte de la variante
+    if (product.name && variant.name.startsWith(product.name)) {
       return variant.name.substring(product.name.length).trim()
     }
+    
     return variant.name
   }
 
@@ -327,10 +348,10 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
 
         {/* Contenido principal */}
         <div className="flex-1 flex flex-col justify-between min-h-[80px] lg:min-h-[100px]">
-          {/* Título del producto - mostrar nombre de la variante seleccionada */}
+          {/* Título del producto - siempre mostrar nombre base del producto */}
           <div className="pr-20 lg:pr-24 mb-4">
             <h3 className="text-gray-900 text-[16px] lg:text-[18px] leading-[1.3] w-[90%] tracking-tight font-semibold">
-              {currentProduct.name}
+              {getBaseProductName}
             </h3>
           </div>
 
@@ -408,10 +429,10 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
 
         {/* Contenido - derecha */}
         <div className="flex-1 flex flex-col justify-between min-h-[100px]">
-          {/* Título del producto - mostrar nombre de la variante seleccionada */}
+          {/* Título del producto - siempre mostrar nombre base del producto */}
           <div className="pr-20">
             <h3 className="text-gray-900 text-[15px] leading-tight tracking-tight font-semibold line-clamp-2">
-              {currentProduct.name}
+              {getBaseProductName}
             </h3>
           </div>
 

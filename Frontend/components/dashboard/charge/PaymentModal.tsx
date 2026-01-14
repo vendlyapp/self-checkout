@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, CheckCircle, Smartphone, CreditCard, Coins, QrCode, FileText } from "lucide-react";
-import { ModernSpinner } from "@/components/ui";
+import { Loader } from "@/components/ui/Loader";
 import { formatSwissPriceWithCHF } from "@/lib/utils";
 import { usePaymentMethods } from "@/hooks/queries/usePaymentMethods";
 import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
@@ -192,7 +192,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
           {paymentStep === "processing" && (
             <div className="text-center py-8">
-              <ModernSpinner size="lg" color="brand" className="mb-6" />
+              <Loader size="lg" className="mb-6" />
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2 animate-pulse antialiased">
                 Zahlung wird verarbeitet
               </h3>

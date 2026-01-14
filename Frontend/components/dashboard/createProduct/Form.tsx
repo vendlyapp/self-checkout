@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
-import { CheckCircle, Loader2 } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 import MobileForm from "./MobileForm";
 import DesktopForm from "./DesktopForm";
 import { FormProps, CreatedProduct, ProductVariant, FormErrors, Category } from "./types";
@@ -13,6 +13,7 @@ import { useCreateProduct } from "@/hooks/mutations";
 import { useCategories } from "@/hooks/queries/useCategories";
 import { useQueryClient } from "@tanstack/react-query";
 import type { CreateProductRequest } from "@/lib/services/productService";
+import { Loader } from "@/components/ui/Loader";
 
 export default function Form({ isDesktop = false }: FormProps) {
   const router = useRouter();
@@ -448,7 +449,7 @@ export default function Form({ isDesktop = false }: FormProps) {
           {/* Gradiente superior */}
           <div className="bg-gradient-to-br from-[#25D076] to-[#20BA68] rounded-t-3xl p-8 text-center">
             <div className="w-20 h-20 bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <Loader2 className="w-10 h-10 text-white animate-spin" strokeWidth={3} />
+              <Loader size="lg" color="white" />
             </div>
             <h3 className="text-2xl font-bold text-white mb-2">
               Creando productos

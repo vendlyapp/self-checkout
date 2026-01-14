@@ -56,14 +56,34 @@ class InvoiceController {
       }
 
       // Preparar items de la factura
-      const invoiceItems = order.items.map((item) => ({
-        productId: item.productId,
-        productName: item.product?.name || 'Producto',
-        productSku: item.product?.sku || '',
-        quantity: item.quantity,
-        price: Number(item.price),
-        subtotal: Number(item.price) * item.quantity,
-      }));
+      // Los items vienen con productName y productSku del JOIN en OrderService.findById
+      const invoiceItems = order.items.map((item) => {
+        // Debug: verificar que el productName esté llegando
+        if (!item.productName) {
+          console.warn('⚠️ [InvoiceController] Item sin productName:', {
+            productId: item.productId,
+            hasProductName: !!item.productName,
+            itemKeys: Object.keys(item),
+          });
+        }
+        
+        return {
+          productId: item.productId,
+          productName: item.productName || 'Producto',
+          productSku: item.productSku || '',
+          quantity: item.quantity,
+          price: Number(item.price),
+          subtotal: Number(item.price) * item.quantity,
+        };
+      });
+      
+      // Debug: verificar items antes de crear invoice
+      console.log('📋 [InvoiceController] Items preparados para invoice:', {
+        itemsCount: invoiceItems.length,
+        itemsWithNames: invoiceItems.filter(i => i.productName && i.productName !== 'Producto').length,
+        itemsWithoutNames: invoiceItems.filter(i => !i.productName || i.productName === 'Producto').length,
+        sampleItem: invoiceItems[0],
+      });
 
       // Calcular totales desde metadata si están disponibles
       const metadata = order.metadata || {};

@@ -6,7 +6,8 @@ import { useCartStore } from '@/lib/stores/cartStore'
 import { useScannedStoreStore } from '@/lib/stores/scannedStoreStore'
 import { buildApiUrl } from '@/lib/config/api'
 import { Product } from '@/components/dashboard/products_list/data/mockProducts'
-import { Loader2, CheckCircle, XCircle } from 'lucide-react'
+import { CheckCircle, XCircle } from 'lucide-react'
+import { Loader } from '@/components/ui/Loader'
 
 export default function ProductQRPage() {
   const params = useParams()
@@ -122,7 +123,7 @@ export default function ProductQRPage() {
     return (
       <div className="min-h-screen bg-[#F9F6F4] flex items-center justify-center p-4 animate-fade-in">
         <div className="text-center animate-scale-in">
-          <Loader2 className="w-12 h-12 text-[#25D076] animate-spin mx-auto mb-4" />
+          <Loader size="lg" className="mx-auto mb-4" />
           <p className="text-gray-700 font-medium transition-ios">Cargando producto...</p>
         </div>
       </div>

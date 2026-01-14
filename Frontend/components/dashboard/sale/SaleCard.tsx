@@ -1,11 +1,14 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { FileText, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { SaleCardProps } from '../types';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 
 const SaleCard = ({ sale }: SaleCardProps) => {
+  const router = useRouter();
+
   // Get status configuration
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -46,19 +49,28 @@ const SaleCard = ({ sale }: SaleCardProps) => {
 
   const statusConfig = getStatusConfig(sale.status);
 
+  const handleClick = () => {
+    if (sale.id) {
+      router.push(`/sales/orders/${sale.id}`);
+    }
+  };
+
   return (
-    <Card className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <Card 
+      className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer active:scale-[0.98] touch-target"
+      onClick={handleClick}
+    >
       <CardContent className="p-4 lg:p-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 lg:gap-4">
-            <div className={`w-10 h-10 lg:w-12 lg:h-12 ${statusConfig.bgColor} rounded-xl flex items-center justify-center`}>
+            <div className={`w-10 h-10 lg:w-12 lg:h-12 ${statusConfig.bgColor} rounded-xl flex items-center justify-center flex-shrink-0`}>
               <div className={`${statusConfig.textColor} lg:scale-110`}>
                 {statusConfig.icon}
               </div>
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 lg:text-base">{sale.name}</h3>
-              <p className="text-sm lg:text-base text-gray-600">{sale.receipt} • {sale.time}</p>
+              <h3 className="font-semibold text-gray-900 lg:text-base truncate">{sale.name}</h3>
+              <p className="text-sm lg:text-base text-gray-600 truncate">{sale.receipt} • {sale.time}</p>
               <div className="flex items-center gap-1 mt-1">
                 <span className={`text-xs lg:text-sm font-medium ${statusConfig.textColor}`}>
                   {statusConfig.label}

@@ -175,6 +175,12 @@ router.get('/recent', orderController.getRecentOrders);
 router.get('/:id', validateUUID('id'), orderController.getOrderById);
 
 /**
+ * Actualizar estado de una orden
+ * @route PATCH /api/orders/:id/status
+ */
+router.patch('/:id/status', validateUUID('id'), orderController.updateOrderStatus);
+
+/**
  * @swagger
  * /api/orders/{id}/status:
  *   patch:

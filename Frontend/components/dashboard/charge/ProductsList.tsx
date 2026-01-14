@@ -4,6 +4,7 @@ import React from "react";
 import ProductCard from "./ProductCard";
 import { Product } from "../products_list/data/mockProducts";
 import { useStaggerAnimation } from "@/lib/utils/iosAnimations";
+import { Loader } from "@/components/ui/Loader";
 
 interface ProductsListProps {
   products: Product[];
@@ -26,10 +27,7 @@ const ProductsList = React.memo(function ProductsList({
     return (
       <div className={`p-4 pb-32 lg:p-0 lg:pb-0 ${className} animate-fade-in`}>
         <div className="text-center py-12">
-          <div className="relative w-8 h-8 mx-auto">
-            <div className="absolute inset-0 rounded-full border-2 border-gray-200"></div>
-            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#25D076] animate-spin"></div>
-          </div>
+          <Loader size="md" className="mx-auto" />
           <p className="mt-4 text-sm text-gray-600 font-medium">
             Produkte werden geladen...
           </p>

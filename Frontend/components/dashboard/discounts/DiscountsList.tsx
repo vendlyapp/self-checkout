@@ -8,6 +8,7 @@ import { useDiscountCodes, useDiscountCodeStats, useArchiveDiscountCode, useUpda
 import { DiscountCode } from './types'
 import DeleteDiscountCodeModal from './DeleteDiscountCodeModal'
 import CreateDiscountModal, { DiscountFormData } from './CreateDiscountModal'
+import { Loader } from '@/components/ui/Loader'
 
 export default function DiscountsList() {
   const { data: discountCodes = [], isLoading } = useDiscountCodes()
@@ -122,7 +123,7 @@ export default function DiscountsList() {
   if (isLoading || isLoadingArchived) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#25D076]"></div>
+        <Loader size="md" />
       </div>
     )
   }

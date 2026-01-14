@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Loader2 } from 'lucide-react';
+import { X } from 'lucide-react';
+import { Loader } from '@/components/ui/Loader';
 import { ProductService } from '@/lib/services/productService';
 import type { Product as ProductType } from '@/lib/services/productService';
 import DesktopForm from '@/components/dashboard/createProduct/DesktopForm';
@@ -373,7 +374,7 @@ export default function EditProductModal({ product, isOpen, onClose, onSuccess }
     return createPortal(
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
         <div className="bg-white rounded-2xl shadow-xl p-8">
-          <Loader2 className="w-8 h-8 animate-spin text-brand-600 mx-auto" />
+          <Loader size="md" className="mx-auto" />
           <p className="mt-4 text-gray-600 text-center">Cargando producto...</p>
         </div>
       </div>,
@@ -385,7 +386,7 @@ export default function EditProductModal({ product, isOpen, onClose, onSuccess }
     return createPortal(
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
         <div className="bg-white rounded-2xl shadow-xl p-8">
-          <Loader2 className="w-8 h-8 animate-spin text-brand-600 mx-auto" />
+          <Loader size="md" className="mx-auto" />
           <p className="mt-4 text-gray-600 text-center">Cargando producto...</p>
         </div>
       </div>,

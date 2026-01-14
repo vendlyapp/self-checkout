@@ -537,12 +537,9 @@ const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
                   <span className="font-medium">-{formatSwissPriceWithCHF(invoice.discountAmount)}</span>
                 </div>
               )}
-              {invoice.taxAmount > 0 && (
-                <div className="flex justify-between text-xs text-gray-600">
-                  <span>MwSt. (7.7%):</span>
-                  <span className="font-medium">{formatSwissPriceWithCHF(invoice.taxAmount)}</span>
-                </div>
-              )}
+              <div className="flex justify-between text-xs text-gray-500 italic">
+                <span>MwSt. inklusive</span>
+              </div>
               <div className={`border-t-2 border-gray-200 pt-2.5 mt-2.5 ${isMobile ? 'pt-3' : ''}`}>
                 <div className="flex justify-between items-center">
                   <span className={`${isMobile ? 'text-sm' : 'text-base'} font-bold text-gray-900`}>

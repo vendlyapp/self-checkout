@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { QrCode, Download, Edit2, Save, X, Loader2, Copy, Share2, RefreshCw } from 'lucide-react'
+import { QrCode, Download, Edit2, Save, X, Copy, Share2, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { useMyStore } from '@/hooks/queries'
 import { useUpdateStore, useRegenerateQR } from '@/hooks/mutations'
+import { Loader } from '@/components/ui/Loader'
 
 export default function MyQRPage() {
   const { data: store, isLoading: loading, error } = useMyStore()
@@ -91,7 +92,7 @@ export default function MyQRPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
+        <Loader size="md" />
       </div>
     )
   }
@@ -164,7 +165,7 @@ export default function MyQRPage() {
                 >
                   {regenerateQRMutation.isPending ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader size="sm" />
                       Wird regeneriert...
                     </>
                   ) : (
@@ -283,7 +284,7 @@ export default function MyQRPage() {
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-colors font-semibold disabled:opacity-50 text-sm"
                   >
                     {updateStoreMutation.isPending ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader size="sm" />
                     ) : (
                       <Save className="w-4 h-4" />
                     )}
@@ -354,7 +355,7 @@ export default function MyQRPage() {
                       className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors disabled:opacity-50"
                     >
                       {updateStoreMutation.isPending ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader size="sm" />
                       ) : (
                         <Save className="w-4 h-4" />
                       )}
@@ -473,7 +474,7 @@ export default function MyQRPage() {
                     >
                       {regenerateQRMutation.isPending ? (
                         <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <Loader size="sm" />
                           Wird regeneriert...
                         </>
                       ) : (

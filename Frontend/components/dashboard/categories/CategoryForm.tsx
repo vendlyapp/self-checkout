@@ -5,6 +5,7 @@ import { X, Save } from "lucide-react";
 import { useCreateCategory, useUpdateCategory } from "@/hooks/mutations";
 import type { Category, CreateCategoryRequest, UpdateCategoryRequest } from "@/lib/services/categoryService";
 import { getIcon, iconMap } from "../products_list/data/iconMap";
+import { Loader } from "@/components/ui/Loader";
 
 interface CategoryFormProps {
   category?: Category | null;
@@ -201,7 +202,7 @@ export default function CategoryForm({ category, onClose, onSuccess }: CategoryF
             >
               {isLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <Loader size="xs" color="white" />
                   Speichern...
                 </>
               ) : (

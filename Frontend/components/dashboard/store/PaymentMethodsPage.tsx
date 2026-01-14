@@ -6,8 +6,7 @@ import PaymentMethodCard from './PaymentMethodCard'
 import { useMyStore } from '@/hooks/queries/useMyStore'
 import { usePaymentMethods } from '@/hooks/queries/usePaymentMethods'
 import { useUpdatePaymentMethod } from '@/hooks/mutations/usePaymentMethodMutations'
-import { ModernSpinner } from '@/components/ui'
-import ModernSpinnerComponent from '@/components/ui/ModernSpinner'
+import { Loader } from '@/components/ui/Loader'
 import { getPaymentMethodIcon, isSvgIcon } from '@/lib/utils/paymentMethodIcons'
 import Image from 'next/image'
 import type { PaymentMethod as ApiPaymentMethod } from '@/hooks/queries/usePaymentMethods'
@@ -113,7 +112,7 @@ const PaymentMethodsPage = () => {
   if (storeLoading || methodsLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <ModernSpinner />
+        <Loader size="lg" />
       </div>
     )
   }
@@ -142,7 +141,7 @@ const PaymentMethodsPage = () => {
           {/* Modal */}
           <div className="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl animate-scale-in gpu-accelerated">
             <div className="p-8 text-center">
-              <ModernSpinnerComponent size="lg" color="brand" className="mb-6" />
+              <Loader size="lg" className="mb-6" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 {updatingMethodName ? (
                   <>
