@@ -190,6 +190,7 @@ class PaymentMethodController {
       const result = await paymentMethodService.update(id, req.body);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
+      console.error('Error en updatePaymentMethod:', error);
       const statusCode = error.message.includes('no encontrado')
         ? HTTP_STATUS.NOT_FOUND
         : error.message.includes('ya existe')
@@ -198,7 +199,7 @@ class PaymentMethodController {
 
       res.status(statusCode).json({
         success: false,
-        error: error.message
+        error: error.message || 'Error al actualizar método de pago'
       });
     }
   }

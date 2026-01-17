@@ -20,6 +20,7 @@ interface PaymentMethodDisplay {
   name: string
   icon: React.ReactNode
   isActive: boolean
+  disabledBySuperAdmin?: boolean
   apiMethod: ApiPaymentMethod
 }
 
@@ -80,6 +81,7 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
       name: method.displayName,
       icon: iconElement,
       isActive: method.isActive,
+      disabledBySuperAdmin: method.disabledBySuperAdmin || false,
       apiMethod: method,
     }
   }) || []
@@ -105,8 +107,34 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
     }
   }
 
-  const activeMethods = paymentMethods.filter(method => method.isActive)
-  const inactiveMethods = paymentMethods.filter(method => !method.isActive)
+  const handleToggleDisabled = async (id: string) => {
+    const method = paymentMethods.find(m => m.id === id)
+    if (!method) return
+
+    setUpdatingMethodName(method.name)
+
+    try {
+      await updatePaymentMethod.mutateAsync({
+        id: method.id,
+        data: {
+          disabledBySuperAdmin: !method.disabledBySuperAdmin,
+        },
+      })
+      await refetch()
+    } catch (error) {
+      console.error('Fehler beim Aktualisieren der Zahlungsmethode:', error)
+    } finally {
+      setUpdatingMethodName(null)
+    }
+  }
+
+  // Separar métodos por estado
+  // Activos: isActive = true y disabledBySuperAdmin = false
+  const activeMethods = paymentMethods.filter(method => method.isActive && !method.disabledBySuperAdmin)
+  // Inactivos: isActive = false y disabledBySuperAdmin = false
+  const inactiveMethods = paymentMethods.filter(method => !method.isActive && !method.disabledBySuperAdmin)
+  // Inhabilitados: disabledBySuperAdmin = true (independiente de isActive)
+  const disabledMethods = paymentMethods.filter(method => method.disabledBySuperAdmin)
 
   const isLoadingModal = updatePaymentMethod.isPending && updatingMethodName && modalContainer
 
@@ -139,14 +167,24 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
             <div className="p-8 text-center">
               <Loader size="lg" className="mb-6" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                {updatingMethodName ? (
-                  <>
-                    {paymentMethods.find(m => m.name === updatingMethodName)?.isActive
-                      ? 'Zahlungsmethode wird deaktiviert...'
-                      : 'Zahlungsmethode wird aktiviert...'}
-                  </>
-                ) : (
-                  'Actualizando método de pago...'
+                {updatingMethodName ? (() => {
+                  const method = paymentMethods.find(m => m.name === updatingMethodName)
+                  if (!method) return 'Zahlungsmethode wird aktualisiert...'
+                  
+                  // Verificar si se está habilitando/deshabilitando (disabledBySuperAdmin)
+                  const isTogglingDisabled = method.disabledBySuperAdmin !== undefined
+                  if (isTogglingDisabled && method.disabledBySuperAdmin) {
+                    return 'Zahlungsmethode wird aktiviert...'
+                  } else if (isTogglingDisabled && !method.disabledBySuperAdmin) {
+                    return 'Zahlungsmethode wird deaktiviert...'
+                  }
+                  
+                  // Verificar si se está activando/desactivando (isActive)
+                  return method.isActive
+                    ? 'Zahlungsmethode wird deaktiviert...'
+                    : 'Zahlungsmethode wird aktiviert...'
+                })() : (
+                  'Zahlungsmethode wird aktualisiert...'
                 )}
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -179,7 +217,7 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
                   key={method.id}
                   className="bg-muted/30 rounded-xl p-4 border border-border/50 hover:shadow-sm transition-all"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4 flex-1 min-w-0">
                       {method.icon}
                       <div className="flex-1 min-w-0">
@@ -191,26 +229,39 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
                         </p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => !updatePaymentMethod.isPending && handleToggle(method.id)}
-                      disabled={updatePaymentMethod.isPending}
-                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-ios-slow focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
-                        method.isActive 
-                          ? 'bg-emerald-500 shadow-sm shadow-emerald-500/30' 
-                          : 'bg-gray-300 dark:bg-gray-600'
-                      }`}
-                      role="switch"
-                      aria-checked={method.isActive}
-                      aria-label={`Toggle ${method.name}`}
-                    >
-                      <span
-                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-ios-slow ${
+                    <div className="flex items-center gap-3">
+                      {/* Toggle Activar/Desactivar */}
+                      <button
+                        onClick={() => !updatePaymentMethod.isPending && handleToggle(method.id)}
+                        disabled={updatePaymentMethod.isPending}
+                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-ios-slow focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
                           method.isActive 
-                            ? 'translate-x-6' 
-                            : 'translate-x-1'
+                            ? 'bg-emerald-500 shadow-sm shadow-emerald-500/30' 
+                            : 'bg-gray-300 dark:bg-gray-600'
                         }`}
-                      />
-                    </button>
+                        role="switch"
+                        aria-checked={method.isActive}
+                        aria-label={`Toggle ${method.name}`}
+                        title={method.isActive ? 'Desactivar' : 'Activar'}
+                      >
+                        <span
+                          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-ios-slow ${
+                            method.isActive 
+                              ? 'translate-x-6' 
+                              : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                      {/* Botón Inhabilitar */}
+                      <button
+                        onClick={() => !updatePaymentMethod.isPending && handleToggleDisabled(method.id)}
+                        disabled={updatePaymentMethod.isPending}
+                        className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/15 rounded-lg hover:bg-red-100 dark:hover:bg-red-500/25 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Zahlungsmethode deaktivieren"
+                      >
+                        Inhabilitar
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -228,7 +279,7 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
                   key={method.id}
                   className="bg-muted/30 rounded-xl p-4 border border-border/50 hover:shadow-sm transition-all opacity-75"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4 flex-1 min-w-0">
                       {method.icon}
                       <div className="flex-1 min-w-0">
@@ -240,26 +291,108 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
                         </p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => !updatePaymentMethod.isPending && handleToggle(method.id)}
-                      disabled={updatePaymentMethod.isPending}
-                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-ios-slow focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
-                        method.isActive 
-                          ? 'bg-emerald-500 shadow-sm shadow-emerald-500/30' 
-                          : 'bg-gray-300 dark:bg-gray-600'
-                      }`}
-                      role="switch"
-                      aria-checked={method.isActive}
-                      aria-label={`Toggle ${method.name}`}
-                    >
-                      <span
-                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-ios-slow ${
+                    <div className="flex items-center gap-3">
+                      {/* Toggle Activar/Desactivar */}
+                      <button
+                        onClick={() => !updatePaymentMethod.isPending && handleToggle(method.id)}
+                        disabled={updatePaymentMethod.isPending}
+                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-ios-slow focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
                           method.isActive 
-                            ? 'translate-x-6' 
-                            : 'translate-x-1'
+                            ? 'bg-emerald-500 shadow-sm shadow-emerald-500/30' 
+                            : 'bg-gray-300 dark:bg-gray-600'
                         }`}
-                      />
-                    </button>
+                        role="switch"
+                        aria-checked={method.isActive}
+                        aria-label={`Toggle ${method.name}`}
+                        title={method.isActive ? 'Desactivar' : 'Activar'}
+                      >
+                        <span
+                          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-ios-slow ${
+                            method.isActive 
+                              ? 'translate-x-6' 
+                              : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                      {/* Botón Inhabilitar */}
+                      <button
+                        onClick={() => !updatePaymentMethod.isPending && handleToggleDisabled(method.id)}
+                        disabled={updatePaymentMethod.isPending}
+                        className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/15 rounded-lg hover:bg-red-100 dark:hover:bg-red-500/25 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Zahlungsmethode deaktivieren"
+                      >
+                        Inhabilitar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Métodos Inhabilitados por Super Admin - SIEMPRE mostrar si hay métodos inhabilitados */}
+        {disabledMethods.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-sm font-semibold text-foreground mb-3">
+              Inhabilitados por Super Admin
+              <span className="ml-2 text-xs text-muted-foreground font-normal">
+                ({disabledMethods.length})
+              </span>
+            </h3>
+            <div className="space-y-3">
+              {disabledMethods.map((method) => (
+                <div
+                  key={method.id}
+                  className="bg-muted/30 rounded-xl p-4 border border-border/50 hover:shadow-sm transition-all opacity-50"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <div className="opacity-50">
+                        {method.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-semibold text-foreground truncate opacity-50">
+                          {method.name}
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-0.5 opacity-50">
+                          {method.apiMethod.code}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {/* Toggle Activar/Desactivar (aunque esté inhabilitado, puede cambiar estado) */}
+                      <button
+                        onClick={() => !updatePaymentMethod.isPending && handleToggle(method.id)}
+                        disabled={updatePaymentMethod.isPending}
+                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-ios-slow focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+                          method.isActive 
+                            ? 'bg-emerald-500 shadow-sm shadow-emerald-500/30' 
+                            : 'bg-gray-300 dark:bg-gray-600'
+                        }`}
+                        role="switch"
+                        aria-checked={method.isActive}
+                        aria-label={`Toggle ${method.name}`}
+                        title={method.isActive ? 'Desactivar' : 'Activar'}
+                      >
+                        <span
+                          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-ios-slow ${
+                            method.isActive 
+                              ? 'translate-x-6' 
+                              : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                      {/* Botón Habilitar */}
+                      <button
+                        onClick={() => !updatePaymentMethod.isPending && handleToggleDisabled(method.id)}
+                        disabled={updatePaymentMethod.isPending}
+                        className="px-3 py-1.5 text-xs font-medium text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/15 rounded-lg hover:bg-brand-100 dark:hover:bg-brand-500/25 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Zahlungsmethode aktivieren"
+                      >
+                        Habilitar
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

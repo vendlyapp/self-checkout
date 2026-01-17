@@ -4,16 +4,19 @@ import { X, Loader2 } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { useState, useEffect } from 'react'
 import { PaymentMethod } from './PaymentMethodsPage'
+import { getAvailablePaymentMethod, type AvailablePaymentMethod } from '@/lib/constants/paymentMethods'
+import { getPaymentMethodIcon, isSvgIcon } from '@/lib/utils/paymentMethodIcons'
+import Image from 'next/image'
+import React from 'react'
 
 export interface PaymentMethodConfig {
-  apiKey?: string
-  apiSecret?: string
-  merchantId?: string
+  [key: string]: string | number | boolean | undefined
 }
 
 interface ConfigurePaymentMethodModalProps {
   isOpen: boolean
   method: PaymentMethod | null
+  availableMethod: AvailablePaymentMethod | null
   onSave: (config: PaymentMethodConfig) => Promise<void>
   onCancel: () => void
   isLoading?: boolean
@@ -22,6 +25,7 @@ interface ConfigurePaymentMethodModalProps {
 export default function ConfigurePaymentMethodModal({
   isOpen,
   method,
+  availableMethod,
   onSave,
   onCancel,
   isLoading = false,
@@ -48,41 +52,95 @@ export default function ConfigurePaymentMethodModal({
     }
   }, [])
 
-  useEffect(() => {
-    if (method && isOpen) {
-      // Resetear configuración cuando se abre el modal
-      setConfig({})
-    }
-  }, [method, isOpen])
+  // Determinar qué método usar (el disponible o el que viene del método existente)
+  const methodToConfigure = availableMethod || (method ? getAvailablePaymentMethod(method.apiMethod.code) : null)
 
-  if (!isOpen || !modalContainer || !method) return null
+  useEffect(() => {
+    if (methodToConfigure && isOpen) {
+      // Si hay un método existente con config, cargar esos valores
+      if (method?.apiMethod.config) {
+        setConfig(method.apiMethod.config as PaymentMethodConfig)
+      } else {
+        // Resetear configuración cuando se abre el modal
+        setConfig({})
+      }
+    }
+  }, [method, methodToConfigure, isOpen])
+
+  if (!isOpen || !modalContainer || !methodToConfigure) return null
 
   const handleSave = async () => {
+    // Validar campos requeridos
+    const requiredFields = methodToConfigure.configFields.filter((field) => field.required)
+    const missingFields = requiredFields.filter((field) => !config[field.key] || String(config[field.key]).trim() === '')
+
+    if (missingFields.length > 0) {
+      alert(`Bitte füllen Sie alle erforderlichen Felder aus: ${missingFields.map((f) => f.label).join(', ')}`)
+      return
+    }
+
     await onSave(config)
   }
+
+  const handleConfigChange = (key: string, value: string) => {
+    setConfig((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+  }
+
+  // Renderizar icono
+  const isSvg = isSvgIcon(methodToConfigure.icon)
+  const iconPath = methodToConfigure.icon
+
+  const iconElement = isSvg && iconPath ? (
+    <div className="w-12 h-12 rounded-lg flex items-center justify-center overflow-hidden bg-white border border-gray-200">
+      <Image 
+        src={iconPath} 
+        alt={`${methodToConfigure.displayName} icon`}
+        width={48}
+        height={48}
+        className="object-contain"
+      />
+    </div>
+  ) : (
+    <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-gray-100">
+      {React.createElement(getPaymentMethodIcon(methodToConfigure.icon), { className: 'w-7 h-7 text-gray-600' })}
+    </div>
+  )
 
   const modalContent = (
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
       style={{ pointerEvents: 'auto' }}
+      onClick={(e) => {
+        // Cerrar solo si se hace clic en el backdrop
+        if (e.target === e.currentTarget && !isLoading) {
+          onCancel()
+        }
+      }}
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
-        onClick={onCancel}
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-fade-in-scale"
+        onClick={!isLoading ? onCancel : undefined}
       />
 
       {/* Modal */}
       <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl animate-scale-in gpu-accelerated max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {method.name} einrichten
-          </h2>
+          <div className="flex items-center gap-3">
+            {iconElement}
+            <h2 className="text-xl font-semibold text-gray-900">
+              {methodToConfigure.displayName} einrichten
+            </h2>
+          </div>
           <button
             onClick={onCancel}
             disabled={isLoading}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 touch-target"
+            aria-label="Modal schließen"
           >
             <X className="w-5 h-5" />
           </button>
@@ -90,49 +148,28 @@ export default function ConfigurePaymentMethodModal({
 
         {/* Content */}
         <div className="p-6">
+          <p className="text-sm text-gray-600 mb-6">
+            {methodToConfigure.description}
+          </p>
+
           <div className="space-y-4">
-            {/* Aquí puedes agregar campos específicos según el método de pago */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                API Key
-              </label>
-              <input
-                type="text"
-                value={config.apiKey || ''}
-                onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
-                placeholder="Ingrese su API Key"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-                disabled={isLoading}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                API Secret
-              </label>
-              <input
-                type="password"
-                value={config.apiSecret || ''}
-                onChange={(e) => setConfig({ ...config, apiSecret: e.target.value })}
-                placeholder="Ingrese su API Secret"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-                disabled={isLoading}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Merchant ID (opcional)
-              </label>
-              <input
-                type="text"
-                value={config.merchantId || ''}
-                onChange={(e) => setConfig({ ...config, merchantId: e.target.value })}
-                placeholder="Ingrese su Merchant ID"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-                disabled={isLoading}
-              />
-            </div>
+            {methodToConfigure.configFields.map((field) => (
+              <div key={field.key}>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {field.label}
+                  {field.required && <span className="text-red-500 ml-1">*</span>}
+                </label>
+                <input
+                  type={field.type}
+                  value={String(config[field.key] || '')}
+                  onChange={(e) => handleConfigChange(field.key, e.target.value)}
+                  placeholder={field.placeholder}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isLoading}
+                  required={field.required}
+                />
+              </div>
+            ))}
           </div>
         </div>
 
@@ -151,7 +188,7 @@ export default function ConfigurePaymentMethodModal({
               type="button"
               onClick={handleSave}
               disabled={isLoading}
-              className="flex-1 px-4 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-medium active:bg-brand-700 transition-all touch-manipulation active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
+              className="flex-1 px-4 py-3 bg-[#25D076] hover:bg-[#25D076]/90 text-white rounded-xl font-medium active:bg-[#25D076]/80 transition-all touch-manipulation active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
             >
               {isLoading ? (
                 <>
@@ -170,4 +207,3 @@ export default function ConfigurePaymentMethodModal({
 
   return createPortal(modalContent, modalContainer)
 }
-

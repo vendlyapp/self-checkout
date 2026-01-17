@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Invoice } from '@/lib/services/invoiceService';
 import { useResponsive } from '@/hooks';
 import { useInvoices } from '@/hooks/queries/useInvoices';
-import HeaderNav from '@/components/navigation/HeaderNav';
 import { FileText, Search, Calendar, DollarSign, User, ChevronRight, ShoppingCart, ExternalLink } from 'lucide-react';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 import Link from 'next/link';
@@ -71,7 +70,6 @@ export default function SalesInvoicesPage() {
       <div className="w-full h-full overflow-auto gpu-accelerated">
         {isMobile && (
           <div className="flex flex-col h-full">
-            <HeaderNav title="Belege" closeDestination="/sales" />
             <div className="flex-1 flex items-center justify-center p-4">
               <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Fehler</h2>
@@ -109,8 +107,6 @@ export default function SalesInvoicesPage() {
       {/* Mobile Layout */}
       {isMobile && (
         <div className="flex flex-col h-full">
-          <HeaderNav title="Belege" closeDestination="/sales" />
-          
           <div className="flex-1 overflow-y-auto">
             {/* Search Bar */}
             <div className="p-4 pb-2">

@@ -36,65 +36,122 @@ import { RecentOrder } from '@/lib/services/orderService';
  */
 // UseAnalyticsReturn interface moved to @/types
 
-// Helper function to transform orders into SalesData
-const transformOrdersToSalesData = (orders: RecentOrder[]): SalesData[] => {
+// Helper function to transform orders into SalesData based on period
+const transformOrdersToSalesData = (orders: RecentOrder[], period: TimePeriod): SalesData[] => {
   if (orders.length === 0) {
     return [];
   }
 
-  // Agrupar órdenes por día de la semana actual
   const today = new Date();
-  const currentWeekStart = new Date(today);
-  currentWeekStart.setDate(today.getDate() - today.getDay()); // Domingo
-  currentWeekStart.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
 
-  // Mapeo de días de la semana (getDay() retorna 0=Domingo, 1=Lunes, etc.)
-  // Usar abreviaciones alemanas: M=Lunes, D=Martes, M=Miércoles, D=Jueves, F=Viernes, S=Sábado, S=Domingo
-  const daysMap: Record<number, string> = {
-    0: 'S', // Domingo (Sonntag)
-    1: 'M', // Lunes (Montag)
-    2: 'D', // Martes (Dienstag)
-    3: 'M', // Miércoles (Mittwoch)
-    4: 'D', // Jueves (Donnerstag)
-    5: 'F', // Viernes (Freitag)
-    6: 'S', // Sábado (Samstag)
-  };
+  let periodStart: Date;
+  let periodEnd: Date = new Date(today);
+  periodEnd.setHours(23, 59, 59, 999);
 
-  const salesByDay: Array<{ dayOfWeek: number; current: number; last: number; date: string }> = [];
-
-  // Inicializar todos los días de la semana
-  for (let i = 0; i < 7; i++) {
-    const day = new Date(currentWeekStart);
-    day.setDate(currentWeekStart.getDate() + i);
-    const dayOfWeek = day.getDay();
-    salesByDay.push({ dayOfWeek, current: 0, last: 0, date: day.toISOString().split('T')[0] });
+  // Determinar el rango de fechas según el período
+  switch (period) {
+    case 'heute':
+      periodStart = new Date(today);
+      break;
+    case 'woche':
+      periodStart = new Date(today);
+      periodStart.setDate(today.getDate() - today.getDay()); // Domingo
+      break;
+    case 'monat':
+      periodStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      break;
+    case 'jahr':
+      periodStart = new Date(today.getFullYear(), 0, 1);
+      break;
+    default:
+      periodStart = new Date(today);
+      periodStart.setDate(today.getDate() - today.getDay());
   }
 
-  // Agrupar órdenes por día
-  orders.forEach((order) => {
+  // Filtrar órdenes del período
+  const periodOrders = orders.filter(order => {
     const orderDate = new Date(order.createdAt);
-    const orderTotal = typeof order.total === 'number' ? order.total : parseFloat(String(order.total)) || 0;
+    return orderDate >= periodStart && orderDate <= periodEnd;
+  });
 
-    // Solo contar órdenes de la semana actual
-    if (orderDate >= currentWeekStart) {
+  if (periodOrders.length === 0) {
+    return [];
+  }
+
+  // Agrupar por día según el período
+  if (period === 'heute' || period === 'woche') {
+    // Para hoy/semana: agrupar por día de la semana
+    const daysMap: Record<number, string> = {
+      0: 'S', 1: 'M', 2: 'D', 3: 'M', 4: 'D', 5: 'F', 6: 'S',
+    };
+
+    const salesByDay: Array<{ dayOfWeek: number; current: number; last: number; date: string }> = [];
+    
+    // Inicializar días del período
+    for (let i = 0; i < (period === 'heute' ? 1 : 7); i++) {
+      const day = new Date(periodStart);
+      day.setDate(periodStart.getDate() + i);
+      const dayOfWeek = day.getDay();
+      salesByDay.push({ dayOfWeek, current: 0, last: 0, date: day.toISOString().split('T')[0] });
+    }
+
+    // Agrupar órdenes por día
+    periodOrders.forEach((order) => {
+      const orderDate = new Date(order.createdAt);
+      const orderTotal = typeof order.total === 'number' ? order.total : parseFloat(String(order.total)) || 0;
       const dayOfWeek = orderDate.getDay();
       const dayData = salesByDay.find(d => d.dayOfWeek === dayOfWeek);
       if (dayData) {
         dayData.current += orderTotal;
       }
-    }
-  });
+    });
 
-  // Ordenar por día de la semana (0-6)
-  salesByDay.sort((a, b) => a.dayOfWeek - b.dayOfWeek);
+    salesByDay.sort((a, b) => a.dayOfWeek - b.dayOfWeek);
 
-  // Convertir a array con formato SalesData
-  return salesByDay.map((data) => ({
-    day: daysMap[data.dayOfWeek],
-    currentWeek: data.current,
-    lastWeek: data.last, // Por ahora 0, se puede mejorar obteniendo datos de la semana pasada
-    date: data.date,
-  }));
+    return salesByDay.map((data) => ({
+      day: daysMap[data.dayOfWeek],
+      currentWeek: data.current,
+      lastWeek: data.last,
+      date: data.date,
+    }));
+  } else {
+    // Para mes/año: agrupar por semana del período
+    const salesByWeek: Map<string, number> = new Map();
+    
+    periodOrders.forEach((order) => {
+      const orderDate = new Date(order.createdAt);
+      const orderTotal = typeof order.total === 'number' ? order.total : parseFloat(String(order.total)) || 0;
+      
+      // Calcular semana del año
+      const weekNumber = getWeekNumber(orderDate);
+      const weekKey = `${orderDate.getFullYear()}-W${weekNumber}`;
+      
+      salesByWeek.set(weekKey, (salesByWeek.get(weekKey) || 0) + orderTotal);
+    });
+
+    // Convertir a array y ordenar
+    return Array.from(salesByWeek.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([weekKey, total]) => {
+        const [year, weekStr] = weekKey.split('-W');
+        return {
+          day: `W${weekStr}`,
+          currentWeek: total,
+          lastWeek: 0,
+          date: weekKey,
+        };
+      });
+  }
+};
+
+// Helper para calcular número de semana
+const getWeekNumber = (date: Date): number => {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
 };
 
 // Helper function to transform orders into PaymentMethods
@@ -230,8 +287,9 @@ export const useAnalytics = (): UseAnalyticsReturn => {
   // Obtener estadísticas de órdenes
   const { data: orderStats, isLoading: statsLoading, error: statsError } = useOrderStats(undefined, ownerId);
   
-  // Obtener órdenes recientes (por ahora todas, se puede filtrar por store cuando el backend lo soporte)
-  const { data: recentOrders = [], isLoading: ordersLoading, error: ordersError } = useRecentOrders(100);
+  // Obtener órdenes recientes (ya filtradas por store automáticamente)
+  // Usar más órdenes para tener datos históricos según el período seleccionado
+  const { data: recentOrders = [], isLoading: ordersLoading, error: ordersError } = useRecentOrders(500);
 
   // Transformar datos reales en AnalyticsData
   const data = useMemo<AnalyticsData | null>(() => {
@@ -264,7 +322,7 @@ export const useAnalytics = (): UseAnalyticsReturn => {
       };
     }
 
-    const salesData = transformOrdersToSalesData(recentOrders);
+    const salesData = transformOrdersToSalesData(recentOrders, salesPeriod);
     const paymentMethods = transformOrdersToPaymentMethods(recentOrders);
     const shopActivity = transformOrdersToShopActivity(recentOrders);
     const cartData = createCartData(recentOrders);
@@ -281,7 +339,7 @@ export const useAnalytics = (): UseAnalyticsReturn => {
         { id: 'cart', title: 'Warenkorb', subtitle: 'Ansehen', color: 'bg-emerald-100', iconColor: 'text-emerald-600' },
       ],
     };
-  }, [recentOrders]);
+  }, [recentOrders, salesPeriod]);
 
   // Calculate derived values
   const totalSales = useMemo(() => {

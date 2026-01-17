@@ -10,7 +10,8 @@ import { Loader } from '@/components/ui/Loader';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 import Link from 'next/link';
 import { useCancelOrder } from '@/hooks/mutations/useOrderMutations';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import CancelOrderModal from '@/components/orders/CancelOrderModal';
 
 export default function SalesOrderDetailPage() {
   const params = useParams();
@@ -18,6 +19,7 @@ export default function SalesOrderDetailPage() {
   const { isMobile } = useResponsive();
   const orderId = params.id as string;
   const cancelOrder = useCancelOrder();
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   
   // Usar React Query hooks para obtener orden e invoices con cache
   const { data: order, isLoading: orderLoading, error: orderError, isFetching: orderFetching } = useOrder(orderId);
@@ -64,14 +66,24 @@ export default function SalesOrderDetailPage() {
     }
   };
 
-  const handleCancelOrder = async () => {
-    if (confirm('Möchten Sie diese Bestellung wirklich stornieren? Dies wird auch alle zugehörigen Rechnungen stornieren.')) {
-      try {
-        await cancelOrder.mutateAsync(orderId);
-        router.push('/sales/orders');
-      } catch (error) {
-        // Error ya se maneja en el hook
-      }
+  const handleOpenCancelModal = () => {
+    setIsCancelModalOpen(true);
+  };
+
+  const handleCloseCancelModal = () => {
+    if (!cancelOrder.isPending) {
+      setIsCancelModalOpen(false);
+    }
+  };
+
+  const handleConfirmCancel = async () => {
+    try {
+      await cancelOrder.mutateAsync(orderId);
+      setIsCancelModalOpen(false);
+      router.push('/sales/orders');
+    } catch (error) {
+      // Error ya se maneja en el hook
+      // El modal se mantiene abierto si hay error para que el usuario pueda intentar de nuevo
     }
   };
 
@@ -177,7 +189,7 @@ export default function SalesOrderDetailPage() {
 
                 {order.status !== 'cancelled' && (
                   <button
-                    onClick={handleCancelOrder}
+                    onClick={handleOpenCancelModal}
                     className="mt-4 w-full bg-red-50 hover:bg-red-100 text-red-600 rounded-xl py-2.5 px-4 font-semibold transition-colors touch-target flex items-center justify-center gap-2"
                   >
                     <XCircle className="w-4 h-4" />
@@ -281,7 +293,7 @@ export default function SalesOrderDetailPage() {
                 </span>
                 {order.status !== 'cancelled' && (
                   <button
-                    onClick={handleCancelOrder}
+                    onClick={handleOpenCancelModal}
                     className="bg-red-50 hover:bg-red-100 text-red-600 rounded-xl py-2 px-4 font-semibold transition-colors flex items-center gap-2"
                   >
                     <XCircle className="w-4 h-4" />
@@ -412,6 +424,15 @@ export default function SalesOrderDetailPage() {
           )}
         </div>
       )}
+
+      {/* Cancel Order Modal */}
+      <CancelOrderModal
+        isOpen={isCancelModalOpen}
+        orderNumber={order?.id ? order.id.slice(-8).toUpperCase() : undefined}
+        onClose={handleCloseCancelModal}
+        onConfirm={handleConfirmCancel}
+        isLoading={cancelOrder.isPending}
+      />
     </div>
   );
 }

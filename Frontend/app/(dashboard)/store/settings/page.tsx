@@ -1,7 +1,6 @@
 'use client'
 
 import StoreSettingsForm from '@/components/dashboard/store/StoreSettingsForm'
-import HeaderNav from '@/components/navigation/HeaderNav'
 import { useResponsive } from '@/hooks'
 
 export default function StoreSettingsPage() {
@@ -12,11 +11,6 @@ export default function StoreSettingsPage() {
       {/* Mobile Layout - Optimizado para iOS */}
       {isMobile && (
         <div className="w-full min-h-screen bg-[#F2EDE8] safe-area-bottom">
-          {/* Header Navigation */}
-          <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-100/50 safe-area-top">
-            <HeaderNav title="Mi Tienda" closeDestination="/store" />
-          </div>
-          
           {/* Content Container - Con padding optimizado para móvil */}
           <div className="px-4 py-6 pb-32 max-w-full mx-auto">
             {/* Header Section - Más compacto y elegante */}

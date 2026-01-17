@@ -9,6 +9,10 @@ interface PaymentMethodCardProps {
 }
 
 const PaymentMethodCard = ({ method, onToggle, isLoading = false }: PaymentMethodCardProps) => {
+  // Bargeld (efectivo) siempre está activo y no tiene toggle
+  const isBargeld = method.apiMethod.code.toLowerCase() === 'bargeld'
+  const isAlwaysActive = isBargeld
+
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-ios active:scale-[0.98] gpu-accelerated">
       <div className="flex items-center justify-between">
@@ -26,28 +30,34 @@ const PaymentMethodCard = ({ method, onToggle, isLoading = false }: PaymentMetho
           </div>
         </div>
 
-        {/* Toggle Switch */}
-        <button
-          onClick={() => !isLoading && onToggle(method.id)}
-          disabled={isLoading}
-          className={`relative inline-flex h-7 w-12 items-center rounded-full transition-ios-slow focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
-            method.isActive 
-              ? 'bg-[#25D076] shadow-sm shadow-[#25D076]/30' 
-              : 'bg-gray-300'
-          }`}
-          role="switch"
-          aria-checked={method.isActive}
-          aria-label={`Toggle ${method.name}`}
-          aria-disabled={isLoading}
-        >
-          <span
-            className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-ios-slow ${
+        {/* Toggle Switch - Bargeld no tiene toggle, siempre muestra como activo */}
+        {isAlwaysActive ? (
+          <div className="relative inline-flex h-7 w-12 items-center rounded-full bg-[#25D076] shadow-sm shadow-[#25D076]/30">
+            <span className="inline-block h-5 w-5 transform rounded-full bg-white shadow-sm translate-x-6 scale-100" />
+          </div>
+        ) : (
+          <button
+            onClick={() => !isLoading && onToggle(method.id)}
+            disabled={isLoading}
+            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-ios-slow focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
               method.isActive 
-                ? 'translate-x-6 scale-100' 
-                : 'translate-x-1 scale-100'
+                ? 'bg-[#25D076] shadow-sm shadow-[#25D076]/30' 
+                : 'bg-gray-300'
             }`}
-          />
-        </button>
+            role="switch"
+            aria-checked={method.isActive}
+            aria-label={`Toggle ${method.name}`}
+            aria-disabled={isLoading}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-ios-slow ${
+                method.isActive 
+                  ? 'translate-x-6 scale-100' 
+                  : 'translate-x-1 scale-100'
+              }`}
+            />
+          </button>
+        )}
       </div>
     </div>
   )

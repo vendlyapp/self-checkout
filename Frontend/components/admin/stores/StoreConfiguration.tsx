@@ -1,13 +1,29 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Settings, Save, Power, PowerOff, Mail, User, MapPin, Calendar, AlertCircle, CheckCircle, StoreIcon } from 'lucide-react';
+import { Settings, Save, Power, PowerOff, Mail, User, MapPin, Calendar, AlertCircle, CheckCircle, StoreIcon, CreditCard, Shield, ShieldOff, CheckCircle2, XCircle, PauseCircle } from 'lucide-react';
 import { SuperAdminService, type Store } from '@/lib/services/superAdminService';
+import { usePaymentMethods } from '@/hooks/queries/usePaymentMethods';
+import { useUpdatePaymentMethod } from '@/hooks/mutations/usePaymentMethodMutations';
+import { getPaymentMethodIcon, isSvgIcon } from '@/lib/utils/paymentMethodIcons';
+import Image from 'next/image';
+import { Loader } from '@/components/ui/Loader';
+import type { PaymentMethod as ApiPaymentMethod } from '@/hooks/queries/usePaymentMethods';
 
 interface StoreConfigurationProps {
   store: Store | null;
   onUpdate: () => void;
+}
+
+interface PaymentMethodDisplay {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+  isActive: boolean;
+  disabledBySuperAdmin?: boolean;
+  apiMethod: ApiPaymentMethod;
 }
 
 export default function StoreConfiguration({ store, onUpdate }: StoreConfigurationProps) {
@@ -20,6 +36,15 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
     isActive: store?.isActive ?? true,
     isOpen: store?.isOpen ?? true,
   });
+
+  // Payment Methods State
+  const { data: paymentMethodsData, isLoading: methodsLoading, refetch: refetchPaymentMethods } = usePaymentMethods({
+    storeId: store?.id || '',
+    activeOnly: false,
+  });
+  const updatePaymentMethod = useUpdatePaymentMethod();
+  const [modalContainer, setModalContainer] = useState<HTMLElement | null>(null);
+  const [updatingMethodName, setUpdatingMethodName] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -94,6 +119,112 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
     }
   };
 
+  // Setup modal container for payment methods
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      let container = document.getElementById('global-modals-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'global-modals-container';
+        container.style.position = 'fixed';
+        container.style.top = '0';
+        container.style.left = '0';
+        container.style.width = '100%';
+        container.style.height = '100%';
+        container.style.pointerEvents = 'none';
+        container.style.zIndex = '99999';
+        document.body.appendChild(container);
+      }
+      setModalContainer(container);
+    }
+  }, []);
+
+  // Map payment methods
+  const paymentMethods: PaymentMethodDisplay[] = paymentMethodsData?.map((method) => {
+    const isSvg = isSvgIcon(method.icon);
+    const iconPath = method.icon;
+    
+    const iconElement = isSvg && iconPath ? (
+      <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden bg-white border border-gray-200 dark:border-gray-700">
+        <Image 
+          src={iconPath} 
+          alt={`${method.displayName} icon`}
+          width={40}
+          height={40}
+          className="object-contain"
+        />
+      </div>
+    ) : (
+      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+        {(() => {
+          const IconComponent = getPaymentMethodIcon(method.icon);
+          return <IconComponent className="w-6 h-6 text-gray-600 dark:text-gray-400" />;
+        })()}
+      </div>
+    );
+
+    return {
+      id: method.id,
+      name: method.displayName,
+      icon: iconElement,
+      isActive: method.isActive,
+      disabledBySuperAdmin: method.disabledBySuperAdmin || false,
+      apiMethod: method,
+    };
+  }) || [];
+
+  const handleTogglePaymentMethod = async (id: string) => {
+    const method = paymentMethods.find(m => m.id === id);
+    if (!method) return;
+
+    setUpdatingMethodName(method.name);
+
+    try {
+      await updatePaymentMethod.mutateAsync({
+        id: method.id,
+        data: {
+          isActive: !method.isActive,
+        },
+      });
+      await refetchPaymentMethods();
+    } catch (error) {
+      console.error('Fehler beim Aktualisieren der Zahlungsmethode:', error);
+    } finally {
+      setUpdatingMethodName(null);
+    }
+  };
+
+  const handleToggleDisabledPaymentMethod = async (id: string) => {
+    const method = paymentMethods.find(m => m.id === id);
+    if (!method) return;
+
+    setUpdatingMethodName(method.name);
+
+    try {
+      await updatePaymentMethod.mutateAsync({
+        id: method.id,
+        data: {
+          disabledBySuperAdmin: !method.disabledBySuperAdmin,
+        },
+      });
+      // Forzar refetch inmediato y limpiar caché
+      setTimeout(() => {
+        refetchPaymentMethods();
+      }, 500);
+    } catch (error) {
+      console.error('Fehler beim Aktualisieren der Zahlungsmethode:', error);
+    } finally {
+      setUpdatingMethodName(null);
+    }
+  };
+
+  // Separate payment methods by status
+  const activePaymentMethods = paymentMethods.filter(method => method.isActive && !method.disabledBySuperAdmin);
+  const inactivePaymentMethods = paymentMethods.filter(method => !method.isActive && !method.disabledBySuperAdmin);
+  const disabledPaymentMethods = paymentMethods.filter(method => method.disabledBySuperAdmin);
+
+  const isLoadingPaymentModal = updatePaymentMethod.isPending && updatingMethodName && modalContainer;
+
   const hasChanges = 
     formData.name !== store?.name ||
     formData.slug !== store?.slug ||
@@ -154,7 +285,7 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
                 placeholder="Nombre de la tienda"
               />
               <p className="text-xs text-muted-foreground mt-2">
-                Este nombre será visible para los clientes
+                Dieser Name wird für Kunden sichtbar sein
               </p>
             </div>
 
@@ -181,7 +312,7 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
 
           {/* Estados */}
           <div className="pt-8 border-t border-border/50 space-y-6">
-            <h3 className="text-sm font-semibold text-foreground mb-1">Estado de la Tienda</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-1">Geschäftsstatus</h3>
             
             <div className="flex items-center justify-between gap-4 p-5 bg-muted/30 rounded-xl border border-border/50">
               <div className="flex items-center gap-4 flex-1">
@@ -198,12 +329,12 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-foreground mb-1">
-                    {formData.isActive ? 'Tienda Activa' : 'Tienda Inactiva'}
+                    {formData.isActive ? 'Geschäft Aktiv' : 'Geschäft Inaktiv'}
                   </p>
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     {formData.isActive 
-                      ? 'La tienda está operativa y visible para clientes' 
-                      : 'La tienda está desactivada y no es accesible'}
+                      ? 'Das Geschäft ist betriebsbereit und für Kunden sichtbar' 
+                      : 'Das Geschäft ist deaktiviert und nicht zugänglich'}
                   </p>
                 </div>
               </div>
@@ -219,12 +350,12 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
                 {formData.isActive ? (
                   <>
                     <PowerOff className="w-4 h-4 inline mr-2" />
-                    Desactivar
+                    Deaktivieren
                   </>
                 ) : (
                   <>
                     <Power className="w-4 h-4 inline mr-2" />
-                    Activar
+                    Aktivieren
                   </>
                 )}
               </button>
@@ -245,12 +376,12 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-foreground mb-1">
-                    {formData.isOpen ? 'Tienda Abierta' : 'Tienda Cerrada'}
+                    {formData.isOpen ? 'Geschäft Geöffnet' : 'Geschäft Geschlossen'}
                   </p>
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     {formData.isOpen 
-                      ? 'La tienda está abierta y acepta pedidos' 
-                      : 'La tienda está cerrada temporalmente'}
+                      ? 'Das Geschäft ist geöffnet und nimmt Bestellungen entgegen' 
+                      : 'Das Geschäft ist vorübergehend geschlossen'}
                   </p>
                 </div>
               </div>
@@ -353,6 +484,309 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
               )}
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Payment Methods Section */}
+      <Card className="bg-card rounded-2xl border border-border/50 transition-ios hover:shadow-md">
+        <CardHeader className="pb-6">
+          <CardTitle className="flex items-center gap-2 text-lg lg:text-xl mb-2 mt-4">
+            <CreditCard className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+            Métodos de Pago
+          </CardTitle>
+          <CardDescription className="text-sm">
+            Administra los métodos de pago disponibles para esta tienda
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-8 px-6 pb-6">
+          {/* Payment Methods Loading Modal */}
+          {isLoadingPaymentModal && createPortal(
+            <div
+              className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+              style={{ pointerEvents: 'auto' }}
+            >
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" />
+              <div className="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl animate-scale-in gpu-accelerated">
+                <div className="p-8 text-center">
+                  <Loader size="lg" className="mb-6" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    {updatingMethodName ? (() => {
+                      const method = paymentMethods.find(m => m.name === updatingMethodName);
+                      if (!method) return 'Zahlungsmethode wird aktualisiert...';
+                      const isTogglingDisabled = method.disabledBySuperAdmin !== undefined;
+                      if (isTogglingDisabled && method.disabledBySuperAdmin) {
+                        return 'Zahlungsmethode wird aktiviert...';
+                      } else if (isTogglingDisabled && !method.disabledBySuperAdmin) {
+                        return 'Zahlungsmethode wird deaktiviert...';
+                      }
+                      return method.isActive
+                        ? 'Zahlungsmethode wird deaktiviert...'
+                        : 'Zahlungsmethode wird aktiviert...';
+                    })() : (
+                      'Zahlungsmethode wird aktualisiert...'
+                    )}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Bitte warten Sie einen Moment
+                  </p>
+                </div>
+              </div>
+            </div>,
+            modalContainer
+          )}
+
+          {methodsLoading ? (
+            <div className="flex items-center justify-center gap-3 py-8">
+              <Loader size="sm" />
+              <p className="text-sm text-muted-foreground">Cargando métodos de pago...</p>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {/* Active Payment Methods */}
+              {activePaymentMethods.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-foreground">Métodos Activos</h3>
+                      <p className="text-xs text-muted-foreground">Disponibles para los clientes</p>
+                    </div>
+                    <span className="ml-auto px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
+                      {activePaymentMethods.length}
+                    </span>
+                  </div>
+                  <div className="grid gap-3">
+                    {activePaymentMethods.map((method) => (
+                      <div
+                        key={method.id}
+                        className="group p-4 bg-gradient-to-r from-emerald-50/50 to-transparent dark:from-emerald-500/5 dark:to-transparent rounded-xl border-2 border-emerald-200/50 dark:border-emerald-500/20 hover:border-emerald-300 dark:hover:border-emerald-500/30 hover:shadow-md transition-all duration-200"
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-4 flex-1 min-w-0">
+                            <div className="relative">
+                              {method.icon}
+                              <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center">
+                                <CheckCircle2 className="w-2.5 h-2.5 text-white" />
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-sm font-semibold text-foreground truncate">
+                                  {method.name}
+                                </h4>
+                                <span className="px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
+                                  Activo
+                                </span>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5 font-mono">
+                                {method.apiMethod.code}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => !updatePaymentMethod.isPending && handleTogglePaymentMethod(method.id)}
+                              disabled={updatePaymentMethod.isPending}
+                              className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+                                method.isActive 
+                                  ? 'bg-emerald-500 shadow-sm shadow-emerald-500/30' 
+                                  : 'bg-gray-300 dark:bg-gray-600'
+                              }`}
+                              role="switch"
+                              aria-checked={method.isActive}
+                              title={method.isActive ? 'Deaktivieren' : 'Aktivieren'}
+                            >
+                              <span
+                                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-all duration-200 ${
+                                  method.isActive ? 'translate-x-6' : 'translate-x-1'
+                                }`}
+                              />
+                            </button>
+                            <button
+                              onClick={() => !updatePaymentMethod.isPending && handleToggleDisabledPaymentMethod(method.id)}
+                              disabled={updatePaymentMethod.isPending}
+                              className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/15 rounded-lg hover:bg-red-100 dark:hover:bg-red-500/25 border border-red-200 dark:border-red-500/30 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                              title="Zahlungsmethode deaktivieren"
+                            >
+                              <ShieldOff className="w-3.5 h-3.5" />
+                              Deaktivieren
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Inactive Payment Methods */}
+              {inactivePaymentMethods.length > 0 && (
+                <div className="space-y-4 pt-6 border-t border-border/50">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
+                      <PauseCircle className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-foreground">Inaktive Methoden</h3>
+                      <p className="text-xs text-muted-foreground">Nicht verfügbar für Kunden</p>
+                    </div>
+                    <span className="ml-auto px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                      {inactivePaymentMethods.length}
+                    </span>
+                  </div>
+                  <div className="grid gap-3">
+                    {inactivePaymentMethods.map((method) => (
+                      <div
+                        key={method.id}
+                        className="group p-4 bg-muted/30 rounded-xl border border-border/50 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-sm transition-all duration-200"
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-4 flex-1 min-w-0">
+                            <div className="opacity-60">{method.icon}</div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-sm font-semibold text-foreground truncate">
+                                  {method.name}
+                                </h4>
+                                <span className="px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                                  Inaktiv
+                                </span>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5 font-mono">
+                                {method.apiMethod.code}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => !updatePaymentMethod.isPending && handleTogglePaymentMethod(method.id)}
+                              disabled={updatePaymentMethod.isPending}
+                              className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+                                method.isActive 
+                                  ? 'bg-emerald-500 shadow-sm shadow-emerald-500/30' 
+                                  : 'bg-gray-300 dark:bg-gray-600'
+                              }`}
+                              role="switch"
+                              aria-checked={method.isActive}
+                              title={method.isActive ? 'Deaktivieren' : 'Aktivieren'}
+                            >
+                              <span
+                                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-all duration-200 ${
+                                  method.isActive ? 'translate-x-6' : 'translate-x-1'
+                                }`}
+                              />
+                            </button>
+                            <button
+                              onClick={() => !updatePaymentMethod.isPending && handleToggleDisabledPaymentMethod(method.id)}
+                              disabled={updatePaymentMethod.isPending}
+                              className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/15 rounded-lg hover:bg-red-100 dark:hover:bg-red-500/25 border border-red-200 dark:border-red-500/30 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                              title="Zahlungsmethode deaktivieren"
+                            >
+                              <ShieldOff className="w-3.5 h-3.5" />
+                              Deaktivieren
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Disabled Payment Methods */}
+              {disabledPaymentMethods.length > 0 && (
+                <div className="space-y-4 pt-6 border-t-2 border-orange-200 dark:border-orange-500/30">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-orange-50 dark:bg-orange-500/10">
+                      <Shield className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-foreground">Deaktiviert durch Super Admin</h3>
+                      <p className="text-xs text-muted-foreground">Gesperrt für Geschäftsadmin</p>
+                    </div>
+                    <span className="ml-auto px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400">
+                      {disabledPaymentMethods.length}
+                    </span>
+                  </div>
+                  <div className="grid gap-3">
+                    {disabledPaymentMethods.map((method) => (
+                      <div
+                        key={method.id}
+                        className="group p-4 bg-gradient-to-r from-orange-50/30 to-transparent dark:from-orange-500/5 dark:to-transparent rounded-xl border-2 border-orange-200/50 dark:border-orange-500/20 hover:border-orange-300 dark:hover:border-orange-500/30 hover:shadow-md transition-all duration-200"
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-4 flex-1 min-w-0">
+                            <div className="relative opacity-60">
+                              {method.icon}
+                              <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center">
+                                <Shield className="w-2.5 h-2.5 text-white" />
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-sm font-semibold text-foreground truncate">
+                                  {method.name}
+                                </h4>
+                                <span className="px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400">
+                                  Deaktiviert
+                                </span>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5 font-mono">
+                                {method.apiMethod.code}
+                              </p>
+                              <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                                {method.isActive ? 'Aktiv aber gesperrt' : 'Inaktiv und gesperrt'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => !updatePaymentMethod.isPending && handleTogglePaymentMethod(method.id)}
+                              disabled={updatePaymentMethod.isPending}
+                              className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+                                method.isActive 
+                                  ? 'bg-emerald-500 shadow-sm shadow-emerald-500/30' 
+                                  : 'bg-gray-300 dark:bg-gray-600'
+                              }`}
+                              role="switch"
+                              aria-checked={method.isActive}
+                              title={method.isActive ? 'Deaktivieren' : 'Aktivieren'}
+                            >
+                              <span
+                                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-all duration-200 ${
+                                  method.isActive ? 'translate-x-6' : 'translate-x-1'
+                                }`}
+                              />
+                            </button>
+                            <button
+                              onClick={() => !updatePaymentMethod.isPending && handleToggleDisabledPaymentMethod(method.id)}
+                              disabled={updatePaymentMethod.isPending}
+                              className="px-3 py-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/15 rounded-lg hover:bg-brand-100 dark:hover:bg-brand-500/25 border-2 border-brand-300 dark:border-brand-500/40 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-sm"
+                              title="Zahlungsmethode aktivieren - Erlauben, dass der Geschäftsadmin es wieder verwendet"
+                            >
+                              <Shield className="w-3.5 h-3.5" />
+                              Aktivieren
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {paymentMethods.length === 0 && !methodsLoading && (
+                <div className="text-center py-8">
+                  <CreditCard className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    Keine Zahlungsmethoden für dieses Geschäft konfiguriert
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

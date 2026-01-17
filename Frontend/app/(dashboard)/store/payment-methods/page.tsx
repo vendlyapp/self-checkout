@@ -1,7 +1,6 @@
 'use client'
 
 import PaymentMethodsPage from '@/components/dashboard/store/PaymentMethodsPage'
-import HeaderNav from '@/components/navigation/HeaderNav'
 import { useResponsive } from '@/hooks'
 
 export default function PaymentMethodsRoute() {
@@ -11,11 +10,8 @@ export default function PaymentMethodsRoute() {
     <div className="w-full h-full gpu-accelerated">
       {/* Mobile Layout */}
       {isMobile && (
-        <div className="w-full">
-          <HeaderNav title="Zahlungsarten verwalten" closeDestination="/store" />
-          <div className="p-4 pb-24">
-            <PaymentMethodsPage />
-          </div>
+        <div className="p-4">
+          <PaymentMethodsPage />
         </div>
       )}
 

@@ -105,8 +105,56 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     isOrderDetailRoute && orderId ? orderId : null
   );
   
+  // Determinar si estamos en la ruta de settings
+  const isSettingsRoute = pathname?.startsWith('/store/settings');
+  
+  // Determinar si estamos en la ruta de my-qr
+  const isMyQRRoute = pathname === '/my-qr' || pathname === '/my-qr/';
+  
+  // Determinar si estamos en la ruta de sales (página principal)
+  const isSalesRoute = pathname === '/sales' || pathname === '/sales/';
+  
+  // Determinar si estamos en la lista de invoices (no detalle)
+  const isInvoicesListRoute = (pathname === '/sales/invoices' || pathname === '/store/invoice') && !isInvoiceDetailRoute;
+  
+  // Determinar si estamos en la lista de orders (no detalle)
+  const isOrdersListRoute = isOrderRoute && !isOrderDetailRoute;
+  
+  // Función para obtener el título del HeaderNav según la ruta
+  const getHeaderNavTitleForStoreSales = (): string | null => {
+    if (isPaymentMethodsRoute) return 'Zahlungsarten verwalten';
+    if (isSettingsRoute) return 'Mi Tienda';
+    if (isDiscountsRoute) return 'Rabatte & Codes';
+    if (isMyQRRoute) return 'Mein QR-Code';
+    if (isInvoicesListRoute) {
+      return pathname?.startsWith('/sales/invoices') ? 'Belege' : 'Rechnungen';
+    }
+    if (isOrdersListRoute) return 'Bestellungen';
+    return null;
+  };
+  
+  // Función para obtener el closeDestination según la ruta
+  const getHeaderNavCloseDestination = (): string => {
+    if (isPaymentMethodsRoute || isSettingsRoute || isDiscountsRoute || (isInvoicesListRoute && pathname?.startsWith('/store/invoice'))) {
+      return '/store';
+    }
+    if (isMyQRRoute) {
+      return '/store';
+    }
+    if (isInvoicesListRoute && pathname?.startsWith('/sales/invoices')) {
+      return '/sales';
+    }
+    if (isOrdersListRoute) {
+      return '/sales';
+    }
+    return '/dashboard';
+  };
+  
+  const headerNavTitleForStoreSales = getHeaderNavTitleForStoreSales();
+  const shouldShowStoreSalesHeaderNav = isMobile && headerNavTitleForStoreSales !== null;
+  
   // Rutas que ocultan el navbar/sidebar
-  const isStoreSubRoute = isDiscountsRoute || isPaymentMethodsRoute || isInvoiceRoute;
+  const isStoreSubRoute = isDiscountsRoute || isPaymentMethodsRoute || isInvoiceRoute || isSettingsRoute;
   
   // Determinar si estamos en modo edición (edit o view)
   const isEditMode = pathname?.includes('/products_list/edit/') || pathname?.includes('/products_list/view/');
@@ -394,6 +442,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           />
         )}
 
+        {/* HeaderNav para rutas de store y sales (listas y configuraciones) */}
+        {shouldShowStoreSalesHeaderNav && (
+          <HeaderNav 
+            title={headerNavTitleForStoreSales || ''} 
+            closeDestination={getHeaderNavCloseDestination()}
+            isFixed={true} 
+          />
+        )}
+
         {/* Contenido principal */}
         <main
           ref={scrollContainerRef}
@@ -402,7 +459,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             isMobile ? "ios-scroll-fix" : "scroll-smooth",
             shouldShowCartSummary && "pb-24", // Padding para el CartSummary fixed
             isMobile && isInvoiceDetailRoute && "pb-24 pt-[calc(70px+env(safe-area-inset-top))]", // Padding para ResponsiveHeader (~85px) + HeaderNav fixed (~70px) y InvoiceActionsFooter fixed
-            isMobile && isOrderDetailRoute && "pt-[calc(70px+env(safe-area-inset-top))]" // Padding para ResponsiveHeader (~85px) + HeaderNav fixed (~70px)
+            isMobile && isOrderDetailRoute && "pt-[calc(70px+env(safe-area-inset-top))]", // Padding para ResponsiveHeader (~85px) + HeaderNav fixed (~70px)
+            shouldShowStoreSalesHeaderNav && "pt-[calc(70px+env(safe-area-inset-top))]" // Padding para ResponsiveHeader (~85px) + HeaderNav fixed (~70px)
           )}
         >
           <div className={clsx(

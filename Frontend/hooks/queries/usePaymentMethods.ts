@@ -14,6 +14,9 @@ export interface PaymentMethod {
   textColor: string | null;
   isActive: boolean;
   sortOrder: number;
+  config: Record<string, unknown> | null;
+  disabledBySuperAdmin?: boolean; // Si es true, el super admin inhabilitó este método
+  disabledGlobally?: boolean; // Si es true, el método está deshabilitado globalmente (no disponible para ninguna tienda)
   createdAt: string;
   updatedAt: string;
 }
@@ -76,13 +79,13 @@ export const usePaymentMethods = (options: UsePaymentMethodsOptions) => {
       }
     },
     enabled: !!storeId,
-    staleTime: 15 * 60 * 1000, // 15 minutos - métodos de pago cambian raramente
-    gcTime: 30 * 60 * 1000, // 30 minutos en cache
+    staleTime: 0, // Siempre considerar los datos como stale para métodos de pago (pueden cambiar)
+    gcTime: 5 * 60 * 1000, // 5 minutos en cache
     retry: 2,
     retryDelay: 1000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false, // No recargar si hay datos en cache
-    refetchOnReconnect: false,
+    refetchOnWindowFocus: true, // Recargar al enfocar la ventana
+    refetchOnMount: true, // Recargar cuando se monta el componente
+    refetchOnReconnect: true, // Recargar al reconectar
   });
 };
 

@@ -14,6 +14,7 @@ export interface CreatePaymentMethodData {
   textColor?: string | null;
   isActive?: boolean;
   sortOrder?: number;
+  config?: Record<string, unknown> | null;
 }
 
 export interface UpdatePaymentMethodData {
@@ -25,6 +26,8 @@ export interface UpdatePaymentMethodData {
   textColor?: string | null;
   isActive?: boolean;
   sortOrder?: number;
+  config?: Record<string, unknown> | null;
+  disabledBySuperAdmin?: boolean;
 }
 
 /**
@@ -106,7 +109,7 @@ export const useUpdatePaymentMethod = () => {
       const headers = getAuthHeaders(session.access_token);
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
 
       try {
         const response = await fetch(url, {
@@ -138,7 +141,9 @@ export const useUpdatePaymentMethod = () => {
       }
     },
     onSuccess: (data) => {
+      // Invalidar todas las queries de paymentMethods para este storeId
       queryClient.invalidateQueries({ queryKey: ['paymentMethods', data.storeId] });
+      queryClient.invalidateQueries({ queryKey: ['paymentMethods'] });
       queryClient.invalidateQueries({ queryKey: ['paymentMethod', data.id] });
       toast.success('Método de pago actualizado exitosamente');
     },

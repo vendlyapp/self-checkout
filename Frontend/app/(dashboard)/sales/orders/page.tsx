@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useResponsive } from '@/hooks';
 import { useOrders } from '@/hooks/queries/useOrders';
-import HeaderNav from '@/components/navigation/HeaderNav';
 import { ShoppingCart, Search, Calendar, DollarSign, User, ChevronRight, FileText, XCircle } from 'lucide-react';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 import Link from 'next/link';
@@ -101,7 +100,6 @@ export default function SalesOrdersPage() {
       <div className="w-full h-full overflow-auto gpu-accelerated">
         {isMobile && (
           <div className="flex flex-col h-full">
-            <HeaderNav title="Bestellungen" closeDestination="/sales" />
             <div className="flex-1 flex items-center justify-center p-4">
               <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Fehler</h2>
@@ -138,7 +136,6 @@ export default function SalesOrdersPage() {
     <div className="w-full h-full overflow-auto gpu-accelerated">
       {isMobile && (
         <div className="flex flex-col h-full">
-          <HeaderNav title="Bestellungen" closeDestination="/sales" />
           <div className="flex-1 overflow-y-auto">
             {/* Search Bar */}
             <div className="p-4 pb-2">

@@ -50,14 +50,13 @@ function StoreLayoutContent({ children }: StoreLayoutContentProps) {
   
   const headerNavTitle = getHeaderNavTitle()
   const shouldShowHeaderNav = !isMainProductsPage && headerNavTitle !== null
-  const shouldShowScanHeaderNav = isScanPage && headerNavTitle !== null
   
   // Si la tienda está cerrada, ocultar navbar y footer
   const isStoreClosed = store?.isOpen === false
   
-  // En la página de scan, ocultar footer pero mantener HeaderUser
-  const shouldHideNavigation = isScanPage
-  const shouldHideFooter = isScanPage
+  // En la página de scan, mostrar HeaderNav y FooterNavUser (ya no ocultamos)
+  const shouldHideNavigation = false // Mostrar navegación en todas las páginas incluyendo scan
+  const shouldHideFooter = false // Mostrar footer en todas las páginas incluyendo scan
 
   const containerBgClass = "bg-background-cream"
   const headerBgClass = "bg-white"
@@ -106,8 +105,8 @@ function StoreLayoutContent({ children }: StoreLayoutContentProps) {
   // - HeaderNav: ~60px (con flecha de navegación)
   // En scan:
   // - HeaderUser: ~85px (con safe area)
-  // - HeaderNav sutil: ~60px (botón de retroceso)
-  const fixedHeadersHeight = isScanPage && shouldShowScanHeaderNav
+  // - HeaderNav: ~60px (con flecha de navegación)
+  const fixedHeadersHeight = isScanPage && shouldShowHeaderNav
     ? 'calc(85px + env(safe-area-inset-top) + 60px)'
     : isMainProductsPage && store && store.isOpen !== false && storeContext.categoryFilters.length > 0
     ? 'calc(85px + env(safe-area-inset-top) + 65px + 60px + 60px)'
@@ -150,25 +149,13 @@ function StoreLayoutContent({ children }: StoreLayoutContentProps) {
           />
         )}
 
-        {/* HeaderNav fijo - Solo en páginas que no son la principal (cart, payment, promotion, search) */}
-        {!isStoreClosed && !shouldHideNavigation && shouldShowHeaderNav && headerNavTitle && !isScanPage && (
+        {/* HeaderNav fijo - Solo en páginas que no son la principal (cart, payment, promotion, search, scan) */}
+        {!isStoreClosed && !shouldHideNavigation && shouldShowHeaderNav && headerNavTitle && (
           <div 
             className="fixed left-0 right-0 z-40 bg-white"
             style={{ top: 'calc(85px + env(safe-area-inset-top))' }}
           >
             <HeaderNav title={headerNavTitle} isFixed={false} />
-          </div>
-        )}
-
-        {/* HeaderNav sutil para scan - Solo botón de retroceso, posicionado debajo del HeaderUser */}
-        {!isStoreClosed && shouldShowScanHeaderNav && headerNavTitle && (
-          <div 
-            className="fixed left-0 right-0 z-[99] pointer-events-none"
-            style={{ top: 'calc(85px + env(safe-area-inset-top))' }}
-          >
-            <div className="pointer-events-auto px-2 pt-2">
-              <HeaderNav title={headerNavTitle} isFixed={false} variant="subtle" />
-            </div>
           </div>
         )}
 
@@ -194,7 +181,7 @@ function StoreLayoutContent({ children }: StoreLayoutContentProps) {
           </div>
         </main>
 
-        {/* Footer de navegación fijo con safe area - ocultar si tienda cerrada o en scan */}
+        {/* Footer de navegación fijo con safe area - ocultar solo si tienda cerrada */}
         {!isStoreClosed && !shouldHideFooter && (
           <div className="fixed bottom-0 left-0 right-0 z-[9999]">
             <FooterNavUser />

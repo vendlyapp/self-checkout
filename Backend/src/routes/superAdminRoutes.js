@@ -425,5 +425,49 @@ router.get('/analytics/active-overview', analyticsController.getActiveOverview);
  */
 router.get('/analytics/active-stores', analyticsController.getActiveCustomersByStore);
 
+/**
+ * @swagger
+ * /api/super-admin/payment-methods/global-config:
+ *   get:
+ *     summary: Obtener configuraciones globales de métodos de pago
+ *     tags: [Super Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Configuraciones obtenidas exitosamente
+ */
+router.get('/payment-methods/global-config', superAdminController.getGlobalPaymentMethodConfigs);
+
+/**
+ * @swagger
+ * /api/super-admin/payment-methods/global-config:
+ *   put:
+ *     summary: Actualizar configuración global de método de pago
+ *     tags: [Super Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *               - disabledGlobally
+ *             properties:
+ *               code:
+ *                 type: string
+ *               disabledGlobally:
+ *                 type: boolean
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Configuración actualizada exitosamente
+ */
+router.put('/payment-methods/global-config', superAdminController.updateGlobalPaymentMethodConfig);
+
 module.exports = router;
 

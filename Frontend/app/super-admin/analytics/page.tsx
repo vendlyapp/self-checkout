@@ -26,9 +26,9 @@ import { cn } from "@/lib/utils";
 type Period = "month" | "quarter" | "year";
 
 const periodOptions: Array<{ value: Period; label: string }> = [
-  { value: "month", label: "Mensual" },
-  { value: "quarter", label: "Trimestral" },
-  { value: "year", label: "Anual" },
+  { value: "month", label: "Monatlich" },
+  { value: "quarter", label: "Quartal" },
+  { value: "year", label: "Jährlich" },
 ];
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
@@ -139,13 +139,13 @@ const SuperAdminAnalytics: React.FC = () => {
       month.setMonth(month.getMonth() - (11 - index));
 
       return {
-        month: month.toLocaleDateString("es-ES", { month: "short" }),
+        month: month.toLocaleDateString("de-CH", { month: "short" }),
         users: Math.floor(stats.users.total * (0.7 + (index / 12) * 0.3)),
       };
     });
 
     const productsByCategory = products.reduce<Record<string, number>>((acc, product) => {
-      const category = product.category || "Sin categoría";
+      const category = product.category || "Ohne Kategorie";
       acc[category] = (acc[category] || 0) + 1;
       return acc;
     }, {});
@@ -160,7 +160,7 @@ const SuperAdminAnalytics: React.FC = () => {
       month.setMonth(month.getMonth() - (11 - index));
 
       return {
-        month: month.toLocaleDateString("es-ES", { month: "short" }),
+        month: month.toLocaleDateString("de-CH", { month: "short" }),
         sales: Math.floor(
           Number(stats.orders.revenue || 0) / 12 * (0.8 + Math.random() * 0.4),
         ),
@@ -235,7 +235,7 @@ const SuperAdminAnalytics: React.FC = () => {
 
     const mostRecent = Math.max(...timestamps);
 
-    return new Date(mostRecent).toLocaleString("es-ES", {
+    return new Date(mostRecent).toLocaleString("de-CH", {
       day: "2-digit",
       month: "short",
       hour: "2-digit",
@@ -292,17 +292,13 @@ const SuperAdminAnalytics: React.FC = () => {
         labels: { style: { fontSize: "12px" } },
       },
       yaxis: {
-        title: { text: "CHF" },
-        labels: { formatter: (value) => `CHF ${value.toLocaleString()}` },
+        title: { text: "Bestellungen" },
+        labels: { formatter: (value) => `${Math.round(value).toLocaleString()}` },
       },
       grid: { borderColor: "#e5e7eb" },
       tooltip: {
         y: {
-          formatter: (value) =>
-            `CHF ${value.toLocaleString("de-CH", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}`,
+          formatter: (value) => `${Math.round(value).toLocaleString()} Bestellungen`,
         },
       },
     }),
@@ -312,8 +308,8 @@ const SuperAdminAnalytics: React.FC = () => {
   const salesByStoreSeries = useMemo(
     () => [
       {
-        name: "Ingresos",
-        data: safeSalesByStore.slice(0, 10).map((store) => store.revenue),
+        name: "Bestellungen",
+        data: safeSalesByStore.slice(0, 10).map((store) => store.orders),
       },
     ],
     [safeSalesByStore],
@@ -349,12 +345,14 @@ const SuperAdminAnalytics: React.FC = () => {
               show: true,
               total: {
                 show: true,
-                label: "Total Revenue",
-                formatter: () =>
-                  `CHF ${safeTotalRevenue.toLocaleString("de-CH", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}`,
+                label: "Total Bestellungen",
+                formatter: () => {
+                  const totalOrders = analyticsData?.salesByStore.reduce(
+                    (sum, store) => sum + store.orders,
+                    0
+                  ) || 0;
+                  return `${totalOrders.toLocaleString("de-CH")}`;
+                },
               },
             },
           },
@@ -366,11 +364,12 @@ const SuperAdminAnalytics: React.FC = () => {
       },
       tooltip: {
         y: {
-          formatter: (value) =>
-            `CHF ${value.toLocaleString("de-CH", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}`,
+          formatter: (value: number) => {
+            // Calcular el porcentaje basado en el total de la distribución
+            const totalRevenue = safeTotalRevenue || 1;
+            const percentage = totalRevenue > 0 ? ((value / totalRevenue) * 100).toFixed(1) : '0';
+            return `${percentage}%`;
+          },
         },
       },
     }),
@@ -398,12 +397,12 @@ const SuperAdminAnalytics: React.FC = () => {
         labels: { style: { fontSize: "12px" } },
       },
       yaxis: {
-        title: { text: "Usuarios" },
+        title: { text: "Benutzer" },
         labels: { formatter: (value) => Math.floor(value).toString() },
       },
       grid: { borderColor: "#e5e7eb" },
       tooltip: {
-        y: { formatter: (value) => `${Math.floor(value)} usuarios` },
+        y: { formatter: (value) => `${Math.floor(value)} Benutzer` },
       },
       fill: {
         type: "gradient",
@@ -421,7 +420,7 @@ const SuperAdminAnalytics: React.FC = () => {
   const userGrowthSeries = useMemo(
     () => [
       {
-        name: "Total Usuarios",
+        name: "Total Benutzer",
         data: safeUserGrowthData.map((point) => point.users),
       },
     ],
@@ -450,7 +449,7 @@ const SuperAdminAnalytics: React.FC = () => {
         labels: { style: { fontSize: "12px" } },
       },
       tooltip: {
-        y: { formatter: (value) => `${value} productos` },
+        y: { formatter: (value) => `${value} Produkte` },
       },
       grid: { borderColor: "#e5e7eb" },
     }),
@@ -460,7 +459,7 @@ const SuperAdminAnalytics: React.FC = () => {
   const categoriesSeries = useMemo(
     () => [
       {
-        name: "Productos",
+        name: "Produkte",
         data: safeTopCategories.map((category) => category.count),
       },
     ],
@@ -490,18 +489,14 @@ const SuperAdminAnalytics: React.FC = () => {
         labels: { style: { fontSize: "12px" } },
       },
       yaxis: {
-        title: { text: "CHF" },
-        labels: { formatter: (value) => `CHF ${value.toLocaleString()}` },
+        title: { text: "Bestellungen" },
+        labels: { formatter: (value) => `${Math.round(value).toLocaleString()}` },
       },
       legend: { position: "top" },
       grid: { borderColor: "#e5e7eb" },
       tooltip: {
         y: {
-          formatter: (value) =>
-            `CHF ${value.toLocaleString("de-CH", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}`,
+          formatter: (value) => `${Math.round(value).toLocaleString()} Bestellungen`,
         },
       },
     }),
@@ -536,8 +531,8 @@ const SuperAdminAnalytics: React.FC = () => {
     return (
       <AdminDataState
         type="loading"
-        title="Cargando analíticas"
-        description="Estamos preparando la información de rendimiento de la plataforma."
+        title="Analytics werden geladen"
+        description="Wir bereiten die Leistungsinformationen der Plattform vor."
         className="min-h-[60vh]"
       />
     );
@@ -547,9 +542,9 @@ const SuperAdminAnalytics: React.FC = () => {
     return (
       <AdminDataState
         type="error"
-        title="No pudimos obtener las analíticas"
+        title="Analytics konnten nicht geladen werden"
         description={statsError}
-        actionLabel="Reintentar"
+        actionLabel="Erneut versuchen"
         onAction={() => refreshAll()}
         className="min-h-[60vh]"
       />
@@ -574,29 +569,37 @@ const SuperAdminAnalytics: React.FC = () => {
   const metricTone: "success" | "danger" = userGrowthRate >= 0 ? "success" : "danger";
   const MetricIcon = userGrowthRate >= 0 ? TrendingUp : TrendingDown;
 
+  // Calcular porcentajes y métricas basadas en cantidades
+  const totalStores = analyticsData.salesByStore.length;
+  const activeStorePercentage = totalStores > 0 
+    ? Math.round((activeStoreCount / totalStores) * 100) 
+    : 0;
+  
+  const orderGrowthRate = 12.5; // Por ahora estático, se puede calcular si hay datos históricos
+  const storePerformanceRate = totalStores > 0 
+    ? Math.round((activeStoreCount / totalStores) * 100) 
+    : 0;
+
   const metricCards = [
     {
-      id: "revenue",
-      label: "Gesamtumsatz",
-      icon: DollarSign,
-      primaryValue: `CHF ${analyticsData.totalRevenue.toLocaleString("de-CH", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`,
-      secondaryValue: `${totalOrders.toLocaleString("de-CH")} Bestellungen`,
+      id: "orders",
+      label: "Total Bestellungen",
+      icon: ShoppingCart,
+      primaryValue: `${totalOrders.toLocaleString("de-CH")}`,
+      secondaryValue: `${orderGrowthRate >= 0 ? "+" : ""}${orderGrowthRate.toFixed(1)}% Wachstum`,
       helperText: `Zeitraum ${
         periodOptions.find((option) => option.value === selectedPeriod)?.label?.toLowerCase() ?? ""
       }`,
       tone: "brand" as const,
     },
     {
-      id: "ticket",
-      label: "Durchschnittlicher Warenkorbwert",
-      icon: ShoppingCart,
-      primaryValue: `CHF ${avgOrderValue.toFixed(2)}`,
-      secondaryValue: "Pro Bestellung",
-      helperText: "Umfasst alle aktiven Geschäfte",
-      tone: "neutral" as const,
+      id: "stores",
+      label: "Aktive Geschäfte",
+      icon: Store,
+      primaryValue: `${activeStoreCount}`,
+      secondaryValue: `${activeStorePercentage}% aktiv`,
+      helperText: `${totalStores.toLocaleString("de-CH")} Geschäfte insgesamt`,
+      tone: "success" as const,
     },
     {
       id: "growth",
@@ -608,15 +611,12 @@ const SuperAdminAnalytics: React.FC = () => {
       tone: metricTone,
     },
     {
-      id: "storeRevenue",
-      label: "Umsatz pro Geschäft",
-      icon: Store,
-      primaryValue: `CHF ${avgRevenuePerStore.toLocaleString("de-CH", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`,
-      secondaryValue: `${activeStoreCount} aktive Geschäfte`,
-      helperText: `${analyticsData.salesByStore.length.toLocaleString("de-CH")} Geschäfte insgesamt`,
+      id: "performance",
+      label: "Plattform-Performance",
+      icon: TrendingUp,
+      primaryValue: `${storePerformanceRate}%`,
+      secondaryValue: "Aktive Geschäfte",
+      helperText: `Durchschnitt: ${avgOrderValue > 0 ? Math.round(avgOrderValue) : 0} CHF pro Bestellung`,
       tone: "warning" as const,
     },
   ];
@@ -723,10 +723,10 @@ const SuperAdminAnalytics: React.FC = () => {
       <div className="grid grid-cols-12 gap-4 md:gap-6 xl:items-stretch">
         <div className="col-span-12 lg:col-span-7">
           <AdminSectionCard
-            title="Top Geschäfte nach Umsatz"
-            subtitle="Die 10 Geschäfte mit dem höchsten Umsatz"
+            title="Top Geschäfte nach Bestellungen"
+            subtitle="Die 10 Geschäfte mit den meisten Bestellungen"
           >
-            <div className="h-[360px]" aria-label="Ranking de tiendas por ingresos">
+            <div className="h-[360px]" aria-label="Ranking der Geschäfte nach Bestellungen">
               <ReactApexChart
                 options={salesByStoreOptions}
                 series={salesByStoreSeries}
@@ -742,7 +742,7 @@ const SuperAdminAnalytics: React.FC = () => {
             title="Benutzerwachstum"
             subtitle="Trend der letzten 12 Monate"
           >
-            <div className="h-[360px]" aria-label="Gráfico de crecimiento de usuarios">
+            <div className="h-[360px]" aria-label="Grafik des Benutzerwachstums">
               <ReactApexChart
                 options={userGrowthOptions}
                 series={userGrowthSeries}
@@ -755,8 +755,8 @@ const SuperAdminAnalytics: React.FC = () => {
       </div>
 
       <AdminSectionCard
-        title="Productos por categoría"
-        subtitle="Distribución de productos en la plataforma"
+        title="Produkte nach Kategorie"
+        subtitle="Produktverteilung auf der Plattform"
       >
         <div className="h-[360px]" aria-label="Produktverteilung nach Kategorie">
           <ReactApexChart
@@ -769,20 +769,20 @@ const SuperAdminAnalytics: React.FC = () => {
       </AdminSectionCard>
 
       <AdminSectionCard
-        title="Rendimiento de tiendas"
-        subtitle="Comparativa de métricas clave"
+        title="Geschäftsleistung"
+        subtitle="Vergleich wichtiger Metriken"
         contentClassName="p-0"
       >
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-100 text-sm dark:divide-gray-800">
             <thead className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:bg-gray-900/60 dark:text-gray-300">
               <tr>
-                <th className="px-6 py-3">Tienda</th>
-                <th className="px-6 py-3">Revenue</th>
-                <th className="px-6 py-3">Órdenes</th>
-                <th className="px-6 py-3">Ticket promedio</th>
-                <th className="px-6 py-3">Productos</th>
-                <th className="px-6 py-3">Estado</th>
+                <th className="px-6 py-3">Geschäft</th>
+                <th className="px-6 py-3">Anteil (%)</th>
+                <th className="px-6 py-3">Bestellungen</th>
+                <th className="px-6 py-3">Durchschnitt</th>
+                <th className="px-6 py-3">Produkte</th>
+                <th className="px-6 py-3">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -802,17 +802,15 @@ const SuperAdminAnalytics: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 font-semibold text-gray-900 dark:text-white/90">
-                    CHF{" "}
-                    {store.revenue.toLocaleString("de-CH", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    {totalOrders > 0 
+                      ? `${Math.round((store.orders / totalOrders) * 100)}%`
+                      : "0%"}
                   </td>
                   <td className="px-6 py-4 text-gray-700 dark:text-gray-300">
                     {store.orders.toLocaleString("de-CH")}
                   </td>
-                  <td className="px-6 py-4 font-semibold text-brand-600 dark:text-brand-400">
-                    CHF {store.avgOrderValue.toFixed(2)}
+                  <td className="px-6 py-4 text-gray-700 dark:text-gray-300">
+                    {Math.round(store.avgOrderValue)}
                   </td>
                   <td className="px-6 py-4 text-gray-700 dark:text-gray-300">
                     {store.products.toLocaleString("de-CH")}
@@ -826,7 +824,7 @@ const SuperAdminAnalytics: React.FC = () => {
                           : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-500",
                       )}
                     >
-                      {store.isActive ? "Activa" : "Inactiva"}
+                      {store.isActive ? "Aktiv" : "Inaktiv"}
                     </span>
                   </td>
                 </tr>

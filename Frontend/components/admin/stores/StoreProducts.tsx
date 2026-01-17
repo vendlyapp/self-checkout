@@ -283,10 +283,10 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
                             handleEditProduct(product);
                           }}
                           className="flex items-center gap-2 px-3 py-1.5 text-sm text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-500/10 rounded-lg transition-colors border border-brand-200 dark:border-brand-500/30"
-                          title="Editar producto"
+                          title="Produkt bearbeiten"
                         >
                           <Edit className="w-4 h-4" />
-                          <span className="hidden sm:inline">Editar</span>
+                          <span className="hidden sm:inline">Bearbeiten</span>
                         </button>
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -295,7 +295,7 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
                               : 'bg-muted text-muted-foreground'
                           }`}
                         >
-                          {product.isActive ? 'Activo' : 'Inactivo'}
+                          {product.isActive ? 'Aktiv' : 'Inaktiv'}
                         </span>
                       </div>
                     </div>

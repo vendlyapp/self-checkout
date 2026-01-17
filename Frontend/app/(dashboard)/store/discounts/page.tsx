@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import HeaderNav from '@/components/navigation/HeaderNav'
 import DiscountsList from '@/components/dashboard/discounts/DiscountsList'
 import CreateDiscountModal, { DiscountFormData } from '@/components/dashboard/discounts/CreateDiscountModal'
 import { useResponsive } from '@/hooks'
@@ -44,10 +43,6 @@ export default function DiscountsPage() {
       {/* Mobile Layout */}
       {!isDesktop && (
         <div className="flex flex-col h-full">
-          <HeaderNav
-            title="Rabatte & Codes"
-            closeDestination="/store"
-          />
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
             {/* Create Button */}
             <button

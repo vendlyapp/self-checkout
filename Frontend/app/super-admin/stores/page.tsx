@@ -120,7 +120,7 @@ export default function SuperAdminStores() {
         <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Activas</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Aktiv</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white/90">{activeStores}</p>
               <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">{inactiveStores} inaktiv</p>
             </div>
@@ -147,7 +147,7 @@ export default function SuperAdminStores() {
         <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Productos</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Produkte</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white/90">{totalProducts}</p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{totalOrders} Bestellungen</p>
             </div>
@@ -236,7 +236,7 @@ export default function SuperAdminStores() {
                 <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-100 dark:border-gray-800">
                   <div className="flex items-center text-gray-600 dark:text-gray-400">
                     <Package className="w-4 h-4 mr-2" />
-                    <span>Productos</span>
+                    <span>Produkte</span>
                   </div>
                   <span className="font-semibold text-gray-900 dark:text-white/90">{store.productCount}</span>
                 </div>

@@ -148,21 +148,39 @@ async function query(text, params = [], retries = 1) {
         const paramPlaceholders = [];
         let placeholderIndex = 0; // Índice para pg-format (solo para valores que no son arrays)
         
+        // Estrategia: reemplazar placeholders secuencialmente
+        // Para pg-format, cada %L debe tener un valor correspondiente
+        // Si un placeholder aparece múltiples veces, debemos agregar el valor múltiples veces
+        
+        // Reemplazar placeholders en orden (de menor a mayor índice)
         for (let i = 1; i <= params.length; i++) {
           const paramValue = params[i - 1];
-          // Buscar si hay casting después del placeholder (ej: $13::jsonb)
-          const placeholderRegex = new RegExp(`\\$${i}(::\\w+)?\\b`, 'g');
-          const match = formattedText.match(placeholderRegex);
+          const placeholderPattern = `\\$${i}(::\\w+)?\\b`;
+          const placeholderRegex = new RegExp(placeholderPattern, 'g');
           
-          if (match && match[0].includes('::')) {
-            // Si hay casting, preservarlo
-            const casting = match[0].substring(match[0].indexOf('::'));
+          // Contar cuántas veces aparece este placeholder en la query
+          const matches = text.match(new RegExp(placeholderPattern, 'g'));
+          if (!matches || matches.length === 0) {
+            continue; // Este placeholder no está en la query, saltar
+          }
+          
+          const occurrences = matches.length;
+          
+          // Buscar primera ocurrencia para detectar casting
+          const firstMatch = text.match(new RegExp(placeholderPattern));
+          const hasCasting = firstMatch && firstMatch[0] && firstMatch[0].includes('::');
+          
+          if (hasCasting) {
+            // Si hay casting (ej: $2::jsonb), preservarlo
+            const casting = firstMatch[0].substring(firstMatch[0].indexOf('::'));
+            // Reemplazar todas las ocurrencias con %L seguido del casting
             formattedText = formattedText.replace(placeholderRegex, `%L${casting}`);
-            paramPlaceholders.push(paramValue);
-            placeholderIndex++;
+            // Agregar el valor tantas veces como aparezca el placeholder
+            for (let j = 0; j < occurrences; j++) {
+              paramPlaceholders.push(paramValue);
+            }
           } else if (Array.isArray(paramValue)) {
             // Para arrays, convertir a formato PostgreSQL text[] manualmente
-            // Formato: ARRAY['valor1','valor2']::text[]
             const escapedArray = paramValue.map(val => {
               if (val === null || val === undefined) return 'NULL';
               const str = String(val).replace(/'/g, "''").replace(/\\/g, '\\\\');
@@ -172,12 +190,14 @@ async function query(text, params = [], retries = 1) {
               ? `ARRAY[${escapedArray.join(',')}]::text[]`
               : `ARRAY[]::text[]`;
             formattedText = formattedText.replace(new RegExp(`\\$${i}\\b`, 'g'), arrayLiteral);
-            // No agregar a paramPlaceholders porque ya está en la query
+            // No agregar a paramPlaceholders porque el valor ya está en la query
           } else {
-            // Sin casting, reemplazar normalmente
+            // Sin casting, reemplazar todas las ocurrencias con %L
             formattedText = formattedText.replace(new RegExp(`\\$${i}\\b`, 'g'), `%L`);
-            paramPlaceholders.push(paramValue);
-            placeholderIndex++;
+            // Agregar el valor tantas veces como aparezca el placeholder
+            for (let j = 0; j < occurrences; j++) {
+              paramPlaceholders.push(paramValue);
+            }
           }
         }
         const finalQuery = paramPlaceholders.length > 0 ? format(formattedText, ...paramPlaceholders) : formattedText;

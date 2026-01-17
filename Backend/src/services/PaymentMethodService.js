@@ -1,4 +1,5 @@
 const { query } = require('../../lib/database');
+const globalPaymentMethodConfigService = require('./GlobalPaymentMethodConfigService');
 
 class PaymentMethodService {
 
@@ -24,14 +25,87 @@ class PaymentMethodService {
     const params = [storeId];
     
     if (activeOnly) {
-      selectQuery += ' AND "isActive" = $2';
-      params.push(true);
+      // Solo métodos activos Y que tengan configuración (config no nulo y no vacío)
+      // EXCEPCIÓN: Bargeld (efectivo) siempre está activo, no requiere configuración
+      // EXCLUIR métodos inhabilitados por super admin (disabledBySuperAdmin = false)
+      // Verificar que config no sea null, que sea un objeto, y que no esté vacío
+      // O que sea Bargeld (que siempre está activo y siempre se muestra)
+      params.push(true); // $2
+      selectQuery += ` AND (
+                         ("isActive" = $2 AND config IS NOT NULL AND jsonb_typeof(config) = 'object' AND config != '{}'::jsonb)
+                         OR (LOWER(code) = 'bargeld' AND "isActive" = $2)
+                       )
+                       AND ("disabledBySuperAdmin" = false OR "disabledBySuperAdmin" IS NULL)`;
     }
+    // Si activeOnly=false, NO filtrar métodos inhabilitados
+    // Esto permite que el super admin vea TODOS los métodos, incluyendo los inhabilitados
+    // El frontend se encargará de filtrarlos según el contexto (admin vs super admin)
     
     selectQuery += ' ORDER BY "sortOrder" ASC, "createdAt" ASC';
     
+    // Debug: Verificar que los parámetros coincidan con los placeholders
+    const paramPlaceholders = selectQuery.match(/\$(\d+)/g) || [];
+    const maxParamNumber = paramPlaceholders.length > 0 
+      ? Math.max(...paramPlaceholders.map(p => parseInt(p.replace('$', ''))))
+      : 0;
+    
+    if (maxParamNumber > params.length) {
+      console.error('[PaymentMethodService.findByStoreId] Error: Query requiere más parámetros de los proporcionados');
+      console.error('Query completa:', selectQuery);
+      console.error('Params requeridos:', maxParamNumber);
+      console.error('Params proporcionados:', params.length);
+      console.error('Params:', params);
+      console.error('activeOnly:', activeOnly);
+      throw new Error(`Query requiere ${maxParamNumber} parámetros pero solo se proporcionaron ${params.length}`);
+    }
+    
+    // Log para debugging
+    if (activeOnly) {
+      console.log('[PaymentMethodService.findByStoreId] Query con activeOnly=true:', selectQuery.substring(0, 200) + '...');
+      console.log('[PaymentMethodService.findByStoreId] Params:', params);
+    }
+    
     const result = await query(selectQuery, params);
-    const methods = result.rows;
+    let methods = result.rows;
+
+    // Obtener códigos de métodos globalmente deshabilitados
+    let disabledGlobalCodes = [];
+    try {
+      disabledGlobalCodes = await globalPaymentMethodConfigService.getDisabledCodes();
+    } catch (error) {
+      console.error('[PaymentMethodService.findByStoreId] Error verificando configuraciones globales:', error);
+      // En caso de error, continuar sin filtrar (fail-safe)
+    }
+
+    // Si activeOnly=true, filtrar métodos deshabilitados globalmente (clientes no deben verlos)
+    // Si activeOnly=false, NO filtrar pero marcar con disabledGlobally=true (admin debe verlos con info)
+    if (activeOnly) {
+      if (disabledGlobalCodes.length > 0) {
+        const beforeCount = methods.length;
+        methods = methods.filter(method => {
+          const methodCode = method.code?.toLowerCase() || '';
+          const isDisabled = disabledGlobalCodes.includes(methodCode);
+          if (isDisabled) {
+            console.log(`[PaymentMethodService] Filtrando método globalmente deshabilitado: ${method.code}`);
+          }
+          return !isDisabled;
+        });
+        const afterCount = methods.length;
+        if (beforeCount !== afterCount) {
+          console.log(`[PaymentMethodService] Filtrados ${beforeCount - afterCount} métodos globalmente deshabilitados`);
+        }
+      }
+    } else {
+      // Para activeOnly=false (admin de tienda), agregar campo disabledGlobally a cada método
+      methods = methods.map(method => {
+        const methodCode = method.code?.toLowerCase() || '';
+        const isGloballyDisabled = disabledGlobalCodes.includes(methodCode);
+        return {
+          ...method,
+          disabledGlobally: isGloballyDisabled
+        };
+      });
+    }
 
     return {
       success: true,
@@ -123,10 +197,22 @@ class PaymentMethodService {
 
     const insertQuery = `
       INSERT INTO "PaymentMethod" 
-      ("storeId", name, "displayName", code, icon, "bgColor", "textColor", "isActive", "sortOrder")
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      ("storeId", name, "displayName", code, icon, "bgColor", "textColor", "isActive", "sortOrder", config)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *
     `;
+
+    // Procesar config si existe
+    let configValue = null;
+    if (methodData.config) {
+      configValue = typeof methodData.config === 'string' ? JSON.parse(methodData.config) : methodData.config;
+    }
+
+    // Bargeld (efectivo) debe estar activo por defecto
+    let isActive = methodData.isActive !== undefined ? Boolean(methodData.isActive) : true;
+    if (methodData.code.trim().toLowerCase() === 'bargeld' && methodData.isActive === undefined) {
+      isActive = true;
+    }
 
     const result = await query(insertQuery, [
       methodData.storeId.trim(),
@@ -136,8 +222,9 @@ class PaymentMethodService {
       methodData.icon?.trim() || null,
       methodData.bgColor?.trim() || null,
       methodData.textColor?.trim() || null,
-      methodData.isActive !== undefined ? Boolean(methodData.isActive) : true,
-      sortOrder
+      isActive,
+      sortOrder,
+      configValue ? JSON.stringify(configValue) : null
     ]);
 
     const method = result.rows[0];
@@ -162,13 +249,36 @@ class PaymentMethodService {
       throw new Error('Método de pago no encontrado');
     }
 
+    // Verificar si la columna config existe en la tabla
+    let configColumnExists = true;
+    try {
+      const columnCheck = await query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'PaymentMethod' 
+        AND column_name = 'config'
+      `);
+      configColumnExists = columnCheck.rows.length > 0;
+    } catch (error) {
+      console.warn('No se pudo verificar la existencia de la columna config:', error);
+      configColumnExists = false;
+    }
+
     // Construir query de actualización dinámicamente
     const updateFields = [];
     const values = [];
     let paramCount = 0;
 
     // Campos que se pueden actualizar
-    const updatableFields = ['name', 'displayName', 'code', 'icon', 'bgColor', 'textColor', 'isActive', 'sortOrder'];
+    // El campo disabledBySuperAdmin solo puede ser actualizado por SUPER_ADMIN (se verifica en el controller)
+    let updatableFields = ['name', 'displayName', 'code', 'icon', 'bgColor', 'textColor', 'isActive', 'sortOrder', 'disabledBySuperAdmin'];
+    // Solo agregar config si la columna existe
+    if (configColumnExists) {
+      updatableFields.push('config');
+    } else if (methodData.config !== undefined) {
+      // Si se intenta actualizar config pero la columna no existe, ignorar
+      console.warn('Se intentó actualizar config pero la columna no existe en la tabla');
+    }
 
     // Si se actualiza el código, verificar que no esté duplicado
     if (methodData.code !== undefined && methodData.code.trim() !== existingMethod.data.code) {
@@ -192,6 +302,33 @@ class PaymentMethodService {
           value = parseInt(value);
         } else if (field === 'isActive') {
           value = Boolean(value);
+          // Bargeld siempre debe estar activo - prevenir desactivación
+          // existingMethod ya fue obtenido al inicio de la función
+          if (existingMethod.success && existingMethod.data.code.toLowerCase() === 'bargeld' && !value) {
+            throw new Error('Bargeld (efectivo) siempre debe estar activo y no se puede desactivar');
+          }
+        } else if (field === 'disabledBySuperAdmin') {
+          value = Boolean(value);
+          // Bargeld nunca puede ser inhabilitado por super admin
+          if (existingMethod.success && existingMethod.data.code.toLowerCase() === 'bargeld' && value) {
+            throw new Error('Bargeld (efectivo) no puede ser inhabilitado por super admin');
+          }
+        } else if (field === 'config') {
+          // Si es config, convertir a JSON string para PostgreSQL JSONB
+          if (value === null || value === undefined) {
+            value = null;
+          } else if (typeof value === 'string') {
+            // Si ya es string, validar que sea JSON válido, sino dejarlo como está
+            try {
+              JSON.parse(value);
+            } catch {
+              // Si no es JSON válido, convertirlo a objeto y luego a JSON string
+              value = JSON.stringify(value);
+            }
+          } else {
+            // Si es objeto, convertir a JSON string
+            value = JSON.stringify(value);
+          }
         } else if (typeof value === 'string') {
           value = value.trim();
         }
@@ -208,21 +345,84 @@ class PaymentMethodService {
     paramCount++;
     values.push(id);
 
-    const updateQuery = `
+    // Construir query con cast JSONB para el campo config si existe
+    const processedUpdateFields = updateFields.map((field, idx) => {
+      if (field.includes('"config"')) {
+        // Usar cast a JSONB para el campo config
+        const paramNumber = idx + 1;
+        const configValue = values[idx];
+        // Si el valor es null, usar NULL directamente sin cast
+        if (configValue === null || configValue === undefined) {
+          return `"config" = NULL`;
+        }
+        // Si tiene valor, usar cast a JSONB
+        return `"config" = $${paramNumber}::jsonb`;
+      }
+      return field;
+    });
+
+    // Construir valores finales: excluir nulls de config y mantener el orden
+    const finalValues = [];
+    const finalUpdateFields = [];
+    let finalParamCount = 0;
+
+    for (let i = 0; i < processedUpdateFields.length; i++) {
+      const field = processedUpdateFields[i];
+      const value = values[i];
+      
+      if (field.includes('"config"')) {
+        const configValue = values[i];
+        if (configValue === null || configValue === undefined) {
+          // NULL directo, no necesita parámetro
+          finalUpdateFields.push(`"config" = NULL`);
+        } else {
+          // Tiene valor, necesita parámetro
+          finalParamCount++;
+          finalUpdateFields.push(`"config" = $${finalParamCount}::jsonb`);
+          finalValues.push(value);
+        }
+      } else {
+        // Otro campo normal
+        finalParamCount++;
+        finalUpdateFields.push(field.replace(/\$\d+/, `$${finalParamCount}`));
+        finalValues.push(value);
+      }
+    }
+
+    // Agregar ID como último parámetro
+    finalParamCount++;
+    finalValues.push(id);
+
+    const finalUpdateQuery = `
       UPDATE "PaymentMethod"
-      SET ${updateFields.join(', ')}, "updatedAt" = CURRENT_TIMESTAMP
-      WHERE id = $${paramCount}
+      SET ${finalUpdateFields.join(', ')}, "updatedAt" = CURRENT_TIMESTAMP
+      WHERE id = $${finalParamCount}
       RETURNING *
     `;
 
-    const result = await query(updateQuery, values);
-    const method = result.rows[0];
+    try {
+      const result = await query(finalUpdateQuery, finalValues);
+      const method = result.rows[0];
+      
+      // Parsear config si es necesario
+      if (method.config && typeof method.config === 'string') {
+        try {
+          method.config = JSON.parse(method.config);
+        } catch (e) {
+          // Si no se puede parsear, dejarlo como está
+          console.warn('No se pudo parsear config:', e);
+        }
+      }
 
-    return {
-      success: true,
-      data: method,
-      message: 'Método de pago actualizado exitosamente'
-    };
+      return {
+        success: true,
+        data: method,
+        message: 'Método de pago actualizado exitosamente'
+      };
+    } catch (error) {
+      console.error('Error al actualizar método de pago:', error);
+      throw new Error(`Error al actualizar método de pago: ${error.message}`);
+    }
   }
 
   /**

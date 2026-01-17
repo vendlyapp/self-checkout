@@ -1,4 +1,5 @@
 const superAdminService = require('../services/SuperAdminService');
+const globalPaymentMethodConfigService = require('../services/GlobalPaymentMethodConfigService');
 const { HTTP_STATUS } = require('../types');
 
 /**
@@ -225,6 +226,63 @@ class SuperAdminController {
     } catch (error) {
       const statusCode = error.message.includes('not found')
         ? HTTP_STATUS.NOT_FOUND
+        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
+
+      res.status(statusCode).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Get global payment method configurations
+   * @route GET /api/super-admin/payment-methods/global-config
+   */
+  async getGlobalPaymentMethodConfigs(req, res) {
+    try {
+      const result = await globalPaymentMethodConfigService.findAll();
+      res.status(HTTP_STATUS.OK).json(result);
+    } catch (error) {
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Update global payment method configuration
+   * @route PUT /api/super-admin/payment-methods/global-config
+   */
+  async updateGlobalPaymentMethodConfig(req, res) {
+    try {
+      const { code, disabledGlobally, reason } = req.body;
+
+      if (!code) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: 'El código del método de pago es requerido'
+        });
+      }
+
+      if (typeof disabledGlobally !== 'boolean') {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: 'disabledGlobally debe ser un booleano'
+        });
+      }
+
+      const result = await globalPaymentMethodConfigService.upsert({
+        code,
+        disabledGlobally,
+        reason
+      });
+
+      res.status(HTTP_STATUS.OK).json(result);
+    } catch (error) {
+      const statusCode = error.message.includes('requerido') || error.message.includes('debe ser')
+        ? HTTP_STATUS.BAD_REQUEST
         : HTTP_STATUS.INTERNAL_SERVER_ERROR;
 
       res.status(statusCode).json({

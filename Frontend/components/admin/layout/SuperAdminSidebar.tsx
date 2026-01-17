@@ -46,6 +46,11 @@ const navItems: NavItem[] = [
     name: "Analytics",
     path: "/super-admin/analytics",
   },
+  {
+    icon: <Settings className="w-5 h-5" />,
+    name: "Configuración",
+    path: "/super-admin/config",
+  },
 ];
 
 const AppSidebar: React.FC = () => {
