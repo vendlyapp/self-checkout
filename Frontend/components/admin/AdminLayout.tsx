@@ -3,6 +3,7 @@
 import { ReactNode, useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { clsx } from 'clsx';
+import { Receipt } from 'lucide-react';
 import Sidebar from '@/components/navigation/Sidebar';
 import ResponsiveHeader from '@/components/navigation/ResponsiveHeader';
 import ResponsiveFooterNav from '@/components/navigation/ResponsiveFooterNav';
@@ -14,6 +15,25 @@ import CartSummary from '@/components/dashboard/charge/CartSummary';
 import FooterContinue from '@/components/dashboard/charge/FooterContinue';
 import HeaderNav from '@/components/navigation/HeaderNav';
 import Filter_Busqueda from '@/components/dashboard/products_list/Filter_Busqueda';
+import OrderFilters from '@/components/dashboard/orders/OrderFilters';
+import { useOrdersContext } from '@/components/dashboard/orders/OrdersContext';
+
+// Componente wrapper para usar el contexto de órdenes
+function OrderFiltersWrapper() {
+  try {
+    const ordersContext = useOrdersContext();
+    return (
+      <OrderFilters 
+        searchQuery={ordersContext.searchQuery}
+        onSearch={ordersContext.onSearch}
+        isFixed={true} 
+      />
+    );
+  } catch {
+    // Si no hay contexto, mostrar sin búsqueda
+    return <OrderFilters searchQuery="" onSearch={() => {}} isFixed={true} />;
+  }
+}
 import InvoiceActionsFooter from '@/components/dashboard/invoice/InvoiceActionsFooter';
 import { useInvoice } from '@/hooks/queries/useInvoice';
 import { useOrder } from '@/hooks/queries/useOrder';
@@ -87,6 +107,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   // Determinar si estamos en la ruta de orders
   const isOrderRoute = pathname?.startsWith('/sales/orders');
   
+  // Determinar si estamos EXACTAMENTE en /sales/orders (página principal de órdenes)
+  const isOrdersListMainPage = pathname === '/sales/orders';
+  
+  // Determinar si estamos en la ruta de verkaufe (ventas completas)
+  const isVerkaufeRoute = pathname?.startsWith('/sales/verkaufe');
+  
   // Determinar si estamos en el detalle de una orden (tiene ID)
   const isOrderDetailRoute = pathname?.match(/\/sales\/orders\/[^\/]+/);
   
@@ -120,22 +146,43 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   // Determinar si estamos en la lista de orders (no detalle)
   const isOrdersListRoute = isOrderRoute && !isOrderDetailRoute;
   
+  // Determinar si estamos en verkaufe (ventas completas)
+  const isVerkaufeListRoute = isVerkaufeRoute;
+  
+  // Determinar si estamos en otras rutas de store
+  const isCustomersRoute = pathname?.startsWith('/store/customers');
+  const isProfileRoute = pathname?.startsWith('/store/profile');
+  const isPrinterRoute = pathname?.startsWith('/store/printer');
+  const isBackupsRoute = pathname?.startsWith('/store/backups');
+  const isNotificationsRoute = pathname?.startsWith('/store/notifications');
+  const isHelpRoute = pathname?.startsWith('/store/help');
+  
   // Función para obtener el título del HeaderNav según la ruta
   const getHeaderNavTitleForStoreSales = (): string | null => {
     if (isPaymentMethodsRoute) return 'Zahlungsarten verwalten';
-    if (isSettingsRoute) return 'Mi Tienda';
+    if (isSettingsRoute) return 'Mein Geschäft';
     if (isDiscountsRoute) return 'Rabatte & Codes';
     if (isMyQRRoute) return 'Mein QR-Code';
+    if (isCustomersRoute) return 'Kunden verwalten';
+    if (isProfileRoute) return 'Mein Profil';
+    if (isPrinterRoute) return 'POS-Drucker';
+    if (isBackupsRoute) return 'Backups';
+    if (isNotificationsRoute) return 'Benachrichtigungen';
+    if (isHelpRoute) return 'Hilfe & FAQ';
     if (isInvoicesListRoute) {
       return pathname?.startsWith('/sales/invoices') ? 'Belege' : 'Rechnungen';
     }
+    if (isVerkaufeListRoute) return 'Verkäufe';
     if (isOrdersListRoute) return 'Bestellungen';
     return null;
   };
   
   // Función para obtener el closeDestination según la ruta
   const getHeaderNavCloseDestination = (): string => {
-    if (isPaymentMethodsRoute || isSettingsRoute || isDiscountsRoute || (isInvoicesListRoute && pathname?.startsWith('/store/invoice'))) {
+    if (isPaymentMethodsRoute || isSettingsRoute || isDiscountsRoute || 
+        isCustomersRoute || isProfileRoute || isPrinterRoute || 
+        isBackupsRoute || isNotificationsRoute || isHelpRoute ||
+        (isInvoicesListRoute && pathname?.startsWith('/store/invoice'))) {
       return '/store';
     }
     if (isMyQRRoute) {
@@ -144,7 +191,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     if (isInvoicesListRoute && pathname?.startsWith('/sales/invoices')) {
       return '/sales';
     }
-    if (isOrdersListRoute) {
+    if (isVerkaufeListRoute || isOrdersListRoute) {
       return '/sales';
     }
     return '/dashboard';
@@ -154,7 +201,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const shouldShowStoreSalesHeaderNav = isMobile && headerNavTitleForStoreSales !== null;
   
   // Rutas que ocultan el navbar/sidebar
-  const isStoreSubRoute = isDiscountsRoute || isPaymentMethodsRoute || isInvoiceRoute || isSettingsRoute;
+  const isStoreSubRoute = isDiscountsRoute || isPaymentMethodsRoute || isInvoiceRoute || 
+                          isSettingsRoute || isCustomersRoute || isProfileRoute || 
+                          isPrinterRoute || isBackupsRoute || isNotificationsRoute || isHelpRoute;
   
   // Determinar si estamos en modo edición (edit o view)
   const isEditMode = pathname?.includes('/products_list/edit/') || pathname?.includes('/products_list/view/');
@@ -429,7 +478,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <HeaderNav 
             title={invoiceForHeader?.invoiceNumber || 'Rechnung'} 
             closeDestination={pathname?.startsWith('/sales/invoices') ? "/sales/invoices" : "/store/invoice"}
-            isFixed={true} 
+            isFixed={true}
+            rightAction={invoiceForHeader?.orderId ? {
+              icon: Receipt,
+              onClick: () => router.push(`/sales/orders/${invoiceForHeader.orderId}`),
+              label: 'Zugehörige Bestellung ansehen'
+            } : undefined}
           />
         )}
 
@@ -449,6 +503,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             closeDestination={getHeaderNavCloseDestination()}
             isFixed={true} 
           />
+        )}
+
+        {/* Filtros de órdenes - Solo en móvil y EXACTAMENTE en /sales/orders */}
+        {isMobile && isOrdersListMainPage && (
+          <OrderFiltersWrapper />
         )}
 
         {/* Contenido principal */}

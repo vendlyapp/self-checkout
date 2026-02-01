@@ -12,7 +12,7 @@ const services = [
     icon: <User className="w-6 h-6" />,
     title: "Kunden",
     subtitle: "verwalten",
-    href: "#",
+    href: "/store/customers",
   },
   {
     icon: <Percent className="w-6 h-6" />,
@@ -24,7 +24,7 @@ const services = [
     icon: <QrCode className="w-6 h-6" />,
     title: "QR- & Barcodes",
     subtitle: "verwalten",
-    href: "#",
+    href: "/my-qr",
   },
   {
     icon: <CreditCard className="w-6 h-6" />,

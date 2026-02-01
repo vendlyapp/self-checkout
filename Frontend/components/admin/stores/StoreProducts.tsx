@@ -34,11 +34,11 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
       if (response.success && response.data) {
         setProducts(response.data);
       } else {
-        setError(response.error || 'Error al cargar los productos');
+        setError(response.error || 'Fehler beim Laden der Produkte');
       }
     } catch (error) {
       console.error('Error fetching products:', error);
-      setError(error instanceof Error ? error.message : 'Error al cargar los productos');
+      setError(error instanceof Error ? error.message : 'Fehler beim Laden der Produkte');
     } finally {
       setLoading(false);
     }
@@ -53,11 +53,11 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
         setEditingProduct(response.data);
         setIsEditModalOpen(true);
       } else {
-        setError('No se pudo cargar la información del producto');
+        setError('Produktinformationen konnten nicht geladen werden');
       }
     } catch (err) {
       console.error('Error loading product:', err);
-      setError('Error al cargar el producto');
+      setError('Fehler beim Laden des Produkts');
     }
   };
 
@@ -104,14 +104,14 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
       <Card className="bg-card rounded-2xl border border-border/50">
         <CardContent className="p-8 text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-foreground mb-2">Error al cargar productos</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-2">Fehler beim Laden der Produkte</h3>
           <p className="text-sm text-muted-foreground mb-4">{error}</p>
           <button
             onClick={fetchProducts}
             className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
-            Reintentar
+            Erneut versuchen
           </button>
         </CardContent>
       </Card>
@@ -126,10 +126,10 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground mb-2">Total Productos</p>
+                <p className="text-xs text-muted-foreground mb-2">Produkte insgesamt</p>
                 <p className="text-2xl font-bold text-foreground mb-1">{products.length}</p>
                 <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                  {activeProducts} activos
+                  {activeProducts} aktiv
                 </p>
               </div>
               <div className="w-12 h-12 bg-brand-50 dark:bg-brand-500/15 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -143,11 +143,11 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground mb-2">Valor Total</p>
+                <p className="text-xs text-muted-foreground mb-2">Gesamtwert</p>
                 <p className="text-xl font-bold text-foreground mb-1">
                   CHF {formatSwissPrice(totalValue)}
                 </p>
-                <p className="text-xs text-muted-foreground">Inventario</p>
+                <p className="text-xs text-muted-foreground">Inventar</p>
               </div>
               <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-500/15 rounded-xl flex items-center justify-center flex-shrink-0">
                 <TrendingUp className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
@@ -160,9 +160,9 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground mb-2">Stock Bajo</p>
+                <p className="text-xs text-muted-foreground mb-2">Niedriger Bestand</p>
                 <p className="text-2xl font-bold text-orange-600 dark:text-orange-400 mb-1">{lowStockProducts}</p>
-                <p className="text-xs text-muted-foreground">Menos de 10 unidades</p>
+                <p className="text-xs text-muted-foreground">Weniger als 10 Einheiten</p>
               </div>
               <div className="w-12 h-12 bg-orange-50 dark:bg-orange-500/15 rounded-xl flex items-center justify-center flex-shrink-0">
                 <AlertCircle className="w-6 h-6 text-orange-600 dark:text-orange-400" />
@@ -175,9 +175,9 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground mb-2">Sin Stock</p>
+                <p className="text-xs text-muted-foreground mb-2">Kein Bestand</p>
                 <p className="text-2xl font-bold text-red-600 dark:text-red-400 mb-1">{outOfStockProducts}</p>
-                <p className="text-xs text-muted-foreground">Productos agotados</p>
+                <p className="text-xs text-muted-foreground">Ausverkaufte Produkte</p>
               </div>
               <div className="w-12 h-12 bg-red-50 dark:bg-red-500/15 rounded-xl flex items-center justify-center flex-shrink-0">
                 <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
@@ -194,10 +194,10 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
             <div>
               <CardTitle className="flex items-center gap-2 text-lg lg:text-xl mb-2">
                 <Package className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-                Productos
+                Produkte
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                {filteredProducts.length} de {products.length} productos
+                {filteredProducts.length} von {products.length} Produkten
               </p>
             </div>
             <div className="relative flex-1 sm:flex-none sm:w-64">
@@ -233,8 +233,8 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
               </h3>
               <p className="text-sm text-muted-foreground">
                 {searchTerm 
-                  ? 'Intenta con otro término de búsqueda' 
-                  : 'Los productos de esta tienda aparecerán aquí'}
+                  ? 'Versuchen Sie einen anderen Suchbegriff' 
+                  : 'Die Produkte dieses Geschäfts werden hier angezeigt'}
               </p>
             </div>
           ) : (
@@ -264,7 +264,7 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
                     <div className="flex items-start justify-between gap-4 mb-3">
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-foreground text-base mb-1.5 truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                          {product.name || 'Sin nombre'}
+                          {product.name || 'Ohne Namen'}
                         </h3>
                         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                           <span className="font-mono">SKU: {product.sku || 'N/A'}</span>
@@ -311,11 +311,11 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
                             ? 'text-orange-600 dark:text-orange-400' 
                             : 'text-foreground'
                         }`}>
-                          {product.stock || 0} unidades
+                          {product.stock || 0} Einheiten
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">Precio:</span>
+                        <span className="text-sm text-muted-foreground">Preis:</span>
                         <span className="text-base font-bold text-brand-600 dark:text-brand-400">
                           CHF {formatSwissPrice(product.price || 0)}
                         </span>

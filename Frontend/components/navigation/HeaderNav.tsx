@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, Plus, X, Zap } from "lucide-react";
+import { ArrowLeftIcon, Plus, X, Zap, Receipt, LucideIcon } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useCartStore } from "@/lib/stores/cartStore";
 import {
@@ -14,6 +14,11 @@ interface HeaderNavProps {
   isFixed?: boolean;
   promotionCount?: number; // Número real de promociones
   variant?: 'default' | 'subtle'; // Variante para diseño más sutil
+  rightAction?: {
+    icon: LucideIcon;
+    onClick: () => void;
+    label: string;
+  }; // Acción adicional a la derecha (antes del botón de cerrar)
 }
 
 export default function HeaderNav({
@@ -23,6 +28,7 @@ export default function HeaderNav({
   isFixed = false,
   promotionCount, // Número real de promociones pasado como prop
   variant = 'default', // Variante por defecto
+  rightAction, // Acción adicional a la derecha
 }: HeaderNavProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -45,16 +51,16 @@ export default function HeaderNav({
   const isSubtle = variant === 'subtle'
   
   return (
-    <div className={`${isFixed ? 'fixed top-[80px]' : ''} flex justify-between items-center ${isSubtle ? 'p-3' : 'p-4'} ${isSubtle ? 'bg-transparent' : 'bg-white'} left-0 right-0 z-40 safe-area-top ${isSubtle ? 'pt-[calc(0.5rem+env(safe-area-inset-top))]' : 'pt-[calc(1rem+env(safe-area-inset-top))]'}`}>
-      <div className={`flex items-center gap-2 justify-between w-full ${isSubtle ? 'pt-[5px]' : 'pt-[10px]'} ${isSubtle ? 'px-2' : 'px-4'} touch-target`}>
+    <div className={`${isFixed ? 'fixed top-[80px]' : ''} flex justify-between items-center ${isSubtle ? 'p-3' : 'p-3'} ${isSubtle ? 'bg-transparent' : 'bg-white'} left-0 right-0 z-40 safe-area-top ${isSubtle ? 'pt-[calc(0.5rem+env(safe-area-inset-top))]' : 'pt-[calc(0.75rem+env(safe-area-inset-top))]'}`}>
+      <div className={`flex items-center gap-2 justify-between w-full ${isSubtle ? 'pt-[5px]' : 'pt-[6px]'} ${isSubtle ? 'px-2' : 'px-3'} touch-target`}>
         <button
           className={`flex items-center gap-2 cursor-pointer ${isSubtle ? 'hover:bg-white/50 active:bg-white/70 rounded-full p-2 -ml-2 transition-ios' : ''}`}
           onClick={() => router.back()}
           aria-label="Zurück"
           tabIndex={0}
         >
-          <ArrowLeftIcon className={`${isSubtle ? 'w-5 h-5' : 'w-6 h-6'} ${isSubtle ? 'text-gray-800' : ''}`} />
-          {!isSubtle && <span className="text-[18px] font-semibold">{title}</span>}
+          <ArrowLeftIcon className={`${isSubtle ? 'w-5 h-5' : 'w-5 h-5'} ${isSubtle ? 'text-gray-800' : ''}`} />
+          {!isSubtle && <span className="text-[16px] font-semibold">{title}</span>}
         </button>
         <div className="flex items-center gap-2">
           {isCartPage && hasItems && (
@@ -90,6 +96,16 @@ export default function HeaderNav({
                 Aktionen
               </button>
             </div>
+          )}
+          {rightAction && (
+            <button
+              className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
+              onClick={rightAction.onClick}
+              aria-label={rightAction.label}
+              tabIndex={0}
+            >
+              <rightAction.icon className="w-5 h-5 text-[#25D076]" />
+            </button>
           )}
           {!isCartPage && !showAddButton && !isPromotionPage && !isSubtle && (
             <button

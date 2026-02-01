@@ -15,7 +15,7 @@ export interface PaymentMethod {
   isActive: boolean;
   sortOrder: number;
   config: Record<string, unknown> | null;
-  disabledBySuperAdmin?: boolean; // Si es true, el super admin inhabilitó este método
+  disabledBySuperAdmin?: boolean; // Si es true, el super admin hat este método eingeschränkt
   disabledGlobally?: boolean; // Si es true, el método está deshabilitado globalmente (no disponible para ninguna tienda)
   createdAt: string;
   updatedAt: string;

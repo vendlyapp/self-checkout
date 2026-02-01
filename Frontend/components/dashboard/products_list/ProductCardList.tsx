@@ -53,7 +53,14 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
   const [isVariantDropdownOpen, setIsVariantDropdownOpen] = useState(false)
 
   const formatPrice = (price: number): string => {
-    return `CHF ${price.toFixed(2)}`
+    // Usar formato suizo: .– cuando es exacto, .45 cuando tiene decimales
+    const rounded = Math.round(price * 100) / 100;
+    const hasDecimals = rounded % 1 !== 0;
+    
+    if (!hasDecimals) {
+      return `CHF ${Math.round(rounded)}.–`;
+    }
+    return `CHF ${rounded.toFixed(2)}`;
   }
   
   // Obtener el texto del selector de variantes

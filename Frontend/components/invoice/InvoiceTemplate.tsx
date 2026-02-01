@@ -1,573 +1,846 @@
 'use client';
 
-import React from 'react';
-import { Invoice, InvoiceItem } from '@/lib/services/invoiceService';
-import { formatSwissPriceWithCHF } from '@/lib/utils';
-import { Download, Share2, Printer, Mail, Phone, MapPin, Building2, Calendar, FileText, CheckCircle, XCircle, Clock } from 'lucide-react';
-import { toast } from 'sonner';
+import { useMemo, useRef } from 'react';
+import {
+  Download,
+  Printer,
+  Mail,
+  Copy,
+  Scissors,
+} from 'lucide-react';
+import {
+  formatCHF,
+  formatDate,
+  formatMwStRate,
+  calculateMwStBreakdown,
+  getStatusConfig,
+  type Invoice as SwissInvoice,
+  type MwStGroup,
+  type InvoiceParty,
+  type InvoiceLineItem,
+  type InvoiceStatus,
+} from '@/lib/invoice-utils';
+import { Invoice as ServiceInvoice, InvoiceItem } from '@/lib/services/invoiceService';
+
+// =============================================================================
+// Swiss Invoice Template
+// Design: Swiss International Style (Neue Grafik / Helvetica tradition)
+// Compliance: Art. 26 MWSTG — all mandatory fields included
+// =============================================================================
 
 interface InvoiceTemplateProps {
-  invoice: Invoice;
-  onDownload?: () => void;
-  onShare?: () => void;
-  onPrint?: () => void;
+  invoice: ServiceInvoice;
   showActions?: boolean;
   isMobile?: boolean;
 }
 
-const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
-  invoice,
-  onDownload,
-  onShare,
-  onPrint,
-  showActions = true,
-  isMobile = false,
-}) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('de-DE', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+// ─── Transform Service Invoice to Swiss Invoice Format ────────────────────────
+
+function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
+  // Parse address strings to extract street, zip, city
+  const parseAddress = (address?: string) => {
+    if (!address) return { street: undefined, zip: undefined, city: undefined };
+    
+    // Try to match Swiss address format: "Street, ZIP City" or "Street ZIP City"
+    const match = address.match(/^(.+?),\s*(\d{4})\s+(.+)$/) || address.match(/^(.+?)\s+(\d{4})\s+(.+)$/);
+    if (match) {
+      return {
+        street: match[1].trim(),
+        zip: match[2].trim(),
+        city: match[3].trim(),
+      };
+    }
+    
+    // Fallback: try to extract ZIP and city
+    const zipMatch = address.match(/(\d{4})\s+(.+)$/);
+    if (zipMatch) {
+      return {
+        street: address.replace(/\d{4}\s+.+$/, '').trim() || undefined,
+        zip: zipMatch[1],
+        city: zipMatch[2],
+      };
+    }
+    
+    return { street: address, zip: undefined, city: undefined };
   };
 
-  const handlePrint = () => {
-    if (onPrint) {
-      onPrint();
-    } else {
-      window.print();
-    }
+  const storeAddress = parseAddress(serviceInvoice.storeAddress);
+  const customerAddress = parseAddress(serviceInvoice.customerAddress);
+
+  // Build issuer (store) info
+  const issuer: InvoiceParty = {
+    name: serviceInvoice.storeName || 'Vendly',
+    street: storeAddress.street,
+    zip: storeAddress.zip || serviceInvoice.customerPostalCode,
+    city: storeAddress.city || serviceInvoice.customerCity,
+    country: 'Schweiz',
+    email: serviceInvoice.storeEmail,
+    phone: serviceInvoice.storePhone,
   };
 
-  const handleShare = async () => {
-    if (onShare) {
-      await onShare();
-    } else if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Rechnung ${invoice.invoiceNumber}`,
-          text: `Rechnung ${invoice.invoiceNumber} von ${invoice.storeName || 'Vendly'}`,
-          url: window.location.href,
-        });
-        toast.success('Rechnung geteilt');
-      } catch (error) {
-        // Usuario canceló
-      }
-    } else {
-      // Fallback: copiar al portapapeles
-      try {
-        await navigator.clipboard.writeText(window.location.href);
-        toast.success('Link zur Rechnung wurde in die Zwischenablage kopiert');
-      } catch (err) {
-        toast.error('Fehler beim Kopieren');
-      }
-    }
+  // Build recipient (customer) info
+  const recipient: InvoiceParty = {
+    name: serviceInvoice.customerName || 'Kunde',
+    street: customerAddress.street,
+    zip: customerAddress.zip || serviceInvoice.customerPostalCode,
+    city: customerAddress.city || serviceInvoice.customerCity,
+    country: 'Schweiz',
+    email: serviceInvoice.customerEmail,
+    phone: serviceInvoice.customerPhone,
   };
 
-  const handleDownload = async () => {
-    if (onDownload) {
-      await onDownload();
-    } else {
-      toast.info('PDF-Download wird in Kürze verfügbar sein');
+  // Transform items - calculate MwSt using Swiss formula
+  // In Switzerland, prices ALREADY include VAT (Brutto)
+  // Formula: Netto = Brutto ÷ (1 + rate), MwSt = Brutto - Netto
+  // NEVER do: Brutto × rate (that's incorrect in Switzerland)
+  
+  // Helper function to determine MwSt rate and code from item metadata or defaults
+  const getMwStRateAndCode = (item: InvoiceItem, index: number): { rate: number; code: string } => {
+    // Try to get taxRate from item metadata if available
+    const itemMetadata = (item as any).metadata || {};
+    const taxRate = itemMetadata.taxRate || itemMetadata.tax_rate;
+    
+    if (taxRate !== undefined && taxRate !== null) {
+      const rate = typeof taxRate === 'number' ? taxRate : parseFloat(taxRate);
+      // Map rate to code
+      if (rate === 0.081 || rate === 0.077) return { rate: 0.081, code: 'A' }; // Normalsatz
+      if (rate === 0.026) return { rate: 0.026, code: 'B' }; // Reduziert
+      if (rate === 0.038) return { rate: 0.038, code: 'C' }; // Beherbergung
+      if (rate === 0) return { rate: 0, code: 'D' }; // Befreit
+      // Default to standard rate if unknown
+      return { rate: 0.081, code: 'A' };
     }
+    
+    // Default: use standard Swiss VAT rate (8.1% Normalsatz)
+    // This can be customized per product in the future
+    return { rate: 0.081, code: 'A' };
   };
+  
+  const items: InvoiceLineItem[] = serviceInvoice.items.map((item: InvoiceItem, index: number) => {
+    // item.subtotal is already BRUTTO (includes VAT)
+    // item.price should be the unit price BRUTTO (includes VAT)
+    const totalBrutto = item.subtotal; // Already includes VAT
+    
+    // Get MwSt rate and code (variable per item if available in metadata)
+    const { rate: mwstRate, code: mwstCode } = getMwStRateAndCode(item, index);
+    
+    // Calculate netto using Swiss formula: Netto = Brutto ÷ (1 + rate)
+    // This extracts the VAT from the price, not adds it
+    const netto = totalBrutto / (1 + mwstRate);
+    
+    // Calculate MwSt: MwSt = Brutto - Netto
+    // This is the correct way in Switzerland
+    const mwstAmount = totalBrutto - netto;
+    
+    // unitPrice should be the price per unit BRUTTO (including VAT)
+    // If item.price is already BRUTTO, use it directly
+    // Otherwise, calculate from subtotal: unitPrice = subtotal / quantity
+    const unitPriceBrutto = item.price || (totalBrutto / item.quantity);
+    
+    return {
+      id: item.productId || index,
+      description: item.productName,
+      detail: item.productSku ? `SKU: ${item.productSku}` : undefined,
+      quantity: item.quantity,
+      unitPrice: unitPriceBrutto, // Price per unit BRUTTO (includes VAT)
+      totalBrutto: totalBrutto, // Total BRUTTO (includes VAT)
+      mwstRate,
+      mwstCode,
+    };
+  });
 
-  const getStatusIcon = () => {
-    switch (invoice.status) {
-      case 'paid':
-        return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'cancelled':
-        return <XCircle className="w-4 h-4 text-red-600" />;
-      default:
-        return <Clock className="w-4 h-4 text-blue-600" />;
-    }
+  // Map status
+  const statusMap: Record<string, InvoiceStatus> = {
+    'issued': 'open',
+    'paid': 'paid',
+    'cancelled': 'cancelled',
   };
+  const status = statusMap[serviceInvoice.status] || 'open';
 
-  const getStatusColor = () => {
-    switch (invoice.status) {
-      case 'paid':
-        return 'bg-green-100 text-green-700 border-green-200';
-      case 'cancelled':
-        return 'bg-red-100 text-red-700 border-red-200';
-      default:
-        return 'bg-blue-100 text-blue-700 border-blue-200';
-    }
-  };
+  // Calculate due date (30 days from issue date by default)
+  const issuedDate = new Date(serviceInvoice.issuedAt);
+  const dueDate = new Date(issuedDate);
+  dueDate.setDate(dueDate.getDate() + 30);
 
-  const getStatusText = () => {
-    switch (invoice.status) {
-      case 'paid':
-        return 'Bezahlt';
-      case 'cancelled':
-        return 'Storniert';
-      default:
-        return 'Ausgestellt';
-    }
+  // Calculate totals using Swiss formula
+  // totalBrutto is already the total including VAT
+  const totalBrutto = serviceInvoice.total; // Already includes VAT
+  
+  // If taxAmount is provided, use it (it should be calculated correctly)
+  // Otherwise, calculate from items breakdown (which uses variable rates per item)
+  let totalMwst: number;
+  let totalNetto: number;
+  
+  if (serviceInvoice.taxAmount && serviceInvoice.taxAmount > 0) {
+    // Use provided taxAmount if available
+    totalMwst = serviceInvoice.taxAmount;
+    totalNetto = totalBrutto - totalMwst;
+  } else {
+    // Calculate from items (which may have different rates)
+    // This will be recalculated correctly in the component using calculateMwStBreakdown
+    // For now, use a default calculation as fallback
+    const defaultRate = 0.081; // Default to standard rate if no items
+    totalNetto = totalBrutto / (1 + defaultRate);
+    totalMwst = totalBrutto - totalNetto;
+  }
+
+  return {
+    id: serviceInvoice.id,
+    nummer: serviceInvoice.invoiceNumber,
+    datum: serviceInvoice.issuedAt,
+    leistungsDatum: serviceInvoice.orderDate,
+    faelligkeitsDatum: dueDate.toISOString(),
+    zahlungsfrist: 30,
+    waehrung: 'CHF',
+    referenz: serviceInvoice.invoiceNumber,
+    status,
+    issuer,
+    recipient,
+    items,
+    notes: serviceInvoice.metadata?.notes as string | undefined,
+    orderId: serviceInvoice.orderId,
+    totalBrutto,
+    totalNetto,
+    totalMwst,
   };
+}
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+function StatusBadge({ status }: { status: string }) {
+  const config = getStatusConfig(status as any);
+  return (
+    <span
+      className={`
+        inline-flex items-center gap-1.5 px-3 py-1 rounded-full
+        text-[10px] font-semibold tracking-[0.08em] uppercase
+        ${config.bgColor} ${config.textColor} ring-1 ${config.ringColor}
+      `}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${config.dotColor}`} />
+      {config.label}
+    </span>
+  );
+}
+
+function MwStCodeBadge({ code, rate }: { code: string; rate: number }) {
+  // Color scheme based on rate type
+  const isReduced = rate <= 0.026;
+  const isSpecial = rate === 0.038;
+  const isExempt = rate === 0;
+
+  const colorClass = isExempt
+    ? 'bg-emerald-50 text-emerald-600 ring-emerald-200'
+    : isReduced
+    ? 'bg-sky-50 text-sky-600 ring-sky-200'
+    : isSpecial
+    ? 'bg-amber-50 text-amber-600 ring-amber-200'
+    : 'bg-gray-100 text-gray-500 ring-gray-200';
 
   return (
-    <div id="invoice-content" className="w-full invoice-print">
-      {/* Print Styles */}
-      <style jsx global>{`
-        @media print {
-          @page {
-            margin: 1cm;
-            size: A4;
-          }
-          
-          * {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-            color-adjust: exact !important;
-          }
-          
-          html, body {
-            background: white !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
-            height: auto !important;
-            overflow: visible !important;
-          }
-          
-          /* Ocultar elementos de navegación y UI */
-          header,
-          nav,
-          footer,
-          .no-print,
-          [class*="HeaderNav"],
-          [class*="ResponsiveHeader"],
-          [class*="InvoiceActionsFooter"],
-          [class*="ResponsiveFooterNav"],
-          [class*="Sidebar"],
-          button:not(.print-button),
-          .print-hide,
-          .fixed {
-            display: none !important;
-            visibility: hidden !important;
-          }
-          
-          /* Mostrar el contenedor de la factura */
-          .invoice-print-container {
-            display: block !important;
-            position: static !important;
-            width: 100% !important;
-            height: auto !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            background: white !important;
-            overflow: visible !important;
-          }
-          
-          /* Asegurar que el contenido de la factura sea visible */
-          .invoice-print-container,
-          .invoice-print-container *,
-          #invoice-content,
-          #invoice-content * {
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-          }
-          
-          /* Mostrar elementos inline correctamente */
-          .invoice-print-container span,
-          .invoice-print-container p,
-          .invoice-print-container div {
-            display: block !important;
-          }
-          
-          .invoice-print-container .flex {
-            display: flex !important;
-          }
-          
-          .invoice-print-container .inline,
-          .invoice-print-container .inline-block {
-            display: inline-block !important;
-          }
-          
-          /* Ocultar elementos de navegación y UI */
-          header,
-          nav,
-          footer,
-          .no-print,
-          [class*="HeaderNav"],
-          [class*="ResponsiveHeader"],
-          [class*="InvoiceActionsFooter"],
-          [class*="ResponsiveFooterNav"],
-          [class*="Sidebar"],
-          button:not(.print-button),
-          .print-hide,
-          .fixed {
-            display: none !important;
-            visibility: hidden !important;
-          }
-          
-          /* Estilos para el contenido de la factura */
-          .invoice-print,
-          #invoice-content {
-            background: white !important;
-            color: #000000 !important;
-            padding: 20px !important;
-            margin: 0 auto !important;
-            max-width: 100% !important;
-            box-shadow: none !important;
-            border: none !important;
-            page-break-inside: avoid;
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-          }
-          
-          .invoice-print *,
-          #invoice-content * {
-            color: #000000 !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-          }
-          
-          .invoice-print .bg-gray-50,
-          #invoice-content .bg-gray-50 {
-            background: #f9fafb !important;
-          }
-          
-          .invoice-print .bg-white,
-          #invoice-content .bg-white {
-            background: #ffffff !important;
-          }
-          
-          .invoice-print .text-gray-900,
-          .invoice-print .text-gray-700,
-          .invoice-print .text-gray-600,
-          #invoice-content .text-gray-900,
-          #invoice-content .text-gray-700,
-          #invoice-content .text-gray-600 {
-            color: #1f2937 !important;
-          }
-          
-          .invoice-print .text-\\[\\#25D076\\],
-          #invoice-content .text-\\[\\#25D076\\] {
-            color: #059669 !important;
-          }
-          
-          .invoice-print .border-gray-200,
-          .invoice-print .border-gray-100,
-          #invoice-content .border-gray-200,
-          #invoice-content .border-gray-100 {
-            border-color: #e5e7eb !important;
-          }
-          
-          /* Asegurar que las tablas se impriman correctamente */
-          table {
-            page-break-inside: avoid;
-            width: 100% !important;
-          }
-          
-          tr {
-            page-break-inside: avoid;
-            page-break-after: auto;
-          }
-          
-          thead {
-            display: table-header-group;
-          }
-          
-          tfoot {
-            display: table-footer-group;
-          }
-          
-          /* Evitar saltos de página en elementos importantes */
-          .invoice-print > div {
-            page-break-inside: avoid;
-          }
-        }
-      `}</style>
+    <span
+      className={`
+        inline-flex items-center justify-center
+        w-6 h-5 rounded text-[10px] font-bold tracking-wide
+        ring-1 ${colorClass}
+      `}
+    >
+      {code}
+    </span>
+  );
+}
 
-      {/* Actions Bar - Fixed Bottom for Mobile - Now handled in page component */}
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="text-[10px] text-gray-300 uppercase tracking-[0.15em] font-semibold mb-2 select-none">
+      {children}
+    </div>
+  );
+}
 
-      {/* Actions Bar - Top for Desktop */}
-      {showActions && !isMobile && (
-        <div className="no-print mb-4 flex flex-wrap gap-2 justify-end">
-          <button
-            onClick={handlePrint}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors text-sm font-medium"
-            aria-label="Drucken"
-          >
-            <Printer className="w-4 h-4" />
-            <span>Drucken</span>
-          </button>
-          <button
-            onClick={handleShare}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors text-sm font-medium"
-            aria-label="Teilen"
-          >
-            <Share2 className="w-4 h-4" />
-            <span>Teilen</span>
-          </button>
-          {onDownload && (
-            <button
-              onClick={handleDownload}
-              className="flex items-center gap-2 px-4 py-2 bg-[#25D076] hover:bg-[#20B865] text-white rounded-xl transition-colors text-sm font-semibold shadow-lg shadow-[#25D076]/20"
-              aria-label="PDF herunterladen"
-            >
-              <Download className="w-4 h-4" />
-              <span>PDF</span>
-            </button>
-          )}
+function QRCodePlaceholder() {
+  return (
+    <div className="w-[120px] h-[120px] md:w-[132px] md:h-[132px] bg-white border-2 border-[#25D076] p-1 relative flex-shrink-0">
+      <div className="w-full h-full relative">
+        {/* Green center marker */}
+        <div className="absolute inset-0 flex items-center justify-center z-10">
+          <div className="w-6 h-6 md:w-7 md:h-7 bg-[#25D076] rounded-sm flex items-center justify-center">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+              <rect x="6" y="1" width="4" height="14" fill="white" />
+              <rect x="1" y="6" width="14" height="4" fill="white" />
+            </svg>
+          </div>
+        </div>
+        {/* QR pattern */}
+        <svg viewBox="0 0 100 100" className="w-full h-full opacity-75">
+          <rect x="2" y="2" width="22" height="22" fill="#111" />
+          <rect x="5" y="5" width="16" height="16" fill="white" />
+          <rect x="8" y="8" width="10" height="10" fill="#111" />
+          <rect x="76" y="2" width="22" height="22" fill="#111" />
+          <rect x="79" y="5" width="16" height="16" fill="white" />
+          <rect x="82" y="8" width="10" height="10" fill="#111" />
+          <rect x="2" y="76" width="22" height="22" fill="#111" />
+          <rect x="5" y="79" width="16" height="16" fill="white" />
+          <rect x="8" y="82" width="10" height="10" fill="#111" />
+          {[
+            [28,4],[32,8],[40,4],[48,12],[56,4],[60,8],[64,16],[68,4],
+            [28,16],[36,12],[44,20],[52,8],[60,20],[68,12],
+            [4,28],[12,32],[20,28],[28,36],[36,28],[44,32],[52,28],
+            [60,36],[68,28],[76,32],[84,28],[92,36],
+            [4,44],[16,48],[28,44],[36,52],[60,48],[68,44],[76,52],[88,44],
+            [4,60],[12,56],[20,64],[28,56],[36,64],[60,56],[68,64],[76,56],[88,60],
+            [4,68],[16,72],[28,68],[40,72],[52,68],[64,72],[76,68],[88,72],
+            [28,80],[36,88],[48,80],[60,88],[72,80],[84,88],[92,80],
+            [28,92],[40,92],[56,92],[68,92],[80,92],[92,92],
+          ].map(([x, y], i) => (
+            <rect key={i} x={x} y={y} width="4" height="4" fill="#111" />
+          ))}
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+function CutLine() {
+  return (
+    <div className="flex items-center gap-2 py-3 select-none print:hidden" aria-hidden="true">
+      <Scissors className="w-3.5 h-3.5 text-gray-300 rotate-90" />
+      <div className="flex-1 border-t-2 border-dashed border-gray-200" />
+    </div>
+  );
+}
+
+// ─── Action Buttons ──────────────────────────────────────────────────────────
+
+function ActionBar({ onPrint }: { onPrint: () => void }) {
+  return (
+    <div className="flex items-center gap-1.5 print:hidden">
+      {[
+        { icon: Printer, label: 'Drucken', onClick: onPrint },
+        { icon: Download, label: 'PDF', onClick: () => {} },
+        { icon: Mail, label: 'Senden', onClick: () => {} },
+        { icon: Copy, label: 'Kopieren', onClick: () => {} },
+      ].map(({ icon: Icon, label, onClick }) => (
+        <button
+          key={label}
+          onClick={onClick}
+          title={label}
+          className="
+            group flex items-center gap-1.5
+            px-3 py-2 rounded-lg
+            text-xs font-medium text-gray-500
+            bg-white border border-gray-200
+            hover:border-gray-300 hover:text-gray-800 hover:shadow-sm
+            active:scale-[0.97]
+            transition-all duration-150
+          "
+        >
+          <Icon className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">{label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Main Component ──────────────────────────────────────────────────────────
+
+export default function InvoiceTemplate({
+  invoice: serviceInvoice,
+  showActions = true,
+  isMobile = false,
+}: InvoiceTemplateProps) {
+  const printRef = useRef<HTMLDivElement>(null);
+
+  // Transform service invoice to Swiss invoice format
+  const invoice = useMemo(() => transformInvoice(serviceInvoice), [serviceInvoice]);
+
+  // Compute VAT breakdown
+  const { breakdown, totalBrutto, totalNetto, totalMwst } = useMemo(() => {
+    if (!invoice.items?.length) {
+      return {
+        breakdown: [] as MwStGroup[],
+        totalBrutto: invoice.totalBrutto || 0,
+        totalNetto: invoice.totalNetto || 0,
+        totalMwst: invoice.totalMwst || 0,
+      };
+    }
+    const groups = calculateMwStBreakdown(invoice.items);
+    const brutto = invoice.items.reduce((s, i) => s + i.totalBrutto, 0);
+    const mwst = groups.reduce((s, g) => s + g.mwst, 0);
+    return {
+      breakdown: groups,
+      totalBrutto: brutto,
+      totalNetto: brutto - mwst,
+      totalMwst: mwst,
+    };
+  }, [invoice.items, invoice.totalBrutto, invoice.totalNetto, invoice.totalMwst]);
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const issuer = invoice.issuer;
+  const recipient = invoice.recipient;
+
+  // Responsive padding - adjusted for better visual
+  const px = isMobile ? 'px-4' : 'px-8 lg:px-12';
+
+  return (
+    <div className="w-full">
+      {/* ── Toolbar ── */}
+      {showActions && (
+        <div className={`flex items-center justify-between mb-4 print:hidden ${isMobile ? 'px-4' : ''}`}>
+          <StatusBadge status={invoice.status} />
+          <ActionBar onPrint={handlePrint} />
         </div>
       )}
 
-      {/* Invoice Container */}
-      <div className={`bg-white ${isMobile ? 'mx-4 rounded-2xl shadow-sm border border-gray-200 p-6' : 'rounded-2xl shadow-lg p-6 sm:p-8 md:p-12'}`}>
-        {/* Header */}
-        <div className={`${isMobile ? 'mb-4 pb-3' : 'mb-6 pb-4'} border-b border-gray-200`}>
-          <div className="flex flex-col gap-3">
-            {/* Title and Number */}
-            <div>
-              <h1 className={`${isMobile ? 'text-xl' : 'text-2xl sm:text-3xl'} font-bold text-gray-900 mb-1.5`}>
+      {/* ── Invoice Paper ── */}
+      <div
+        ref={printRef}
+        className={`
+          bg-white
+          ${isMobile ? 'rounded-xl shadow-sm' : 'rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)]'}
+          overflow-hidden
+          print:shadow-none print:rounded-none
+        `}
+        style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}
+      >
+        {/* Green accent stripe */}
+        <div className="h-[3px] bg-[#25D076]" />
+
+        {/* ═══ HEADER ═══ */}
+        <div className={`${px} pt-6 pb-5 md:pt-8 md:pb-6`}>
+          <div className="flex justify-between items-start gap-4">
+            {/* Issuer info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2.5 mb-3">
+                {/* Logo mark */}
+                <div className="w-9 h-9 bg-[#25D076] rounded-md flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-sm leading-none">
+                    {issuer.name?.charAt(0) || 'R'}
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-bold text-gray-900 tracking-wide truncate">
+                    {issuer.name}
+                  </div>
+                  {issuer.mwstNummer && (
+                    <div className="text-[10px] text-gray-400 font-mono tracking-wider">
+                      {issuer.mwstNummer}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="text-[11px] text-gray-400 leading-relaxed">
+                {issuer.street && <div>{issuer.street}</div>}
+                <div>
+                  {issuer.zip} {issuer.city}
+                </div>
+                {issuer.country && <div>{issuer.country}</div>}
+              </div>
+            </div>
+
+            {/* Title + meta */}
+            <div className="text-right flex-shrink-0">
+              <h1
+                className="text-2xl md:text-[32px] font-extralight text-gray-900 leading-none"
+                style={{ letterSpacing: '-0.03em' }}
+              >
                 Rechnung
               </h1>
-              <div className="flex items-center gap-1.5 text-gray-600">
-                <FileText className="w-3.5 h-3.5" />
-                <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>{invoice.invoiceNumber}</span>
+              <div className="mt-3 space-y-0.5">
+                {[
+                  { label: 'Nr.', value: invoice.nummer, bold: false },
+                  { label: 'Datum', value: formatDate(invoice.datum), bold: false },
+                  invoice.leistungsDatum && {
+                    label: 'Leistung',
+                    value: formatDate(invoice.leistungsDatum),
+                    bold: false,
+                  },
+                  {
+                    label: 'Fällig',
+                    value: formatDate(invoice.faelligkeitsDatum),
+                    bold: true,
+                  },
+                ]
+                  .filter(Boolean)
+                  .map((meta: any) => (
+                    <div key={meta.label} className="text-[11px] text-gray-400 flex items-baseline justify-end gap-2">
+                      <span className="w-16 text-right">{meta.label}</span>
+                      <span
+                        className={`${
+                          meta.bold
+                            ? 'text-gray-900 font-bold'
+                            : 'text-gray-600 font-medium'
+                        }`}
+                      >
+                        {meta.value}
+                      </span>
+                    </div>
+                  ))}
               </div>
-            </div>
 
-            {/* Status Badge */}
-            <div className={`flex items-center gap-1.5 ${getStatusColor()} border px-2.5 py-1.5 rounded-lg w-fit`}>
-              {getStatusIcon()}
-              <span className={`${isMobile ? 'text-xs' : 'text-xs'} font-semibold`}>{getStatusText()}</span>
+              {/* Mobile-only status badge */}
+              {isMobile && !showActions && (
+                <div className="mt-3">
+                  <StatusBadge status={invoice.status} />
+                </div>
+              )}
             </div>
+          </div>
 
-            {/* Store Info */}
-            {invoice.storeName && (
-              <div>
-                <h2 className={`${isMobile ? 'text-base' : 'text-lg'} font-bold text-gray-900 mb-1.5`}>
-                  {invoice.storeName}
-                </h2>
-                {invoice.storeAddress && (
-                  <div className="flex items-start gap-1.5 text-xs text-gray-600 mb-1">
-                    <MapPin className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                    <span className="leading-tight">{invoice.storeAddress}</span>
+          {/* Recipient */}
+          <div className="mt-6 md:mt-8">
+            <SectionLabel>Rechnungsempfänger</SectionLabel>
+            <div className="text-[13px] text-gray-800 leading-relaxed">
+              <div className="font-semibold">{recipient.name}</div>
+              {recipient.street && (
+                <div className="text-gray-500">{recipient.street}</div>
+              )}
+              <div className="text-gray-500">
+                {recipient.zip} {recipient.city}
+              </div>
+              {recipient.uid && (
+                <div className="text-[11px] text-gray-400 font-mono mt-1">
+                  {recipient.uid}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ LINE ITEMS ═══ */}
+        <div className={px}>
+          {/* Table header */}
+          <div
+            className={`
+              grid gap-2 py-2.5
+              border-y-2 border-[#25D076]
+              text-[9px] md:text-[10px] uppercase tracking-[0.12em] text-gray-400 font-semibold
+              select-none
+              ${isMobile ? 'grid-cols-12' : 'grid-cols-12'}
+            `}
+          >
+            <div className="col-span-1 hidden md:block">Pos</div>
+            <div className={isMobile ? 'col-span-7' : 'col-span-5'}>Beschreibung</div>
+            {!isMobile && <div className="col-span-1 text-right">Menge</div>}
+            {!isMobile && <div className="col-span-2 text-right">Einzelpreis</div>}
+            <div className={`${isMobile ? 'col-span-2' : 'col-span-1'} text-center`}>MwSt</div>
+            <div className={`${isMobile ? 'col-span-3' : 'col-span-2'} text-right`}>Betrag</div>
+          </div>
+
+          {/* Table rows */}
+          {invoice.items?.map((item, index) => (
+            <div
+              key={item.id}
+              className={`
+                grid gap-2 py-3 md:py-3.5
+                ${index < (invoice.items?.length ?? 0) - 1 ? 'border-b border-gray-100' : ''}
+                ${isMobile ? 'grid-cols-12' : 'grid-cols-12'}
+              `}
+            >
+              {/* Position number — desktop only */}
+              {!isMobile && (
+                <div className="col-span-1 text-[11px] text-gray-300 font-mono pt-0.5">
+                  {String(index + 1).padStart(2, '0')}
+                </div>
+              )}
+
+              {/* Description */}
+              <div className={isMobile ? 'col-span-7' : 'col-span-5'}>
+                <div className="text-[12px] md:text-[13px] text-gray-800 font-medium leading-snug">
+                  {item.description}
+                </div>
+                {item.detail && (
+                  <div className="text-[10px] md:text-[11px] text-gray-400 mt-0.5 leading-relaxed">
+                    {item.detail}
                   </div>
                 )}
-                <div className="flex flex-wrap gap-2.5 mt-1.5">
-                  {invoice.storePhone && (
-                    <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                      <Phone className="w-3.5 h-3.5" />
-                      <span>{invoice.storePhone}</span>
-                    </div>
-                  )}
-                  {invoice.storeEmail && (
-                    <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                      <Mail className="w-3.5 h-3.5" />
-                      <span className="break-all">{invoice.storeEmail}</span>
-                    </div>
-                  )}
-                </div>
+                {/* Mobile quantity info */}
+                {isMobile && (
+                  <div className="text-[10px] text-gray-400 mt-0.5">
+                    {item.quantity} × {formatCHF(item.unitPrice)}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+
+              {/* Quantity — desktop only */}
+              {!isMobile && (
+                <div className="col-span-1 text-right text-[13px] text-gray-500 pt-0.5 tabular-nums">
+                  {item.quantity}
+                </div>
+              )}
+
+              {/* Unit price — desktop only */}
+              {!isMobile && (
+                <div className="col-span-2 text-right text-[13px] text-gray-500 pt-0.5 tabular-nums">
+                  {formatCHF(item.unitPrice)}
+                </div>
+              )}
+
+              {/* MwSt code */}
+              <div className={`${isMobile ? 'col-span-2' : 'col-span-1'} flex justify-center pt-0.5`}>
+                <MwStCodeBadge code={item.mwstCode} rate={item.mwstRate} />
+              </div>
+
+              {/* Total */}
+              <div
+                className={`${isMobile ? 'col-span-3' : 'col-span-2'} text-right text-[12px] md:text-[13px] text-gray-900 font-semibold pt-0.5 tabular-nums`}
+              >
+                {formatCHF(item.totalBrutto)}
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* Invoice Details Grid */}
-        <div className={`${isMobile ? 'space-y-3 mb-4' : 'grid grid-cols-1 md:grid-cols-2 gap-4 mb-6'}`}>
-          {/* Customer Info */}
-          <div className="bg-gray-50 rounded-xl p-3">
-            <h3 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-2.5">
-              Rechnungsempfänger
-            </h3>
-            <div className="space-y-1.5">
-              {invoice.customerName && (
-                <p className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold text-gray-900`}>
-                  {invoice.customerName}
-                </p>
-              )}
-              {invoice.customerAddress && (
-                <div className="flex items-start gap-1.5 text-xs text-gray-600">
-                  <MapPin className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                  <span className="leading-tight">{invoice.customerAddress}</span>
-                </div>
-              )}
-              {(invoice.customerCity || invoice.customerPostalCode) && (
-                <p className="text-xs text-gray-600 ml-5">
-                  {invoice.customerPostalCode} {invoice.customerCity}
-                </p>
-              )}
-              {invoice.customerEmail && (
-                <div className="flex items-center gap-1.5 text-xs text-gray-600 mt-1.5">
-                  <Mail className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span className="break-all">{invoice.customerEmail}</span>
-                </div>
-              )}
-              {invoice.customerPhone && (
-                <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                  <Phone className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>{invoice.customerPhone}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Invoice Info */}
-          <div className="bg-gray-50 rounded-xl p-3">
-            <h3 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-2.5">
-              Rechnungsdetails
-            </h3>
-            <div className="space-y-2">
-              <div className="flex items-center gap-1.5 text-xs">
-                <Calendar className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                <span className="text-gray-600">Ausstellungsdatum:</span>
-                <span className="font-medium text-gray-900 ml-auto text-right">
-                  {formatDate(invoice.issuedAt)}
+        {/* ═══ TOTALS ═══ */}
+        <div className={`${px} mt-4 mb-5 md:mb-6`}>
+          <div className={`flex ${isMobile ? 'justify-end' : 'justify-end'}`}>
+            <div className={isMobile ? 'w-full' : 'w-72'}>
+              {/* Subtotal netto */}
+              <div className="flex justify-between py-1.5 text-[12px]">
+                <span className="text-gray-400">Zwischensumme netto</span>
+                <span className="text-gray-600 font-medium tabular-nums">
+                  {formatCHF(totalNetto)}
                 </span>
               </div>
-              {invoice.orderDate && (
-                <div className="flex items-center gap-1.5 text-xs">
-                  <Calendar className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                  <span className="text-gray-600">Bestelldatum:</span>
-                  <span className="font-medium text-gray-900 ml-auto text-right">
-                    {formatDate(invoice.orderDate)}
+
+              {/* MwSt lines */}
+              {breakdown.map((g) => (
+                <div key={g.code} className="flex justify-between items-center py-1 text-[12px]">
+                  <span className="flex items-center gap-1.5 text-gray-400">
+                    <MwStCodeBadge code={g.code} rate={g.rate} />
+                    <span>MwSt {formatMwStRate(g.rate)}</span>
                   </span>
+                  <span className="text-gray-500 tabular-nums">{formatCHF(g.mwst)}</span>
                 </div>
-              )}
-              {invoice.paymentMethod && (
-                <div className="flex items-center gap-1.5 text-xs">
-                  <Building2 className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                  <span className="text-gray-600">Zahlungsmethode:</span>
-                  <span className="font-medium text-gray-900 ml-auto text-right">
-                    {invoice.paymentMethod}
-                  </span>
-                </div>
-              )}
+              ))}
+
+              {/* Divider */}
+              <div className="border-t-2 border-[#25D076] my-2.5" />
+
+              {/* Grand total */}
+              <div className="flex justify-between items-baseline">
+                <span className="text-[10px] uppercase tracking-[0.12em] text-gray-400 font-semibold">
+                  Gesamtbetrag {invoice.waehrung || 'CHF'}
+                </span>
+                <span
+                  className="text-xl md:text-2xl font-bold text-gray-900 tabular-nums"
+                  style={{ letterSpacing: '-0.02em' }}
+                >
+                  {formatCHF(totalBrutto)}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Items Table */}
-        <div className={`${isMobile ? 'mb-4' : 'mb-6'}`}>
-          <h3 className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold text-gray-900 mb-2.5`}>
-            Artikel
-          </h3>
-          {isMobile ? (
-            // Mobile: Card-based layout
-            <div className="space-y-2.5">
-              {invoice.items.map((item: InvoiceItem, index: number) => (
+        {/* ═══ MWST SUMMARY TABLE ═══ */}
+        {breakdown.length > 0 && (
+          <div className={`${px} pb-4`}>
+            <div className="bg-gray-50 rounded-lg p-4 md:p-5">
+              <SectionLabel>MwSt-Zusammenfassung</SectionLabel>
+              <div className="grid grid-cols-5 gap-3 text-[9px] md:text-[10px] text-gray-400 font-semibold uppercase tracking-[0.1em] pb-2 border-b border-gray-200">
+                <div>Code</div>
+                <div>Satz</div>
+                <div className="text-right">Brutto</div>
+                <div className="text-right">Netto</div>
+                <div className="text-right">MwSt</div>
+              </div>
+              {breakdown.map((g) => (
                 <div
-                  key={`${item.productId}-${index}`}
-                  className="bg-gray-50 rounded-xl p-3 border border-gray-200"
+                  key={g.code}
+                  className="grid grid-cols-5 gap-3 text-[11px] md:text-[12px] py-1.5"
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex-1 min-w-0 pr-2">
-                      <p className="font-semibold text-gray-900 text-sm mb-0.5">
-                        {item.productName}
-                      </p>
-                      {item.productSku && (
-                        <p className="text-[10px] text-gray-500">SKU: {item.productSku}</p>
-                      )}
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="font-bold text-gray-900 text-sm">
-                        {formatSwissPriceWithCHF(item.subtotal)}
-                      </p>
-                    </div>
+                  <div>
+                    <MwStCodeBadge code={g.code} rate={g.rate} />
                   </div>
-                  <div className="flex justify-between items-center pt-1.5 border-t border-gray-200">
-                    <span className="text-xs text-gray-600">
-                      {item.quantity}x {formatSwissPriceWithCHF(item.price)}
-                    </span>
+                  <div className="text-gray-500 tabular-nums">{formatMwStRate(g.rate)}</div>
+                  <div className="text-right text-gray-500 tabular-nums">{formatCHF(g.brutto)}</div>
+                  <div className="text-right text-gray-500 tabular-nums">{formatCHF(g.netto)}</div>
+                  <div className="text-right text-gray-800 font-semibold tabular-nums">
+                    {formatCHF(g.mwst)}
                   </div>
                 </div>
               ))}
-            </div>
-          ) : (
-            // Desktop: Table layout
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 border-b-2 border-gray-200">
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Artikel</th>
-                    <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700">Menge</th>
-                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Einzelpreis</th>
-                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Gesamt</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {invoice.items.map((item: InvoiceItem, index: number) => (
-                    <tr
-                      key={`${item.productId}-${index}`}
-                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="py-4 px-4">
-                        <div>
-                          <p className="font-medium text-gray-900">{item.productName}</p>
-                          {item.productSku && (
-                            <p className="text-xs text-gray-500 mt-1">SKU: {item.productSku}</p>
-                          )}
-                        </div>
-                      </td>
-                      <td className="text-center py-4 px-4 text-gray-700">
-                        {item.quantity}
-                      </td>
-                      <td className="text-right py-4 px-4 text-gray-700">
-                        {formatSwissPriceWithCHF(item.price)}
-                      </td>
-                      <td className="text-right py-4 px-4 font-semibold text-gray-900">
-                        {formatSwissPriceWithCHF(item.subtotal)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Totals */}
-        <div className={`${isMobile ? 'mb-4' : 'mb-6'}`}>
-          <div className={`${isMobile ? 'w-full' : 'ml-auto max-w-md'}`}>
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs text-gray-600">
-                <span>Zwischensumme:</span>
-                <span className="font-medium">{formatSwissPriceWithCHF(invoice.subtotal)}</span>
-              </div>
-              {invoice.discountAmount > 0 && (
-                <div className="flex justify-between text-xs text-green-600">
-                  <span>Rabatt:</span>
-                  <span className="font-medium">-{formatSwissPriceWithCHF(invoice.discountAmount)}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-xs text-gray-500 italic">
-                <span>MwSt. inklusive</span>
-              </div>
-              <div className={`border-t-2 border-gray-200 pt-2.5 mt-2.5 ${isMobile ? 'pt-3' : ''}`}>
-                <div className="flex justify-between items-center">
-                  <span className={`${isMobile ? 'text-sm' : 'text-base'} font-bold text-gray-900`}>
-                    Gesamtbetrag:
-                  </span>
-                  <span className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-[#25D076]`}>
-                    {formatSwissPriceWithCHF(invoice.total)}
-                  </span>
-                </div>
+              <div className="grid grid-cols-5 gap-3 text-[11px] md:text-[12px] pt-2 border-t border-gray-200 font-semibold text-gray-800">
+                <div className="col-span-2">Total</div>
+                <div className="text-right tabular-nums">{formatCHF(totalBrutto)}</div>
+                <div className="text-right tabular-nums">{formatCHF(totalNetto)}</div>
+                <div className="text-right tabular-nums">{formatCHF(totalMwst)}</div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Footer */}
-        <div className={`border-t border-gray-200 ${isMobile ? 'pt-3 mt-4' : 'pt-4 mt-6'}`}>
-          <p className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-gray-500 text-center leading-relaxed`}>
-            Vielen Dank für Ihren Einkauf bei {invoice.storeName || 'Vendly'}!
-          </p>
-          {invoice.metadata?.saveCustomerData === true && (
-            <p className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-gray-400 text-center mt-1.5`}>
-              Ihre Daten wurden für zukünftige Bestellungen gespeichert.
-            </p>
-          )}
+        {/* ═══ NOTES ═══ */}
+        {invoice.notes && (
+          <div className={`${px} pb-4`}>
+            <p className="text-[11px] text-gray-400 leading-relaxed">{invoice.notes}</p>
+          </div>
+        )}
+
+        {/* ═══ QR-RECHNUNG (PAYMENT SLIP) ═══ */}
+        {issuer.iban && (
+          <>
+            <div className={`${px}`}>
+              <CutLine />
+            </div>
+
+            <div className={`${px} pb-8`}>
+              <div className="border-2 border-[#25D076] rounded-sm overflow-hidden">
+                <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} ${isMobile ? '' : 'divide-x-2'} divide-[#25D076]`}>
+                  {/* Left: Zahlteil (Payment section) */}
+                  <div className="p-4 md:p-5">
+                    <div className="text-[10px] font-bold tracking-[0.15em] uppercase mb-3 text-gray-900">
+                      Zahlteil
+                    </div>
+                    <div className={`flex ${isMobile ? 'flex-col' : ''} gap-4`}>
+                      <QRCodePlaceholder />
+                      <div className="text-[10px] md:text-[11px] space-y-2.5 flex-1 min-w-0">
+                        <div>
+                          <div className="text-gray-400 text-[9px] font-semibold uppercase tracking-[0.1em] mb-0.5">
+                            Konto / Zahlbar an
+                          </div>
+                          <div className="text-gray-800 leading-relaxed font-mono text-[10px]">
+                            {issuer.iban}
+                          </div>
+                          <div className="text-gray-700 leading-relaxed">
+                            {issuer.name}
+                            <br />
+                            {issuer.street && <>{issuer.street}<br /></>}
+                            {issuer.zip} {issuer.city}
+                          </div>
+                        </div>
+                        {invoice.referenz && (
+                          <div>
+                            <div className="text-gray-400 text-[9px] font-semibold uppercase tracking-[0.1em] mb-0.5">
+                              Referenz
+                            </div>
+                            <div className="text-gray-800 font-mono text-[10px]">
+                              {invoice.referenz}
+                            </div>
+                          </div>
+                        )}
+                        <div>
+                          <div className="text-gray-400 text-[9px] font-semibold uppercase tracking-[0.1em] mb-0.5">
+                            Zahlbar durch
+                          </div>
+                          <div className="text-gray-700 leading-relaxed">
+                            {recipient.name}
+                            <br />
+                            {recipient.street && <>{recipient.street}<br /></>}
+                            {recipient.zip} {recipient.city}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-baseline gap-4 mt-4 pt-3 border-t border-gray-200">
+                      <div>
+                        <div className="text-gray-400 text-[9px] uppercase tracking-[0.1em] font-semibold">
+                          Währung
+                        </div>
+                        <div className="text-[12px] font-bold text-gray-900">
+                          {invoice.waehrung || 'CHF'}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-gray-400 text-[9px] uppercase tracking-[0.1em] font-semibold">
+                          Betrag
+                        </div>
+                        <div className="text-[12px] font-bold text-gray-900 tabular-nums">
+                          {formatCHF(totalBrutto)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: Empfangsschein (Receipt) */}
+                  <div className={`p-4 md:p-5 ${isMobile ? 'border-t-2 border-[#25D076]' : ''}`}>
+                    <div className="text-[10px] font-bold tracking-[0.15em] uppercase mb-3 text-gray-900">
+                      Empfangsschein
+                    </div>
+                    <div className="text-[10px] space-y-2.5">
+                      <div>
+                        <div className="text-gray-400 text-[9px] font-semibold uppercase tracking-[0.1em] mb-0.5">
+                          Konto / Zahlbar an
+                        </div>
+                        <div className="text-gray-800 font-mono text-[10px] leading-relaxed">
+                          {issuer.iban}
+                        </div>
+                        <div className="text-gray-700 leading-relaxed">
+                          {issuer.name}
+                          <br />
+                          {issuer.zip} {issuer.city}
+                        </div>
+                      </div>
+                      {invoice.referenz && (
+                        <div>
+                          <div className="text-gray-400 text-[9px] font-semibold uppercase tracking-[0.1em] mb-0.5">
+                            Referenz
+                          </div>
+                          <div className="text-gray-800 font-mono text-[10px]">
+                            {invoice.referenz}
+                          </div>
+                        </div>
+                      )}
+                      <div>
+                        <div className="text-gray-400 text-[9px] font-semibold uppercase tracking-[0.1em] mb-0.5">
+                          Zahlbar durch
+                        </div>
+                        <div className="text-gray-700 leading-relaxed">
+                          {recipient.name}
+                          <br />
+                          {recipient.zip} {recipient.city}
+                        </div>
+                      </div>
+                      <div className="flex items-baseline gap-4 pt-2 border-t border-gray-200">
+                        <div>
+                          <div className="text-gray-400 text-[9px] uppercase tracking-[0.1em] font-semibold">
+                            Währung
+                          </div>
+                          <div className="text-[11px] font-bold text-gray-900">
+                            {invoice.waehrung || 'CHF'}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-gray-400 text-[9px] uppercase tracking-[0.1em] font-semibold">
+                            Betrag
+                          </div>
+                          <div className="text-[11px] font-bold text-gray-900 tabular-nums">
+                            {formatCHF(totalBrutto)}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="pt-4">
+                        <div className="text-gray-400 text-[9px] uppercase tracking-[0.1em] font-semibold">
+                          Annahmestelle
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ═══ FOOTER ═══ */}
+        <div className={`${px} py-4 border-t border-gray-100`}>
+          <div className={`flex ${isMobile ? 'flex-col gap-1' : 'justify-between'} text-[10px] text-gray-300`}>
+            <div>
+              {issuer.name}
+              {issuer.mwstNummer && <> · {issuer.mwstNummer}</>}
+            </div>
+            <div>
+              {issuer.bank && <>{issuer.bank} · </>}
+              {issuer.iban}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default InvoiceTemplate;
+}

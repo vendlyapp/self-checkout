@@ -107,7 +107,7 @@ const PaymentMethodsPage = () => {
     if (method.apiMethod.code.toLowerCase() === 'bargeld') {
       return false;
     }
-    // Excluir métodos inhabilitados por super admin o globalmente
+    // Excluir métodos eingeschränkt por super admin o globalmente
     if (method.apiMethod.disabledBySuperAdmin || method.apiMethod.disabledGlobally) {
       return false;
     }
@@ -128,8 +128,8 @@ const PaymentMethodsPage = () => {
     return method.apiMethod.disabledGlobally === true;
   })
 
-  // Filtrar métodos inhabilitados por super admin o globalmente
-  // Los métodos inhabilitados NO pueden ser configurados ni activados por el admin de tienda
+  // Filtrar métodos eingeschränkt por super admin o globalmente
+  // Los métodos eingeschränkt NO pueden ser configurados ni activados por el admin de tienda
   const enabledMethods = configuredMethods.filter(method => {
     return !method.apiMethod.disabledBySuperAdmin && !method.apiMethod.disabledGlobally;
   })
@@ -151,7 +151,7 @@ const PaymentMethodsPage = () => {
     return !method.isActive;
   })
 
-  // Métodos inhabilitados por super admin (mostrar en gris, sin permitir configuración)
+  // Métodos eingeschränkt por super admin (mostrar en gris, sin permitir configuración)
   const disabledMethods = paymentMethods.filter(method => {
     return method.apiMethod.disabledBySuperAdmin === true;
   })
@@ -392,7 +392,7 @@ const PaymentMethodsPage = () => {
             {configuredMethods
               .filter(method => 
                 method.apiMethod.code.toLowerCase() !== 'bargeld' && // Bargeld no aparece aquí
-                !method.apiMethod.disabledBySuperAdmin // Excluir métodos inhabilitados
+                !method.apiMethod.disabledBySuperAdmin // Excluir métodos eingeschränkt
               )
               .map((method, index, array) => {
                 // Determinar si es el último de los configurados

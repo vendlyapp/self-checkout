@@ -22,8 +22,15 @@ export type PromotionCardProps = {
 };
 
 const formatPrice = (value: number): string => {
-  if (Number.isNaN(value)) return "0.00";
-  return value % 1 === 0 ? `${value.toFixed(0)}.-` : value.toFixed(2);
+  if (Number.isNaN(value)) return "0.–";
+  // Formato suizo: .– cuando es exacto, .45 cuando tiene decimales
+  const rounded = Math.round(value * 100) / 100;
+  const hasDecimals = rounded % 1 !== 0;
+  
+  if (!hasDecimals) {
+    return `${Math.round(rounded)}.–`;
+  }
+  return rounded.toFixed(2);
 };
 
 const clamp01 = (value = 0): number => {

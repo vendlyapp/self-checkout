@@ -13,6 +13,7 @@ import StoreProducts from '@/components/admin/stores/StoreProducts';
 import StoreOrders from '@/components/admin/stores/StoreOrders';
 import StoreHistory from '@/components/admin/stores/StoreHistory';
 import StoreQRManagement from '@/components/admin/stores/StoreQRManagement';
+import { formatSwissPriceWithCHF } from '@/lib/utils';
 
 export default function StoreDetailPage() {
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function StoreDetailPage() {
       }
       setError(null);
       
-      // Try to fetch from API, but don't wait too long
+      // Versuchen, von der API abzurufen, aber nicht zu lange warten
       const fetchPromise = SuperAdminService.getStoreDetails(storeId);
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Timeout')), 5000)
@@ -46,7 +47,7 @@ export default function StoreDetailPage() {
           return;
         }
       } catch (apiError) {
-        console.log('API call failed, using cached data:', apiError);
+        console.log('API-Aufruf fehlgeschlagen, verwende gecachte Daten:', apiError);
       }
       
       const storeFromList = stores.find((s: Store) => s.id === storeId);
@@ -57,7 +58,7 @@ export default function StoreDetailPage() {
         setError('Geschäft konnte nicht geladen werden');
       }
     } catch (err) {
-      console.error('Error fetching store details:', err);
+      console.error('Fehler beim Abrufen der Geschäftsdetails:', err);
       
       const storeFromList = stores.find((s: Store) => s.id === storeId);
       if (storeFromList && !store) {
@@ -75,16 +76,16 @@ export default function StoreDetailPage() {
 
   useEffect(() => {
     if (storeId) {
-      // First check if we already have the store in the list
+      // Zuerst prüfen, ob wir das Geschäft bereits in der Liste haben
       const storeFromList = stores.find((s: Store) => s.id === storeId);
       if (storeFromList) {
-        console.log('Using store from cached list');
+        console.log('Verwende Geschäft aus gecachter Liste');
         setStore(storeFromList);
         setLoading(false);
-        // Still fetch fresh data in background (without showing loading)
+        // Trotzdem frische Daten im Hintergrund abrufen (ohne Loading anzuzeigen)
         fetchStoreDetails(false);
       } else {
-        // If not in list, fetch from API (with loading)
+        // Wenn nicht in der Liste, von der API abrufen (mit Loading)
         fetchStoreDetails(true);
       }
     }
@@ -169,7 +170,7 @@ export default function StoreDetailPage() {
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Gesamtumsatz</p>
                 <p className="text-xl font-bold text-gray-900 dark:text-white/90">
-                  CHF {Number(store.totalRevenue || 0).toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatSwissPriceWithCHF(Number(store.totalRevenue || 0))}
                 </p>
               </div>
             </div>

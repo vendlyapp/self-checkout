@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Store as StoreIcon, Search, Power, PowerOff, TrendingUp, RefreshCw, MapPin, Package, ShoppingCart, Mail, User, ExternalLink } from 'lucide-react';
 import { useSuperAdminStore } from '@/lib/stores/superAdminStore';
+import { formatSwissPriceWithCHF } from '@/lib/utils';
 
 export default function SuperAdminStores() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function SuperAdminStores() {
   }, [fetchStores]);
 
   const handleToggleStatus = async (storeId: string, currentStatus: boolean, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent navigation when clicking toggle
+    e.stopPropagation(); // Navigation verhindern beim Klicken auf Toggle
     try {
       await toggleStoreStatus(storeId, !currentStatus);
     } catch (err) {
@@ -42,7 +43,7 @@ export default function SuperAdminStores() {
     store.slug.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Solo mostrar loader si está cargando Y no hay datos
+  // Nur Loader anzeigen, wenn geladen wird UND keine Daten vorhanden sind
   if (storesLoading && stores.length === 0) {
     return (
       <div className="p-8 flex items-center justify-center min-h-screen">
@@ -102,7 +103,7 @@ export default function SuperAdminStores() {
       </div>
 
       {/* ============================================ */}
-      {/* MÉTRICAS */}
+      {/* METRIKEN */}
       {/* ============================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
@@ -135,7 +136,7 @@ export default function SuperAdminStores() {
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Gesamtumsatz</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white/90">
-                CHF {totalRevenue.toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {formatSwissPriceWithCHF(totalRevenue)}
               </p>
             </div>
             <div className="w-12 h-12 bg-orange-50 dark:bg-orange-500/15 rounded-xl flex items-center justify-center">
@@ -159,7 +160,7 @@ export default function SuperAdminStores() {
       </div>
 
       {/* ============================================ */}
-      {/* LISTA DE TIENDAS */}
+      {/* GESCHÄFTELISTE */}
       {/* ============================================ */}
       {filteredStores.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200 dark:bg-white/[0.03] dark:border-gray-800">
@@ -248,9 +249,9 @@ export default function SuperAdminStores() {
                   <span className="font-semibold text-gray-900 dark:text-white/90">{store.orderCount}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-100 dark:border-gray-800">
-                  <span className="text-gray-600 dark:text-gray-400 font-medium">Revenue</span>
+                  <span className="text-gray-600 dark:text-gray-400 font-medium">Umsatz</span>
                   <span className="font-bold text-brand-600 dark:text-brand-400">
-                    CHF {Number(store.totalRevenue || 0).toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {formatSwissPriceWithCHF(Number(store.totalRevenue || 0))}
                   </span>
                 </div>
               </div>

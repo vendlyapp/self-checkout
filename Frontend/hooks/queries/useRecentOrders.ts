@@ -19,13 +19,16 @@ export const useRecentOrders = (limit: number = 10) => {
         if (response.error === 'Request cancelled' || signal?.aborted) {
           throw new Error('CANCELLED');
         }
-        throw new Error(response.error || 'Error al obtener órdenes recientes');
+        throw new Error(response.error || 'Fehler beim Laden der letzten Bestellungen');
       }
       return response.data;
     },
     enabled: !!store?.id && !storeLoading, // Solo ejecutar si tenemos storeId y no está cargando
-    staleTime: 1 * 60 * 1000, // 1 minuto (muy frecuente)
-    gcTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 3 * 60 * 1000, // 3 minutos - datos frescos por más tiempo
+    gcTime: 15 * 60 * 1000, // 15 minutos en cache
+    refetchOnWindowFocus: false,
+    refetchOnMount: false, // No refetch en mount si los datos están frescos
+    refetchOnReconnect: false,
     retry: (failureCount, error) => {
       if (error instanceof Error && error.message === 'CANCELLED') {
         return false;

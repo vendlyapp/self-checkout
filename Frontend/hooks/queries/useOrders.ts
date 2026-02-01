@@ -52,11 +52,11 @@ export const useOrders = (options?: UseOrdersOptions) => {
       return result.data as RecentOrder[];
     },
     enabled: !!store?.id && !storeLoading, // Solo ejecutar si tenemos storeId y no está cargando
-    staleTime: 2 * 60 * 1000, // 2 minutos - las órdenes cambian más frecuentemente
-    gcTime: 10 * 60 * 1000, // 10 minutos
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    staleTime: 5 * 60 * 1000, // 5 minutos - los datos se consideran frescos por más tiempo
+    gcTime: 30 * 60 * 1000, // 30 minutos en cache - mantener datos en memoria más tiempo
+    refetchOnWindowFocus: false, // No refetch al cambiar de ventana
+    refetchOnMount: false, // No refetch en mount si los datos están frescos (staleTime)
+    refetchOnReconnect: false, // No refetch al reconectar
     retry: (failureCount, error) => {
       if (error instanceof Error && error.message === 'CANCELLED') {
         return false;

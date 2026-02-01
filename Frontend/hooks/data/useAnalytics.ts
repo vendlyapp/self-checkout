@@ -9,6 +9,7 @@ import { useOrderStats, useRecentOrders } from '@/hooks/queries';
 import { useMyStore } from '@/hooks/queries/useMyStore';
 import type { SalesData, PaymentMethod, ShopActivity, CartData, Customer } from '@/components/dashboard/analytics/types';
 import { RecentOrder } from '@/lib/services/orderService';
+import { useCartStore } from '@/lib/stores/cartStore';
 
 /**
  * Hook para gestión de analytics y métricas del dashboard
@@ -154,17 +155,110 @@ const getWeekNumber = (date: Date): number => {
   return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
 };
 
-// Helper function to transform orders into PaymentMethods
-const transformOrdersToPaymentMethods = (orders: RecentOrder[]): PaymentMethod[] => {
+// Helper function to format payment method name with proper capitalization
+const formatPaymentMethodName = (method: string): string => {
+  if (!method) return 'Unbekannt';
+  
+  // Convertir a minúsculas primero para normalizar
+  const lowerMethod = method.toLowerCase().trim();
+  
+  // Mapeo de nombres conocidos con su formato correcto
+  const methodMap: Record<string, string> = {
+    'twint': 'Twint',
+    'bargeld': 'Bargeld',
+    'cash': 'Bargeld',
+    'karte': 'Karte',
+    'card': 'Karte',
+    'kreditkarte': 'Kreditkarte',
+    'credit card': 'Kreditkarte',
+    'debitkarte': 'Debitkarte',
+    'debit card': 'Debitkarte',
+    'klarna': 'Klarna',
+    'postfinance': 'PostFinance',
+    'post finance': 'PostFinance',
+    'qr': 'QR-Code',
+    'qr code': 'QR-Code',
+    'rechnung': 'Rechnung',
+    'invoice': 'Rechnung',
+    'überweisung': 'Überweisung',
+    'transfer': 'Überweisung',
+    'digital': 'Digital',
+    'unbekannt': 'Unbekannt',
+    'desconocido': 'Unbekannt',
+    'unknown': 'Unbekannt',
+  };
+  
+  // Buscar coincidencia exacta primero
+  if (methodMap[lowerMethod]) {
+    return methodMap[lowerMethod];
+  }
+  
+  // Buscar coincidencia parcial
+  for (const [key, value] of Object.entries(methodMap)) {
+    if (lowerMethod.includes(key)) {
+      return value;
+    }
+  }
+  
+  // Si no hay coincidencia, capitalizar primera letra
+  return method.charAt(0).toUpperCase() + method.slice(1).toLowerCase();
+};
+
+// Helper function to filter orders by period
+const filterOrdersByPeriod = (orders: RecentOrder[], period: TimePeriod): RecentOrder[] => {
   if (orders.length === 0) {
+    return [];
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let periodStart: Date;
+  let periodEnd: Date = new Date(today);
+  periodEnd.setHours(23, 59, 59, 999);
+
+  // Determinar el rango de fechas según el período
+  switch (period) {
+    case 'heute':
+      periodStart = new Date(today);
+      break;
+    case 'woche':
+      periodStart = new Date(today);
+      periodStart.setDate(today.getDate() - today.getDay()); // Domingo
+      break;
+    case 'monat':
+      periodStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      break;
+    case 'jahr':
+      periodStart = new Date(today.getFullYear(), 0, 1);
+      break;
+    default:
+      periodStart = new Date(today);
+      periodStart.setDate(today.getDate() - today.getDay());
+  }
+
+  // Filtrar órdenes del período
+  return orders.filter(order => {
+    const orderDate = new Date(order.createdAt);
+    return orderDate >= periodStart && orderDate <= periodEnd;
+  });
+};
+
+// Helper function to transform orders into PaymentMethods
+const transformOrdersToPaymentMethods = (orders: RecentOrder[], period: TimePeriod): PaymentMethod[] => {
+  // Filtrar órdenes por período primero
+  const periodOrders = filterOrdersByPeriod(orders, period);
+  
+  if (periodOrders.length === 0) {
     return [];
   }
 
   // Agrupar órdenes por método de pago
   const paymentMethodMap = new Map<string, { count: number; total: number }>();
 
-  orders.forEach((order) => {
-    const method = order.paymentMethod || 'Desconocido';
+  periodOrders.forEach((order) => {
+    const rawMethod = order.paymentMethod || 'Unbekannt';
+    const method = formatPaymentMethodName(rawMethod);
     const total = typeof order.total === 'number' ? order.total : parseFloat(String(order.total)) || 0;
 
     if (!paymentMethodMap.has(method)) {
@@ -177,7 +271,7 @@ const transformOrdersToPaymentMethods = (orders: RecentOrder[]): PaymentMethod[]
   });
 
   // Convertir a array de PaymentMethod
-  const totalOrders = orders.length;
+  const totalOrders = periodOrders.length;
   const totalRevenue = Array.from(paymentMethodMap.values()).reduce((sum, method) => sum + method.total, 0);
 
   return Array.from(paymentMethodMap.entries()).map(([name, data]) => ({
@@ -208,7 +302,7 @@ const transformOrdersToShopActivity = (orders: RecentOrder[]): ShopActivity => {
   
   orders.forEach((order) => {
     const userId = order.userId;
-    const userName = order.userName || 'Cliente';
+    const userName = order.userName || 'Kunde';
     const orderDate = new Date(order.createdAt);
 
     if (!uniqueUsers.has(userId) || uniqueUsers.get(userId)!.lastOrder < orderDate) {
@@ -323,7 +417,7 @@ export const useAnalytics = (): UseAnalyticsReturn => {
     }
 
     const salesData = transformOrdersToSalesData(recentOrders, salesPeriod);
-    const paymentMethods = transformOrdersToPaymentMethods(recentOrders);
+    const paymentMethods = transformOrdersToPaymentMethods(recentOrders, paymentPeriod);
     const shopActivity = transformOrdersToShopActivity(recentOrders);
     const cartData = createCartData(recentOrders);
 
@@ -339,7 +433,7 @@ export const useAnalytics = (): UseAnalyticsReturn => {
         { id: 'cart', title: 'Warenkorb', subtitle: 'Ansehen', color: 'bg-emerald-100', iconColor: 'text-emerald-600' },
       ],
     };
-  }, [recentOrders, salesPeriod]);
+  }, [recentOrders, salesPeriod, paymentPeriod]);
 
   // Calculate derived values
   const totalSales = useMemo(() => {
@@ -400,15 +494,16 @@ export const useAnalytics = (): UseAnalyticsReturn => {
 
 export const useQuickAccess = (): QuickAccessReturn => {
   const router = useRouter();
+  const getTotalItems = useCartStore((state) => state.getTotalItems);
 
   const handleViewSales = () => {
-    // TODO: Implement navigation to sales page
-    console.log('Navigate to sales page');
+    // Navegar a página de ventas completas
+    router.push('/sales/verkaufe');
   };
 
   const handleCancelSale = () => {
-    // TODO: Implement cancel sale functionality
-    console.log('Cancel current sale');
+    // Navegar a órdenes canceladas (storno)
+    router.push('/sales/orders?status=cancelled');
   };
 
   const handleViewReceipts = () => {
@@ -416,7 +511,15 @@ export const useQuickAccess = (): QuickAccessReturn => {
   };
 
   const handleGoToCart = () => {
-    router.push('/sales/orders');
+    // Verificar si hay items en el carrito
+    const totalItems = getTotalItems();
+    if (totalItems > 0) {
+      // Si hay items, ir al carrito
+      router.push('/charge/cart');
+    } else {
+      // Si no hay items, ir a la página principal de charge
+      router.push('/charge');
+    }
   };
 
   return {

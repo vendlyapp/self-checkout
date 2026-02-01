@@ -12,7 +12,7 @@ class PaymentMethodService {
    */
   async findByStoreId(storeId, options = {}) {
     if (!storeId || !storeId.trim()) {
-      throw new Error('El ID del store es requerido');
+      throw new Error('Store-ID ist erforderlich');
     }
 
     const { activeOnly = false } = options;
@@ -121,14 +121,14 @@ class PaymentMethodService {
    */
   async findById(id) {
     if (!id || !id.trim()) {
-      throw new Error('El ID del método de pago es requerido');
+      throw new Error('Zahlungsmethoden-ID ist erforderlich');
     }
 
     const selectQuery = 'SELECT * FROM "PaymentMethod" WHERE id = $1';
     const result = await query(selectQuery, [id]);
 
     if (result.rows.length === 0) {
-      throw new Error('Método de pago no encontrado');
+      throw new Error('Zahlungsmethode nicht gefunden');
     }
 
     return {
@@ -154,25 +154,25 @@ class PaymentMethodService {
   async create(methodData) {
     // Validaciones
     if (!methodData.storeId || !methodData.storeId.trim()) {
-      throw new Error('El ID del store es requerido');
+      throw new Error('Store-ID ist erforderlich');
     }
 
     if (!methodData.name || !methodData.name.trim()) {
-      throw new Error('El nombre del método de pago es requerido');
+      throw new Error('Name der Zahlungsmethode ist erforderlich');
     }
 
     if (!methodData.displayName || !methodData.displayName.trim()) {
-      throw new Error('El nombre para mostrar es requerido');
+      throw new Error('Anzeigename ist erforderlich');
     }
 
     if (!methodData.code || !methodData.code.trim()) {
-      throw new Error('El código del método de pago es requerido');
+      throw new Error('Code der Zahlungsmethode ist erforderlich');
     }
 
     // Verificar que el store existe
     const storeResult = await query('SELECT id FROM "Store" WHERE id = $1', [methodData.storeId.trim()]);
     if (storeResult.rows.length === 0) {
-      throw new Error('Store no encontrado');
+      throw new Error('Geschäft nicht gefunden');
     }
 
     // Verificar que el código no esté duplicado para este store
@@ -182,7 +182,7 @@ class PaymentMethodService {
     );
 
     if (existingMethod.rows.length > 0) {
-      throw new Error('Ya existe un método de pago con ese código para este store');
+      throw new Error('Es existiert bereits eine Zahlungsmethode mit diesem Code für dieses Geschäft');
     }
 
     // Si no se proporciona sortOrder, obtener el siguiente valor
@@ -246,7 +246,7 @@ class PaymentMethodService {
     // Verificar que el método existe
     const existingMethod = await this.findById(id);
     if (!existingMethod.success) {
-      throw new Error('Método de pago no encontrado');
+      throw new Error('Zahlungsmethode nicht gefunden');
     }
 
     // Verificar si la columna config existe en la tabla
@@ -287,7 +287,7 @@ class PaymentMethodService {
         [existingMethod.data.storeId, methodData.code.trim(), id]
       );
       if (duplicateCheck.rows.length > 0) {
-        throw new Error('Ya existe un método de pago con ese código para este store');
+        throw new Error('Es existiert bereits eine Zahlungsmethode mit diesem Code für dieses Geschäft');
       }
     }
 
@@ -305,13 +305,13 @@ class PaymentMethodService {
           // Bargeld siempre debe estar activo - prevenir desactivación
           // existingMethod ya fue obtenido al inicio de la función
           if (existingMethod.success && existingMethod.data.code.toLowerCase() === 'bargeld' && !value) {
-            throw new Error('Bargeld (efectivo) siempre debe estar activo y no se puede desactivar');
+            throw new Error('Bargeld (Bargeld) muss immer aktiv sein und kann nicht deaktiviert werden');
           }
         } else if (field === 'disabledBySuperAdmin') {
           value = Boolean(value);
           // Bargeld nunca puede ser inhabilitado por super admin
           if (existingMethod.success && existingMethod.data.code.toLowerCase() === 'bargeld' && value) {
-            throw new Error('Bargeld (efectivo) no puede ser inhabilitado por super admin');
+            throw new Error('Bargeld (Bargeld) kann nicht vom Super-Admin deaktiviert werden');
           }
         } else if (field === 'config') {
           // Si es config, convertir a JSON string para PostgreSQL JSONB
@@ -417,11 +417,11 @@ class PaymentMethodService {
       return {
         success: true,
         data: method,
-        message: 'Método de pago actualizado exitosamente'
+        message: 'Zahlungsmethode erfolgreich aktualisiert'
       };
     } catch (error) {
       console.error('Error al actualizar método de pago:', error);
-      throw new Error(`Error al actualizar método de pago: ${error.message}`);
+      throw new Error(`Fehler beim Aktualisieren der Zahlungsmethode: ${error.message}`);
     }
   }
 
@@ -434,7 +434,7 @@ class PaymentMethodService {
     // Verificar que el método existe
     const existingMethod = await this.findById(id);
     if (!existingMethod.success) {
-      throw new Error('Método de pago no encontrado');
+      throw new Error('Zahlungsmethode nicht gefunden');
     }
 
     const deleteQuery = 'DELETE FROM "PaymentMethod" WHERE id = $1';
@@ -456,7 +456,7 @@ class PaymentMethodService {
     const storeResult = await query('SELECT "ownerId" FROM "Store" WHERE id = $1', [storeId]);
     
     if (storeResult.rows.length === 0) {
-      throw new Error('Store no encontrado');
+      throw new Error('Geschäft nicht gefunden');
     }
     
     return storeResult.rows[0].ownerId === userId;

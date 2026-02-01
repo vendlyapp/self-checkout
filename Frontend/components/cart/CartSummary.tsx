@@ -22,11 +22,14 @@ export default function CartSummary({ isMobile = false, className }: CartSummary
   if (isEmpty) return null;
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('de-CH', {
-      style: 'currency',
-      currency: 'CHF',
-      minimumFractionDigits: 2,
-    }).format(price);
+    // Usar formato suizo: .– cuando es exacto, .45 cuando tiene decimales
+    const rounded = Math.round(price * 100) / 100;
+    const hasDecimals = rounded % 1 !== 0;
+    
+    if (!hasDecimals) {
+      return `CHF ${Math.round(rounded)}.–`;
+    }
+    return `CHF ${rounded.toFixed(2)}`;
   };
 
   return (

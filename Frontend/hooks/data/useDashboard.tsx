@@ -133,7 +133,7 @@ export const useDashboard = (): UseDashboardReturn => {
 
       return {
         id: order.id,
-        name: order.userName || 'Cliente',
+        name: order.userName || 'Kunde',
         receipt: `Beleg #${String(order.id).slice(-4).toUpperCase()}`,
         time: timeAgo,
         amount,

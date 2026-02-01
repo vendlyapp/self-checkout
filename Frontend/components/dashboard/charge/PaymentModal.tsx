@@ -73,7 +73,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
     // Si no se encuentra el método, retornar valores por defecto
     return {
-      name: "Método de pago",
+      name: "Zahlungsmethode",
       color: '#6E7996',
       icon: CreditCard,
     };
@@ -191,20 +191,20 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           )}
 
           {paymentStep === "processing" && (
-            <div className="text-center py-8">
+            <div className="flex flex-col items-center justify-center text-center py-12 min-h-[200px]">
               <Loader size="lg" className="mb-6" />
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2 animate-pulse antialiased">
+              <h3 className="text-lg font-semibold text-gray-800 mb-2 animate-pulse antialiased">
                 Zahlung wird verarbeitet
               </h3>
-              <p className="text-gray-600 dark:text-gray-400 antialiased">
+              <p className="text-gray-600 antialiased">
                 Bitte warten Sie, während wir Ihre Zahlung bearbeiten...
               </p>
             </div>
           )}
 
           {paymentStep === "success" && (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="flex flex-col items-center justify-center text-center py-12 min-h-[200px]">
+              <div className="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mb-4">
                 <CheckCircle className="w-8 h-8 text-brand-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2 antialiased">

@@ -35,10 +35,10 @@ export const useOrder = (orderId: string | null | undefined) => {
       return result.data as RecentOrder;
     },
     enabled: !!orderId,
-    staleTime: 2 * 60 * 1000, // 2 minutos
-    gcTime: 10 * 60 * 1000, // 10 minutos
+    staleTime: 5 * 60 * 1000, // 5 minutos - datos frescos por más tiempo
+    gcTime: 30 * 60 * 1000, // 30 minutos en cache
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: false, // No refetch en mount si los datos están frescos
     refetchOnReconnect: false,
     placeholderData: (previousData) => previousData,
     retry: (failureCount, error) => {

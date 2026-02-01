@@ -365,7 +365,7 @@ const SuperAdminAnalytics: React.FC = () => {
       tooltip: {
         y: {
           formatter: (value: number) => {
-            // Calcular el porcentaje basado en el total de la distribución
+            // Prozentsatz basierend auf dem Gesamtwert der Verteilung berechnen
             const totalRevenue = safeTotalRevenue || 1;
             const percentage = totalRevenue > 0 ? ((value / totalRevenue) * 100).toFixed(1) : '0';
             return `${percentage}%`;
@@ -517,11 +517,11 @@ const SuperAdminAnalytics: React.FC = () => {
 
     return [
       {
-        name: "Ventas",
+        name: "Verkäufe",
         data: safeMonthlySales.map((point) => point.sales),
       },
       {
-        name: "Promedio",
+        name: "Durchschnitt",
         data: safeMonthlySales.map(() => average),
       },
     ];
@@ -569,13 +569,13 @@ const SuperAdminAnalytics: React.FC = () => {
   const metricTone: "success" | "danger" = userGrowthRate >= 0 ? "success" : "danger";
   const MetricIcon = userGrowthRate >= 0 ? TrendingUp : TrendingDown;
 
-  // Calcular porcentajes y métricas basadas en cantidades
+  // Prozentsätze und Metriken basierend auf Mengen berechnen
   const totalStores = analyticsData.salesByStore.length;
   const activeStorePercentage = totalStores > 0 
     ? Math.round((activeStoreCount / totalStores) * 100) 
     : 0;
   
-  const orderGrowthRate = 12.5; // Por ahora estático, se puede calcular si hay datos históricos
+  const orderGrowthRate = 12.5; // Vorerst statisch, kann berechnet werden, wenn historische Daten vorhanden sind
   const storePerformanceRate = totalStores > 0 
     ? Math.round((activeStoreCount / totalStores) * 100) 
     : 0;
@@ -689,7 +689,7 @@ const SuperAdminAnalytics: React.FC = () => {
             title="Verkaufstrends"
             subtitle="Monatliche Verkäufe im Vergleich zum Durchschnitt"
           >
-            <div className="h-[360px]" aria-label="Gráfico de ventas mensuales">
+            <div className="h-[360px]" aria-label="Diagramm der monatlichen Verkäufe">
               <ReactApexChart
                 options={monthlySalesOptions}
                 series={monthlySalesSeries}

@@ -121,7 +121,7 @@ function StoreLayoutContent({ children }: StoreLayoutContentProps) {
   return (
     <LoadingProductsModalProvider>
       {/* Pantalla de carga inicial - solo en recarga completa, no en navegación */}
-      {showInitialLoading && <InitialLoadingScreen message="Cargando..." />}
+      {showInitialLoading && <InitialLoadingScreen message="Wird geladen..." />}
       
       <div className={`flex flex-col h-mobile w-full ${containerBgClass} relative overflow-hidden`}>
         {/* Header principal fijo con safe area - mostrar siempre excepto si tienda cerrada */}

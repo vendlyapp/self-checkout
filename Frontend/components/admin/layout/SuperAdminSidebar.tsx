@@ -48,7 +48,7 @@ const navItems: NavItem[] = [
   },
   {
     icon: <Settings className="w-5 h-5" />,
-    name: "Configuración",
+    name: "Konfiguration",
     path: "/super-admin/config",
   },
 ];

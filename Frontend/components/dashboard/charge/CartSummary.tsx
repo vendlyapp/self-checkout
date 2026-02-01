@@ -55,7 +55,14 @@ export default function CartSummary({
   );
 
   const formatPrice = (price: number) => {
-    return `CHF ${price.toFixed(2)}`;
+    // Usar formato suizo: .– cuando es exacto, .45 cuando tiene decimales
+    const rounded = Math.round(price * 100) / 100;
+    const hasDecimals = rounded % 1 !== 0;
+    
+    if (!hasDecimals) {
+      return `CHF ${Math.round(rounded)}.–`;
+    }
+    return `CHF ${rounded.toFixed(2)}`;
   };
 
   if (totalItems === 0 || !isVisible) {
@@ -63,24 +70,25 @@ export default function CartSummary({
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white text-white p-2 shadow-lg z-50">
-      <div className="flex items-center justify-between bg-brand-500 rounded-lg p-4">
+    <div className="fixed bottom-0 left-0 right-0 bg-white text-white p-2 shadow-lg z-50 safe-area-bottom ">
+      <div className="flex items-center justify-between bg-brand-500 rounded-lg px-4 py-2.5 h-[50px] mb-2">
         {/* Cart Info */}
-        <div className="flex items-center gap-3">
-          <ShoppingBag className="w-5 h-5" />
-          <span className="font-medium">
+        <div className="flex items-center gap-2 ">
+          <ShoppingBag className="w-4 h-4" />
+          <span className="font-semibold text-sm">
             {totalItems} {totalItems === 1 ? "Artikel" : "Artikel"}
           </span>
         </div>
 
         {/* Total Price */}
-        <div className="flex items-center gap-4">
-          <span className="font-bold text-lg">{formatPrice(totalPrice)}</span>
+        <div className="flex items-center gap-3">
+          <span className="font-bold text-sm">{formatPrice(totalPrice)}</span>
 
           {/* Continue Button */}
           <button
             onClick={onContinue}
-            className="bg-white text-brand-500 px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-gray-50 transition-colors"
+            className="bg-white text-[#6E7996] font-bold px-2 rounded-lg text-sm shadow-sm 
+                     tap-highlight-transparent flex-shrink-0 h-[32px] flex items-center justify-center gap-1 hover:bg-gray-50 transition-colors"
           >
             <span>Weiter</span>
             <ChevronRight className="w-4 h-4" />

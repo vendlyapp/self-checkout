@@ -16,8 +16,8 @@ export default function StoreHistory({ store }: StoreHistoryProps) {
     {
       id: '1',
       type: 'status_change',
-      action: 'Tienda activada',
-      description: 'La tienda fue activada por el super administrador',
+      action: 'Geschäft aktiviert',
+      description: 'Das Geschäft wurde vom Super Administrator aktiviert',
       user: 'Super Admin',
       timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
       icon: Settings,
@@ -27,9 +27,9 @@ export default function StoreHistory({ store }: StoreHistoryProps) {
     {
       id: '2',
       type: 'order',
-      action: 'Nueva orden completada',
-      description: `Orden #ORD-0001 completada exitosamente`,
-      user: 'Sistema',
+      action: 'Neue Bestellung abgeschlossen',
+      description: `Bestellung #ORD-0001 erfolgreich abgeschlossen`,
+      user: 'System',
       timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
       icon: ShoppingCart,
       color: 'text-blue-600 dark:text-blue-400',
@@ -38,8 +38,8 @@ export default function StoreHistory({ store }: StoreHistoryProps) {
     {
       id: '3',
       type: 'product',
-      action: 'Producto agregado',
-      description: 'Nuevo producto agregado al catálogo',
+      action: 'Produkt hinzugefügt',
+      description: 'Neues Produkt zum Katalog hinzugefügt',
       user: store?.ownerName || 'N/A',
       timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
       icon: Package,
@@ -49,8 +49,8 @@ export default function StoreHistory({ store }: StoreHistoryProps) {
     {
       id: '4',
       type: 'config',
-      action: 'Configuración actualizada',
-      description: 'Se modificaron los ajustes de la tienda',
+      action: 'Konfiguration aktualisiert',
+      description: 'Die Geschäftseinstellungen wurden geändert',
       user: 'Super Admin',
       timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       icon: Settings,
@@ -60,8 +60,8 @@ export default function StoreHistory({ store }: StoreHistoryProps) {
     {
       id: '5',
       type: 'created',
-      action: 'Tienda creada',
-      description: 'La tienda fue registrada en el sistema',
+      action: 'Geschäft erstellt',
+      description: 'Das Geschäft wurde im System registriert',
       user: store?.ownerName || 'N/A',
       timestamp: store?.createdAt || new Date().toISOString(),
       icon: Store,
@@ -79,13 +79,13 @@ export default function StoreHistory({ store }: StoreHistoryProps) {
     const diffDays = Math.floor(diffMs / 86400000);
 
     if (diffMins < 60) {
-      return `Hace ${diffMins} ${diffMins === 1 ? 'minuto' : 'minutos'}`;
+      return `Vor ${diffMins} ${diffMins === 1 ? 'Minute' : 'Minuten'}`;
     } else if (diffHours < 24) {
-      return `Hace ${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
+      return `Vor ${diffHours} ${diffHours === 1 ? 'Stunde' : 'Stunden'}`;
     } else if (diffDays < 7) {
-      return `Hace ${diffDays} ${diffDays === 1 ? 'día' : 'días'}`;
+      return `Vor ${diffDays} ${diffDays === 1 ? 'Tag' : 'Tagen'}`;
     } else {
-      return date.toLocaleDateString('es-ES', {
+      return date.toLocaleDateString('de-CH', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -100,10 +100,10 @@ export default function StoreHistory({ store }: StoreHistoryProps) {
       <CardHeader className="px-6 pt-6 pb-4">
         <CardTitle className="flex items-center gap-2 text-lg lg:text-xl mb-2">
           <History className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-          Historial de Actividad
+          Aktivitätsverlauf
         </CardTitle>
         <CardDescription className="text-sm">
-          Registro de todas las acciones realizadas en esta tienda
+          Protokoll aller in diesem Geschäft durchgeführten Aktionen
         </CardDescription>
       </CardHeader>
       <CardContent className="px-6 pb-6 pt-4">
@@ -140,7 +140,7 @@ export default function StoreHistory({ store }: StoreHistoryProps) {
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <User className="w-3.5 h-3.5" />
-                    <span>Por: <span className="font-medium text-foreground">{event.user}</span></span>
+                    <span>Von: <span className="font-medium text-foreground">{event.user}</span></span>
                   </div>
                 </div>
               </div>
@@ -152,9 +152,9 @@ export default function StoreHistory({ store }: StoreHistoryProps) {
         {historyEvents.length === 0 && (
           <div className="text-center py-16">
             <History className="w-20 h-20 text-muted-foreground/30 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">Sin actividad registrada</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-2">Keine Aktivität registriert</h3>
             <p className="text-sm text-muted-foreground">
-              El historial de actividades aparecerá aquí
+              Der Aktivitätsverlauf wird hier angezeigt
             </p>
           </div>
         )}

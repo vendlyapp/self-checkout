@@ -193,11 +193,15 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
   const formatPrice = (price: number | string | undefined | null) => {
     // Convertir a número si es string o undefined
     const numPrice = typeof price === 'string' ? parseFloat(price) : (price || 0);
-    if (isNaN(numPrice)) return '0.00';
-    if (numPrice % 1 === 0) {
-      return `${numPrice}.-`
+    if (isNaN(numPrice)) return '0.–';
+    // Formato suizo: .– cuando es exacto, .45 cuando tiene decimales
+    const rounded = Math.round(numPrice * 100) / 100;
+    const hasDecimals = rounded % 1 !== 0;
+    
+    if (!hasDecimals) {
+      return `${Math.round(rounded)}.–`;
     }
-    return `${numPrice.toFixed(2)}`
+    return `${rounded.toFixed(2)}`
   }
 
   // Versión simplificada para el carrito (sin selector de variantes)

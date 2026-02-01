@@ -52,9 +52,9 @@ export const useInvoices = (options?: UseInvoicesOptions) => {
     },
     enabled: !!store?.id && !storeLoading, // Solo ejecutar si tenemos storeId y no está cargando
     staleTime: 10 * 60 * 1000, // 10 minutos - los invoices no cambian tan frecuentemente
-    gcTime: 30 * 60 * 1000, // 30 minutos - mantener en cache más tiempo
+    gcTime: 60 * 60 * 1000, // 1 hora en cache - mantener datos en memoria más tiempo
     refetchOnWindowFocus: false, // No refetch automático en window focus
-    refetchOnMount: false, // No refetch en mount si los datos están frescos
+    refetchOnMount: false, // No refetch en mount si los datos están frescos (staleTime)
     refetchOnReconnect: false, // No refetch en reconnect
     retry: (failureCount, error) => {
       if (error instanceof Error && error.message === 'CANCELLED') {

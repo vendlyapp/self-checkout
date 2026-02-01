@@ -20,31 +20,37 @@ const settings = [
     icon: <Building2 className="w-5 h-5" />,
     title: "Geschäftsdaten",
     subtitle: "bearbeiten",
+    href: "/store/settings",
   },
   {
     icon: <Printer className="w-5 h-5" />,
     title: "POS-Drucker",
     subtitle: "einrichten",
+    href: "/store/printer",
   },
   {
     icon: <User className="w-5 h-5" />,
     title: "Mein Profil",
     subtitle: "Einstellungen",
+    href: "/store/profile",
   },
   {
     icon: <Download className="w-5 h-5" />,
     title: "Backups",
     subtitle: "Sicherheitskopien verwalten",
+    href: "/store/backups",
   },
   {
     icon: <Bell className="w-5 h-5" />,
     title: "Benachrichtigungen",
     subtitle: "System-Alerts",
+    href: "/store/notifications",
   },
   {
     icon: <HelpCircle className="w-5 h-5" />,
     title: "Hilfe & FAQ",
     subtitle: "Support und Tutorials",
+    href: "/store/help",
   },
 ];
 

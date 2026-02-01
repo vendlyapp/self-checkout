@@ -24,11 +24,11 @@ class OrderService {
       const quantity = Number(rawItem.quantity);
 
       if (!productId) {
-        throw new Error('Cada item debe incluir productId');
+        throw new Error('Jede Position muss eine productId enthalten');
       }
 
       if (!Number.isFinite(quantity) || quantity <= 0) {
-        throw new Error('La cantidad de cada item debe ser un número mayor a cero');
+        throw new Error('Die Menge jeder Position muss eine Zahl größer als null sein');
       }
 
       uniqueProductIds.add(productId);
@@ -49,7 +49,7 @@ class OrderService {
     );
 
     if (productsResult.rows.length !== uniqueProductIds.size) {
-      throw new Error('Uno o más productos de la orden no existen');
+      throw new Error('Ein oder mehrere Produkte der Bestellung existieren nicht');
     }
 
     const productCatalog = new Map(
@@ -67,11 +67,11 @@ class OrderService {
     for (const item of normalizedItems) {
       const product = productCatalog.get(item.productId);
       if (!product) {
-        throw new Error(`Producto ${item.productId} no encontrado`);
+        throw new Error(`Produkt ${item.productId} nicht gefunden`);
       }
 
       if (product.stock < item.quantity) {
-        throw new Error(`Stock insuficiente para el producto ${item.productId}`);
+        throw new Error(`Unzureichender Lagerbestand für Produkt ${item.productId}`);
       }
 
       const resolvedPrice =
@@ -80,7 +80,7 @@ class OrderService {
           : product.price;
 
       if (!Number.isFinite(resolvedPrice) || resolvedPrice < 0) {
-        throw new Error(`Precio inválido para el producto ${item.productId}`);
+        throw new Error(`Ungültiger Preis für Produkt ${item.productId}`);
       }
 
       item.price = resolvedPrice;
@@ -146,7 +146,7 @@ class OrderService {
         const stockResult = await client.query(updateStockQuery, [item.quantity, item.productId]);
 
         if (stockResult.rowCount === 0) {
-          throw new Error(`Stock insuficiente para el producto ${item.productId}`);
+          throw new Error(`Unzureichender Lagerbestand für Produkt ${item.productId}`);
         }
 
         const itemInsertQuery = `
@@ -190,7 +190,7 @@ class OrderService {
     });
 
     // Crear factura automáticamente después de crear la orden
-    console.log('🚀 [OrderService.create] Orden creada exitosamente. Iniciando creación automática de factura...', {
+    console.log('🚀 [OrderService.create] Bestellung erfolgreich erstellt. Starte automatische Rechnungserstellung...', {
       orderId: result.order.id,
       itemsCount: result.items.length,
       storeId: storeId,
@@ -296,7 +296,7 @@ class OrderService {
         invoiceNumber: createdInvoice?.invoiceNumber || null,
         invoiceShareToken: createdInvoice?.shareToken || null, // Agregar shareToken para acceso público
       },
-      message: 'Orden creada exitosamente',
+      message: 'Bestellung erfolgreich erstellt',
     };
   }
 
@@ -463,7 +463,7 @@ class OrderService {
     const result = await query(selectQuery, [id]);
 
     if (result.rows.length === 0) {
-      throw new Error('Orden no encontrada');
+      throw new Error('Bestellung nicht gefunden');
     }
 
     const order = result.rows[0];
@@ -529,7 +529,7 @@ class OrderService {
     // Verificar que la orden existe
     const existingOrder = await this.findById(id);
     if (!existingOrder.success) {
-      throw new Error('Orden no encontrada');
+      throw new Error('Bestellung nicht gefunden');
     }
 
     // Construir query de actualización dinámicamente
@@ -547,7 +547,7 @@ class OrderService {
           // Validar status
           const validStatuses = ['pending', 'processing', 'completed', 'cancelled'];
           if (!validStatuses.includes(orderData[field])) {
-            throw new Error(`Estado inválido. Debe ser uno de: ${validStatuses.join(', ')}`);
+            throw new Error(`Ungültiger Status. Muss einer von sein: ${validStatuses.join(', ')}`);
           }
           updateFields.push(`"${field}" = $${paramCount}`);
           values.push(orderData[field]);
@@ -559,7 +559,7 @@ class OrderService {
     }
 
     if (updateFields.length === 0) {
-      throw new Error('No hay campos para actualizar');
+      throw new Error('Keine Felder zum Aktualisieren');
     }
 
     // Agregar ID como último parámetro
@@ -595,7 +595,7 @@ class OrderService {
     return {
       success: true,
       data: order,
-      message: 'Orden actualizada exitosamente'
+      message: 'Bestellung erfolgreich aktualisiert'
     };
   }
 
@@ -610,7 +610,7 @@ class OrderService {
     // Verificar que la orden existe
     const existingOrder = await this.findById(id);
     if (!existingOrder.success) {
-      throw new Error('Orden no encontrada');
+      throw new Error('Bestellung nicht gefunden');
     }
 
     // Eliminar usando transacción
@@ -623,7 +623,7 @@ class OrderService {
 
     return {
       success: true,
-      message: 'Orden eliminada exitosamente'
+      message: 'Bestellung erfolgreich gelöscht'
     };
   }
 
@@ -856,7 +856,7 @@ class OrderService {
 
     for (const item of orderData.items) {
       if (!item.productId || !item.quantity) {
-        throw new Error('Cada item debe tener productId y quantity');
+        throw new Error('Jede Position muss productId und quantity haben');
       }
 
       // Obtener precio del producto
@@ -864,7 +864,7 @@ class OrderService {
       const productResult = await query(productQuery, [item.productId]);
 
       if (productResult.rows.length === 0) {
-        throw new Error(`Producto con ID ${item.productId} no encontrado`);
+        throw new Error(`Produkt mit ID ${item.productId} nicht gefunden`);
       }
 
       const productPrice = parseFloat(productResult.rows[0].price);

@@ -84,11 +84,11 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
           onUpdate();
         }, 2000);
       } else {
-        setError(response.error || 'Error al actualizar la tienda');
+        setError(response.error || 'Fehler beim Aktualisieren des Geschäfts');
       }
     } catch (error) {
       console.error('Error updating store:', error);
-      setError(error instanceof Error ? error.message : 'Error al actualizar la tienda');
+      setError(error instanceof Error ? error.message : 'Fehler beim Aktualisieren des Geschäfts');
     } finally {
       setLoading(false);
     }
@@ -109,11 +109,11 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
           onUpdate();
         }, 2000);
       } else {
-        setError(response.error || 'Error al cambiar el estado');
+        setError(response.error || 'Fehler beim Ändern des Status');
       }
     } catch (error) {
       console.error('Error toggling status:', error);
-      setError(error instanceof Error ? error.message : 'Error al cambiar el estado');
+      setError(error instanceof Error ? error.message : 'Fehler beim Ändern des Status');
     } finally {
       setLoading(false);
     }
@@ -207,7 +207,7 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
           disabledBySuperAdmin: !method.disabledBySuperAdmin,
         },
       });
-      // Forzar refetch inmediato y limpiar caché
+      // Refetch sofort erzwingen und Cache leeren
       setTimeout(() => {
         refetchPaymentMethods();
       }, 500);
@@ -240,7 +240,7 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
             <div className="flex items-center gap-3">
               <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
               <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
-                Tienda actualizada exitosamente
+                Geschäft erfolgreich aktualisiert
               </p>
             </div>
           </CardContent>
@@ -258,23 +258,23 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
         </Card>
       )}
 
-      {/* Configuración General */}
+      {/* Allgemeine Einstellungen */}
       <Card className="bg-card rounded-2xl border border-border/50 transition-ios hover:shadow-md">
         <CardHeader className="pb-6">
           <CardTitle className="flex items-center gap-2 text-lg lg:text-xl mb-2 mt-4">
             <Settings className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-            Configuración General
+            Allgemeine Einstellungen
           </CardTitle>
           <CardDescription className="text-sm">
-            Administra la información básica y el estado de la tienda
+            Verwalten Sie die grundlegenden Informationen und den Status des Geschäfts
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-8 px-6 pb-6">
-          {/* Información Básica */}
+          {/* Grundinformationen */}
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-semibold text-foreground mb-2.5">
-                Nombre de la Tienda
+                Geschäftsname
               </label>
               <input
                 type="text"
@@ -282,7 +282,7 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
                 value={formData.name}
                 onChange={handleInputChange}
                 className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-300 bg-background text-foreground placeholder:text-muted-foreground transition-all"
-                placeholder="Nombre de la tienda"
+                placeholder="Geschäftsname"
               />
               <p className="text-xs text-muted-foreground mt-2">
                 Dieser Name wird für Kunden sichtbar sein
@@ -301,11 +301,11 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
                   onChange={handleInputChange}
                   pattern="[a-z0-9-]+"
                   className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-300 bg-background text-foreground placeholder:text-muted-foreground transition-all lowercase"
-                  placeholder="slug-de-la-tienda"
+                  placeholder="geschaeft-slug"
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                URL única para la tienda. Solo letras minúsculas, números y guiones. Se convertirá automáticamente a minúsculas.
+                Eindeutige URL für das Geschäft. Nur Kleinbuchstaben, Zahlen und Bindestriche. Wird automatisch in Kleinbuchstaben umgewandelt.
               </p>
             </div>
           </div>
@@ -399,16 +399,16 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
             </div>
           </div>
 
-          {/* Información del Propietario */}
+          {/* Eigentümerinformationen */}
           <div className="pt-8 border-t border-border/50">
-            <h3 className="text-sm font-semibold text-foreground mb-4">Información del Propietario</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-4">Eigentümerinformationen</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-xl border border-border/50">
                 <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-brand-50 dark:bg-brand-500/15 flex items-center justify-center">
                   <User className="w-6 h-6 text-brand-600 dark:text-brand-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-muted-foreground mb-1">Nombre</p>
+                  <p className="text-xs text-muted-foreground mb-1">Name</p>
                   <p className="text-sm font-semibold text-foreground truncate">{store?.ownerName || 'N/A'}</p>
                 </div>
               </div>
@@ -424,18 +424,18 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
             </div>
           </div>
 
-          {/* Información Adicional */}
+          {/* Zusätzliche Informationen */}
           <div className="pt-8 border-t border-border/50">
-            <h3 className="text-sm font-semibold text-foreground mb-4">Información Adicional</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-4">Zusätzliche Informationen</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-xl border border-border/50">
                 <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
                   <Calendar className="w-6 h-6 text-muted-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-muted-foreground mb-1">Fecha de Creación</p>
+                  <p className="text-xs text-muted-foreground mb-1">Erstellungsdatum</p>
                   <p className="text-sm font-semibold text-foreground">
-                    {new Date(store?.createdAt || '').toLocaleDateString('es-ES', {
+                    {new Date(store?.createdAt || '').toLocaleDateString('de-CH', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric',
@@ -448,14 +448,14 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
                   <MapPin className="w-6 h-6 text-muted-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-muted-foreground mb-1">ID de Tienda</p>
+                  <p className="text-xs text-muted-foreground mb-1">Geschäfts-ID</p>
                   <p className="text-sm font-mono text-foreground font-semibold truncate">{store?.id}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Botón Guardar */}
+          {/* Speichern-Button */}
           <div className="pt-8 border-t border-border/50">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex-1">
@@ -467,12 +467,12 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
                   {loading ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Guardando...
+                      Wird gespeichert...
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4" />
-                      Guardar Cambios
+                      Änderungen speichern
                     </>
                   )}
                 </button>
@@ -492,10 +492,10 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
         <CardHeader className="pb-6">
           <CardTitle className="flex items-center gap-2 text-lg lg:text-xl mb-2 mt-4">
             <CreditCard className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-            Métodos de Pago
+            Zahlungsmethoden
           </CardTitle>
           <CardDescription className="text-sm">
-            Administra los métodos de pago disponibles para esta tienda
+            Verwalten Sie die verfügbaren Zahlungsmethoden für dieses Geschäft
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-8 px-6 pb-6">
@@ -515,9 +515,9 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
                       if (!method) return 'Zahlungsmethode wird aktualisiert...';
                       const isTogglingDisabled = method.disabledBySuperAdmin !== undefined;
                       if (isTogglingDisabled && method.disabledBySuperAdmin) {
-                        return 'Zahlungsmethode wird aktiviert...';
+                        return 'Einschränkung wird aufgehoben...';
                       } else if (isTogglingDisabled && !method.disabledBySuperAdmin) {
-                        return 'Zahlungsmethode wird deaktiviert...';
+                        return 'Zahlungsmethode wird eingeschränkt...';
                       }
                       return method.isActive
                         ? 'Zahlungsmethode wird deaktiviert...'
@@ -538,7 +538,7 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
           {methodsLoading ? (
             <div className="flex items-center justify-center gap-3 py-8">
               <Loader size="sm" />
-              <p className="text-sm text-muted-foreground">Cargando métodos de pago...</p>
+              <p className="text-sm text-muted-foreground">Zahlungsmethoden werden geladen...</p>
             </div>
           ) : (
             <div className="space-y-8">
@@ -550,8 +550,8 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
                       <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                     </div>
                     <div>
-                      <h3 className="text-base font-semibold text-foreground">Métodos Activos</h3>
-                      <p className="text-xs text-muted-foreground">Disponibles para los clientes</p>
+                      <h3 className="text-base font-semibold text-foreground">Aktive Methoden</h3>
+                      <p className="text-xs text-muted-foreground">Verfügbar für Kunden</p>
                     </div>
                     <span className="ml-auto px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
                       {activePaymentMethods.length}
@@ -577,7 +577,7 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
                                   {method.name}
                                 </h4>
                                 <span className="px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
-                                  Activo
+                                  Aktiv
                                 </span>
                               </div>
                               <p className="text-xs text-muted-foreground mt-0.5 font-mono">
@@ -608,10 +608,10 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
                               onClick={() => !updatePaymentMethod.isPending && handleToggleDisabledPaymentMethod(method.id)}
                               disabled={updatePaymentMethod.isPending}
                               className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/15 rounded-lg hover:bg-red-100 dark:hover:bg-red-500/25 border border-red-200 dark:border-red-500/30 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-                              title="Zahlungsmethode deaktivieren"
+                              title="Zahlungsmethode durch Super Admin einschränken"
                             >
                               <ShieldOff className="w-3.5 h-3.5" />
-                              Deaktivieren
+                              Einschränken
                             </button>
                           </div>
                         </div>
@@ -682,10 +682,10 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
                               onClick={() => !updatePaymentMethod.isPending && handleToggleDisabledPaymentMethod(method.id)}
                               disabled={updatePaymentMethod.isPending}
                               className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/15 rounded-lg hover:bg-red-100 dark:hover:bg-red-500/25 border border-red-200 dark:border-red-500/30 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-                              title="Zahlungsmethode deaktivieren"
+                              title="Zahlungsmethode durch Super Admin einschränken"
                             >
                               <ShieldOff className="w-3.5 h-3.5" />
-                              Deaktivieren
+                              Einschränken
                             </button>
                           </div>
                         </div>
@@ -703,8 +703,8 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
                       <Shield className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                     </div>
                     <div>
-                      <h3 className="text-base font-semibold text-foreground">Deaktiviert durch Super Admin</h3>
-                      <p className="text-xs text-muted-foreground">Gesperrt für Geschäftsadmin</p>
+                      <h3 className="text-base font-semibold text-foreground">Eingeschränkt durch Super Admin</h3>
+                      <p className="text-xs text-muted-foreground">Vom Super Admin eingeschränkt</p>
                     </div>
                     <span className="ml-auto px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400">
                       {disabledPaymentMethods.length}
@@ -730,14 +730,14 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
                                   {method.name}
                                 </h4>
                                 <span className="px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400">
-                                  Deaktiviert
+                                  Eingeschränkt
                                 </span>
                               </div>
                               <p className="text-xs text-muted-foreground mt-0.5 font-mono">
                                 {method.apiMethod.code}
                               </p>
                               <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                                {method.isActive ? 'Aktiv aber gesperrt' : 'Inaktiv und gesperrt'}
+                                Vom Super Admin eingeschränkt
                               </p>
                             </div>
                           </div>
@@ -764,10 +764,10 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
                               onClick={() => !updatePaymentMethod.isPending && handleToggleDisabledPaymentMethod(method.id)}
                               disabled={updatePaymentMethod.isPending}
                               className="px-3 py-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/15 rounded-lg hover:bg-brand-100 dark:hover:bg-brand-500/25 border-2 border-brand-300 dark:border-brand-500/40 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-sm"
-                              title="Zahlungsmethode aktivieren - Erlauben, dass der Geschäftsadmin es wieder verwendet"
+                              title="Einschränkung aufheben - Erlauben, dass der Geschäftsadmin es wieder verwendet"
                             >
                               <Shield className="w-3.5 h-3.5" />
-                              Aktivieren
+                              Freischalten
                             </button>
                           </div>
                         </div>

@@ -192,10 +192,14 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   // El totalAmount ya viene con IVA incluido (precios en Suiza ya incluyen IVA)
 
   const formatPrice = (price: number) => {
-    if (price % 1 === 0) {
-      return `${price}.-`;
+    // Usar formato suizo: .– cuando es exacto, .45 cuando tiene decimales
+    const rounded = Math.round(price * 100) / 100;
+    const hasDecimals = rounded % 1 !== 0;
+    
+    if (!hasDecimals) {
+      return `${Math.round(rounded)}.–`;
     }
-    return price.toFixed(2);
+    return rounded.toFixed(2);
   };
 
   const modalContent = (
@@ -345,7 +349,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               )}
             </div>
 
-            {/* Botón CTA Principal - Estilo unificado */}
+            {/* Main CTA Button - Unified Style */}
             <div className="p-5 border-t border-gray-200 bg-white sticky bottom-0">
               <button
                 onClick={() => {
@@ -472,12 +476,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   onClick={async () => {
                     lightHaptic();
                     
-                    // Crear factura como invitado (sin datos del cliente)
+                    // Create invoice as guest (without customer data)
                     if (onCreateInvoice) {
                       try {
                         await onCreateInvoice();
                       } catch (error) {
-                        console.error('Error al crear factura:', error);
+                        console.error('Error creating invoice:', error);
                         // Continuar de todas formas
                       }
                     }
@@ -576,12 +580,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 onClick={async () => {
                   mediumHaptic();
                   
-                  // Guardar datos del cliente en localStorage si se proporcionaron
+                  // Save customer data to localStorage if provided
                   if (personalData.name && personalData.email) {
                     onSaveCustomerData?.(personalData);
                   }
                   
-                  // Crear la factura con los datos del cliente
+                  // Create invoice with customer data
                   if (onCreateInvoice) {
                     try {
                       await onCreateInvoice(personalData);
@@ -729,7 +733,7 @@ export default function PaymentP() {
     return { name: '', email: '', address: '', phone: '' };
   };
 
-  // Guardar datos del cliente en localStorage
+  // Save customer data to localStorage
   const saveCustomerDataToLocalStorage = (data: { name: string; email: string; address: string; phone: string }) => {
     if (typeof window === 'undefined') return;
     try {
@@ -795,11 +799,12 @@ export default function PaymentP() {
 
   // Calcular totales reales del carrito usando las funciones del store
   // Solo calcular después de montar para evitar hydration mismatch
+  // NOTA: En Suiza, los precios ya incluyen IVA (MwSt), por lo que NO debemos agregar IVA nuevamente
   const totalItems = mounted ? getTotalItems() : 0;
-  const subtotal = mounted ? getSubtotal() : 0;
-  const totalWithVAT = mounted ? getTotalWithVAT() : 0;
+  const subtotal = mounted ? getSubtotal() : 0; // Este subtotal ya incluye IVA
+  // El descuento se calcula sobre el subtotal (que ya incluye IVA)
   const totalAfterDiscount = Math.max(
-    totalWithVAT - (promoApplied ? discountAmount || 0 : 0),
+    subtotal - (promoApplied ? discountAmount || 0 : 0),
     0,
   );
   const payableTotal = Number(totalAfterDiscount.toFixed(2));
@@ -845,7 +850,7 @@ export default function PaymentP() {
       setOrderError(null);
       setPaymentStep("processing");
 
-      // Preparar datos del cliente para enviar al backend
+      // Prepare customer data to send to backend
       const customerData = personalData.name && personalData.email 
         ? {
             name: personalData.name,
@@ -862,7 +867,7 @@ export default function PaymentP() {
         total: payableTotal,
         storeId: store?.id,
         storeSlug: store?.slug,
-        customer: customerData, // Enviar datos del cliente al backend
+        customer: customerData, // Send customer data to backend
         metadata: {
           storeId: store?.id ?? null,
           storeSlug: store?.slug ?? null,
@@ -871,8 +876,8 @@ export default function PaymentP() {
           promoCode: promoApplied && promoCode ? promoCode : null, // Enviar código de descuento para registrar uso
           discountAmount: promoApplied ? discountAmount ?? 0 : 0,
           totalBeforeVAT: Number(subtotal.toFixed(2)),
-          totalWithVAT: Number(totalWithVAT.toFixed(2)),
-          // Incluir datos del cliente en metadata también para referencia
+          totalWithVAT: Number(payableTotal.toFixed(2)), // En Suiza, los precios ya incluyen IVA, así que totalWithVAT = subtotal - descuento
+          // Include customer data in metadata as well for reference
           customerData: customerData,
         },
       });
@@ -1074,7 +1079,7 @@ export default function PaymentP() {
     }
 
     try {
-      // Crear la factura con los datos del cliente (o como invitado si no hay datos)
+      // Create invoice with customer data (or as guest if no data)
       const invoicePayload = {
         orderId: createdOrderId,
         customerName: customerData?.name || 'Gast',
@@ -1094,7 +1099,7 @@ export default function PaymentP() {
         console.log('✅ Factura creada:', result.data.invoiceNumber);
       } else {
         console.error('Error al crear factura:', result.error);
-        throw new Error(result.error || 'Error al crear factura');
+        throw new Error(result.error || 'Fehler beim Erstellen der Rechnung');
       }
     } catch (error) {
       console.error('Error al crear factura:', error);
@@ -1102,7 +1107,7 @@ export default function PaymentP() {
     }
   };
 
-  // Función para actualizar la factura con los datos del cliente (si ya existe)
+  // Function to update invoice with customer data (if it already exists)
   const handleUpdateInvoiceWithData = async (data: { name: string; email: string; address: string; phone: string }) => {
     if (!createdInvoiceId || !createdOrderId) {
       // Si no existe factura, crearla
@@ -1126,7 +1131,7 @@ export default function PaymentP() {
         if (result.data.shareToken) {
           setCreatedInvoiceShareToken(result.data.shareToken);
         }
-        console.log('✅ Factura actualizada con datos del cliente');
+        console.log('✅ Invoice updated with customer data');
       }
     } catch (error) {
       console.error('Error al actualizar factura:', error);
@@ -1250,7 +1255,7 @@ export default function PaymentP() {
             </button>
           )}
           
-          {/* Mensaje de redirección automática */}
+          {/* Automatic redirect message */}
           <p className="text-sm text-[#6E7996] mt-6">
             Sie werden automatisch weitergeleitet...
           </p>
@@ -1259,7 +1264,7 @@ export default function PaymentP() {
     );
   }
 
-  // Mostrar loading state durante la hidratación
+  // Show loading state during hydration
   if (!mounted) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] bg-[#F9F6F4]">
@@ -1274,7 +1279,7 @@ export default function PaymentP() {
 
   return (
     <div>
-      {/* Header con información real del carrito */}
+      {/* Header with real cart information */}
       <div className="flex flex-col gap-2 justify-center items-center bg-[#F9F6F4] w-full p-2 border-b border-[#E5E5E5]">
         <p className="text-xl pt-4 font-semibold text-[#373F49]">
           {store?.name ?? "Gastbestellung"}
@@ -1288,7 +1293,7 @@ export default function PaymentP() {
         
       </div>
 
-      {/* Código promocional */}
+      {/* Promotional code */}
       <div className="pt-4 pl-12">
         {!promoApplied ? (
           <>

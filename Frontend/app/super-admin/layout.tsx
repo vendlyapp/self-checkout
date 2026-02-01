@@ -18,7 +18,7 @@ export default function SuperAdminLayout({ children }: Props) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Configurar timeout de sesión de 30 minutos
+  // Sitzungs-Timeout von 30 Minuten konfigurieren
   useSessionTimeout({
     enabled: true,
     onSessionExpired: () => {
@@ -27,7 +27,7 @@ export default function SuperAdminLayout({ children }: Props) {
   });
 
   useEffect(() => {
-    // Verificar que el usuario tenga rol SUPER_ADMIN
+    // Überprüfen, ob der Benutzer die Rolle SUPER_ADMIN hat
     const role = localStorage.getItem('userRole');
     if (role !== 'SUPER_ADMIN') {
       router.push('/login');
@@ -36,7 +36,7 @@ export default function SuperAdminLayout({ children }: Props) {
     setIsLoading(false);
   }, [router]);
 
-  // Mostrar loading mientras verifica
+  // Loading anzeigen, während überprüft wird
   if (isLoading) {
     return <Loader variant="fullscreen" message="Zugriff wird überprüft..." />;
   }

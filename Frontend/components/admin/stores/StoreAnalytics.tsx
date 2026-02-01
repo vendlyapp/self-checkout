@@ -149,11 +149,11 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
         
         setAnalytics(analyticsData);
       } else {
-        throw new Error(analyticsResponse.error || 'Error al cargar analytics');
+        throw new Error(analyticsResponse.error || 'Fehler beim Laden der Analytics');
       }
     } catch (err) {
       console.error('Error fetching analytics:', err);
-      setError(err instanceof Error ? err.message : 'Error al cargar analytics');
+      setError(err instanceof Error ? err.message : 'Fehler beim Laden der Analytics');
       // Don't use mock data - show error state instead
       setAnalytics(null);
     } finally {
@@ -187,7 +187,7 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
             onClick={fetchAnalytics}
             className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors"
           >
-            Reintentar
+            Erneut versuchen
           </button>
         </CardContent>
       </Card>
@@ -209,11 +209,11 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
 
   return (
     <div className="space-y-6">
-      {/* Gráfico 1: Ventas (Últimos 7 días) */}
+      {/* Diagramm 1: Verkäufe (Letzte 7 Tage) */}
       <Card className="bg-card rounded-2xl border border-border/50 transition-ios hover:shadow-md">
         <CardHeader className="px-6 pt-6 pb-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg lg:text-xl font-semibold text-foreground">Ventas</h3>
+            <h3 className="text-lg lg:text-xl font-semibold text-foreground">Verkäufe</h3>
             <div className="relative">
               <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-all px-3 py-1.5 rounded-lg hover:bg-muted">
                 {currentSalesPeriodLabel}
@@ -268,7 +268,7 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
                     strokeWidth={2}
                     strokeDasharray="5 5"
                     dot={false}
-                    name="Semana anterior"
+                    name="Vorherige Woche"
                   />
                   <Line
                     type="monotone"
@@ -276,7 +276,7 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
                     stroke="#10b981"
                     strokeWidth={3}
                     dot={false}
-                    name="Esta semana"
+                    name="Diese Woche"
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -285,11 +285,11 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
         </CardContent>
       </Card>
 
-      {/* Gráfico 2: Revenue Trend */}
+      {/* Diagramm 2: Umsatztrend */}
       <Card className="bg-card rounded-2xl border border-border/50 transition-ios hover:shadow-md">
         <CardHeader className="px-6 pt-6 pb-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg lg:text-xl font-semibold text-foreground">Revenue Trend</h3>
+            <h3 className="text-lg lg:text-xl font-semibold text-foreground">Umsatztrend</h3>
             <div className="relative">
               <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-all px-3 py-1.5 rounded-lg hover:bg-muted">
                 {currentRevenuePeriodLabel}
@@ -329,7 +329,7 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
                   stroke="#10b981"
                   fillOpacity={1}
                   fill="url(#colorRevenue)"
-                  name="Revenue (CHF)"
+                  name="Umsatz (CHF)"
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -337,10 +337,10 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
         </CardContent>
       </Card>
 
-      {/* Gráfico 3: Productos por Categoría */}
+      {/* Diagramm 3: Produkte nach Kategorie */}
       <Card className="bg-card rounded-2xl border border-border/50 transition-ios hover:shadow-md">
         <CardHeader className="px-6 pt-6 pb-4">
-          <h3 className="text-lg lg:text-xl font-semibold text-foreground">Productos por Categoría</h3>
+          <h3 className="text-lg lg:text-xl font-semibold text-foreground">Produkte nach Kategorie</h3>
         </CardHeader>
         <CardContent className="px-6 pb-6 pt-4">
           {analytics.categoriesData && analytics.categoriesData.length > 0 ? (
@@ -380,7 +380,7 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
                         <span className="text-sm text-muted-foreground font-medium">{item.name}</span>
                       </div>
                     </div>
-                    <div className="text-sm font-medium">{item.count} productos</div>
+                    <div className="text-sm font-medium">{item.count} Produkte</div>
                   </div>
                 ))}
               </div>
@@ -393,10 +393,10 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
         </CardContent>
       </Card>
 
-      {/* Gráfico 4: Órdenes por Estado */}
+      {/* Diagramm 4: Bestellungen nach Status */}
       <Card className="bg-card rounded-2xl border border-border/50 transition-ios hover:shadow-md">
         <CardHeader className="px-6 pt-6 pb-4">
-          <h3 className="text-lg lg:text-xl font-semibold text-foreground">Órdenes por Estado</h3>
+          <h3 className="text-lg lg:text-xl font-semibold text-foreground">Bestellungen nach Status</h3>
         </CardHeader>
         <CardContent className="px-6 pb-6 pt-4">
           <div className="h-64">
@@ -436,7 +436,7 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
                   />
                   <span className="text-sm text-foreground">{item.status}</span>
                 </div>
-                <span className="text-sm font-semibold">{item.count} órdenes</span>
+                <span className="text-sm font-semibold">{item.count} Bestellungen</span>
               </div>
             ))}
           </div>

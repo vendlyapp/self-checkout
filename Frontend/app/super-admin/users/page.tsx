@@ -38,7 +38,7 @@ export default function SuperAdminUsers() {
       return matchesSearch && matchesRole;
     });
 
-  // Solo mostrar loader si está cargando Y no hay datos
+  // Nur Loader anzeigen, wenn geladen wird UND keine Daten vorhanden sind
   if (usersLoading && users.length === 0) {
     return (
       <div className="p-8 flex items-center justify-center min-h-screen">
@@ -117,7 +117,7 @@ export default function SuperAdminUsers() {
       </div>
 
       {/* ============================================ */}
-      {/* MÉTRICAS */}
+      {/* METRIKEN */}
       {/* ============================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
@@ -159,7 +159,7 @@ export default function SuperAdminUsers() {
         <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Clientes</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Kunden</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white/90">{roleCounts.customers}</p>
             </div>
             <div className="w-12 h-12 bg-green-50 dark:bg-green-500/15 rounded-xl flex items-center justify-center">
@@ -170,7 +170,7 @@ export default function SuperAdminUsers() {
       </div>
 
       {/* ============================================ */}
-      {/* FILTROS */}
+      {/* FILTER */}
       {/* ============================================ */}
       <div className="flex flex-wrap gap-2">
         {['ALL', 'SUPER_ADMIN', 'ADMIN', 'CUSTOMER'].map((role) => (
@@ -189,7 +189,7 @@ export default function SuperAdminUsers() {
       </div>
 
       {/* ============================================ */}
-      {/* TABLA DE USUARIOS */}
+      {/* BENUTZERTABELLE */}
       {/* ============================================ */}
       {filteredUsers.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200 dark:bg-white/[0.03] dark:border-gray-800">

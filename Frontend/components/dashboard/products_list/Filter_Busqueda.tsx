@@ -28,7 +28,7 @@ export default function Filter_Busqueda({
   return (
     <>
       {/* Barra de búsqueda y filtros - FIJOS */}
-      <div className={`${isFixed ? 'fixed top-[140px]' : ''} left-0 right-0 p-4 flex flex-col-2 gap-4 items-center justify-center bg-background-cream border-b border-gray-100 ${isFixed ? 'z-40' : ''} 
+      <div className={`${isFixed ? 'fixed top-[130px]' : ''} left-0 right-0 p-4 flex flex-col-2 gap-4 items-center justify-center bg-background-cream border-b border-gray-100 ${isFixed ? 'z-40' : ''} 
                       animate-slide-down gpu-accelerated`}>
         <div className="animate-stagger-1">
           <SearchInput
@@ -61,7 +61,7 @@ export default function Filter_Busqueda({
       </div>
 
       {/* Filtros de categorías - FIJOS */}
-      <div className={`${isFixed ? 'fixed top-[225px]' : ''} left-0 right-0 bg-background-cream border-b border-gray-100 ${isFixed ? 'z-40' : ''} 
+      <div className={`${isFixed ? 'fixed top-[215px]' : ''} left-0 right-0 bg-background-cream border-b border-gray-100 ${isFixed ? 'z-40' : ''} 
                       animate-slide-down gpu-accelerated`}
            style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
         <FilterSlider

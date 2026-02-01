@@ -20,7 +20,7 @@ import { HomeDashboard } from "@/components/dashboard";
  */
 export default function DashboardPage() {
   return (
-    <div className="animate-page-enter gpu-accelerated">
+    <div className="animate-fade-in gpu-accelerated">
       <HomeDashboard />
     </div>
   );

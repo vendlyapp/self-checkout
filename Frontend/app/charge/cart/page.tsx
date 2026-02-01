@@ -26,40 +26,34 @@ export default function CartPage() {
   };
 
   return (
-    <div className="w-full animate-page-enter gpu-accelerated">
+    <div className="w-full animate-fade-in gpu-accelerated">
       {/* Mobile Layout */}
       <div className="block lg:hidden">
         {/* HeaderNav específico para el carrito */}
-        <div className="animate-slide-in-right">
-          <HeaderNav title="Warenkorb" showAddButton={false} />
-        </div>
+        <HeaderNav title="Warenkorb" showAddButton={false} />
 
         <main className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 min-h-0 overflow-y-auto px-2 pt-2">
-            <div className="space-y-3 pt-10 animate-fade-in-scale">
+            <div className="space-y-3 pt-10">
               {cartItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 gap-4 animate-scale-in">
-                  <div className="text-center text-gray-500 transition-interactive">
+                <div className="flex flex-col items-center justify-center py-12 gap-4">
+                  <div className="text-center text-gray-500">
                     Dein Warenkorb ist leer.
                   </div>
                   <button
                     onClick={() => router.push("/charge")}
                     className="bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-full px-6 py-3 text-[17px] mt-2 
-                             transition-interactive gpu-accelerated shadow hover:shadow-lg hover:scale-105 active:scale-95"
+                             transition-ios shadow hover:shadow-lg active:scale-95"
                     aria-label="Zurück zu den Produkten"
                   >
                     Zurück zu den Produkten
                   </button>
                 </div>
               ) : (
-                cartItems.map(({ product }, index) => (
+                cartItems.map(({ product }) => (
                   <div 
-                    className="space-y-2 pl-4 pr-4 animate-slide-up-fade gpu-accelerated" 
+                    className="space-y-2 pl-4 pr-4" 
                     key={product.id}
-                    style={{
-                      animationDelay: `${index * 0.05}s`,
-                      animationFillMode: 'both'
-                    }}
                   >
                     <ProductCard
                       key={product.id}
@@ -75,10 +69,10 @@ export default function CartPage() {
 
             {/* Promo Code - Solo mostrar si hay items en el carrito */}
             {cartItems.length > 0 && (
-              <div className="mt-6 px-2 pl-4 pr-4 pb-24 animate-slide-up-fade">
+              <div className="mt-6 px-2 pl-4 pr-4 pb-24">
                 <label
                   htmlFor="promo"
-                  className="text-[#25D076] text-[15px] font-semibold transition-interactive"
+                  className="text-[#25D076] text-[15px] font-semibold"
                 >
                   Promo Code?
                 </label>
@@ -104,7 +98,7 @@ export default function CartPage() {
                       <button
                         onClick={handleApplyPromo}
                         className="bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg px-4 py-2 text-[15px] 
-                                 transition-interactive gpu-accelerated hover:scale-105 active:scale-95"
+                                 transition-ios active:scale-95"
                         aria-label="Promo anwenden"
                       >
                         Anwenden
@@ -146,35 +140,35 @@ export default function CartPage() {
       <div className="hidden lg:block">
         <div className="p-6 space-y-6">
           {/* Header Section */}
-          <div className="flex items-center justify-between animate-stagger-1">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 transition-interactive">Warenkorb</h1>
-              <p className="text-gray-600 mt-1 transition-interactive">{cartItems.length} Artikel im Warenkorb</p>
+              <h1 className="text-2xl font-bold text-gray-900">Warenkorb</h1>
+              <p className="text-gray-600 mt-1">{cartItems.length} Artikel im Warenkorb</p>
             </div>
             <button
               onClick={() => router.push("/charge")}
               className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 
-                       transition-interactive gpu-accelerated hover:bg-gray-100 rounded-lg active:scale-95"
+                       transition-ios hover:bg-gray-100 rounded-lg active:scale-95"
             >
               <span>← Zurück zu Produkten</span>
             </button>
           </div>
 
           {/* Cart Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-stagger-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Cart Items */}
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 animate-fade-in-scale">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 transition-interactive">Artikel</h2>
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Artikel</h2>
                 {cartItems.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 gap-4 animate-scale-in">
-                    <div className="text-center text-gray-500 text-lg transition-interactive">
+                  <div className="flex flex-col items-center justify-center py-12 gap-4">
+                    <div className="text-center text-gray-500 text-lg">
                       Dein Warenkorb ist leer.
                     </div>
                     <button
                       onClick={() => router.push("/charge")}
                       className="bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl px-6 py-3 text-lg 
-                               transition-interactive gpu-accelerated shadow hover:shadow-lg hover:scale-105 active:scale-95"
+                               transition-ios shadow hover:shadow-lg active:scale-95"
                       aria-label="Zurück zu den Produkten"
                     >
                       Produkte hinzufügen
@@ -182,15 +176,8 @@ export default function CartPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {cartItems.map(({ product }, index) => (
-                      <div 
-                        key={product.id}
-                        className="animate-slide-up-fade gpu-accelerated"
-                        style={{
-                          animationDelay: `${index * 0.05}s`,
-                          animationFillMode: 'both'
-                        }}
-                      >
+                    {cartItems.map(({ product }) => (
+                      <div key={product.id}>
                         <ProductCard
                           product={product}
                           onAddToCart={(_product, newQuantity) =>
@@ -206,8 +193,8 @@ export default function CartPage() {
 
             {/* Cart Summary */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 sticky top-6 animate-stagger-3">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 transition-interactive">Zusammenfassung</h2>
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 sticky top-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Zusammenfassung</h2>
 
                 {/* Promo Code Section */}
                 <div className="mb-6">
@@ -281,20 +268,20 @@ export default function CartPage() {
                   <button
                     onClick={() => router.push("/charge/payment")}
                     className="w-full mt-4 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl px-6 py-3 text-lg 
-                             transition-interactive gpu-accelerated shadow hover:shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                             transition-ios active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={cartItems.length === 0}
                   >
                     Zur Kasse
                   </button>
 
-                  {/* Botón Leeren */}
+                  {/* Button Leeren */}
                   <button
                     onClick={() => {
                       const { clearCart } = useCartStore.getState();
                       clearCart();
                     }}
                     className="w-full mt-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl px-6 py-3 text-lg 
-                             transition-interactive gpu-accelerated shadow hover:shadow-lg hover:scale-105 active:scale-95"
+                             transition-ios active:scale-95"
                   >
                     Warenkorb leeren
                   </button>

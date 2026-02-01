@@ -47,7 +47,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
       setStoreData(store);
       setStoreName(store?.name || '');
       setStoreLogo(store?.logo || '');
-      toast.error('Error al cargar los detalles de la tienda');
+      toast.error('Fehler beim Laden der Geschäftsdetails');
     } finally {
       setLoading(false);
     }
@@ -64,16 +64,16 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
       if (response.success) {
         setStoreData(response.data);
         setEditing(false);
-        toast.success('Tienda actualizada correctamente');
+        toast.success('Geschäft erfolgreich aktualisiert');
         if (onUpdate) {
           onUpdate();
         }
       } else {
-        toast.error(response.error || 'Error al actualizar la tienda');
+        toast.error(response.error || 'Fehler beim Aktualisieren des Geschäfts');
       }
     } catch (error) {
       console.error('Error updating store:', error);
-      toast.error('Error al actualizar la tienda');
+      toast.error('Fehler beim Aktualisieren des Geschäfts');
     } finally {
       setSaving(false);
     }
@@ -86,7 +86,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
     link.href = storeData.qrCode;
     link.download = `qr-${storeData.slug || store?.slug || 'store'}.png`;
     link.click();
-    toast.success('QR descargado');
+    toast.success('QR-Code heruntergeladen');
   };
 
   const getStoreUrl = () => {
@@ -99,7 +99,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
   const copyStoreUrl = () => {
     const url = getStoreUrl();
     navigator.clipboard.writeText(url);
-    toast.success('URL copiada al portapapeles');
+    toast.success('URL in die Zwischenablage kopiert');
   };
 
   const shareStore = async () => {
@@ -127,16 +127,16 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
 
       if (response.success && response.data) {
         setStoreData(response.data);
-        toast.success('QR code regenerado exitosamente');
+        toast.success('QR-Code erfolgreich neu generiert');
         if (onUpdate) {
           onUpdate();
         }
       } else {
-        toast.error(response.error || 'Error al regenerar el QR code');
+        toast.error(response.error || 'Fehler beim Neugenerieren des QR-Codes');
       }
     } catch (error) {
       console.error('Error regenerating QR:', error);
-      toast.error('Error al regenerar el QR code');
+      toast.error('Fehler beim Neugenerieren des QR-Codes');
     } finally {
       setRegenerating(false);
     }
@@ -175,10 +175,10 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
         <CardHeader className="px-6 pt-6 pb-4">
           <CardTitle className="flex items-center gap-2 text-lg lg:text-xl mb-2">
             <QrCode className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-            Código QR de la Tienda
+            QR-Code des Geschäfts
           </CardTitle>
           <CardDescription className="text-sm">
-            Comparte este código QR para que los clientes accedan a tu tienda
+            Teilen Sie diesen QR-Code, damit Kunden auf Ihr Geschäft zugreifen können
           </CardDescription>
         </CardHeader>
         <CardContent className="px-6 pb-6 pt-4">
@@ -200,14 +200,14 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
                   className="flex items-center justify-center gap-2 px-4 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl transition-colors font-semibold text-sm"
                 >
                   <Download className="w-4 h-4" />
-                  Descargar QR
+                  QR herunterladen
                 </button>
                 <button
                   onClick={shareStore}
                   className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors font-semibold text-sm"
                 >
                   <Share2 className="w-4 h-4" />
-                  Compartir
+                  Teilen
                 </button>
               </div>
 
@@ -219,24 +219,24 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
                 {regenerating ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Regenerando...
+                    Wird neu generiert...
                   </>
                 ) : (
                   <>
                     <RefreshCw className="w-4 h-4" />
-                    Regenerar QR Code
+                    QR-Code neu generieren
                   </>
                 )}
               </button>
 
               <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-xl p-4">
                 <p className="text-sm text-blue-900 dark:text-blue-300 font-medium mb-2">
-                  💡 Cómo funciona:
+                  💡 So funktioniert es:
                 </p>
                 <ol className="text-xs text-blue-800 dark:text-blue-400 space-y-1">
-                  <li>1. Descarga el código QR</li>
-                  <li>2. Imprímelo o muéstralo digitalmente</li>
-                  <li>3. Los clientes escanean y ven los productos</li>
+                  <li>1. QR-Code herunterladen</li>
+                  <li>2. Drucken oder digital anzeigen</li>
+                  <li>3. Kunden scannen und sehen die Produkte</li>
                 </ol>
               </div>
             </div>
@@ -255,10 +255,10 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="min-w-0 flex-1">
               <CardTitle className="flex items-center gap-2 text-lg lg:text-xl mb-2">
-                Información de la Tienda
+                Geschäftsinformationen
               </CardTitle>
               <CardDescription className="text-sm">
-                Gestión de información básica de la tienda
+                Verwaltung der grundlegenden Geschäftsinformationen
               </CardDescription>
             </div>
             {!editing && (
@@ -267,7 +267,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
                 className="flex items-center gap-2 px-3 py-2 text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-500/10 rounded-lg transition-colors text-sm flex-shrink-0"
               >
                 <Edit2 className="w-4 h-4" />
-                Editar
+                Bearbeiten
               </button>
             )}
           </div>
@@ -276,7 +276,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-semibold text-foreground mb-2">
-                Nombre de la Tienda
+                Geschäftsname
               </label>
               {editing ? (
                 <input
@@ -303,7 +303,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
                 <button
                   onClick={copyStoreUrl}
                   className="p-2 hover:bg-muted rounded-lg transition-colors flex-shrink-0"
-                  title="Copiar URL"
+                  title="URL kopieren"
                 >
                   <Copy className="w-4 h-4 text-muted-foreground" />
                 </button>
@@ -313,7 +313,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
             {editing && (
               <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">
-                  Logo URL (opcional)
+                  Logo URL (optional)
                 </label>
                 <input
                   type="text"
@@ -335,7 +335,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
                   }}
                   className="flex-1 px-4 py-2.5 bg-muted hover:bg-muted/80 text-foreground rounded-xl font-semibold transition-colors text-sm"
                 >
-                  Cancelar
+                  Abbrechen
                 </button>
                 <button
                   onClick={handleSave}
@@ -347,7 +347,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
                   ) : (
                     <Save className="w-4 h-4" />
                   )}
-                  Guardar Cambios
+                  Änderungen speichern
                 </button>
               </div>
             )}
@@ -361,10 +361,10 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="min-w-0 flex-1">
               <CardTitle className="flex items-center gap-2 text-lg lg:text-xl mb-2">
-                Enlace Público
+                Öffentlicher Link
               </CardTitle>
               <CardDescription className="text-sm">
-                URL que los clientes pueden usar para acceder a la tienda
+                URL, die Kunden verwenden können, um auf das Geschäft zuzugreifen
               </CardDescription>
             </div>
             <button
@@ -372,7 +372,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
               className="flex items-center gap-2 px-3 py-2 text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-500/10 rounded-lg transition-colors text-sm flex-shrink-0"
             >
               <Copy className="w-4 h-4" />
-              Copiar
+              Kopieren
             </button>
           </div>
         </CardHeader>
@@ -384,13 +384,13 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
             <button
               onClick={copyStoreUrl}
               className="p-2 hover:bg-muted rounded-lg transition-colors flex-shrink-0"
-              title="Copiar URL completa"
+              title="Vollständige URL kopieren"
             >
               <Copy className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Los clientes pueden visitar este enlace para ver los productos de la tienda
+            Kunden können diesen Link besuchen, um die Produkte des Geschäfts zu sehen
           </p>
         </CardContent>
       </Card>

@@ -1,28 +1,39 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useMemo, useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useResponsive } from '@/hooks';
 import { useOrders } from '@/hooks/queries/useOrders';
-import { ShoppingCart, Search, Calendar, DollarSign, User, ChevronRight, FileText, XCircle } from 'lucide-react';
+import { ShoppingCart, Calendar, DollarSign, User, ChevronRight, FileText, XCircle, Filter, CheckCircle, Clock, Trash2 } from 'lucide-react';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 import Link from 'next/link';
 import { Loader } from '@/components/ui/Loader';
 import { useCancelOrder } from '@/hooks/mutations/useOrderMutations';
 import { toast } from 'sonner';
+import CancelOrderModal from '@/components/orders/CancelOrderModal';
+import { OrdersProvider, useOrdersContext } from '@/components/dashboard/orders/OrdersContext';
 
-export default function SalesOrdersPage() {
+function SalesOrdersPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isMobile } = useResponsive();
   const cancelOrder = useCancelOrder();
   
+  // Obtener filtro de status desde query params
+  const statusFilter = searchParams?.get('status') as 'pending' | 'processing' | 'completed' | 'cancelled' | undefined;
+  
   // Usar React Query hook para obtener órdenes con cache
+  // Si hay un filtro de status en la URL, aplicarlo
   const { data: orders = [], isLoading, isFetching, error: queryError } = useOrders({
     limit: 100,
     offset: 0,
+    status: statusFilter, // Aplicar filtro de status si existe
   });
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const { searchQuery } = useOrdersContext();
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState<{ id: string; orderNumber: string } | null>(null);
+  const [isConfirmingCancel, setIsConfirmingCancel] = useState(false);
 
   // Filtrar órdenes por búsqueda usando useMemo para optimizar rendimiento
   const filteredOrders = useMemo(() => {
@@ -57,26 +68,83 @@ export default function SalesOrdersPage() {
   const getStatusConfig = (status?: string) => {
     switch (status) {
       case 'completed':
-        return { label: 'Abgeschlossen', color: 'bg-green-100 text-green-700', iconColor: 'text-green-600' };
+        return { 
+          label: 'Abgeschlossen', 
+          color: 'bg-green-100 text-green-700', 
+          iconColor: 'text-green-600',
+          bgColor: 'bg-[#D3F6E4]',
+          icon: <CheckCircle className="w-5 h-5" />
+        };
       case 'pending':
-        return { label: 'Ausstehend', color: 'bg-yellow-100 text-yellow-700', iconColor: 'text-yellow-600' };
+        return { 
+          label: 'Ausstehend', 
+          color: 'bg-yellow-100 text-yellow-700', 
+          iconColor: 'text-yellow-600',
+          bgColor: 'bg-[#FEF3C7]',
+          icon: <Clock className="w-5 h-5" />
+        };
       case 'processing':
-        return { label: 'In Bearbeitung', color: 'bg-blue-100 text-blue-700', iconColor: 'text-blue-600' };
+        return { 
+          label: 'In Bearbeitung', 
+          color: 'bg-blue-100 text-blue-700', 
+          iconColor: 'text-blue-600',
+          bgColor: 'bg-blue-50',
+          icon: <Clock className="w-5 h-5" />
+        };
       case 'cancelled':
-        return { label: 'Storniert', color: 'bg-red-100 text-red-700', iconColor: 'text-red-600' };
+        return { 
+          label: 'Storniert', 
+          color: 'bg-red-100 text-red-700', 
+          iconColor: 'text-red-600',
+          bgColor: 'bg-[#FEE2E2]',
+          icon: <XCircle className="w-5 h-5" />
+        };
       default:
-        return { label: 'Abgeschlossen', color: 'bg-gray-100 text-gray-700', iconColor: 'text-gray-600' };
+        return { 
+          label: 'Abgeschlossen', 
+          color: 'bg-gray-100 text-gray-700', 
+          iconColor: 'text-gray-600',
+          bgColor: 'bg-gray-50',
+          icon: <FileText className="w-5 h-5" />
+        };
     }
   };
 
-  const handleCancelOrder = async (orderId: string, e: React.MouseEvent) => {
+  const handleCancelOrder = (orderId: string, e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
-    if (confirm('Möchten Sie diese Bestellung wirklich stornieren?')) {
-      try {
-        await cancelOrder.mutateAsync(orderId);
-      } catch (error) {
-        // Error ya se maneja en el hook
-      }
+    // Abrir modal de confirmación - NO ejecutar cancelación aquí
+    setOrderToCancel({
+      id: orderId,
+      orderNumber: orderId.slice(-8).toUpperCase(),
+    });
+    setCancelModalOpen(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!orderToCancel || isConfirmingCancel) return;
+    
+    setIsConfirmingCancel(true);
+    // Solo aquí se ejecuta la cancelación después de confirmar
+    try {
+      await cancelOrder.mutateAsync(orderToCancel.id);
+      // El hook ya invalida el cache y actualiza la lista automáticamente
+      // Si estamos en la vista de canceladas, la orden desaparecerá de la lista
+      // Si estamos en la vista general, el status cambiará a 'cancelled'
+      setCancelModalOpen(false);
+      setOrderToCancel(null);
+    } catch (error) {
+      // Error ya se maneja en el hook
+      // El modal se mantiene abierto si hay error para que el usuario pueda intentar de nuevo
+    } finally {
+      setIsConfirmingCancel(false);
+    }
+  };
+
+  const handleCloseCancelModal = () => {
+    if (!cancelOrder.isPending && !isConfirmingCancel) {
+      setCancelModalOpen(false);
+      setOrderToCancel(null);
     }
   };
 
@@ -133,97 +201,117 @@ export default function SalesOrdersPage() {
   }
 
   return (
-    <div className="w-full h-full overflow-auto gpu-accelerated">
-      {isMobile && (
-        <div className="flex flex-col h-full">
-          <div className="flex-1 overflow-y-auto">
-            {/* Search Bar */}
-            <div className="p-4 pb-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Suchen..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white text-base"
-                />
-              </div>
-              <p className="text-sm text-gray-600 mt-3 px-1">
-                {filteredOrders.length} {filteredOrders.length === 1 ? 'Bestellung' : 'Bestellungen'}
-                {searchQuery && ` gefunden`}
-              </p>
-            </div>
+    <>
+      {/* Cancellation Confirmation Modal */}
+      <CancelOrderModal
+        isOpen={cancelModalOpen}
+        orderNumber={orderToCancel?.orderNumber}
+        onClose={handleCloseCancelModal}
+        onConfirm={handleConfirmCancel}
+        isLoading={cancelOrder.isPending}
+      />
 
+      <div className="w-full h-full overflow-auto gpu-accelerated">
+        {isMobile && (
+        <div className="flex flex-col h-full">
+          <div className="flex-1 overflow-y-auto pt-[175px]">
             {/* Orders List */}
             {filteredOrders.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 px-4">
                 <ShoppingCart className="w-16 h-16 text-gray-300 mb-4" />
                 <p className="text-gray-600 text-center text-lg font-medium">
-                  {searchQuery ? 'Keine Bestellungen gefunden' : 'Noch keine Bestellungen'}
+                  {statusFilter === 'cancelled'
+                    ? 'Noch keine stornierten Bestellungen'
+                    : statusFilter === 'completed'
+                    ? 'Noch keine abgeschlossenen Bestellungen'
+                    : 'Noch keine Bestellungen'}
                 </p>
               </div>
             ) : (
-              <div className="px-4 pb-24 space-y-3">
+              <div className="px-2 pb-24 space-y-3">
                 {filteredOrders.map((order) => {
                   const statusConfig = getStatusConfig(order.status);
                   return (
-                    <Link
+                    <div
                       key={order.id}
-                      href={`/sales/orders/${order.id}`}
-                      className="bg-white rounded-xl shadow-sm border border-gray-200 active:shadow-md transition-all p-4 block touch-target"
+                      className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 active:scale-[0.98] touch-target overflow-hidden"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <ShoppingCart className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                            <span className="text-xs text-gray-500 font-mono">
-                              {order.id.slice(-8).toUpperCase()}
-                            </span>
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusConfig.color}`}>
-                              {statusConfig.label}
-                            </span>
+                      <Link
+                        href={`/sales/orders/${order.id}`}
+                        className="block p-4"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          {/* Icono de estado con fondo */}
+                          <div className={`w-12 h-12 ${statusConfig.bgColor} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                            <div className={statusConfig.iconColor}>
+                              {statusConfig.icon}
+                            </div>
                           </div>
 
-                          <div className="space-y-1.5">
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <Calendar className="w-4 h-4 text-gray-400" />
-                              <span>{formatDate(order.createdAt)}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <DollarSign className="w-4 h-4 text-gray-400" />
-                              <span className="font-semibold text-gray-900">
-                                {formatSwissPriceWithCHF(order.total)}
+                          {/* Contenido principal */}
+                          <div className="flex-1 min-w-0">
+                            {/* Header con número de orden y estado */}
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs text-gray-500 font-mono font-semibold">
+                                #{order.id.slice(-8).toUpperCase()}
+                              </span>
+                              <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${statusConfig.color}`}>
+                                {statusConfig.label}
                               </span>
                             </div>
-                            {order.userEmail && (
-                              <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <User className="w-4 h-4 text-gray-400" />
-                                <span className="truncate">{order.userEmail}</span>
+
+                            {/* Información de la orden */}
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-sm text-gray-700">
+                                <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                <span className="truncate">{formatDate(order.createdAt)}</span>
                               </div>
-                            )}
-                            {order.paymentMethod && (
-                              <div className="text-xs text-gray-500">
-                                Zahlung: {order.paymentMethod}
-                              </div>
-                            )}
+                              
+                              {order.userName && (
+                                <div className="flex items-center gap-2 text-sm text-gray-700">
+                                  <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                  <span className="truncate font-medium">{order.userName}</span>
+                                </div>
+                              )}
+                              
+                              {order.paymentMethod && (
+                                <div className="text-xs text-gray-500">
+                                  {order.paymentMethod}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Monto y acciones */}
+                          <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                            <div className="text-right">
+                              <p className={`font-bold text-lg ${statusConfig.iconColor}`}>
+                                {formatSwissPriceWithCHF(order.total)}
+                              </p>
+                            </div>
+                            <ChevronRight className="w-5 h-5 text-gray-400" />
                           </div>
                         </div>
+                      </Link>
 
-                        <div className="flex flex-col items-end gap-2">
-                          <ChevronRight className="w-5 h-5 text-gray-400" />
-                          {order.status !== 'cancelled' && (
-                            <button
-                              onClick={(e) => handleCancelOrder(order.id, e)}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors touch-target"
-                              title="Bestellung stornieren"
-                            >
-                              <XCircle className="w-4 h-4" />
-                            </button>
-                          )}
+                      {/* Botón de cancelar separado */}
+                      {order.status !== 'cancelled' && (
+                        <div className="px-4 pb-3 border-t border-gray-100 pt-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleCancelOrder(order.id, e);
+                            }}
+                            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors touch-target active:scale-95"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span>Stornieren</span>
+                          </button>
                         </div>
-                      </div>
-                    </Link>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -234,25 +322,51 @@ export default function SalesOrdersPage() {
 
       {!isMobile && (
         <div className="p-6 max-w-6xl mx-auto">
+          {/* Header con contexto */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Bestellungen</h1>
-            <p className="text-gray-600">
-              {filteredOrders.length} {filteredOrders.length === 1 ? 'Bestellung' : 'Bestellungen'}
-              {searchQuery && ` gefunden`}
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Bestellungen verwalten</h1>
+            <p className="text-gray-600 mb-4">
+              Alle Bestellungen anzeigen, Details einsehen und bei Bedarf stornieren
             </p>
           </div>
 
-          {/* Search Bar */}
-          <div className="mb-6">
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Suchen nach Bestellung, Kunde, E-Mail..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white"
-              />
+          {/* Filtros por Status */}
+          <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <div className="flex items-center gap-2 mb-3">
+              <Filter className="w-4 h-4 text-gray-400" />
+              <span className="text-sm font-medium text-gray-700">Status filtern:</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => router.push('/sales/orders')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  !statusFilter
+                    ? 'bg-brand-500 text-white shadow-sm hover:bg-brand-600'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                Alle
+              </button>
+              <button
+                onClick={() => router.push('/sales/orders?status=completed')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  statusFilter === 'completed'
+                    ? 'bg-green-500 text-white shadow-sm hover:bg-green-600'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                Abgeschlossen
+              </button>
+              <button
+                onClick={() => router.push('/sales/orders?status=cancelled')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  statusFilter === 'cancelled'
+                    ? 'bg-red-500 text-white shadow-sm hover:bg-red-600'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                Storniert
+              </button>
             </div>
           </div>
 
@@ -261,7 +375,11 @@ export default function SalesOrdersPage() {
             <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
               <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-600 text-lg font-medium">
-                {searchQuery ? 'Keine Bestellungen gefunden' : 'Noch keine Bestellungen'}
+                {statusFilter === 'cancelled'
+                  ? 'Noch keine stornierten Bestellungen'
+                  : statusFilter === 'completed'
+                  ? 'Noch keine abgeschlossenen Bestellungen'
+                  : 'Noch keine Bestellungen'}
               </p>
             </div>
           ) : (
@@ -330,21 +448,24 @@ export default function SalesOrdersPage() {
                             <div className="flex items-center gap-2">
                               <Link
                                 href={`/sales/orders/${order.id}`}
-                                className="text-[#25D076] hover:text-[#25D076]/80 font-medium text-sm"
+                                className="text-brand-600 hover:text-brand-700 font-medium text-sm px-3 py-1.5 rounded-lg hover:bg-brand-50 transition-colors"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                Details
+                                Details anzeigen
                               </Link>
                               {order.status !== 'cancelled' && (
                                 <button
+                                  type="button"
                                   onClick={(e) => {
+                                    e.preventDefault();
                                     e.stopPropagation();
                                     handleCancelOrder(order.id, e);
                                   }}
-                                  className="text-red-600 hover:text-red-700 text-sm font-medium"
+                                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
                                   title="Bestellung stornieren"
                                 >
-                                  Stornieren
+                                  <Trash2 className="w-4 h-4" />
+                                  <span>Stornieren</span>
                                 </button>
                               )}
                             </div>
@@ -359,7 +480,15 @@ export default function SalesOrdersPage() {
           )}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 
+export default function SalesOrdersPage() {
+  return (
+    <OrdersProvider>
+      <SalesOrdersPageContent />
+    </OrdersProvider>
+  );
+}

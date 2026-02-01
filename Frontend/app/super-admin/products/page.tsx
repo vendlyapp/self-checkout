@@ -167,7 +167,7 @@ export default function SuperAdminProducts() {
         </div>
 
         {/* ============================================ */}
-        {/* ESTADÍSTICAS DE LA TIENDA */}
+        {/* GESCHÄFTSSTATISTIKEN */}
         {/* ============================================ */}
         {storeStats && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -241,7 +241,7 @@ export default function SuperAdminProducts() {
         )}
 
         {/* ============================================ */}
-        {/* TABLA DE PRODUCTOS */}
+        {/* PRODUKTTABELLE */}
         {/* ============================================ */}
         {filteredProducts.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-xl border border-gray-200 dark:bg-white/[0.03] dark:border-gray-800">
@@ -439,7 +439,7 @@ export default function SuperAdminProducts() {
       )}
 
       {/* ============================================ */}
-      {/* LISTA DE TIENDAS */}
+      {/* GESCHÄFTELISTE */}
       {/* ============================================ */}
       {allStores.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200 dark:bg-white/[0.03] dark:border-gray-800">

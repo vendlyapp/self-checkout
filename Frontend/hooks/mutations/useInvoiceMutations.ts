@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { InvoiceService, Invoice, CreateInvoicePayload } from '@/lib/services/invoiceService';
+import { useMyStore } from '@/hooks/queries/useMyStore';
 
 /**
  * Hook para crear invoice (mutation)
@@ -20,6 +21,7 @@ import { InvoiceService, Invoice, CreateInvoicePayload } from '@/lib/services/in
  */
 export const useCreateInvoice = () => {
   const queryClient = useQueryClient();
+  const { data: store } = useMyStore();
 
   return useMutation({
     mutationFn: async (payload: CreateInvoicePayload) => {
@@ -29,10 +31,29 @@ export const useCreateInvoice = () => {
       }
       return response.data as Invoice;
     },
-    onSuccess: () => {
-      // Invalidar cache de invoices para refrescar la lista
-      // Esto actualizará automáticamente todas las páginas que usen useInvoices
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    onSuccess: (data) => {
+      // Invalidar solo las queries de invoices relevantes para este store
+      if (store?.id) {
+        queryClient.invalidateQueries({ 
+          queryKey: ['invoices', store.id],
+          exact: false, // Invalida todas las variantes (con diferentes options)
+        });
+      } else {
+        // Fallback: invalidar todas si no hay store (raro pero seguro)
+        queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      }
+      
+      // Actualizar optimísticamente la invoice individual si existe en cache
+      if (data?.id) {
+        queryClient.setQueryData(['invoice', data.id], data);
+      }
+      
+      // Si hay orderId, invalidar invoices de esa orden
+      if (data.orderId) {
+        queryClient.invalidateQueries({ 
+          queryKey: ['invoicesByOrderId', data.orderId],
+        });
+      }
     },
   });
 };

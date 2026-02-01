@@ -7,7 +7,7 @@ import { usePaymentMethods } from '@/hooks/queries/usePaymentMethods'
 import { useUpdatePaymentMethod } from '@/hooks/mutations/usePaymentMethodMutations'
 import { getPaymentMethodIcon, isSvgIcon } from '@/lib/utils/paymentMethodIcons'
 import Image from 'next/image'
-import { CreditCard } from 'lucide-react'
+import { CreditCard, AlertTriangle, Shield } from 'lucide-react'
 import { Loader } from '@/components/ui/Loader'
 import type { PaymentMethod as ApiPaymentMethod } from '@/hooks/queries/usePaymentMethods'
 
@@ -21,6 +21,7 @@ interface PaymentMethodDisplay {
   icon: React.ReactNode
   isActive: boolean
   disabledBySuperAdmin?: boolean
+  disabledGlobally?: boolean
   apiMethod: ApiPaymentMethod
 }
 
@@ -82,6 +83,7 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
       icon: iconElement,
       isActive: method.isActive,
       disabledBySuperAdmin: method.disabledBySuperAdmin || false,
+      disabledGlobally: method.disabledGlobally || false,
       apiMethod: method,
     }
   }) || []
@@ -129,12 +131,20 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
   }
 
   // Separar métodos por estado
-  // Activos: isActive = true y disabledBySuperAdmin = false
-  const activeMethods = paymentMethods.filter(method => method.isActive && !method.disabledBySuperAdmin)
-  // Inactivos: isActive = false y disabledBySuperAdmin = false
-  const inactiveMethods = paymentMethods.filter(method => !method.isActive && !method.disabledBySuperAdmin)
-  // Inhabilitados: disabledBySuperAdmin = true (independiente de isActive)
-  const disabledMethods = paymentMethods.filter(method => method.disabledBySuperAdmin)
+  // Activos: isActive = true y no restringidos
+  const activeMethods = paymentMethods.filter(method => 
+    method.isActive && !method.disabledBySuperAdmin && !method.disabledGlobally
+  )
+  // Inactivos: isActive = false y no restringidos
+  const inactiveMethods = paymentMethods.filter(method => 
+    !method.isActive && !method.disabledBySuperAdmin && !method.disabledGlobally
+  )
+  // Restringidos por super admin local: disabledBySuperAdmin = true
+  const disabledBySuperAdminMethods = paymentMethods.filter(method => 
+    method.disabledBySuperAdmin && !method.disabledGlobally
+  )
+  // Restringidos globalmente: disabledGlobally = true
+  const globallyRestrictedMethods = paymentMethods.filter(method => method.disabledGlobally)
 
   const isLoadingModal = updatePaymentMethod.isPending && updatingMethodName && modalContainer
 
@@ -144,7 +154,7 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
         <CardContent className="p-8">
           <div className="flex items-center justify-center gap-3">
             <Loader size="sm" />
-            <p className="text-sm text-muted-foreground">Cargando métodos de pago...</p>
+            <p className="text-sm text-muted-foreground">Zahlungsmethoden werden geladen...</p>
           </div>
         </CardContent>
       </Card>
@@ -153,7 +163,7 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
 
   return (
     <>
-      {/* Modal de carga */}
+      {/* Loading Modal */}
       {isLoadingModal && createPortal(
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
@@ -174,9 +184,9 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
                   // Verificar si se está habilitando/deshabilitando (disabledBySuperAdmin)
                   const isTogglingDisabled = method.disabledBySuperAdmin !== undefined
                   if (isTogglingDisabled && method.disabledBySuperAdmin) {
-                    return 'Zahlungsmethode wird aktiviert...'
+                    return 'Einschränkung wird aufgehoben...'
                   } else if (isTogglingDisabled && !method.disabledBySuperAdmin) {
-                    return 'Zahlungsmethode wird deaktiviert...'
+                    return 'Zahlungsmethode wird eingeschränkt...'
                   }
                   
                   // Verificar si se está activando/desactivando (isActive)
@@ -200,17 +210,17 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
       <CardHeader className="pb-6">
         <CardTitle className="flex items-center gap-2 text-lg lg:text-xl mb-2">
           <CreditCard className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-          Métodos de Pago
+          Zahlungsmethoden
         </CardTitle>
         <CardDescription className="text-sm">
-          Administra los métodos de pago disponibles para esta tienda
+          Verwalten Sie die Zahlungsmethoden für dieses Geschäft
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Métodos Activos */}
+        {/* Aktive Methoden */}
         {activeMethods.length > 0 && (
           <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">Activos</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Aktiv</h3>
             <div className="space-y-3">
               {activeMethods.map((method) => (
                 <div
@@ -242,7 +252,7 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
                         role="switch"
                         aria-checked={method.isActive}
                         aria-label={`Toggle ${method.name}`}
-                        title={method.isActive ? 'Desactivar' : 'Activar'}
+                        title={method.isActive ? 'Deaktivieren' : 'Aktivieren'}
                       >
                         <span
                           className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-ios-slow ${
@@ -252,14 +262,14 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
                           }`}
                         />
                       </button>
-                      {/* Botón Inhabilitar */}
+                      {/* Button Deaktivieren */}
                       <button
                         onClick={() => !updatePaymentMethod.isPending && handleToggleDisabled(method.id)}
                         disabled={updatePaymentMethod.isPending}
                         className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/15 rounded-lg hover:bg-red-100 dark:hover:bg-red-500/25 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Zahlungsmethode deaktivieren"
+                        title="Zahlungsmethode einschränken"
                       >
-                        Inhabilitar
+                        Einschränken
                       </button>
                     </div>
                   </div>
@@ -269,10 +279,10 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
           </div>
         )}
 
-        {/* Métodos Inactivos */}
+        {/* Inaktive Methoden */}
         {inactiveMethods.length > 0 && (
           <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">Inactivos</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Inaktiv</h3>
             <div className="space-y-3">
               {inactiveMethods.map((method) => (
                 <div
@@ -304,7 +314,7 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
                         role="switch"
                         aria-checked={method.isActive}
                         aria-label={`Toggle ${method.name}`}
-                        title={method.isActive ? 'Desactivar' : 'Activar'}
+                        title={method.isActive ? 'Deaktivieren' : 'Aktivieren'}
                       >
                         <span
                           className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-ios-slow ${
@@ -314,14 +324,14 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
                           }`}
                         />
                       </button>
-                      {/* Botón Inhabilitar */}
+                      {/* Button Deaktivieren */}
                       <button
                         onClick={() => !updatePaymentMethod.isPending && handleToggleDisabled(method.id)}
                         disabled={updatePaymentMethod.isPending}
                         className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/15 rounded-lg hover:bg-red-100 dark:hover:bg-red-500/25 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Zahlungsmethode deaktivieren"
+                        title="Zahlungsmethode einschränken"
                       >
-                        Inhabilitar
+                        Einschränken
                       </button>
                     </div>
                   </div>
@@ -331,37 +341,42 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
           </div>
         )}
 
-        {/* Métodos Inhabilitados por Super Admin - SIEMPRE mostrar si hay métodos inhabilitados */}
-        {disabledMethods.length > 0 && (
+        {/* Von Super Admin lokal eingeschränkte Methoden */}
+        {disabledBySuperAdminMethods.length > 0 && (
           <div className="mt-6">
             <h3 className="text-sm font-semibold text-foreground mb-3">
-              Inhabilitados por Super Admin
+              Eingeschränkt (lokal)
               <span className="ml-2 text-xs text-muted-foreground font-normal">
-                ({disabledMethods.length})
+                ({disabledBySuperAdminMethods.length})
               </span>
             </h3>
             <div className="space-y-3">
-              {disabledMethods.map((method) => (
+              {disabledBySuperAdminMethods.map((method) => (
                 <div
                   key={method.id}
-                  className="bg-muted/30 rounded-xl p-4 border border-border/50 hover:shadow-sm transition-all opacity-50"
+                  className="bg-muted/30 rounded-xl p-4 border border-orange-200 dark:border-orange-500/30 hover:shadow-sm transition-all"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4 flex-1 min-w-0">
-                      <div className="opacity-50">
+                      <div className="opacity-70">
                         {method.icon}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-semibold text-foreground truncate opacity-50">
-                          {method.name}
-                        </h4>
-                        <p className="text-xs text-muted-foreground mt-0.5 opacity-50">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="text-sm font-semibold text-foreground truncate">
+                            {method.name}
+                          </h4>
+                          <span className="px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400">
+                            Eingeschränkt
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           {method.apiMethod.code}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      {/* Toggle Activar/Desactivar (aunque esté inhabilitado, puede cambiar estado) */}
+                      {/* Toggle Activar/Desactivar */}
                       <button
                         onClick={() => !updatePaymentMethod.isPending && handleToggle(method.id)}
                         disabled={updatePaymentMethod.isPending}
@@ -373,7 +388,7 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
                         role="switch"
                         aria-checked={method.isActive}
                         aria-label={`Toggle ${method.name}`}
-                        title={method.isActive ? 'Desactivar' : 'Activar'}
+                        title={method.isActive ? 'Deaktivieren' : 'Aktivieren'}
                       >
                         <span
                           className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-ios-slow ${
@@ -383,15 +398,77 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
                           }`}
                         />
                       </button>
-                      {/* Botón Habilitar */}
+                      {/* Botón Freischalten */}
                       <button
                         onClick={() => !updatePaymentMethod.isPending && handleToggleDisabled(method.id)}
                         disabled={updatePaymentMethod.isPending}
                         className="px-3 py-1.5 text-xs font-medium text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/15 rounded-lg hover:bg-brand-100 dark:hover:bg-brand-500/25 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Zahlungsmethode aktivieren"
+                        title="Einschränkung aufheben"
                       >
-                        Habilitar
+                        Freischalten
                       </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Global eingeschränkte Methoden - vom Super Admin */}
+        {globallyRestrictedMethods.length > 0 && (
+          <div className="mt-6 pt-6 border-t-2 border-orange-200 dark:border-orange-500/30">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="p-1.5 rounded-lg bg-orange-50 dark:bg-orange-500/10">
+                <Shield className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+              </div>
+              <h3 className="text-sm font-semibold text-foreground">
+                Eingeschränkt (global)
+                <span className="ml-2 text-xs text-muted-foreground font-normal">
+                  ({globallyRestrictedMethods.length})
+                </span>
+              </h3>
+            </div>
+            <div className="mb-3 p-3 bg-orange-50 dark:bg-orange-500/10 rounded-lg border border-orange-200 dark:border-orange-500/30">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-orange-700 dark:text-orange-400">
+                  Diese Zahlungsmethoden wurden vom Super Admin global eingeschränkt und sind für alle Geschäfte nicht verfügbar.
+                </p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {globallyRestrictedMethods.map((method) => (
+                <div
+                  key={method.id}
+                  className="bg-muted/30 rounded-xl p-4 border-2 border-orange-200 dark:border-orange-500/30 hover:shadow-sm transition-all opacity-60"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <div className="opacity-50">
+                        {method.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="text-sm font-semibold text-foreground truncate">
+                            {method.name}
+                          </h4>
+                          <span className="px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400">
+                            Global eingeschränkt
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {method.apiMethod.code}
+                        </p>
+                        <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                          Vom Super Admin eingeschränkt
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-lg cursor-not-allowed">
+                        Nicht verfügbar
+                      </div>
                     </div>
                   </div>
                 </div>

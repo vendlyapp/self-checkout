@@ -17,6 +17,7 @@ import PaymentModal from "@/components/dashboard/charge/PaymentModal";
 import { useMyStore } from "@/hooks/queries/useMyStore";
 import { usePaymentMethods } from "@/hooks/queries/usePaymentMethods";
 import { Loader } from "@/components/ui/Loader";
+import { formatSwissPriceWithCHF } from "@/lib/utils";
 
 export default function PaymentPage() {
   const {
@@ -99,14 +100,12 @@ export default function PaymentPage() {
   // Mostrar loading state durante la hidratación o mientras se cargan los datos
   if (!mounted || storeLoading || paymentMethodsLoading) {
     return (
-      <div className="w-full animate-page-enter gpu-accelerated">
-        <div className="flex flex-col items-center justify-center min-h-screen">
-          <div className="text-center">
-            <Loader size="lg" className="mb-4" />
-            <p className="text-xl font-semibold text-gray-900 mb-4">
-              Wird geladen...
-            </p>
-          </div>
+      <div className="w-full h-screen flex items-center justify-center animate-fade-in gpu-accelerated">
+        <div className="flex flex-col items-center justify-center text-center">
+          <Loader size="lg" className="mb-4" />
+          <p className="text-xl font-semibold text-gray-900">
+            Wird geladen...
+          </p>
         </div>
       </div>
     );
@@ -114,43 +113,41 @@ export default function PaymentPage() {
 
   return (
     <>
-      <div className="w-full animate-page-enter gpu-accelerated">
+      <div className="w-full animate-fade-in gpu-accelerated">
         {/* Mobile Layout */}
         <div className="block lg:hidden">
           <div className="flex flex-col">
-            <div className="animate-slide-in-right">
-              <HeaderNav
-                title="Bezahlung"
-                showAddButton={false}
-                closeDestination="/charge/cart"
-              />
-            </div>
+            <HeaderNav
+              title="Bezahlung"
+              showAddButton={false}
+              closeDestination="/charge/cart"
+            />
 
             <main className="flex-1 flex flex-col items-center">
-              <div className="w-full max-w-md mx-auto animate-slide-up-fade">
-                <div className="text-center p-4 bg-[#F9F6F4] rounded-xl animate-scale-in">
-                  <div className="text-[18px] font-medium text-gray-700 mb-1 transition-interactive">
-                    {store?.name || "Tienda"}
+              <div className="w-full max-w-md mx-auto">
+                <div className="text-center p-4 bg-[#F9F6F4] rounded-xl">
+                  <div className="text-[18px] font-medium text-gray-700 mb-1">
+                    {store?.name || "Geschäft"}
                   </div>
                   {promoApplied && (
-                    <div className="text-[16px] text-gray-400 line-through mb-1 transition-interactive">
-                      CHF {subtotal.toFixed(2)}
+                    <div className="text-[16px] text-gray-400 line-through mb-1">
+                      {formatSwissPriceWithCHF(subtotal)}
                     </div>
                   )}
-                  <div className="text-[38px] font-bold text-gray-900 leading-tight transition-interactive">
-                    CHF {total.toFixed(2)}
+                  <div className="text-[38px] font-bold text-gray-900 leading-tight">
+                    {formatSwissPriceWithCHF(total)}
                   </div>
                   {promoApplied && (
-                    <div className="text-[#3C7E44] text-[15px] font-semibold mb-1 animate-bounce-in">
+                    <div className="text-[#3C7E44] text-[15px] font-semibold mb-1">
                       10% Rabatt auf Bio-Produkte angewendet!
                     </div>
                   )}
-                  <div className="text-gray-500 text-[16px] transition-interactive">
+                  <div className="text-gray-500 text-[16px]">
                     inkl. MwSt • {totalItems} Artikel
                   </div>
                 </div>
-                <div className="py-6 mb-8 ml-8 mr-8 animate-stagger-1">
-                  <div className="text-center text-[18px] font-semibold text-gray-800 mb-4 transition-interactive">
+                <div className="py-6 mb-8 ml-8 mr-8">
+                  <div className="text-center text-[18px] font-semibold text-gray-800 mb-4">
                     Zahlungsart wählen:
                   </div>
                   {paymentMethods.length === 0 ? (
@@ -159,19 +156,17 @@ export default function PaymentPage() {
                     </div>
                   ) : (
                     <div className="flex flex-col gap-4">
-                      {paymentMethods.map((payment, index) => {
+                      {paymentMethods.map((payment) => {
                         const Icon = payment.icon;
                         return (
                           <button
                             key={payment.code}
                             onClick={() => handlePaymentMethodSelect(payment.code)}
                             className="w-full flex items-center justify-center gap-3 rounded-full hover:opacity-90 text-white font-bold text-[20px] py-4 shadow 
-                                     transition-interactive gpu-accelerated hover:scale-105 active:scale-95"
+                                     transition-ios active:scale-95"
                             aria-label={payment.label}
                             style={{
                               backgroundColor: payment.bgColor,
-                              animationDelay: `${index * 0.1}s`,
-                              animationFillMode: 'both'
                             }}
                           >
                             <Icon className="w-6 h-6" /> {payment.label}
@@ -203,45 +198,43 @@ export default function PaymentPage() {
         <div className="hidden lg:block">
           <div className="p-6 space-y-6">
             {/* Header Section */}
-            <div className="flex items-center justify-between animate-stagger-1">
+            <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 transition-interactive">Bezahlung</h1>
-                <p className="text-gray-600 mt-1 transition-interactive">Wählen Sie Ihre bevorzugte Zahlungsmethode</p>
+                <h1 className="text-2xl font-bold text-gray-900">Bezahlung</h1>
+                <p className="text-gray-600 mt-1">Wählen Sie Ihre bevorzugte Zahlungsmethode</p>
               </div>
               <button
                 onClick={() => router.push("/charge/cart")}
                 className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 
-                         transition-interactive gpu-accelerated hover:bg-gray-100 rounded-lg active:scale-95"
+                         transition-ios hover:bg-gray-100 rounded-lg active:scale-95"
               >
                 <span>← Zurück zum Warenkorb</span>
               </button>
             </div>
 
             {/* Payment Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-stagger-2">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Payment Methods */}
               <div className="lg:col-span-1">
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 animate-fade-in-scale">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-6 transition-interactive">Zahlungsart wählen</h2>
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-6">Zahlungsart wählen</h2>
                   {paymentMethods.length === 0 ? (
                     <div className="text-center py-8">
                       <p className="text-gray-500">Keine Zahlungsmethoden verfügbar</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 gap-4">
-                      {paymentMethods.map((payment, index) => {
+                      {paymentMethods.map((payment) => {
                         const Icon = payment.icon;
                         return (
                           <button
                             key={payment.code}
                             onClick={() => handlePaymentMethodSelect(payment.code)}
                             className="w-full flex items-center justify-center gap-4 rounded-xl hover:opacity-90 text-white font-bold text-lg py-4 shadow 
-                                     transition-interactive gpu-accelerated hover:scale-105 active:scale-95"
+                                     transition-ios active:scale-95"
                             aria-label={payment.label}
                             style={{
                               backgroundColor: payment.bgColor,
-                              animationDelay: `${index * 0.1}s`,
-                              animationFillMode: 'both'
                             }}
                           >
                             <Icon className="w-6 h-6" /> {payment.label}
@@ -255,21 +248,21 @@ export default function PaymentPage() {
 
               {/* Order Summary */}
               <div className="lg:col-span-1">
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 sticky top-6 animate-stagger-3">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4 transition-interactive">Bestellübersicht</h2>
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 sticky top-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Bestellübersicht</h2>
 
                   {/* Store Info */}
                   <div className="text-center p-4 bg-[#F9F6F4] rounded-xl mb-6">
                     <div className="text-lg font-medium text-gray-700 mb-1">
-                      {store?.name || "Tienda"}
+                      {store?.name || "Geschäft"}
                     </div>
                     {promoApplied && (
                       <div className="text-base text-gray-400 line-through mb-1">
-                        CHF {subtotal.toFixed(2)}
+                        {formatSwissPriceWithCHF(subtotal)}
                       </div>
                     )}
                     <div className="text-3xl font-bold text-gray-900 leading-tight">
-                      CHF {total.toFixed(2)}
+                      {formatSwissPriceWithCHF(total)}
                     </div>
                     {promoApplied && (
                       <div className="text-[#3C7E44] text-sm font-semibold mb-1">
@@ -301,7 +294,7 @@ export default function PaymentPage() {
         </div>
       </div>
 
-      {/* Modal de confirmación de pago */}
+      {/* Payment Confirmation Modal */}
       <PaymentModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

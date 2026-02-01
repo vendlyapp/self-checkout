@@ -46,11 +46,11 @@ export default function StoreOrders({ storeId, store }: StoreOrdersProps) {
         const ordersData = Array.isArray(response.data) ? response.data : [];
         setOrders(ordersData as Order[]);
       } else {
-        throw new Error(response.error || 'Error al cargar las órdenes');
+        throw new Error(response.error || 'Fehler beim Laden der Bestellungen');
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
-      setError(error instanceof Error ? error.message : 'Error al cargar las órdenes');
+      setError(error instanceof Error ? error.message : 'Fehler beim Laden der Bestellungen');
       // Fallback to empty array on error
       setOrders([]);
     } finally {
@@ -63,13 +63,13 @@ export default function StoreOrders({ storeId, store }: StoreOrdersProps) {
     return Array.from({ length: Math.min(orderCount || 10, 20) }, (_, i) => ({
       id: `order-${i + 1}`,
       orderNumber: `ORD-${String(i + 1).padStart(4, '0')}`,
-      customerName: `Cliente ${i + 1}`,
-      customerEmail: `cliente${i + 1}@example.com`,
+      customerName: `Kunde ${i + 1}`,
+      customerEmail: `kunde${i + 1}@example.com`,
       total: Math.floor(Math.random() * 500) + 50,
       status: ['completed', 'pending', 'cancelled'][Math.floor(Math.random() * 3)],
       createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
       itemsCount: Math.floor(Math.random() * 5) + 1,
-      paymentMethod: ['Tarjeta', 'Efectivo', 'Transferencia', 'Digital'][Math.floor(Math.random() * 4)],
+      paymentMethod: ['Karte', 'Bargeld', 'Überweisung', 'Digital'][Math.floor(Math.random() * 4)],
     }));
   };
 
@@ -83,21 +83,21 @@ export default function StoreOrders({ storeId, store }: StoreOrdersProps) {
     switch (status) {
       case 'completed':
         return {
-          label: 'Completada',
+          label: 'Abgeschlossen',
           color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
           icon: CheckCircle2,
           iconColor: 'text-emerald-600 dark:text-emerald-400',
         };
       case 'pending':
         return {
-          label: 'Pendiente',
+          label: 'Ausstehend',
           color: 'bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-400',
           icon: Clock,
           iconColor: 'text-orange-600 dark:text-orange-400',
         };
       case 'cancelled':
         return {
-          label: 'Cancelada',
+          label: 'Storniert',
           color: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400',
           icon: XCircle,
           iconColor: 'text-red-600 dark:text-red-400',
@@ -154,10 +154,10 @@ export default function StoreOrders({ storeId, store }: StoreOrdersProps) {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground mb-2">Total Órdenes</p>
+                <p className="text-xs text-muted-foreground mb-2">Bestellungen insgesamt</p>
                 <p className="text-2xl font-bold text-foreground mb-1">{orders.length}</p>
                 <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                  {completedOrders.length} completadas
+                  {completedOrders.length} abgeschlossen
                 </p>
               </div>
               <div className="w-12 h-12 bg-brand-50 dark:bg-brand-500/15 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -171,12 +171,12 @@ export default function StoreOrders({ storeId, store }: StoreOrdersProps) {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground mb-2">Revenue Total</p>
+                <p className="text-xs text-muted-foreground mb-2">Gesamtumsatz</p>
                 <p className="text-xl font-bold text-foreground mb-1">
                   CHF {formatSwissPrice(totalRevenue)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Promedio: CHF {formatSwissPrice(averageOrderValue)}
+                  Durchschnitt: CHF {formatSwissPrice(averageOrderValue)}
                 </p>
               </div>
               <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-500/15 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -190,12 +190,12 @@ export default function StoreOrders({ storeId, store }: StoreOrdersProps) {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground mb-2">Órdenes Completadas</p>
+                <p className="text-xs text-muted-foreground mb-2">Abgeschlossene Bestellungen</p>
                 <p className="text-2xl font-bold text-foreground mb-1">
                   {completedOrders.length}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {orders.length > 0 ? Math.round((completedOrders.length / orders.length) * 100) : 0}% del total
+                  {orders.length > 0 ? Math.round((completedOrders.length / orders.length) * 100) : 0}% des Gesamtwerts
                 </p>
               </div>
               <div className="w-12 h-12 bg-blue-50 dark:bg-blue-500/15 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -213,10 +213,10 @@ export default function StoreOrders({ storeId, store }: StoreOrdersProps) {
             <div>
               <CardTitle className="flex items-center gap-2 text-lg lg:text-xl mb-2">
                 <ShoppingCart className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-                Órdenes Recientes
+                Letzte Bestellungen
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                {filteredOrders.length} de {orders.length} órdenes
+                {filteredOrders.length} von {orders.length} Bestellungen
               </p>
             </div>
             <div className="relative flex-1 sm:flex-none sm:w-64">
@@ -252,8 +252,8 @@ export default function StoreOrders({ storeId, store }: StoreOrdersProps) {
               </h3>
               <p className="text-sm text-muted-foreground">
                 {searchTerm 
-                  ? 'Intenta con otro término de búsqueda' 
-                  : 'Las órdenes de esta tienda aparecerán aquí'}
+                  ? 'Versuchen Sie einen anderen Suchbegriff' 
+                  : 'Die Bestellungen dieses Geschäfts werden hier angezeigt'}
               </p>
             </div>
           ) : (
@@ -287,7 +287,7 @@ export default function StoreOrders({ storeId, store }: StoreOrdersProps) {
                           <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1.5">
                               <Package className="w-3.5 h-3.5" />
-                              {order.itemsCount} {order.itemsCount === 1 ? 'item' : 'items'}
+                              {order.itemsCount} {order.itemsCount === 1 ? 'Artikel' : 'Artikel'}
                             </span>
                             <span>•</span>
                             <span>{order.paymentMethod}</span>
@@ -298,7 +298,7 @@ export default function StoreOrders({ storeId, store }: StoreOrdersProps) {
                             CHF {formatSwissPrice(order.total)}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {new Date(order.createdAt).toLocaleDateString('es-ES', {
+                            {new Date(order.createdAt).toLocaleDateString('de-CH', {
                               day: 'numeric',
                               month: 'short',
                               year: 'numeric',
@@ -311,14 +311,14 @@ export default function StoreOrders({ storeId, store }: StoreOrdersProps) {
                       <div className="pt-4 border-t border-border/50">
                         <div className="flex flex-wrap items-center gap-3 text-sm">
                           <div>
-                            <span className="text-muted-foreground">Cliente: </span>
+                            <span className="text-muted-foreground">Kunde: </span>
                             <span className="font-medium text-foreground">{order.customerName}</span>
                           </div>
                           <span className="text-muted-foreground">•</span>
                           <span className="text-muted-foreground truncate">{order.customerEmail}</span>
                           <span className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Calendar className="w-3.5 h-3.5" />
-                            {new Date(order.createdAt).toLocaleTimeString('es-ES', {
+                            {new Date(order.createdAt).toLocaleTimeString('de-CH', {
                               hour: '2-digit',
                               minute: '2-digit',
                             })}

@@ -33,7 +33,7 @@ class GlobalPaymentMethodConfigService {
    */
   async findByCode(code) {
     if (!code || !code.trim()) {
-      throw new Error('El código del método de pago es requerido');
+      throw new Error('Code der Zahlungsmethode ist erforderlich');
     }
 
     try {
@@ -46,7 +46,7 @@ class GlobalPaymentMethodConfigService {
         return {
           success: false,
           data: null,
-          message: 'Configuración global no encontrada'
+          message: 'Globale Konfiguration nicht gefunden'
         };
       }
 
@@ -72,16 +72,16 @@ class GlobalPaymentMethodConfigService {
     const { code, disabledGlobally, reason } = configData;
 
     if (!code || !code.trim()) {
-      throw new Error('El código del método de pago es requerido');
+      throw new Error('Code der Zahlungsmethode ist erforderlich');
     }
 
     if (typeof disabledGlobally !== 'boolean') {
-      throw new Error('disabledGlobally debe ser un booleano');
+      throw new Error('disabledGlobally muss ein Boolean sein');
     }
 
     // Bargeld no puede ser deshabilitado globalmente
     if (code.toLowerCase().trim() === 'bargeld' && disabledGlobally) {
-      throw new Error('Bargeld (efectivo) no puede ser deshabilitado globalmente');
+      throw new Error('Bargeld (Bargeld) kann nicht global deaktiviert werden');
     }
 
     try {

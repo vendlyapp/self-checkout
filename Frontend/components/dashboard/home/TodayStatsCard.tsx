@@ -5,6 +5,7 @@ import StatCard from './StatCard';
 import { useMemo } from 'react';
 import { useOrderStats } from '@/hooks/queries';
 import { useMyStore } from '@/hooks/queries/useMyStore';
+import { formatSwissPrice } from '@/lib/utils';
 
 const TodayStatsCard = () => {
   // Obtener store del usuario para filtrar estadísticas
@@ -80,7 +81,7 @@ const TodayStatsCard = () => {
         <StatCard
           icon={<DollarSign className="w-4 h-4" />}
           label="Verkäufe"
-          amount={totalSales.toFixed(2)}
+          amount={formatSwissPrice(totalSales)}
           count={`${totalTransactions} Transaktionen`}
           trend={totalTransactions > 0 ? "Heute" : "Keine Verkäufe"}
           showCurrency={true}
@@ -103,7 +104,7 @@ const TodayStatsCard = () => {
           <StatCard
             icon={<TrendingUp className="w-4 h-4" />}
             label="Durchschnitt"
-            amount={averagePerSale.toFixed(2)}
+            amount={formatSwissPrice(averagePerSale)}
             count="pro Verkauf"
             trend={totalTransactions > 0 ? "Heute" : "N/A"}
             showCurrency={true}
@@ -115,8 +116,8 @@ const TodayStatsCard = () => {
           <StatCard
             icon={<Clock className="w-4 h-4" />}
             label="Umsatz/Stunde"
-            amount={revenuePerHour.toFixed(2)}
-            count="CHF pro Stunde"
+            amount={formatSwissPrice(revenuePerHour)}
+            count="pro Stunde"
             trend="Heute"
             isDark={true}
             showCurrency={true}

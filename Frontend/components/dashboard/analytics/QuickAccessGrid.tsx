@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronRight, List, X, FileText, ShoppingBasket } from "lucide-react";
+import { ChevronRight, List, XCircle, FileText, ShoppingBasket } from "lucide-react";
 import { QuickAccessItem } from "./types";
 
 interface QuickAccessGridProps {
@@ -31,9 +31,9 @@ const QuickAccessGrid: React.FC<QuickAccessGridProps> = ({
     },
     {
       id: "cancel",
-      icon: <X className="w-6 h-6" />,
+      icon: <XCircle className="w-6 h-6" />,
       title: "Storno",
-      subtitle: "Verkauf stornieren",
+      subtitle: "Stornierte Bestellungen",
       color: "bg-red-100",
       iconColor: "text-red-600",
       action: onCancelAction,
