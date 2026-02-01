@@ -8,6 +8,9 @@ import {
   Copy,
   Scissors,
 } from 'lucide-react';
+import { toast } from 'sonner';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import {
   formatCHF,
   formatDate,
@@ -32,13 +35,24 @@ interface InvoiceTemplateProps {
   invoice: ServiceInvoice;
   showActions?: boolean;
   isMobile?: boolean;
+  onDownload?: () => void;
+  onPrint?: () => void;
 }
 
 // ─── Transform Service Invoice to Swiss Invoice Format ────────────────────────
 
 function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
   // Parse address strings to extract street, zip, city
-  const parseAddress = (address?: string) => {
+  const parseAddress = (address?: string, postalCode?: string, city?: string) => {
+    // If we have separate postalCode and city, use them
+    if (postalCode && city) {
+      return {
+        street: address || undefined,
+        zip: postalCode,
+        city: city,
+      };
+    }
+    
     if (!address) return { street: undefined, zip: undefined, city: undefined };
     
     // Try to match Swiss address format: "Street, ZIP City" or "Street ZIP City"
@@ -61,32 +75,52 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
       };
     }
     
+    // If we have postalCode and city separately, use them
+    if (postalCode) {
+      return {
+        street: address,
+        zip: postalCode,
+        city: city || undefined,
+      };
+    }
+    
     return { street: address, zip: undefined, city: undefined };
   };
 
-  const storeAddress = parseAddress(serviceInvoice.storeAddress);
-  const customerAddress = parseAddress(serviceInvoice.customerAddress);
+  // Parse store address with all available fields
+  const storeAddress = parseAddress(
+    serviceInvoice.storeAddress,
+    undefined, // Store doesn't have separate postalCode field in invoice
+    undefined  // Store doesn't have separate city field in invoice
+  );
 
-  // Build issuer (store) info
+  // Parse customer address with all available fields
+  const customerAddress = parseAddress(
+    serviceInvoice.customerAddress,
+    serviceInvoice.customerPostalCode,
+    serviceInvoice.customerCity
+  );
+
+  // Build issuer (store) info - ensure all fields are properly structured
   const issuer: InvoiceParty = {
-    name: serviceInvoice.storeName || 'Vendly',
-    street: storeAddress.street,
-    zip: storeAddress.zip || serviceInvoice.customerPostalCode,
-    city: storeAddress.city || serviceInvoice.customerCity,
+    name: serviceInvoice.storeName?.trim() || 'Vendly',
+    street: storeAddress.street?.trim() || undefined,
+    zip: storeAddress.zip?.trim() || undefined,
+    city: storeAddress.city?.trim() || undefined,
     country: 'Schweiz',
-    email: serviceInvoice.storeEmail,
-    phone: serviceInvoice.storePhone,
+    email: serviceInvoice.storeEmail?.trim() || undefined,
+    phone: serviceInvoice.storePhone?.trim() || undefined,
   };
 
-  // Build recipient (customer) info
+  // Build recipient (customer) info - ensure all fields are properly structured
   const recipient: InvoiceParty = {
-    name: serviceInvoice.customerName || 'Kunde',
-    street: customerAddress.street,
-    zip: customerAddress.zip || serviceInvoice.customerPostalCode,
-    city: customerAddress.city || serviceInvoice.customerCity,
+    name: serviceInvoice.customerName?.trim() || 'Kunde',
+    street: customerAddress.street?.trim() || undefined,
+    zip: customerAddress.zip?.trim() || serviceInvoice.customerPostalCode?.trim() || undefined,
+    city: customerAddress.city?.trim() || serviceInvoice.customerCity?.trim() || undefined,
     country: 'Schweiz',
-    email: serviceInvoice.customerEmail,
-    phone: serviceInvoice.customerPhone,
+    email: serviceInvoice.customerEmail?.trim() || undefined,
+    phone: serviceInvoice.customerPhone?.trim() || undefined,
   };
 
   // Transform items - calculate MwSt using Swiss formula
@@ -117,9 +151,11 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
   };
   
   const items: InvoiceLineItem[] = serviceInvoice.items.map((item: InvoiceItem, index: number) => {
-    // item.subtotal is already BRUTTO (includes VAT)
-    // item.price should be the unit price BRUTTO (includes VAT)
-    const totalBrutto = item.subtotal; // Already includes VAT
+    // Validate and ensure all product data is present
+    const productName = item.productName?.trim() || `Produkt ${index + 1}`;
+    const productSku = item.productSku?.trim() || undefined;
+    const quantity = Math.max(1, item.quantity || 1); // Ensure quantity is at least 1
+    const totalBrutto = item.subtotal || 0; // Already includes VAT
     
     // Get MwSt rate and code (variable per item if available in metadata)
     const { rate: mwstRate, code: mwstCode } = getMwStRateAndCode(item, index);
@@ -135,15 +171,18 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
     // unitPrice should be the price per unit BRUTTO (including VAT)
     // If item.price is already BRUTTO, use it directly
     // Otherwise, calculate from subtotal: unitPrice = subtotal / quantity
-    const unitPriceBrutto = item.price || (totalBrutto / item.quantity);
+    const unitPriceBrutto = item.price || (totalBrutto / quantity);
+    
+    // Build detail string with SKU if available
+    const detail = productSku ? `SKU: ${productSku}` : undefined;
     
     return {
-      id: item.productId || index,
-      description: item.productName,
-      detail: item.productSku ? `SKU: ${item.productSku}` : undefined,
-      quantity: item.quantity,
-      unitPrice: unitPriceBrutto, // Price per unit BRUTTO (includes VAT)
-      totalBrutto: totalBrutto, // Total BRUTTO (includes VAT)
+      id: item.productId || `product-${index}`,
+      description: productName,
+      detail: detail,
+      quantity: quantity,
+      unitPrice: Math.round(unitPriceBrutto * 100) / 100, // Round to 2 decimals
+      totalBrutto: Math.round(totalBrutto * 100) / 100, // Round to 2 decimals
       mwstRate,
       mwstCode,
     };
@@ -157,10 +196,36 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
   };
   const status = statusMap[serviceInvoice.status] || 'open';
 
+  // Ensure dates are correct and current
+  // Use issuedAt if available, otherwise use current date
+  const issuedDate = serviceInvoice.issuedAt 
+    ? new Date(serviceInvoice.issuedAt)
+    : new Date();
+  
+  // Validate date
+  if (isNaN(issuedDate.getTime())) {
+    // If invalid, use current date
+    issuedDate.setTime(Date.now());
+  }
+  
+  // Use orderDate for service date (Leistungsdatum), fallback to issuedDate
+  const orderDate = serviceInvoice.orderDate 
+    ? new Date(serviceInvoice.orderDate)
+    : issuedDate;
+  
+  // Validate orderDate
+  if (isNaN(orderDate.getTime())) {
+    orderDate.setTime(issuedDate.getTime());
+  }
+  
   // Calculate due date (30 days from issue date by default)
-  const issuedDate = new Date(serviceInvoice.issuedAt);
   const dueDate = new Date(issuedDate);
   dueDate.setDate(dueDate.getDate() + 30);
+  
+  // Ensure due date is valid
+  if (isNaN(dueDate.getTime())) {
+    dueDate.setTime(issuedDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+  }
 
   // Calculate totals using Swiss formula
   // totalBrutto is already the total including VAT
@@ -186,22 +251,22 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
 
   return {
     id: serviceInvoice.id,
-    nummer: serviceInvoice.invoiceNumber,
-    datum: serviceInvoice.issuedAt,
-    leistungsDatum: serviceInvoice.orderDate,
-    faelligkeitsDatum: dueDate.toISOString(),
+    nummer: serviceInvoice.invoiceNumber || `INV-${issuedDate.toISOString().split('T')[0].replace(/-/g, '')}`,
+    datum: issuedDate.toISOString(), // Date of issue (current/actual date)
+    leistungsDatum: orderDate.toISOString(), // Service date (order date)
+    faelligkeitsDatum: dueDate.toISOString(), // Due date (30 days from issue)
     zahlungsfrist: 30,
     waehrung: 'CHF',
-    referenz: serviceInvoice.invoiceNumber,
+    referenz: serviceInvoice.invoiceNumber || serviceInvoice.id,
     status,
     issuer,
     recipient,
     items,
     notes: serviceInvoice.metadata?.notes as string | undefined,
     orderId: serviceInvoice.orderId,
-    totalBrutto,
-    totalNetto,
-    totalMwst,
+    totalBrutto: Math.round(totalBrutto * 100) / 100, // Round to 2 decimals
+    totalNetto: Math.round(totalNetto * 100) / 100, // Round to 2 decimals
+    totalMwst: Math.round(totalMwst * 100) / 100, // Round to 2 decimals
   };
 }
 
@@ -312,14 +377,57 @@ function CutLine() {
 
 // ─── Action Buttons ──────────────────────────────────────────────────────────
 
-function ActionBar({ onPrint }: { onPrint: () => void }) {
+function ActionBar({ 
+  onPrint, 
+  onDownload 
+}: { 
+  onPrint: () => void;
+  onDownload?: () => void;
+}) {
+  const handleDownload = () => {
+    if (onDownload) {
+      onDownload();
+    }
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Rechnung',
+          text: 'Rechnung teilen',
+          url: window.location.href,
+        });
+        toast.success('Rechnung geteilt');
+      } catch (error) {
+        // Usuario canceló
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success('Link zur Rechnung wurde in die Zwischenablage kopiert');
+      } catch (err) {
+        toast.error('Fehler beim Kopieren');
+      }
+    }
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success('Link zur Rechnung wurde in die Zwischenablage kopiert');
+    } catch (err) {
+      toast.error('Fehler beim Kopieren');
+    }
+  };
+
   return (
     <div className="flex items-center gap-1.5 print:hidden">
       {[
         { icon: Printer, label: 'Drucken', onClick: onPrint },
-        { icon: Download, label: 'PDF', onClick: () => {} },
-        { icon: Mail, label: 'Senden', onClick: () => {} },
-        { icon: Copy, label: 'Kopieren', onClick: () => {} },
+        { icon: Download, label: 'PDF', onClick: handleDownload },
+        { icon: Mail, label: 'Senden', onClick: handleShare },
+        { icon: Copy, label: 'Kopieren', onClick: handleCopy },
       ].map(({ icon: Icon, label, onClick }) => (
         <button
           key={label}
@@ -349,6 +457,8 @@ export default function InvoiceTemplate({
   invoice: serviceInvoice,
   showActions = true,
   isMobile = false,
+  onDownload,
+  onPrint,
 }: InvoiceTemplateProps) {
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -377,7 +487,125 @@ export default function InvoiceTemplate({
   }, [invoice.items, invoice.totalBrutto, invoice.totalNetto, invoice.totalMwst]);
 
   const handlePrint = () => {
-    window.print();
+    if (onPrint) {
+      onPrint();
+    } else {
+      // Ocultar elementos que no deben imprimirse
+      const footer = document.querySelector('[class*="InvoiceActionsFooter"]');
+      const headerNav = document.querySelector('[class*="HeaderNav"]');
+      const responsiveHeader = document.querySelector('[class*="ResponsiveHeader"]');
+      
+      if (footer) (footer as HTMLElement).style.display = 'none';
+      if (headerNav) (headerNav as HTMLElement).style.display = 'none';
+      if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = 'none';
+      
+      window.print();
+      
+      // Restaurar después de imprimir
+      setTimeout(() => {
+        if (footer) (footer as HTMLElement).style.display = '';
+        if (headerNav) (headerNav as HTMLElement).style.display = '';
+        if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = '';
+      }, 1000);
+    }
+  };
+
+  const handleDownload = async () => {
+    if (onDownload) {
+      onDownload();
+      return;
+    }
+
+    // Función de descarga por defecto
+    try {
+      toast.loading('PDF wird erstellt...', { id: 'pdf-download' });
+      
+      if (!printRef.current) {
+        toast.error('Rechnung nicht gefunden', { id: 'pdf-download' });
+        return;
+      }
+
+      // Ocultar elementos que no deben aparecer en el PDF
+      const footer = document.querySelector('[class*="InvoiceActionsFooter"]');
+      const headerNav = document.querySelector('[class*="HeaderNav"]');
+      const responsiveHeader = document.querySelector('[class*="ResponsiveHeader"]');
+      
+      const originalFooterDisplay = footer ? (footer as HTMLElement).style.display : '';
+      const originalHeaderNavDisplay = headerNav ? (headerNav as HTMLElement).style.display : '';
+      const originalResponsiveHeaderDisplay = responsiveHeader ? (responsiveHeader as HTMLElement).style.display : '';
+      
+      if (footer) (footer as HTMLElement).style.display = 'none';
+      if (headerNav) (headerNav as HTMLElement).style.display = 'none';
+      if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = 'none';
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Capturar el contenido
+      const canvas = await html2canvas(printRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: printRef.current.scrollWidth,
+        windowHeight: printRef.current.scrollHeight,
+        ignoreElements: (element) => {
+          return element.classList?.contains('print:hidden') || 
+                 element.classList?.contains('no-print') || 
+                 element.classList?.contains('fixed') ||
+                 element.tagName === 'BUTTON';
+        },
+      });
+      
+      // Restaurar elementos
+      if (footer) (footer as HTMLElement).style.display = originalFooterDisplay;
+      if (headerNav) (headerNav as HTMLElement).style.display = originalHeaderNavDisplay;
+      if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = originalResponsiveHeaderDisplay;
+      
+      // Crear PDF
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min((pdfWidth - 20) / imgWidth, (pdfHeight - 20) / imgHeight); // Margen de 10mm
+      const imgScaledWidth = imgWidth * ratio;
+      const imgScaledHeight = imgHeight * ratio;
+      
+      const xOffset = (pdfWidth - imgScaledWidth) / 2;
+      const yOffset = 10; // Margen superior
+      
+      // Si la imagen es más alta que una página, dividirla
+      if (imgScaledHeight > pdfHeight - 20) {
+        let heightLeft = imgScaledHeight;
+        let position = yOffset;
+        
+        pdf.addImage(imgData, 'PNG', xOffset, position, imgScaledWidth, imgScaledHeight);
+        heightLeft -= (pdfHeight - 20);
+        
+        while (heightLeft > 0) {
+          position = heightLeft - imgScaledHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', xOffset, position, imgScaledWidth, imgScaledHeight);
+          heightLeft -= (pdfHeight - 20);
+        }
+      } else {
+        pdf.addImage(imgData, 'PNG', xOffset, yOffset, imgScaledWidth, imgScaledHeight);
+      }
+      
+      const fileName = `Rechnung_${serviceInvoice.invoiceNumber || serviceInvoice.id}.pdf`;
+      pdf.save(fileName);
+      
+      toast.success('PDF erfolgreich heruntergeladen', { id: 'pdf-download' });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Fehler beim Erstellen des PDFs', { id: 'pdf-download' });
+    }
   };
 
   const issuer = invoice.issuer;
@@ -392,13 +620,14 @@ export default function InvoiceTemplate({
       {showActions && (
         <div className={`flex items-center justify-between mb-4 print:hidden ${isMobile ? 'px-4' : ''}`}>
           <StatusBadge status={invoice.status} />
-          <ActionBar onPrint={handlePrint} />
+          <ActionBar onPrint={handlePrint} onDownload={handleDownload} />
         </div>
       )}
 
       {/* ── Invoice Paper ── */}
       <div
         ref={printRef}
+        id="invoice-content"
         className={`
           bg-white
           ${isMobile ? 'rounded-xl shadow-sm' : 'rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)]'}

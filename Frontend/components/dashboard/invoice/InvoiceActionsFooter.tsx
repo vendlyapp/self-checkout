@@ -20,21 +20,30 @@ export default function InvoiceActionsFooter() {
 
   const handlePrint = (e: React.MouseEvent<HTMLButtonElement>) => {
     lightFeedback(e.currentTarget);
-    // Ocultar el footer de acciones antes de imprimir
+    
+    // Ocultar elementos que no deben imprimirse
     const footer = document.querySelector('[class*="InvoiceActionsFooter"]');
-    if (footer) {
-      (footer as HTMLElement).style.display = 'none';
-    }
+    const headerNav = document.querySelector('[class*="HeaderNav"]');
+    const responsiveHeader = document.querySelector('[class*="ResponsiveHeader"]');
+    const sidebar = document.querySelector('[class*="Sidebar"]');
     
-    // Imprimir
-    window.print();
+    if (footer) (footer as HTMLElement).style.display = 'none';
+    if (headerNav) (headerNav as HTMLElement).style.display = 'none';
+    if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = 'none';
+    if (sidebar) (sidebar as HTMLElement).style.display = 'none';
     
-    // Restaurar el footer después de un breve delay
+    // Esperar un momento para que los cambios se apliquen
     setTimeout(() => {
-      if (footer) {
-        (footer as HTMLElement).style.display = '';
-      }
-    }, 1000);
+      window.print();
+      
+      // Restaurar elementos después de imprimir
+      setTimeout(() => {
+        if (footer) (footer as HTMLElement).style.display = '';
+        if (headerNav) (headerNav as HTMLElement).style.display = '';
+        if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = '';
+        if (sidebar) (sidebar as HTMLElement).style.display = '';
+      }, 500);
+    }, 100);
   };
 
   const handleShare = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -138,8 +147,16 @@ export default function InvoiceActionsFooter() {
         #invoice-content .bg-gray-100 {
           background-color: rgb(243, 244, 246) !important;
         }
-        #invoice-content .bg-green-100 {
+        #invoice-content .bg-green-100,
+        #invoice-content .bg-emerald-50,
+        #invoice-content .bg-sky-50,
+        #invoice-content .bg-amber-50 {
           background-color: rgb(220, 252, 231) !important;
+        }
+        #invoice-content .bg-\\[\\#25D076\\] {
+          background-color: rgb(37, 208, 118) !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
         }
         #invoice-content .bg-red-100 {
           background-color: rgb(254, 226, 226) !important;
@@ -156,8 +173,9 @@ export default function InvoiceActionsFooter() {
         #invoice-content .text-gray-600 {
           color: rgb(75, 85, 99) !important;
         }
-        #invoice-content .text-green-600 {
-          color: rgb(22, 163, 74) !important;
+        #invoice-content .text-green-600,
+        #invoice-content .text-\\[\\#25D076\\] {
+          color: rgb(37, 208, 118) !important;
         }
         #invoice-content .text-green-700 {
           color: rgb(21, 128, 61) !important;
@@ -183,8 +201,9 @@ export default function InvoiceActionsFooter() {
         #invoice-content .border-gray-100 {
           border-color: rgb(243, 244, 246) !important;
         }
-        #invoice-content .border-green-200 {
-          border-color: rgb(187, 247, 208) !important;
+        #invoice-content .border-green-200,
+        #invoice-content .border-\\[\\#25D076\\] {
+          border-color: rgb(37, 208, 118) !important;
         }
         #invoice-content .border-red-200 {
           border-color: rgb(254, 202, 202) !important;
@@ -192,25 +211,31 @@ export default function InvoiceActionsFooter() {
         #invoice-content .border-blue-200 {
           border-color: rgb(191, 219, 254) !important;
         }
+        #invoice-content .divide-\\[\\#25D076\\] > * + * {
+          border-color: rgb(37, 208, 118) !important;
+        }
       `;
       document.head.appendChild(colorFixStyle);
       
       // Esperar un momento para que los estilos se apliquen
       await new Promise(resolve => setTimeout(resolve, 300));
       
-      // Capturar el contenido como imagen con configuración que evita errores de color
+      // Capturar el contenido como imagen con configuración optimizada
       const canvas = await html2canvas(invoiceElement, {
-        scale: 2,
+        scale: 2, // Alta resolución para PDF de calidad
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
         windowWidth: invoiceElement.scrollWidth,
         windowHeight: invoiceElement.scrollHeight,
+        allowTaint: false,
         ignoreElements: (element) => {
-          // Ignorar elementos que causan problemas
-          return element.classList?.contains('no-print') || 
+          // Ignorar elementos que no deben aparecer en el PDF
+          return element.classList?.contains('print:hidden') ||
+                 element.classList?.contains('no-print') || 
                  element.classList?.contains('fixed') ||
-                 element.tagName === 'BUTTON';
+                 element.tagName === 'BUTTON' ||
+                 element.getAttribute('aria-hidden') === 'true';
         },
         onclone: (clonedDoc) => {
           // Agregar estilos que fuerzan RGB para todos los elementos
@@ -228,8 +253,16 @@ export default function InvoiceActionsFooter() {
             .bg-gray-100 {
               background-color: rgb(243, 244, 246) !important;
             }
-            .bg-green-100 {
+            .bg-green-100,
+            .bg-emerald-50,
+            .bg-sky-50,
+            .bg-amber-50 {
               background-color: rgb(220, 252, 231) !important;
+            }
+            .bg-\\[\\#25D076\\] {
+              background-color: rgb(37, 208, 118) !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
             .bg-red-100 {
               background-color: rgb(254, 226, 226) !important;
@@ -246,8 +279,9 @@ export default function InvoiceActionsFooter() {
             .text-gray-600 {
               color: rgb(75, 85, 99) !important;
             }
-            .text-green-600 {
-              color: rgb(22, 163, 74) !important;
+            .text-green-600,
+            .text-\\[\\#25D076\\] {
+              color: rgb(37, 208, 118) !important;
             }
             .text-green-700 {
               color: rgb(21, 128, 61) !important;
@@ -276,14 +310,18 @@ export default function InvoiceActionsFooter() {
             .border-gray-100 {
               border-color: rgb(243, 244, 246) !important;
             }
-            .border-green-200 {
-              border-color: rgb(187, 247, 208) !important;
+            .border-green-200,
+            .border-\\[\\#25D076\\] {
+              border-color: rgb(37, 208, 118) !important;
             }
             .border-red-200 {
               border-color: rgb(254, 202, 202) !important;
             }
             .border-blue-200 {
               border-color: rgb(191, 219, 254) !important;
+            }
+            .divide-\\[\\#25D076\\] > * + * {
+              border-color: rgb(37, 208, 118) !important;
             }
           `;
           clonedDoc.head.appendChild(style);
@@ -311,32 +349,42 @@ export default function InvoiceActionsFooter() {
       
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      // Margen de 10mm en cada lado
+      const margin = 10;
+      const availableWidth = pdfWidth - (margin * 2);
+      const availableHeight = pdfHeight - (margin * 2);
+      
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      
+      // Calcular ratio para ajustar la imagen al ancho disponible
+      const ratio = availableWidth / imgWidth;
       const imgScaledWidth = imgWidth * ratio;
       const imgScaledHeight = imgHeight * ratio;
       
-      // Calcular centrado
+      // Centrar horizontalmente
       const xOffset = (pdfWidth - imgScaledWidth) / 2;
-      const yOffset = 0;
       
-      // Si la imagen es más alta que una página, dividirla en múltiples páginas
-      if (imgScaledHeight > pdfHeight) {
+      // Si la imagen cabe en una página, usar solo una página
+      if (imgScaledHeight <= pdfHeight) {
+        // Centrar verticalmente si es más pequeña que la página
+        const yOffset = imgScaledHeight < pdfHeight ? (pdfHeight - imgScaledHeight) / 2 : margin;
+        pdf.addImage(imgData, 'PNG', xOffset, yOffset, imgScaledWidth, imgScaledHeight);
+      } else {
+        // Si es más grande, dividir en múltiples páginas
         let heightLeft = imgScaledHeight;
-        let position = 0;
+        let position = margin;
         
         pdf.addImage(imgData, 'PNG', xOffset, position, imgScaledWidth, imgScaledHeight);
-        heightLeft -= pdfHeight;
+        heightLeft -= (pdfHeight - margin);
         
         while (heightLeft > 0) {
           position = heightLeft - imgScaledHeight;
           pdf.addPage();
           pdf.addImage(imgData, 'PNG', xOffset, position, imgScaledWidth, imgScaledHeight);
-          heightLeft -= pdfHeight;
+          heightLeft -= (pdfHeight - margin);
         }
-      } else {
-        pdf.addImage(imgData, 'PNG', xOffset, yOffset, imgScaledWidth, imgScaledHeight);
       }
       
       // Descargar el PDF

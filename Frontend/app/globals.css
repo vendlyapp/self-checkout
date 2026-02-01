@@ -1993,6 +1993,32 @@
   #invoice-content th {
     display: table-cell !important;
   }
+  
+  /* Force color printing for green accent */
+  /* Target the green stripe at the top of invoice */
+  #invoice-content > div > div:first-child {
+    background-color: rgb(37, 208, 118) !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Target green logo mark and other green elements */
+  #invoice-content div[style*="rgb(37, 208, 118)"] {
+    background-color: rgb(37, 208, 118) !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Ensure borders print correctly */
+  #invoice-content .qr-zahlteil {
+    border-color: rgb(37, 208, 118) !important;
+  }
+  
+  /* Ensure grid elements display correctly */
+  .invoice-print-container .grid,
+  #invoice-content .grid {
+    display: grid !important;
+  }
 }
 
 /* ============================================
