@@ -337,7 +337,6 @@ export default function SalesInvoiceDetailPage() {
       // Dejar márgenes de 10mm en cada lado
       const margin = 10;
       const availableWidth = pdfWidth - (margin * 2);
-      const availableHeight = pdfHeight - (margin * 2);
       
       // Calcular ratio para ajustar la imagen al ancho disponible
       const imgWidth = canvas.width;

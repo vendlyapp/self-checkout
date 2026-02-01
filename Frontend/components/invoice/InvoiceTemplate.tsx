@@ -131,11 +131,16 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
   // Helper function to determine MwSt rate and code from item metadata or defaults
   const getMwStRateAndCode = (item: InvoiceItem, index: number): { rate: number; code: string } => {
     // Try to get taxRate from item metadata if available
-    const itemMetadata = (item as any).metadata || {};
+    const itemWithMetadata = item as InvoiceItem & { metadata?: Record<string, unknown> };
+    const itemMetadata = itemWithMetadata.metadata || {};
     const taxRate = itemMetadata.taxRate || itemMetadata.tax_rate;
     
     if (taxRate !== undefined && taxRate !== null) {
-      const rate = typeof taxRate === 'number' ? taxRate : parseFloat(taxRate);
+      const rate = typeof taxRate === 'number' 
+        ? taxRate 
+        : typeof taxRate === 'string' 
+        ? parseFloat(taxRate) 
+        : 0.081;
       // Map rate to code
       if (rate === 0.081 || rate === 0.077) return { rate: 0.081, code: 'A' }; // Normalsatz
       if (rate === 0.026) return { rate: 0.026, code: 'B' }; // Reduziert
@@ -273,7 +278,7 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: string }) {
-  const config = getStatusConfig(status as any);
+  const config = getStatusConfig(status as InvoiceStatus);
   return (
     <span
       className={`
@@ -680,7 +685,7 @@ export default function InvoiceTemplate({
                 Rechnung
               </h1>
               <div className="mt-3 space-y-0.5">
-                {[
+                {([
                   { label: 'Nr.', value: invoice.nummer, bold: false },
                   { label: 'Datum', value: formatDate(invoice.datum), bold: false },
                   invoice.leistungsDatum && {
@@ -693,9 +698,9 @@ export default function InvoiceTemplate({
                     value: formatDate(invoice.faelligkeitsDatum),
                     bold: true,
                   },
-                ]
-                  .filter(Boolean)
-                  .map((meta: any) => (
+                ] as Array<{ label: string; value: string; bold: boolean } | false>)
+                  .filter((item): item is { label: string; value: string; bold: boolean } => Boolean(item))
+                  .map((meta) => (
                     <div key={meta.label} className="text-[11px] text-gray-400 flex items-baseline justify-end gap-2">
                       <span className="w-16 text-right">{meta.label}</span>
                       <span
