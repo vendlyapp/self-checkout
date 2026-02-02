@@ -473,7 +473,7 @@ const PaymentMethodsPage = () => {
                 // Obtener icono: check verde para configurados (incluyendo QR Rechnung si está configurado)
                 const iconElement = getMethodIcon(
                   method.apiMethod.code,
-                  method.apiMethod.icon,
+                  method.apiMethod.icon || '',
                   method.name,
                   true, // isConfigured
                   true  // showInSettingsSection - aquí debe mostrar check verde
@@ -523,7 +523,7 @@ const PaymentMethodsPage = () => {
               // Obtener icono (QR con cruz suiza para QR Rechnung, icono normal para otros)
               const iconElement = getMethodIcon(
                 method.apiMethod.code,
-                method.apiMethod.icon,
+                method.apiMethod.icon || '',
                 method.name,
                 false, // isConfigured
                 true   // showInSettingsSection
@@ -571,7 +571,7 @@ const PaymentMethodsPage = () => {
               // Obtener icono (QR con cruz suiza para QR Rechnung)
               const iconElement = getMethodIcon(
                 availableMethod.code,
-                availableMethod.icon,
+                availableMethod.icon || '',
                 availableMethod.displayName,
                 false, // isConfigured
                 true   // showInSettingsSection
@@ -621,7 +621,7 @@ const PaymentMethodsPage = () => {
               // Obtener icono (QR con cruz suiza para QR Rechnung) con opacidad reducida
               const baseIcon = getMethodIcon(
                 method.apiMethod.code,
-                method.apiMethod.icon,
+                method.apiMethod.icon || '',
                 method.name,
                 false, // isConfigured
                 true   // showInSettingsSection
