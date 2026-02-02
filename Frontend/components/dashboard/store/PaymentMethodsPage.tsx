@@ -13,6 +13,7 @@ import Image from 'next/image'
 import { AVAILABLE_PAYMENT_METHODS, getAvailablePaymentMethod } from '@/lib/constants/paymentMethods'
 import { Check, Settings, ChevronRight, AlertCircle } from 'lucide-react'
 import type { PaymentMethodConfig } from './ConfigurePaymentMethodModal'
+import SwissQRCode from './SwissQRCode'
 
 export interface PaymentMethod {
   id: string
@@ -63,24 +64,39 @@ const PaymentMethodsPage = () => {
 
   // Mapear métodos de la API al formato del componente
   const paymentMethods: PaymentMethod[] = paymentMethodsData?.map((method) => {
-    const isSvg = isSvgIcon(method.icon)
-    const iconPath = method.icon
+    // Si es QR Rechnung, usar el componente SwissQRCode
+    const isQRRechnung = method.code.toLowerCase() === 'qr-rechnung'
     
-    const iconElement = isSvg && iconPath ? (
-      <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden bg-white border border-gray-200">
-        <Image 
-          src={iconPath} 
-          alt={`${method.displayName} icon`}
-          width={40}
-          height={40}
-          className="object-contain"
-        />
-      </div>
-    ) : (
-      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100">
-        {React.createElement(getPaymentMethodIcon(method.icon), { className: 'w-6 h-6 text-gray-600' })}
-      </div>
-    )
+    let iconElement: React.ReactNode
+    
+    if (isQRRechnung) {
+      // Mostrar QR con cruz suiza para QR Rechnung
+      iconElement = (
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden bg-white border border-gray-200">
+          <SwissQRCode size={40} className="scale-100" />
+        </div>
+      )
+    } else {
+      // Para otros métodos, usar el icono normal
+      const isSvg = isSvgIcon(method.icon)
+      const iconPath = method.icon
+      
+      iconElement = isSvg && iconPath ? (
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden bg-white border border-gray-200">
+          <Image 
+            src={iconPath} 
+            alt={`${method.displayName} icon`}
+            width={40}
+            height={40}
+            className="object-contain"
+          />
+        </div>
+      ) : (
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100">
+          {React.createElement(getPaymentMethodIcon(method.icon), { className: 'w-6 h-6 text-gray-600' })}
+        </div>
+      )
+    }
 
     return {
       id: method.id,
@@ -90,6 +106,59 @@ const PaymentMethodsPage = () => {
       apiMethod: method,
     }
   }) || []
+
+  // Función helper para obtener el icono correcto
+  // Para QR Rechnung: mostrar QR con cruz suiza en métodos activos/inactivos, check verde en configurados
+  const getMethodIcon = (methodCode: string, icon: string, displayName: string, isConfigured: boolean = false, showInSettingsSection: boolean = false) => {
+    const isQRRechnung = methodCode.toLowerCase() === 'qr-rechnung'
+    
+    // Si está en la sección de configurados (Zahlungsarten Einstellungen) y está configurado: mostrar check verde
+    if (isConfigured && showInSettingsSection) {
+      return (
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#25D076' }}>
+          <Check className="w-6 h-6 text-white" strokeWidth={3} />
+        </div>
+      )
+    }
+    
+    // Para QR Rechnung en otras secciones (activos/inactivos) o no configurado: mostrar QR con cruz suiza
+    if (isQRRechnung) {
+      return (
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden bg-white border border-gray-200">
+          <SwissQRCode size={40} className="scale-100" />
+        </div>
+      )
+    }
+    
+    // Para otros métodos configurados (no QR): mostrar fondo verde con check blanco
+    if (isConfigured && showInSettingsSection) {
+      return (
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#25D076' }}>
+          <Check className="w-6 h-6 text-white" strokeWidth={3} />
+        </div>
+      )
+    }
+    
+    // Para otros métodos no configurados, usar el icono normal
+    const isSvg = isSvgIcon(icon)
+    const iconPath = icon
+    
+    return isSvg && iconPath ? (
+      <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden bg-white border border-gray-200">
+        <Image 
+          src={iconPath} 
+          alt={`${displayName} icon`}
+          width={40}
+          height={40}
+          className="object-contain"
+        />
+      </div>
+    ) : (
+      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100">
+        {React.createElement(getPaymentMethodIcon(icon), { className: 'w-6 h-6 text-gray-600' })}
+      </div>
+    )
+  }
 
   // Separar métodos configurados y no configurados
   // Bargeld (efectivo) es especial: siempre está "configurado" y activo por defecto
@@ -401,11 +470,13 @@ const PaymentMethodsPage = () => {
                 const availableMethod = getAvailablePaymentMethod(method.apiMethod.code)
                 if (!availableMethod) return null
 
-                // Para métodos configurados: mostrar fondo verde con check blanco
-                const iconElement = (
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#25D076' }}>
-                    <Check className="w-6 h-6 text-white" strokeWidth={3} />
-                  </div>
+                // Obtener icono: check verde para configurados (incluyendo QR Rechnung si está configurado)
+                const iconElement = getMethodIcon(
+                  method.apiMethod.code,
+                  method.apiMethod.icon,
+                  method.name,
+                  true, // isConfigured
+                  true  // showInSettingsSection - aquí debe mostrar check verde
                 )
 
                 return (
@@ -449,23 +520,13 @@ const PaymentMethodsPage = () => {
               const availableMethod = getAvailablePaymentMethod(method.apiMethod.code)
               if (!availableMethod) return null
 
-              const isSvg = isSvgIcon(method.apiMethod.icon)
-              const iconPath = method.apiMethod.icon
-
-              const iconElement = isSvg && iconPath ? (
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden bg-white border border-gray-200">
-                  <Image 
-                    src={iconPath} 
-                    alt={`${method.name} icon`}
-                    width={40}
-                    height={40}
-                    className="object-contain"
-                  />
-                </div>
-              ) : (
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100">
-                  {React.createElement(getPaymentMethodIcon(method.apiMethod.icon), { className: 'w-6 h-6 text-gray-600' })}
-                </div>
+              // Obtener icono (QR con cruz suiza para QR Rechnung, icono normal para otros)
+              const iconElement = getMethodIcon(
+                method.apiMethod.code,
+                method.apiMethod.icon,
+                method.name,
+                false, // isConfigured
+                true   // showInSettingsSection
               )
 
               return (
@@ -506,23 +567,14 @@ const PaymentMethodsPage = () => {
             {availableMethodsToCreate.map((availableMethod, index, array) => {
               const isLast = index === array.length - 1
               const hasNext = index < array.length - 1
-              const isSvg = isSvgIcon(availableMethod.icon)
-              const iconPath = availableMethod.icon
 
-              const iconElement = isSvg && iconPath ? (
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden bg-white border border-gray-200">
-                  <Image 
-                    src={iconPath} 
-                    alt={`${availableMethod.displayName} icon`}
-                    width={40}
-                    height={40}
-                    className="object-contain"
-                  />
-                </div>
-              ) : (
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100">
-                  {React.createElement(getPaymentMethodIcon(availableMethod.icon), { className: 'w-6 h-6 text-gray-600' })}
-                </div>
+              // Obtener icono (QR con cruz suiza para QR Rechnung)
+              const iconElement = getMethodIcon(
+                availableMethod.code,
+                availableMethod.icon,
+                availableMethod.displayName,
+                false, // isConfigured
+                true   // showInSettingsSection
               )
 
               return (
@@ -566,22 +618,19 @@ const PaymentMethodsPage = () => {
               const availableMethod = getAvailablePaymentMethod(method.apiMethod.code)
               if (!availableMethod) return null
 
-              const isSvg = isSvgIcon(method.apiMethod.icon)
-              const iconPath = method.apiMethod.icon
-
-              const iconElement = isSvg && iconPath ? (
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden bg-white border border-gray-200 opacity-50">
-                  <Image 
-                    src={iconPath} 
-                    alt={`${method.name} icon`}
-                    width={40}
-                    height={40}
-                    className="object-contain grayscale"
-                  />
-                </div>
-              ) : (
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100 opacity-50">
-                  {React.createElement(getPaymentMethodIcon(method.apiMethod.icon), { className: 'w-6 h-6 text-gray-400' })}
+              // Obtener icono (QR con cruz suiza para QR Rechnung) con opacidad reducida
+              const baseIcon = getMethodIcon(
+                method.apiMethod.code,
+                method.apiMethod.icon,
+                method.name,
+                false, // isConfigured
+                true   // showInSettingsSection
+              )
+              
+              // Aplicar opacidad para métodos globalmente deshabilitados
+              const iconElement = (
+                <div className="opacity-50">
+                  {baseIcon}
                 </div>
               )
 

@@ -585,13 +585,16 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     onSaveCustomerData?.(personalData);
                   }
                   
-                  // Create invoice with customer data
+                  // Create invoice with customer data and wait for it to complete
                   if (onCreateInvoice) {
                     try {
                       await onCreateInvoice(personalData);
+                      // Esperar un momento para asegurar que el estado se actualice
+                      await new Promise(resolve => setTimeout(resolve, 100));
                     } catch (error) {
                       console.error('Error al crear factura:', error);
-                      // Continuar de todas formas
+                      toast.error('Fehler beim Erstellen der Rechnung');
+                      // Continuar de todas formas para que el usuario pueda salir
                     }
                   }
                   
@@ -1093,8 +1096,28 @@ export default function PaymentP() {
 
       if (result.success && result.data) {
         setCreatedInvoiceId(result.data.id);
+        console.log('📄 Factura creada - datos recibidos:', {
+          id: result.data.id,
+          invoiceNumber: result.data.invoiceNumber,
+          shareToken: result.data.shareToken,
+          hasShareToken: !!result.data.shareToken,
+        });
+        
         if (result.data.shareToken) {
           setCreatedInvoiceShareToken(result.data.shareToken);
+          console.log('✅ ShareToken establecido:', result.data.shareToken);
+        } else {
+          console.warn('⚠️ Factura creada pero sin shareToken. Intentando obtenerlo...');
+          // Si no viene el shareToken, intentar obtenerlo de la factura
+          try {
+            const invoiceResult = await InvoiceService.getInvoiceById(result.data.id);
+            if (invoiceResult.success && invoiceResult.data?.shareToken) {
+              setCreatedInvoiceShareToken(invoiceResult.data.shareToken);
+              console.log('✅ ShareToken obtenido después:', invoiceResult.data.shareToken);
+            }
+          } catch (error) {
+            console.error('Error al obtener shareToken:', error);
+          }
         }
         console.log('✅ Factura creada:', result.data.invoiceNumber);
       } else {

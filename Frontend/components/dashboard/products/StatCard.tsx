@@ -40,7 +40,7 @@ const StatCard: React.FC<StatCardProps> = ({
   const percentChange = previousValue ? ((lastValue - previousValue) / previousValue * 100).toFixed(1) : 0;
 
   return (
-    <Card className={`bg-card rounded-2xl border-0 shadow-sm hover:shadow-md transition-ios ${className}`}>
+    <Card className={`bg-card rounded-3xl shadow-2xl drop-shadow-sm transition-ios border border-gray-200/50 ${className}`}>
       <CardContent className="p-5 lg:p-6">
         <div className="flex items-center justify-between mb-3 lg:mb-4">
           <div className="w-10 h-10 lg:w-12 lg:h-12 bg-[#C4BAAF] rounded-xl flex items-center justify-center">

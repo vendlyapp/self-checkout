@@ -2,6 +2,7 @@ const { query, transaction } = require('../../lib/database');
 const discountCodeService = require('./DiscountCodeService');
 const invoiceService = require('./InvoiceService');
 const storeService = require('./StoreService');
+const customerService = require('./CustomerService');
 
 class OrderService {
 
@@ -883,12 +884,24 @@ class OrderService {
       ? Number(orderData.total)
       : total;
 
+    // Preparar metadata y customer data ANTES de la transacción para usarlos después
+    const storeId = orderData.storeId || null;
+    const customerData = orderData.customer && typeof orderData.customer === 'object' 
+      ? {
+          name: orderData.customer.name || null,
+          email: orderData.customer.email || null,
+          address: orderData.customer.address || null,
+          phone: orderData.customer.phone || null,
+          city: orderData.customer.city || null,
+          postalCode: orderData.customer.postalCode || null,
+        }
+      : null;
+
     // Crear orden usando transacción
     const result = await transaction(async (client) => {
       // Establecer status como 'completed' por defecto ya que el pago se procesa inmediatamente
       const orderStatus = orderData.status || 'completed';
       const paymentMethod = orderData.paymentMethod || null;
-      const storeId = orderData.storeId || null;
       
       // Preparar metadata como JSONB, incluyendo datos del cliente si están disponibles
       let metadataJson = '{}';
@@ -897,13 +910,8 @@ class OrderService {
         : {};
       
       // Agregar datos del cliente a metadata si están disponibles
-      if (orderData.customer && typeof orderData.customer === 'object') {
-        metadata.customer = {
-          name: orderData.customer.name || null,
-          email: orderData.customer.email || null,
-          address: orderData.customer.address || null,
-          phone: orderData.customer.phone || null,
-        };
+      if (customerData) {
+        metadata.customer = customerData;
       }
       
       metadataJson = JSON.stringify(metadata);
@@ -964,6 +972,31 @@ class OrderService {
 
       return { order, items: orderItems, discountCodeUpdated };
     });
+
+    // Crear o actualizar cliente automáticamente si hay datos del cliente y storeId
+    // El email es obligatorio para crear/identificar un cliente
+    let customer = null;
+    if (storeId && customerData && customerData.email) {
+      try {
+        const customerResult = await customerService.createOrUpdate(storeId, customerData);
+
+        if (customerResult.success) {
+          customer = customerResult.data;
+
+          // Actualizar la orden con el customerId
+          await query(
+            `UPDATE "Order" SET "customerId" = $1 WHERE "id" = $2`,
+            [customer.id, result.order.id]
+          );
+
+          // Actualizar estadísticas del cliente
+          await customerService.updateStats(customer.id);
+        }
+      } catch (customerError) {
+        // No fallar la orden si hay error al crear/actualizar el cliente
+        console.error('Error al crear/actualizar cliente:', customerError);
+      }
+    }
 
     // Crear factura automáticamente después de crear la orden
     let createdInvoice = null;

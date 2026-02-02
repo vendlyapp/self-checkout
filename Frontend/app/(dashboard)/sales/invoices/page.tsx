@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Invoice } from '@/lib/services/invoiceService';
 import { useResponsive } from '@/hooks';
 import { useInvoices } from '@/hooks/queries/useInvoices';
 import { FileText, Search, Calendar, DollarSign, User, ChevronRight, ShoppingCart, ExternalLink } from 'lucide-react';

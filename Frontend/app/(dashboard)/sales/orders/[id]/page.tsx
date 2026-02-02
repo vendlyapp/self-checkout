@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useResponsive } from '@/hooks';
 import { useOrder } from '@/hooks/queries/useOrder';
 import { useInvoicesByOrderId } from '@/hooks/queries/useInvoicesByOrderId';
-import { AlertCircle, ShoppingCart, FileText, Calendar, DollarSign, User, Package, XCircle, ExternalLink, CheckCircle, Clock, Trash2, CreditCard } from 'lucide-react';
+import { AlertCircle, ShoppingCart, FileText, Calendar, User, Package, XCircle, ExternalLink, CheckCircle, Clock, Trash2, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 import { Loader } from '@/components/ui/Loader';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
@@ -23,7 +23,7 @@ export default function SalesOrderDetailPage() {
   
   // Usar React Query hooks para obtener orden e invoices con cache
   const { data: order, isLoading: orderLoading, error: orderError, isFetching: orderFetching } = useOrder(orderId);
-  const { data: invoices = [], isLoading: invoicesLoading, error: invoicesError } = useInvoicesByOrderId(orderId);
+  const { data: invoices = [], isLoading: invoicesLoading } = useInvoicesByOrderId(orderId);
 
   // Mostrar toast de error si hay error
   useEffect(() => {
@@ -111,7 +111,7 @@ export default function SalesOrderDetailPage() {
       await cancelOrder.mutateAsync(orderId);
       setIsCancelModalOpen(false);
       router.push('/sales/orders');
-    } catch (error) {
+    } catch {
       // Error ya se maneja en el hook
       // El modal se mantiene abierto si hay error para que el usuario pueda intentar de nuevo
     }

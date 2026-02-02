@@ -82,7 +82,7 @@ export default function Header() {
         />
       )}
 
-      <header className="dashboard-header h-[calc(85px+env(safe-area-inset-top))] w-full pt-[env(safe-area-inset-top)]">
+      <header className="dashboard-header h-[calc(85px+env(safe-area-inset-top))] w-full pt-[env(safe-area-inset-top)] border-b border-b-white border-[1px]">
         <div className="dashboard-header-content bg-background-cream h-[85px] w-full">
           {/* Logo */}
           <Link href="/dashboard" className="dashboard-logo-d touch-target tap-highlight-transparent">

@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useResponsive } from '@/hooks';
 import { useOrders } from '@/hooks/queries/useOrders';
-import { ShoppingCart, Calendar, DollarSign, User, ChevronRight, FileText, XCircle, Filter, CheckCircle, Clock, Trash2 } from 'lucide-react';
+import { ShoppingCart, Calendar, User, ChevronRight, FileText, XCircle, Filter, CheckCircle, Clock, Trash2 } from 'lucide-react';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 import Link from 'next/link';
 import { Loader } from '@/components/ui/Loader';

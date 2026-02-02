@@ -114,7 +114,7 @@ export default function ResponsiveHeader({
       )}
 
       <header className={clsx(
-        "bg-white border-b border-gray-200 transition-ios-slow",
+        "bg-white border-b border-b-white border-[1px] transition-ios-slow",
         isMobile ? "h-[calc(85px+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)]" : "h-20"
       )}>
         {isDesktop ? (

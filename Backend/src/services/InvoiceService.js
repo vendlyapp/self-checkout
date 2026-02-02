@@ -1,5 +1,6 @@
 const { query, transaction } = require('../../lib/database');
 const crypto = require('crypto');
+const customerService = require('./CustomerService');
 
 class InvoiceService {
   /**
@@ -160,6 +161,41 @@ class InvoiceService {
 
       return invoiceResult.rows[0];
     });
+
+    // Crear o actualizar cliente automáticamente DESPUÉS de crear la factura (fuera de la transacción)
+    // El email es obligatorio para crear/identificar un cliente
+    if (storeId && customerEmail) {
+      try {
+        const customerResult = await customerService.createOrUpdate(storeId, {
+          name: customerName || null,
+          email: customerEmail,
+          phone: customerPhone || null,
+          address: customerAddress || null,
+          city: customerCity || null,
+          postalCode: customerPostalCode || null,
+        });
+
+        if (customerResult.success) {
+          const customer = customerResult.data;
+
+          // Actualizar la orden con el customerId
+          if (orderId) {
+            await query(
+              `UPDATE "Order" SET "customerId" = $1 WHERE "id" = $2`,
+              [customer.id, orderId]
+            );
+          }
+
+          // Actualizar estadísticas del cliente
+          await customerService.updateStats(customer.id);
+          
+          console.log('✅ [InvoiceService.create] Cliente creado/actualizado:', customer.id);
+        }
+      } catch (customerError) {
+        // No fallar la factura si hay error al crear/actualizar el cliente
+        console.error('⚠️ [InvoiceService.create] Error al crear/actualizar cliente:', customerError);
+      }
+    }
 
     console.log('✅ [InvoiceService.create] Factura creada exitosamente en la base de datos:', {
       invoiceId: result.id,

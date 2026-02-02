@@ -120,10 +120,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const orderId = pathname?.match(/\/sales\/orders\/([^\/]+)/)?.[1];
   
   // Usar React Query hook para obtener invoice (comparte cache con otros componentes)
-  // Solo obtener si estamos en una ruta de detalle de invoice
+  // Solo obtener si estamos en una ruta de detalle de invoice y tenemos un invoiceId válido
   const { data: invoiceForHeader } = useInvoice(
     isInvoiceDetailRoute && invoiceId ? invoiceId : null
   );
+  
+  // Silenciar errores de invoice en el layout - los componentes hijos los manejarán
+  // Solo usar invoiceForHeader si existe, no mostrar errores aquí
   
   // Usar React Query hook para obtener order (comparte cache con otros componentes)
   // Solo obtener si estamos en una ruta de detalle de order
@@ -136,9 +139,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   
   // Determinar si estamos en la ruta de my-qr
   const isMyQRRoute = pathname === '/my-qr' || pathname === '/my-qr/';
-  
-  // Determinar si estamos en la ruta de sales (página principal)
-  const isSalesRoute = pathname === '/sales' || pathname === '/sales/';
   
   // Determinar si estamos en la lista de invoices (no detalle)
   const isInvoicesListRoute = (pathname === '/sales/invoices' || pathname === '/store/invoice') && !isInvoiceDetailRoute;

@@ -1,7 +1,6 @@
 'use client'
 
 import { useResponsive } from '@/hooks'
-import HeaderNav from '@/components/navigation/HeaderNav'
 import { User } from 'lucide-react'
 
 export default function ProfilePage() {

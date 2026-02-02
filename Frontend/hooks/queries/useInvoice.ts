@@ -32,12 +32,15 @@ export const useInvoice = (invoiceId: string | null | undefined) => {
       }
 
       if (!result.success || !result.data) {
+        // No lanzar error si la factura simplemente no existe
+        // Dejar que el componente maneje el estado de "no encontrado"
         throw new Error(result.error || 'Rechnung nicht gefunden');
       }
 
       return result.data as Invoice;
     },
     enabled: !!invoiceId, // Solo ejecutar si tenemos invoiceId
+    throwOnError: false, // No lanzar error automáticamente, dejar que el componente lo maneje
     staleTime: 10 * 60 * 1000, // 10 minutos - los invoices no cambian frecuentemente (aumentado de 5 a 10)
     gcTime: 30 * 60 * 1000, // 30 minutos - mantener en cache más tiempo
     refetchOnWindowFocus: false, // No refetch automático en window focus

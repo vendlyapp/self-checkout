@@ -4,7 +4,7 @@ import ServiceCard from "@/components/dashboard/store/ServiceCard";
 import SystemSettingsList from "@/components/dashboard/store/SystemSettingsList";
 import ContactCard from "@/components/dashboard/store/ContactCard";
 import { SearchInput } from "@/components/ui/search-input";
-import { User, Percent, QrCode, CreditCard, Store, FileText } from "lucide-react";
+import { User, Percent, QrCode, CreditCard, Store } from "lucide-react";
 import Link from "next/link";
 
 const services = [
@@ -47,7 +47,7 @@ const StoreDashboard = () => (
           <SearchInput placeholder="Einstellungen durchsuchen..." esHome={false} className="w-full h-[48px]" />
         </div>
 
-         {/* Mi Tienda Card */}
+         {/* Mein Geschäft Card */}
          <Link href="/store/settings" className="block">
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-4">
@@ -55,8 +55,8 @@ const StoreDashboard = () => (
                 <Store className="w-8 h-8 text-brand-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">Mi Tienda</h3>
-                <p className="text-sm text-gray-500">Personaliza la información de tu tienda</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">Mein Geschäft</h3>
+                <p className="text-sm text-gray-500">Personalisieren Sie die Informationen Ihres Geschäfts</p>
               </div>
               <div className="flex-shrink-0">
                 <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -72,7 +72,7 @@ const StoreDashboard = () => (
 
         {/* Services */}
         <div>
-          <h2 className="text-base font-semibold text-gray-900 mb-3">Services:</h2>
+          <h2 className="text-base font-semibold text-gray-900 mb-3">Dienste:</h2>
           <div className="grid grid-cols-2 gap-4">
             {services.map((service) => (
               <ServiceCard key={service.title} {...service} />
@@ -109,7 +109,7 @@ const StoreDashboard = () => (
           </div>
         </div>
 
-        {/* Mi Tienda Card */}
+        {/* Mein Geschäft Card */}
         <Link href="/store/settings" className="block">
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-4">
@@ -117,8 +117,8 @@ const StoreDashboard = () => (
                 <Store className="w-10 h-10 text-brand-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">Mi Tienda</h3>
-                <p className="text-base text-gray-500">Personaliza la información de tu tienda</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-1">Mein Geschäft</h3>
+                <p className="text-base text-gray-500">Personalisieren Sie die Informationen Ihres Geschäfts</p>
               </div>
               <div className="flex-shrink-0">
                 <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,7 +141,7 @@ const StoreDashboard = () => (
 
         {/* Services Section */}
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Services</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Dienste</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {services.map((service) => (
               <ServiceCard key={service.title} {...service} />
@@ -161,7 +161,7 @@ const StoreDashboard = () => (
             <ContactCard />
           <div className="flex items-center justify-center">
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">System Information</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Systeminformationen</h3>
               <p className="text-sm text-gray-600 mb-2">Version 1.02.2</p>
               <p className="text-sm text-gray-600 mb-2">Self-Checkout</p>
               <p className="text-sm text-gray-600">29.6.2025</p>

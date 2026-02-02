@@ -841,7 +841,7 @@
   .dashboard-header {
     @apply sticky top-0 z-40 w-full;
     @apply bg-white/95 backdrop-blur-md;
-    @apply border-b border-gray-100;
+    @apply border-b border-b-white border-[1px];
     padding-top: env(safe-area-inset-top);
     animation: fade-down 0.3s ease-out;
   }

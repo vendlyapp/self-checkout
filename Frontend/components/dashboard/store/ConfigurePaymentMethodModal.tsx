@@ -8,6 +8,7 @@ import { getAvailablePaymentMethod, type AvailablePaymentMethod } from '@/lib/co
 import { getPaymentMethodIcon, isSvgIcon } from '@/lib/utils/paymentMethodIcons'
 import Image from 'next/image'
 import React from 'react'
+import SwissQRCode from './SwissQRCode'
 
 export interface PaymentMethodConfig {
   [key: string]: string | number | boolean | undefined
@@ -151,6 +152,17 @@ export default function ConfigurePaymentMethodModal({
           <p className="text-sm text-gray-600 mb-6">
             {methodToConfigure.description}
           </p>
+
+          {/* Mostrar QR con cruz suiza si es QR Rechnung */}
+          {methodToConfigure.code === 'qr-rechnung' && (
+            <div className="mb-6 flex flex-col items-center justify-center bg-gray-50 rounded-xl p-6 border border-gray-200">
+              <p className="text-sm font-semibold text-gray-700 mb-4">QR-Rechnung Vorschau</p>
+              <SwissQRCode size={180} />
+              <p className="text-xs text-gray-500 mt-4 text-center">
+                Der QR-Code wird mit der Schweizer Flagge im Zentrum angezeigt
+              </p>
+            </div>
+          )}
 
           <div className="space-y-4">
             {methodToConfigure.configFields.map((field) => (
