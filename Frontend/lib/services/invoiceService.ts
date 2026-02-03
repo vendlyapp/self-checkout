@@ -25,6 +25,7 @@ export interface Invoice {
   storeAddress?: string;
   storePhone?: string;
   storeEmail?: string;
+  storeLogo?: string;
   items: InvoiceItem[];
   subtotal: number;
   discountAmount: number;

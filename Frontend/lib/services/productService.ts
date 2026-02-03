@@ -101,6 +101,7 @@ export interface CreateProductRequest {
   notes?: string;
   expiryDate?: string;
   parentId?: string; // ID del producto padre (para variantes)
+  taxRate?: number; // Tasa de IVA (ej: 0.026 para 2.6%, 0.081 para 8.1%)
 }
 
 export interface UpdateProductRequest extends Partial<CreateProductRequest> {

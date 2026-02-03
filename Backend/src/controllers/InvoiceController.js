@@ -56,7 +56,7 @@ class InvoiceController {
       }
 
       // Preparar items de la factura
-      // Los items vienen con productName y productSku del JOIN en OrderService.findById
+      // Los items vienen con productName, productSku y taxRate del JOIN en OrderService.findById
       const invoiceItems = order.items.map((item) => {
         // Debug: verificar que el productName esté llegando
         if (!item.productName) {
@@ -74,6 +74,9 @@ class InvoiceController {
           quantity: item.quantity,
           price: Number(item.price),
           subtotal: Number(item.price) * item.quantity,
+          metadata: {
+            taxRate: item.taxRate !== null && item.taxRate !== undefined ? Number(item.taxRate) : 0.026 // Default 2.6% if null
+          }
         };
       });
       
@@ -106,6 +109,7 @@ class InvoiceController {
         storeAddress: storeInfo?.address || null,
         storePhone: storeInfo?.phone || null,
         storeEmail: storeInfo?.email || null,
+        storeLogo: storeInfo?.logo || null,
         items: invoiceItems,
         subtotal: Number(subtotal),
         discountAmount: Number(discountAmount),

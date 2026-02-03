@@ -1970,13 +1970,22 @@
     opacity: 1 !important;
   }
   
-  /* Asegurar que los elementos flex se muestren */
+  /* Force white background for invoice container */
+  #invoice-content {
+    background-color: white !important;
+  }
+  
+  #invoice-content > div {
+    background-color: white !important;
+  }
+  
+  /* Ensure flex elements display correctly */
   .invoice-print-container .flex,
   #invoice-content .flex {
     display: flex !important;
   }
   
-  /* Asegurar que las tablas se muestren */
+  /* Ensure tables display correctly */
   .invoice-print-container table,
   #invoice-content table {
     display: table !important;
@@ -1994,30 +2003,49 @@
     display: table-cell !important;
   }
   
-  /* Force color printing for green accent */
-  /* Target the green stripe at the top of invoice */
-  #invoice-content > div > div:first-child {
-    background-color: rgb(37, 208, 118) !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-  
-  /* Target green logo mark and other green elements */
-  #invoice-content div[style*="rgb(37, 208, 118)"] {
-    background-color: rgb(37, 208, 118) !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-  
-  /* Ensure borders print correctly */
-  #invoice-content .qr-zahlteil {
-    border-color: rgb(37, 208, 118) !important;
-  }
-  
   /* Ensure grid elements display correctly */
   .invoice-print-container .grid,
   #invoice-content .grid {
     display: grid !important;
+  }
+  
+  /* Only apply green to the 3px stripe at the top - use specific class */
+  #invoice-content .print-green-stripe {
+    background-color: rgb(37, 208, 118) !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Green borders - target by class attribute */
+  #invoice-content [class*="border"][class*="25D076"] {
+    border-color: rgb(37, 208, 118) !important;
+  }
+  
+  #invoice-content [class*="divide"][class*="25D076"] {
+    border-color: rgb(37, 208, 118) !important;
+  }
+  
+  /* Green logo mark - target small square backgrounds */
+  #invoice-content [class*="bg"][class*="25D076"][class*="w-9"],
+  #invoice-content [class*="bg"][class*="25D076"][class*="w-6"],
+  #invoice-content [class*="bg"][class*="25D076"][class*="w-7"] {
+    background-color: rgb(37, 208, 118) !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Ensure all backgrounds are white by default */
+  #invoice-content > div > div {
+    background-color: white !important;
+  }
+  
+  /* Ensure text colors are correct */
+  #invoice-content {
+    color: rgb(31, 41, 55) !important;
+  }
+  
+  #invoice-content * {
+    color: inherit !important;
   }
 }
 

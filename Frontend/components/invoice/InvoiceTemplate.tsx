@@ -9,8 +9,6 @@ import {
   Scissors,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import {
   formatCHF,
   formatDate,
@@ -140,19 +138,19 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
         ? taxRate 
         : typeof taxRate === 'string' 
         ? parseFloat(taxRate) 
-        : 0.081;
+        : 0.026;
       // Map rate to code
       if (rate === 0.081 || rate === 0.077) return { rate: 0.081, code: 'A' }; // Normalsatz
       if (rate === 0.026) return { rate: 0.026, code: 'B' }; // Reduziert
       if (rate === 0.038) return { rate: 0.038, code: 'C' }; // Beherbergung
       if (rate === 0) return { rate: 0, code: 'D' }; // Befreit
-      // Default to standard rate if unknown
-      return { rate: 0.081, code: 'A' };
+      // Default to reduced rate for food products if unknown
+      return { rate: 0.026, code: 'B' };
     }
     
-    // Default: use standard Swiss VAT rate (8.1% Normalsatz)
-    // This can be customized per product in the future
-    return { rate: 0.081, code: 'A' };
+    // Default: use reduced Swiss VAT rate (2.6% Reduziert) for food products
+    // This is appropriate for self-checkout of farm products (milk, cheese, eggs, fruits, etc.)
+    return { rate: 0.026, code: 'B' };
   };
   
   const items: InvoiceLineItem[] = serviceInvoice.items.map((item: InvoiceItem, index: number) => {
@@ -245,11 +243,11 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
     // Use provided taxAmount if available
     totalMwst = serviceInvoice.taxAmount;
     totalNetto = totalBrutto - totalMwst;
-  } else {
+    } else {
     // Calculate from items (which may have different rates)
     // This will be recalculated correctly in the component using calculateMwStBreakdown
     // For now, use a default calculation as fallback
-    const defaultRate = 0.081; // Default to standard rate if no items
+    const defaultRate = 0.026; // Default to reduced rate for food products if no items
     totalNetto = totalBrutto / (1 + defaultRate);
     totalMwst = totalBrutto - totalNetto;
   }
@@ -269,9 +267,11 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
     items,
     notes: serviceInvoice.metadata?.notes as string | undefined,
     orderId: serviceInvoice.orderId,
+    discountAmount: serviceInvoice.discountAmount || 0,
     totalBrutto: Math.round(totalBrutto * 100) / 100, // Round to 2 decimals
     totalNetto: Math.round(totalNetto * 100) / 100, // Round to 2 decimals
     totalMwst: Math.round(totalMwst * 100) / 100, // Round to 2 decimals
+    storeLogo: serviceInvoice.storeLogo,
   };
 }
 
@@ -471,66 +471,56 @@ export default function InvoiceTemplate({
   const invoice = useMemo(() => transformInvoice(serviceInvoice), [serviceInvoice]);
 
   // Compute VAT breakdown
-  const { breakdown, totalBrutto, totalNetto, totalMwst } = useMemo(() => {
+  // El serviceInvoice.total ya incluye el descuento aplicado
+  // Necesitamos mostrar: subtotal netto, MwSt, descuento, y total final
+  const { breakdown, discountAmount, totalBrutto, totalNetto, totalMwst } = useMemo(() => {
+    const discount = invoice.discountAmount || 0;
+    
     if (!invoice.items?.length) {
+      // Si no hay items, usar los valores del invoice directamente
+      const brutto = invoice.totalBrutto || 0;
+      const netto = invoice.totalNetto || 0;
+      const mwst = invoice.totalMwst || 0;
       return {
         breakdown: [] as MwStGroup[],
-        totalBrutto: invoice.totalBrutto || 0,
-        totalNetto: invoice.totalNetto || 0,
-        totalMwst: invoice.totalMwst || 0,
+        discountAmount: discount,
+        totalBrutto: brutto, // Total final después del descuento
+        totalNetto: netto,
+        totalMwst: mwst,
       };
     }
+    
+    // Calcular breakdown de MwSt desde los items
     const groups = calculateMwStBreakdown(invoice.items);
-    const brutto = invoice.items.reduce((s, i) => s + i.totalBrutto, 0);
-    const mwst = groups.reduce((s, g) => s + g.mwst, 0);
+    // Suma de todos los items (esto es el subtotal brutto antes del descuento)
+    const bruttoFromItems = invoice.items.reduce((s, i) => s + i.totalBrutto, 0);
+    const mwstFromItems = groups.reduce((s, g) => s + g.mwst, 0);
+    const nettoFromItems = bruttoFromItems - mwstFromItems;
+    
+    // El total final (después del descuento) viene del serviceInvoice.total
+    // que ya tiene el descuento aplicado
+    const finalBrutto = serviceInvoice.total;
+    const finalMwst = serviceInvoice.taxAmount || mwstFromItems;
+    const finalNetto = finalBrutto - finalMwst;
+    
     return {
       breakdown: groups,
-      totalBrutto: brutto,
-      totalNetto: brutto - mwst,
-      totalMwst: mwst,
+      discountAmount: discount,
+      totalBrutto: Math.round(finalBrutto * 100) / 100, // Total final después del descuento
+      totalNetto: Math.round(finalNetto * 100) / 100,
+      totalMwst: Math.round(finalMwst * 100) / 100,
     };
-  }, [invoice.items, invoice.totalBrutto, invoice.totalNetto, invoice.totalMwst]);
+  }, [invoice.items, invoice.totalBrutto, invoice.totalNetto, invoice.totalMwst, invoice.discountAmount, serviceInvoice.total, serviceInvoice.taxAmount]);
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (onPrint) {
       onPrint();
-    } else {
-      // Ocultar elementos que no deben imprimirse
-      const footer = document.querySelector('[class*="InvoiceActionsFooter"]');
-      const headerNav = document.querySelector('[class*="HeaderNav"]');
-      const responsiveHeader = document.querySelector('[class*="ResponsiveHeader"]');
-      
-      if (footer) (footer as HTMLElement).style.display = 'none';
-      if (headerNav) (headerNav as HTMLElement).style.display = 'none';
-      if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = 'none';
-      
-      window.print();
-      
-      // Restaurar después de imprimir
-      setTimeout(() => {
-        if (footer) (footer as HTMLElement).style.display = '';
-        if (headerNav) (headerNav as HTMLElement).style.display = '';
-        if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = '';
-      }, 1000);
-    }
-  };
-
-  const handleDownload = async () => {
-    if (onDownload) {
-      onDownload();
       return;
     }
 
-    // Función de descarga por defecto
+    // Usar el mismo método que PDF para garantizar diseño idéntico
     try {
-      toast.loading('PDF wird erstellt...', { id: 'pdf-download' });
-      
-      if (!printRef.current) {
-        toast.error('Rechnung nicht gefunden', { id: 'pdf-download' });
-        return;
-      }
-
-      // Ocultar elementos que no deben aparecer en el PDF
+      // Ocultar elementos que no deben aparecer al imprimir
       const footer = document.querySelector('[class*="InvoiceActionsFooter"]');
       const headerNav = document.querySelector('[class*="HeaderNav"]');
       const responsiveHeader = document.querySelector('[class*="ResponsiveHeader"]');
@@ -543,73 +533,62 @@ export default function InvoiceTemplate({
       if (headerNav) (headerNav as HTMLElement).style.display = 'none';
       if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = 'none';
       
+      // Pequeño delay para asegurar que los elementos se oculten
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Capturar el contenido
-      const canvas = await html2canvas(printRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: printRef.current.scrollWidth,
-        windowHeight: printRef.current.scrollHeight,
-        ignoreElements: (element) => {
-          return element.classList?.contains('print:hidden') || 
-                 element.classList?.contains('no-print') || 
-                 element.classList?.contains('fixed') ||
-                 element.tagName === 'BUTTON';
-        },
-      });
+      // Usar window.print() que respetará los estilos @media print
+      window.print();
       
-      // Restaurar elementos
-      if (footer) (footer as HTMLElement).style.display = originalFooterDisplay;
-      if (headerNav) (headerNav as HTMLElement).style.display = originalHeaderNavDisplay;
-      if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = originalResponsiveHeaderDisplay;
-      
-      // Crear PDF
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-      
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min((pdfWidth - 20) / imgWidth, (pdfHeight - 20) / imgHeight); // Margen de 10mm
-      const imgScaledWidth = imgWidth * ratio;
-      const imgScaledHeight = imgHeight * ratio;
-      
-      const xOffset = (pdfWidth - imgScaledWidth) / 2;
-      const yOffset = 10; // Margen superior
-      
-      // Si la imagen es más alta que una página, dividirla
-      if (imgScaledHeight > pdfHeight - 20) {
-        let heightLeft = imgScaledHeight;
-        let position = yOffset;
-        
-        pdf.addImage(imgData, 'PNG', xOffset, position, imgScaledWidth, imgScaledHeight);
-        heightLeft -= (pdfHeight - 20);
-        
-        while (heightLeft > 0) {
-          position = heightLeft - imgScaledHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', xOffset, position, imgScaledWidth, imgScaledHeight);
-          heightLeft -= (pdfHeight - 20);
-        }
-      } else {
-        pdf.addImage(imgData, 'PNG', xOffset, yOffset, imgScaledWidth, imgScaledHeight);
-      }
-      
-      const fileName = `Rechnung_${serviceInvoice.invoiceNumber || serviceInvoice.id}.pdf`;
-      pdf.save(fileName);
-      
-      toast.success('PDF erfolgreich heruntergeladen', { id: 'pdf-download' });
+      // Restaurar elementos después de imprimir
+      setTimeout(() => {
+        if (footer) (footer as HTMLElement).style.display = originalFooterDisplay;
+        if (headerNav) (headerNav as HTMLElement).style.display = originalHeaderNavDisplay;
+        if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = originalResponsiveHeaderDisplay;
+      }, 1000);
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast.error('Fehler beim Erstellen des PDFs', { id: 'pdf-download' });
+      console.error('Error printing:', error);
+      toast.error('Fehler beim Drucken');
+    }
+  };
+
+  const handleDownload = async () => {
+    if (onDownload) {
+      onDownload();
+      return;
+    }
+
+    // Usar window.print() que es más confiable y evita problemas con html2canvas
+    // El usuario puede guardar como PDF desde el diálogo de impresión
+    try {
+      // Ocultar elementos que no deben aparecer al imprimir
+      const footer = document.querySelector('[class*="InvoiceActionsFooter"]');
+      const headerNav = document.querySelector('[class*="HeaderNav"]');
+      const responsiveHeader = document.querySelector('[class*="ResponsiveHeader"]');
+      
+      const originalFooterDisplay = footer ? (footer as HTMLElement).style.display : '';
+      const originalHeaderNavDisplay = headerNav ? (headerNav as HTMLElement).style.display : '';
+      const originalResponsiveHeaderDisplay = responsiveHeader ? (responsiveHeader as HTMLElement).style.display : '';
+      
+      if (footer) (footer as HTMLElement).style.display = 'none';
+      if (headerNav) (headerNav as HTMLElement).style.display = 'none';
+      if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = 'none';
+      
+      // Pequeño delay para asegurar que los elementos se oculten
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Usar window.print() que respetará los estilos @media print
+      // El navegador mostrará el diálogo donde el usuario puede guardar como PDF
+      window.print();
+      
+      // Restaurar elementos después de imprimir
+      setTimeout(() => {
+        if (footer) (footer as HTMLElement).style.display = originalFooterDisplay;
+        if (headerNav) (headerNav as HTMLElement).style.display = originalHeaderNavDisplay;
+        if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = originalResponsiveHeaderDisplay;
+      }, 1000);
+    } catch (error) {
+      console.error('Error printing:', error);
+      toast.error('Fehler beim Drucken');
     }
   };
 
@@ -642,7 +621,7 @@ export default function InvoiceTemplate({
         style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}
       >
         {/* Green accent stripe */}
-        <div className="h-[3px] bg-[#25D076]" />
+        <div className="h-[3px] bg-[#25D076] print-green-stripe" />
 
         {/* ═══ HEADER ═══ */}
         <div className={`${px} pt-6 pb-5 md:pt-8 md:pb-6`}>
@@ -650,16 +629,42 @@ export default function InvoiceTemplate({
             {/* Issuer info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2.5 mb-3">
-                {/* Logo mark */}
-                <div className="w-9 h-9 bg-[#25D076] rounded-md flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-bold text-sm leading-none">
-                    {issuer.name?.charAt(0) || 'R'}
-                  </span>
-                </div>
+                {/* Logo de la tienda o logo mark */}
+                {invoice.storeLogo ? (
+                  <div className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden bg-white border border-gray-200">
+                    <img
+                      src={invoice.storeLogo}
+                      alt={issuer.name || 'Store logo'}
+                      className="w-full h-full object-contain p-1"
+                      crossOrigin="anonymous"
+                      loading="eager"
+                      style={{ 
+                        imageRendering: '-webkit-optimize-contrast',
+                        maxWidth: '100%',
+                        maxHeight: '100%'
+                      }}
+                      onError={(e) => {
+                        // Si falla la carga, mostrar el logo mark por defecto
+                        const target = e.currentTarget;
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = `<span class="text-white font-bold text-sm leading-none">${issuer.name?.charAt(0) || 'R'}</span>`;
+                          parent.className = 'w-9 h-9 bg-[#25D076] rounded-md flex items-center justify-center flex-shrink-0';
+                        }
+                      }}
+                    />
+            </div>
+                ) : (
+                  <div className="w-9 h-9 bg-[#25D076] rounded-md flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-bold text-sm leading-none">
+                      {issuer.name?.charAt(0) || 'R'}
+                    </span>
+                  </div>
+                )}
                 <div className="min-w-0">
                   <div className="text-sm font-bold text-gray-900 tracking-wide truncate">
                     {issuer.name}
-                  </div>
+                    </div>
                   {issuer.mwstNummer && (
                     <div className="text-[10px] text-gray-400 font-mono tracking-wider">
                       {issuer.mwstNummer}
@@ -720,10 +725,10 @@ export default function InvoiceTemplate({
               {isMobile && !showActions && (
                 <div className="mt-3">
                   <StatusBadge status={invoice.status} />
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
+        </div>
 
           {/* Recipient */}
           <div className="mt-6 md:mt-8">
@@ -827,7 +832,7 @@ export default function InvoiceTemplate({
               </div>
             </div>
           ))}
-        </div>
+          </div>
 
         {/* ═══ TOTALS ═══ */}
         <div className={`${px} mt-4 mb-5 md:mb-6`}>
@@ -852,6 +857,18 @@ export default function InvoiceTemplate({
                 </div>
               ))}
 
+              {/* Descuento aplicado */}
+              {discountAmount > 0 && (
+                <>
+                  <div className="flex justify-between items-center py-1.5 text-[12px] mt-1">
+                    <span className="text-[#3C7E44] font-semibold">Rabatt</span>
+                    <span className="text-[#3C7E44] font-semibold tabular-nums">
+                      - {formatCHF(discountAmount)}
+                    </span>
+                  </div>
+                </>
+              )}
+
               {/* Divider */}
               <div className="border-t-2 border-[#25D076] my-2.5" />
 
@@ -865,8 +882,8 @@ export default function InvoiceTemplate({
                   style={{ letterSpacing: '-0.02em' }}
                 >
                   {formatCHF(totalBrutto)}
-                </span>
-              </div>
+                  </span>
+                </div>
             </div>
           </div>
         </div>
@@ -956,8 +973,8 @@ export default function InvoiceTemplate({
                             <div className="text-gray-800 font-mono text-[10px]">
                               {invoice.referenz}
                             </div>
-                          </div>
-                        )}
+            </div>
+          )}
                         <div>
                           <div className="text-gray-400 text-[9px] font-semibold uppercase tracking-[0.1em] mb-0.5">
                             Zahlbar durch
@@ -989,7 +1006,7 @@ export default function InvoiceTemplate({
                         </div>
                       </div>
                     </div>
-                  </div>
+        </div>
 
                   {/* Right: Empfangsschein (Receipt) */}
                   <div className={`p-4 md:p-5 ${isMobile ? 'border-t-2 border-[#25D076]' : ''}`}>
@@ -1017,9 +1034,9 @@ export default function InvoiceTemplate({
                           </div>
                           <div className="text-gray-800 font-mono text-[10px]">
                             {invoice.referenz}
-                          </div>
-                        </div>
-                      )}
+              </div>
+                </div>
+              )}
                       <div>
                         <div className="text-gray-400 text-[9px] font-semibold uppercase tracking-[0.1em] mb-0.5">
                           Zahlbar durch
@@ -1054,7 +1071,7 @@ export default function InvoiceTemplate({
                         </div>
                       </div>
                     </div>
-                  </div>
+              </div>
                 </div>
               </div>
             </div>

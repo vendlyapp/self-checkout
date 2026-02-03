@@ -114,7 +114,7 @@ class ProductService {
       productData.supplier?.trim() || null, // $34
       productData.costPrice ? parseFloat(productData.costPrice) : null, // $35
       productData.margin ? parseFloat(productData.margin) : null, // $36
-      productData.taxRate ? parseFloat(productData.taxRate) : null, // $37
+      productData.taxRate ? parseFloat(productData.taxRate) : 0.026, // $37 - Default 2.6% for food products
       productData.expiryDate ? new Date(productData.expiryDate).toISOString() : null, // $38
       productData.location?.trim() || null, // $39
       productData.notes?.trim() || null, // $40

@@ -59,9 +59,11 @@ export interface Invoice {
   notes?: string;
   orderId?: string;
   // Computed or stored totals
+  discountAmount?: number;
   totalBrutto?: number;
   totalNetto?: number;
   totalMwst?: number;
+  storeLogo?: string;
 }
 
 // ─── Formatting ──────────────────────────────────────────────────────────────

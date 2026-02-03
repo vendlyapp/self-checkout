@@ -256,6 +256,9 @@ export default function Form({ isDesktop = false }: FormProps) {
         productData.image = productImages[0]; // Primera imagen como imagen principal
       }
 
+      // Agregar taxRate (IVA) al objeto del producto
+      productData.taxRate = parseFloat(vatRate) / 100; // Convertir de porcentaje a decimal (2.6 -> 0.026)
+
       try {
         let createdProduct;
         const createdProducts: CreatedProduct[] = [];
@@ -290,6 +293,7 @@ export default function Form({ isDesktop = false }: FormProps) {
               categoryId: productCategoryId,
               stock: 999,
               isActive: true,
+              taxRate: parseFloat(vatRate) / 100, // Convertir de porcentaje a decimal (2.6 -> 0.026)
             };
 
             // Agregar imágenes si existen

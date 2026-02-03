@@ -471,7 +471,7 @@ class OrderService {
 
     // Obtener items con información del producto
     const itemsQuery = `
-      SELECT oi.*, p.name as "productName", p.sku as "productSku"
+      SELECT oi.*, p.name as "productName", p.sku as "productSku", p."taxRate"
       FROM "OrderItem" oi
       LEFT JOIN "Product" p ON oi."productId" = p.id
       WHERE oi."orderId" = $1
@@ -1002,16 +1002,21 @@ class OrderService {
     let createdInvoice = null;
     let invoiceData = null; // Declarar fuera del try para que esté disponible en el catch
     try {
-      // Obtener productos con sus nombres y SKUs para la factura
+      // Obtener productos con sus nombres, SKUs y taxRate para la factura
       const productIds = result.items.map(item => item.productId);
       const productsQuery = `
-        SELECT id, name, sku, price
+        SELECT id, name, sku, price, "taxRate"
         FROM "Product"
         WHERE id = ANY($1)
       `;
       const productsResult = await query(productsQuery, [productIds]);
       const productsMap = new Map(
-        productsResult.rows.map(p => [p.id, { name: p.name, sku: p.sku, price: Number(p.price) }])
+        productsResult.rows.map(p => [p.id, { 
+          name: p.name, 
+          sku: p.sku, 
+          price: Number(p.price),
+          taxRate: p.taxRate !== null ? Number(p.taxRate) : 0.026 // Default 2.6% if null
+        }])
       );
 
       // Preparar items de la factura
@@ -1024,6 +1029,9 @@ class OrderService {
           quantity: item.quantity,
           price: Number(item.price),
           subtotal: Number(item.price) * item.quantity,
+          metadata: {
+            taxRate: product?.taxRate || 0.026 // Include taxRate in metadata
+          }
         };
       });
 

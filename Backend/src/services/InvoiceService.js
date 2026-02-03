@@ -47,6 +47,7 @@ class InvoiceService {
       storeAddress,
       storePhone,
       storeEmail,
+      storeLogo,
       items,
       subtotal,
       discountAmount = 0,
@@ -121,6 +122,7 @@ class InvoiceService {
           "storeAddress",
           "storePhone",
           "storeEmail",
+          "storeLogo",
           "items",
           "subtotal",
           "discountAmount",
@@ -130,7 +132,7 @@ class InvoiceService {
           "status",
           "metadata"
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, $16, $17, $18, $19, $20, $21, $22::jsonb)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16::jsonb, $17, $18, $19, $20, $21, $22, $23::jsonb)
         RETURNING *
       `;
 
@@ -149,6 +151,7 @@ class InvoiceService {
         storeAddress || null,
         storePhone || null,
         storeEmail || null,
+        storeLogo || null,
         JSON.stringify(items),
         subtotal,
         discountAmount,
