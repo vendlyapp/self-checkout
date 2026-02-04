@@ -6,14 +6,7 @@ import StoreSettingsForm from '@/components/dashboard/store/StoreSettingsForm'
 import { useResponsive } from '@/hooks'
 import { useMyStore } from '@/hooks/queries/useMyStore'
 import type { StoreData } from '@/hooks/queries/useMyStore'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { buildApiUrl, getAuthHeaders } from '@/lib/config/api'
 import { toast } from 'sonner'
 import { CreditCard, Store } from 'lucide-react'
@@ -116,37 +109,46 @@ export default function StoreSettingsPage() {
         </div>
       )}
 
-      {/* Modal: ¿Configurar método de pago? */}
+      {/* Modal: ¿Configurar método de pago? — Consistente con diseño del sistema */}
       <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
-        <DialogContent showCloseButton={false} className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-brand-500" />
-              Zahlungsart konfigurieren?
-            </DialogTitle>
-            <DialogDescription>
-              Möchten Sie jetzt eine Zahlungsart konfigurieren? Barzahlung (Bargeld) ist bereits
-              aktiv. Sie können jederzeit unter Einstellungen → Zahlungsarten weitere Methoden
-              hinzufügen.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <button
-              type="button"
-              onClick={handleConfigurePaymentNo}
-              disabled={completingOnboarding}
-              className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-            >
-              {completingOnboarding ? 'Bitte warten…' : 'Später'}
-            </button>
-            <button
-              type="button"
-              onClick={handleConfigurePaymentYes}
-              className="inline-flex items-center justify-center rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"
-            >
-              Ja, jetzt konfigurieren
-            </button>
-          </DialogFooter>
+        <DialogContent
+          showCloseButton={true}
+          className="max-w-[calc(100%-2rem)] w-full sm:max-w-md rounded-2xl border border-gray-200 bg-white p-0 shadow-xl gap-0 overflow-hidden"
+        >
+          <div className="flex flex-col">
+            <div className="flex items-center gap-3 border-b border-gray-200 px-6 py-5 pr-12">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-100">
+                <CreditCard className="h-6 w-6 text-brand-600" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-semibold text-gray-900">
+                  Zahlungsart konfigurieren?
+                </DialogTitle>
+                <DialogDescription className="mt-1 text-sm text-gray-500">
+                  Möchten Sie jetzt eine Zahlungsart konfigurieren? Barzahlung (Bargeld) ist bereits
+                  aktiv. Sie können jederzeit unter Einstellungen → Zahlungsarten weitere Methoden
+                  hinzufügen.
+                </DialogDescription>
+              </div>
+            </div>
+            <div className="flex flex-col-reverse gap-3 px-6 py-5 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={handleConfigurePaymentNo}
+                disabled={completingOnboarding}
+                className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 active:scale-[0.98] disabled:opacity-50 transition-ios"
+              >
+                {completingOnboarding ? 'Bitte warten…' : 'Später'}
+              </button>
+              <button
+                type="button"
+                onClick={handleConfigurePaymentYes}
+                className="inline-flex items-center justify-center rounded-xl bg-brand-500 px-4 py-3 text-sm font-semibold text-white hover:bg-brand-600 active:scale-[0.98] shadow-lg shadow-brand-500/25 transition-ios"
+              >
+                Ja, jetzt konfigurieren
+              </button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -6,25 +6,68 @@ import { toast } from 'sonner'
 import { buildApiUrl, getAuthHeaders } from '@/lib/config/api'
 import { Loader } from '@/components/ui/Loader'
 import { useResponsive } from '@/hooks'
-
-interface StoreData {
-  id: string
-  ownerId: string
-  name: string
-  slug: string
-  logo: string | null
-  address?: string | null
-  phone?: string | null
-  email?: string | null
-  description?: string | null
-  isActive: boolean
-  isOpen: boolean
-  createdAt: string
-  updatedAt: string
-}
+import type { StoreData } from '@/hooks/queries/useMyStore'
 
 interface StoreSettingsFormProps {
   onUpdate?: (store: StoreData) => void
+}
+
+/** Campo de formulario: definido fuera del componente para evitar remount y pérdida de foco al escribir */
+interface FormFieldProps {
+  icon: React.ElementType
+  label: string
+  value: string
+  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
+  placeholder?: string
+  type?: string
+  required?: boolean
+  multiline?: boolean
+  rows?: number
+  editing: boolean
+}
+
+const FormField = ({
+  icon: Icon,
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = 'text',
+  required = false,
+  multiline = false,
+  rows = 4,
+  editing,
+}: FormFieldProps) => {
+  const InputComponent = multiline ? 'textarea' : 'input'
+  const hasValue = value.trim().length > 0
+  return (
+    <div className="bg-white rounded-2xl overflow-hidden border border-gray-200/60 shadow-sm">
+      <div className="px-4 py-3 border-b border-gray-100/50">
+        <label className="flex items-center gap-2.5 text-sm font-semibold text-gray-700">
+          <Icon className="w-4 h-4 text-brand-500" />
+          <span>{label}</span>
+          {required && <span className="text-red-500 text-xs ml-1">*</span>}
+        </label>
+      </div>
+      {editing ? (
+        <InputComponent
+          type={type}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          required={required}
+          rows={multiline ? rows : undefined}
+          className="w-full px-4 py-3.5 text-base text-gray-900 placeholder:text-gray-400 bg-transparent focus:outline-none"
+        />
+      ) : (
+        <div className="px-4 py-3.5 min-h-[3rem] flex items-center">
+          <p className={`text-base ${hasValue ? 'text-gray-900 font-medium' : 'text-gray-400 italic'}`}>
+            {value || 'Nicht angegeben'}
+          </p>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) {
@@ -260,61 +303,6 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
     )
   }
 
-  // Componente de campo estilo iOS
-  const FormField = ({ 
-    icon: Icon, 
-    label, 
-    value, 
-    onChange, 
-    placeholder, 
-    type = 'text', 
-    required = false,
-    multiline = false,
-    rows = 4
-  }: {
-    icon: React.ElementType
-    label: string
-    value: string
-    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
-    placeholder?: string
-    type?: string
-    required?: boolean
-    multiline?: boolean
-    rows?: number
-  }) => {
-    const InputComponent = multiline ? 'textarea' : 'input'
-    const hasValue = value.trim().length > 0
-    
-    return (
-      <div className="bg-white rounded-2xl overflow-hidden border border-gray-200/60 shadow-sm">
-        <div className="px-4 py-3 border-b border-gray-100/50">
-          <label className="flex items-center gap-2.5 text-sm font-semibold text-gray-700">
-            <Icon className="w-4 h-4 text-brand-500" />
-            <span>{label}</span>
-            {required && <span className="text-red-500 text-xs ml-1">*</span>}
-          </label>
-        </div>
-        {editing ? (
-          <InputComponent
-            type={type}
-            value={value}
-            onChange={onChange}
-            placeholder={placeholder}
-            required={required}
-            rows={multiline ? rows : undefined}
-            className="w-full px-4 py-3.5 text-base text-gray-900 placeholder:text-gray-400 bg-transparent focus:outline-none"
-          />
-        ) : (
-          <div className="px-4 py-3.5 min-h-[3rem] flex items-center">
-            <p className={`text-base ${hasValue ? 'text-gray-900 font-medium' : 'text-gray-400 italic'}`}>
-              {value || 'Nicht angegeben'}
-            </p>
-          </div>
-        )}
-      </div>
-    )
-  }
-
   return (
     <div className="w-full space-y-4">
       {/* Header integrado estilo iOS */}
@@ -495,6 +483,7 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
           onChange={(e) => setName(e.target.value)}
           placeholder="z.B. Heinigers Hofladen"
           required
+          editing={editing}
         />
 
         <FormField
@@ -503,6 +492,7 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           placeholder="z.B. Grundhof 3, 8305 Dietlikon"
+          editing={editing}
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -513,6 +503,7 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
             onChange={(e) => setPhone(e.target.value)}
             placeholder="z.B. +41 44 123 45 67"
             type="tel"
+            editing={editing}
           />
 
           <FormField
@@ -522,6 +513,7 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
             onChange={(e) => setEmail(e.target.value)}
             placeholder="z.B. info@mein-geschäft.ch"
             type="email"
+            editing={editing}
           />
         </div>
 
