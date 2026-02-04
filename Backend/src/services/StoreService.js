@@ -305,7 +305,22 @@ class StoreService {
         throw new Error('Tienda no encontrada');
       }
 
-      const updatedStore = result.rows[0];
+      let updatedStore = result.rows[0];
+
+      // Marcar configuración completada la primera vez que guardan (onboarding)
+      try {
+        const onboardingUpdate = await query(
+          `UPDATE "Store" SET "settingsCompletedAt" = CURRENT_TIMESTAMP WHERE "ownerId" = $1 AND "settingsCompletedAt" IS NULL RETURNING *`,
+          [ownerId]
+        );
+        if (onboardingUpdate.rows.length > 0) {
+          updatedStore = onboardingUpdate.rows[0];
+        }
+      } catch (colErr) {
+        if (!colErr.message?.includes('column')) {
+          throw colErr;
+        }
+      }
 
       // Regenerar QR code si el slug cambió o si no existe
       if (!updatedStore.qrCode || (name !== undefined && name !== updatedStore.name)) {
@@ -328,6 +343,32 @@ class StoreService {
       };
     } catch (error) {
       console.error('Error updating store:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Marca el onboarding como completado (después de configuración y opcionalmente métodos de pago)
+   * @param {string} ownerId - ID del propietario
+   */
+  async completeOnboarding(ownerId) {
+    try {
+      const updateQuery = `
+        UPDATE "Store"
+        SET "onboardingCompletedAt" = CURRENT_TIMESTAMP, "updatedAt" = CURRENT_TIMESTAMP
+        WHERE "ownerId" = $1
+        RETURNING *
+      `;
+      const result = await query(updateQuery, [ownerId]);
+      if (result.rows.length === 0) {
+        throw new Error('Tienda no encontrada');
+      }
+      return { success: true, data: result.rows[0] };
+    } catch (error) {
+      if (error.message === 'Tienda no encontrada') throw error;
+      if (error.message?.includes('column')) {
+        return { success: true, data: await this.getByOwnerId(ownerId) };
+      }
       throw error;
     }
   }

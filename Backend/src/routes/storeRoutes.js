@@ -85,6 +85,17 @@ router.patch('/my-store/status', authMiddleware, storeController.updateStoreStat
 
 /**
  * @swagger
+ * /api/store/my-store/onboarding-complete:
+ *   patch:
+ *     summary: Marcar onboarding de la tienda como completado
+ *     tags: [Store]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.patch('/my-store/onboarding-complete', authMiddleware, storeController.completeOnboarding);
+
+/**
+ * @swagger
  * /api/store/my-store/regenerate-qr:
  *   post:
  *     summary: Regenerar código QR de la tienda

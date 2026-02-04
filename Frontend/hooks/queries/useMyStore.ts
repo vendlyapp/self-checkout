@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { buildApiUrl, getAuthHeaders } from '@/lib/config/api'
 
-interface StoreData {
+export interface StoreData {
   id: string
   ownerId: string
   name: string
@@ -19,6 +19,10 @@ interface StoreData {
   isOpen?: boolean
   createdAt: string
   updatedAt: string
+  /** Primera vez que el admin guardó la configuración de la tienda (onboarding) */
+  settingsCompletedAt?: string | null
+  /** Cuando el admin completó el flujo de onboarding */
+  onboardingCompletedAt?: string | null
 }
 
 export const useMyStore = () => {

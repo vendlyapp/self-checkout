@@ -216,6 +216,29 @@ class StoreController {
   }
 
   /**
+   * Marca el onboarding como completado para la tienda del usuario
+   * @route PATCH /api/store/my-store/onboarding-complete
+   */
+  async completeOnboarding(req, res) {
+    try {
+      const ownerId = req.user?.userId;
+      if (!ownerId) {
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+          success: false,
+          error: 'Usuario no autenticado'
+        });
+      }
+      const result = await storeService.completeOnboarding(ownerId);
+      res.status(HTTP_STATUS.OK).json(result);
+    } catch (error) {
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
    * Regenera el código QR de la tienda del usuario autenticado
    * Útil cuando se necesita actualizar el QR code con la URL correcta
    * @route POST /api/store/my-store/regenerate-qr
