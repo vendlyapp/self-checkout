@@ -88,7 +88,7 @@ export default function CancelOrderModal({
             <button
               onClick={onClose}
               className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors touch-target"
-              aria-label="Modal schließen"
+              aria-label="Modal schliessen"
             >
               <X className="w-5 h-5" />
             </button>

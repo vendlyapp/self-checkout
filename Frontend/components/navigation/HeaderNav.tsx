@@ -111,7 +111,7 @@ export default function HeaderNav({
             <button
               className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100"
               onClick={() => router.push(closeDestination)}
-              aria-label="Schließen"
+              aria-label="Schliessen"
               tabIndex={0}
             >
               <X className="w-5 h-5 text-gray-600" />

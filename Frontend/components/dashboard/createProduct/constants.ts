@@ -21,5 +21,5 @@ export const SAVE_PROGRESS_STEPS = [
   { message: "Bilder hochladen...", duration: 600 },
   { message: "QR-Code generieren...", duration: 400 },
   { message: "Katalog aktualisieren...", duration: 500 },
-  { message: "Abschließen...", duration: 200 },
+  { message: "Abschliessen...", duration: 200 },
 ];

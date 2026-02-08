@@ -54,7 +54,7 @@ export default function DeleteDiscountCodeModal({
             onClick={onCancel}
             disabled={isDeleting}
             className="p-2 rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50"
-            aria-label="Schließen"
+            aria-label="Schliessen"
           >
             <X className="w-5 h-5 text-gray-600" />
           </button>

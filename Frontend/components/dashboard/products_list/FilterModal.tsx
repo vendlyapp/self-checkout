@@ -190,7 +190,7 @@ export default function FilterModal({
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-          aria-label="Schließen"
+          aria-label="Schliessen"
         >
           <X className="w-5 h-5" />
         </button>

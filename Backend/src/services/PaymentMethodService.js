@@ -4,6 +4,36 @@ const globalPaymentMethodConfigService = require('./GlobalPaymentMethodConfigSer
 class PaymentMethodService {
 
   /**
+   * Asegura que el método Bargeld (efectivo) exista para la tienda. Si no existe, lo crea.
+   * Así las tiendas creadas antes de tener creación automática de Bargeld lo tendrán al abrir métodos de pago.
+   * @param {string} storeId - ID del store
+   */
+  async ensureBargeldExistsForStore(storeId) {
+    const existing = await query(
+      'SELECT id FROM "PaymentMethod" WHERE "storeId" = $1 AND LOWER(code) = $2',
+      [storeId.trim(), 'bargeld']
+    );
+    if (existing.rows.length > 0) return;
+    try {
+      await this.create({
+        storeId: storeId.trim(),
+        name: 'Bargeld',
+        displayName: 'Bargeld',
+        code: 'bargeld',
+        icon: 'Coins',
+        bgColor: '#766B6A',
+        textColor: '#FFFFFF',
+        sortOrder: 1,
+        isActive: true
+      });
+    } catch (err) {
+      if (!err.message || !err.message.includes('existiert bereits')) {
+        console.warn('[PaymentMethodService] ensureBargeldExistsForStore:', err.message);
+      }
+    }
+  }
+
+  /**
    * Obtiene todos los métodos de pago de un store
    * @param {string} storeId - ID del store
    * @param {Object} options - Opciones de consulta
@@ -14,6 +44,8 @@ class PaymentMethodService {
     if (!storeId || !storeId.trim()) {
       throw new Error('Store-ID ist erforderlich');
     }
+
+    await this.ensureBargeldExistsForStore(storeId);
 
     const { activeOnly = false } = options;
     
@@ -302,11 +334,7 @@ class PaymentMethodService {
           value = parseInt(value);
         } else if (field === 'isActive') {
           value = Boolean(value);
-          // Bargeld siempre debe estar activo - prevenir desactivación
-          // existingMethod ya fue obtenido al inicio de la función
-          if (existingMethod.success && existingMethod.data.code.toLowerCase() === 'bargeld' && !value) {
-            throw new Error('Bargeld (Bargeld) muss immer aktiv sein und kann nicht deaktiviert werden');
-          }
+          // El admin de la tienda puede activar/desactivar Bargeld si lo desea
         } else if (field === 'disabledBySuperAdmin') {
           value = Boolean(value);
           // Bargeld nunca puede ser inhabilitado por super admin

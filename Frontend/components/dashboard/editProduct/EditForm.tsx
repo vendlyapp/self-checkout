@@ -314,7 +314,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        alert(`${file.name} ist zu groß. Maximum 5MB`);
+        alert(`${file.name} ist zu gross. Maximum 5MB`);
         return;
       }
 

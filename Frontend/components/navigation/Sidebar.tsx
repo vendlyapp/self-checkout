@@ -326,7 +326,7 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
               {user?.user_metadata?.name || 'Admin User'}
             </p>
             <p className="text-xs text-gray-500 truncate">
-              {user?.email || 'admin@vendly.ch'}
+              {user?.email || 'max.muster@muster.ch'}
             </p>
           </div>
         </div>

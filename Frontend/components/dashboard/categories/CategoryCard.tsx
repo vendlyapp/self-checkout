@@ -1,6 +1,6 @@
 'use client'
 
-import { Eye, EyeOff, Edit } from 'lucide-react'
+import { Eye, EyeOff, Edit, Trash2 } from 'lucide-react'
 import { getIcon } from '../products_list/data/iconMap'
 import type { Category } from '@/lib/services/categoryService'
 
@@ -8,14 +8,15 @@ interface CategoryCardProps {
   category: Category
   onEdit: (category: Category) => void
   onToggleVisibility?: (category: Category) => void
+  onDelete?: (category: Category) => void
 }
 
-export default function CategoryCard({ 
-  category, 
-  onEdit, 
-  onToggleVisibility 
+export default function CategoryCard({
+  category,
+  onEdit,
+  onToggleVisibility,
+  onDelete,
 }: CategoryCardProps) {
-  // Usar isActive si existe, sino usar count como fallback
   const isActive = category.isActive !== undefined ? category.isActive : (category.count !== undefined && category.count > 0)
   
   // Obtener icono de la categoría (si existe en el tipo Category, sino usar Tag por defecto)
@@ -34,6 +35,12 @@ export default function CategoryCard({
     }
   }
 
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (onDelete) {
+      onDelete(category)
+    }
+  }
 
   return (
     <div 
@@ -101,6 +108,20 @@ export default function CategoryCard({
           >
             <Edit className="w-5 h-5 text-gray-600" />
           </button>
+
+          {/* Botón eliminar: solo visible cuando la categoría está inactiva */}
+          {!isActive && onDelete && (
+            <button
+              onClick={handleDeleteClick}
+              className="p-2 rounded-lg transition-colors
+                       hover:bg-red-50 hover:text-red-600 active:scale-95
+                       focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-gray-400"
+              aria-label="Kategorie löschen"
+              tabIndex={0}
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
     </div>

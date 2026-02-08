@@ -42,7 +42,7 @@ export const useCreatePaymentMethod = () => {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session?.access_token) {
-        throw new Error('No estás autenticado');
+        throw new Error('Sie sind nicht authentifiziert');
       }
 
       const url = buildApiUrl(`/api/payment-methods/store/${storeId}`);
@@ -68,24 +68,24 @@ export const useCreatePaymentMethod = () => {
         const result = await response.json();
 
         if (!result.success) {
-          throw new Error(result.error || 'Error al crear método de pago');
+          throw new Error(result.error || 'Fehler beim Erstellen der Zahlungsmethode');
         }
 
         return result.data as PaymentMethod;
       } catch (error) {
         clearTimeout(timeoutId);
         if (error instanceof Error && error.name === 'AbortError') {
-          throw new Error('Request timeout');
+          throw new Error('Anfrage-Timeout');
         }
         throw error;
       }
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['paymentMethods', variables.storeId] });
-      toast.success('Método de pago creado exitosamente');
+      toast.success('Zahlungsmethode erfolgreich erstellt');
     },
     onError: (error) => {
-      toast.error(error.message || 'Error al crear método de pago');
+      toast.error(error.message || 'Fehler beim Erstellen der Zahlungsmethode');
     },
   });
 };
@@ -102,7 +102,7 @@ export const useUpdatePaymentMethod = () => {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session?.access_token) {
-        throw new Error('No estás autenticado');
+        throw new Error('Sie sind nicht authentifiziert');
       }
 
       const url = buildApiUrl(`/api/payment-methods/${id}`);
@@ -128,27 +128,26 @@ export const useUpdatePaymentMethod = () => {
         const result = await response.json();
 
         if (!result.success) {
-          throw new Error(result.error || 'Error al actualizar método de pago');
+          throw new Error(result.error || 'Fehler beim Aktualisieren der Zahlungsmethode');
         }
 
         return result.data as PaymentMethod;
       } catch (error) {
         clearTimeout(timeoutId);
         if (error instanceof Error && error.name === 'AbortError') {
-          throw new Error('Request timeout');
+          throw new Error('Anfrage-Timeout');
         }
         throw error;
       }
     },
     onSuccess: (data) => {
-      // Invalidar todas las queries de paymentMethods para este storeId
       queryClient.invalidateQueries({ queryKey: ['paymentMethods', data.storeId] });
       queryClient.invalidateQueries({ queryKey: ['paymentMethods'] });
       queryClient.invalidateQueries({ queryKey: ['paymentMethod', data.id] });
-      toast.success('Método de pago actualizado exitosamente');
+      toast.success('Zahlungsmethode erfolgreich aktualisiert');
     },
     onError: (error) => {
-      toast.error(error.message || 'Error al actualizar método de pago');
+      toast.error(error.message || 'Fehler beim Aktualisieren der Zahlungsmethode');
     },
   });
 };
@@ -165,14 +164,14 @@ export const useDeletePaymentMethod = () => {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session?.access_token) {
-        throw new Error('No estás autenticado');
+        throw new Error('Sie sind nicht authentifiziert');
       }
 
       const url = buildApiUrl(`/api/payment-methods/${id}`);
       const headers = getAuthHeaders(session.access_token);
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       try {
         const response = await fetch(url, {
@@ -190,24 +189,24 @@ export const useDeletePaymentMethod = () => {
         const result = await response.json();
 
         if (!result.success) {
-          throw new Error(result.error || 'Error al eliminar método de pago');
+          throw new Error(result.error || 'Fehler beim Löschen der Zahlungsmethode');
         }
 
         return { id };
       } catch (error) {
         clearTimeout(timeoutId);
         if (error instanceof Error && error.name === 'AbortError') {
-          throw new Error('Request timeout');
+          throw new Error('Anfrage-Timeout');
         }
         throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['paymentMethods'] });
-      toast.success('Método de pago eliminado exitosamente');
+      toast.success('Zahlungsmethode erfolgreich gelöscht');
     },
     onError: (error) => {
-      toast.error(error.message || 'Error al eliminar método de pago');
+      toast.error(error.message || 'Fehler beim Löschen der Zahlungsmethode');
     },
   });
 };

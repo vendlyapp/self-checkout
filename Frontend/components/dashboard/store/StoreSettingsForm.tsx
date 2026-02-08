@@ -140,7 +140,7 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
     const file = e.target.files?.[0]
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('Das Bild ist zu groß. Maximum 5MB')
+        toast.error('Das Bild ist zu gross. Maximum 5MB')
         return
       }
       if (!file.type.startsWith('image/')) {

@@ -2,6 +2,7 @@ const { query } = require('../../lib/database');
 const qrCodeGenerator = require('../utils/qrCodeGenerator');
 const barcodeGenerator = require('../utils/barcodeGenerator');
 const storeService = require('./StoreService');
+const categoryService = require('./CategoryService');
 
 class ProductService {
 
@@ -26,6 +27,22 @@ class ProductService {
 
     if (!productData.category || !productData.category.trim()) {
       throw new Error('La categoría es requerida');
+    }
+
+    const store = await storeService.getByOwnerId(ownerId);
+    if (!store) {
+      throw new Error('Tienda no encontrada para este usuario');
+    }
+    if (productData.categoryId) {
+      try {
+        const catResult = await categoryService.findById(productData.categoryId, store.id);
+        if (!catResult.data || catResult.data.storeId !== store.id) {
+          throw new Error('Die Kategorie gehört nicht zu Ihrem Geschäft');
+        }
+      } catch (e) {
+        if (e.message && e.message.includes('gehört nicht')) throw e;
+        throw new Error('Die Kategorie gehört nicht zu Ihrem Geschäft');
+      }
     }
 
     const stock = productData.stock !== undefined ? parseInt(productData.stock) : 999;
@@ -124,9 +141,7 @@ class ProductService {
     const result = await query(insertQuery, values);
     const product = result.rows[0];
 
-    // Obtener la tienda para generar URL completa del QR
-    const store = await storeService.getByOwnerId(ownerId);
-    // Usar URL de producción por defecto para que los QR codes funcionen en producción
+    // Usar URL de producción por defecto (store ya obtenido arriba) para que los QR codes funcionen en producción
     // En desarrollo local, configurar FRONTEND_URL en .env
     const frontendUrl = process.env.FRONTEND_URL || 'https://self-checkout-kappa.vercel.app';
     

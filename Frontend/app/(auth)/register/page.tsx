@@ -175,7 +175,7 @@ export default function RegisterPage() {
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="admin@vendly.ch"
+                  placeholder="max.muster@muster.ch"
                   required
                   disabled={loading}
                   className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl 

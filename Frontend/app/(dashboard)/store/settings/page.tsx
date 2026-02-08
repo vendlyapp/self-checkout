@@ -14,7 +14,7 @@ import { CreditCard, Store } from 'lucide-react'
 const FIRST_TIME_BANNER = {
   title: 'Willkommen! Konfigurieren Sie Ihre Geschäft zum ersten Mal',
   description:
-    'Bitte füllen Sie die folgenden Angaben aus und speichern Sie. Anschließend können Sie optional Ihre Zahlungsarten einrichten. Bargeld (Barzahlung) ist standardmäßig aktiv.',
+    'Bitte füllen Sie die folgenden Angaben aus und speichern Sie. Anschliessend können Sie optional Ihre Zahlungsarten einrichten. Bargeld (Barzahlung) ist standardmässig aktiv.',
 }
 
 export default function StoreSettingsPage() {

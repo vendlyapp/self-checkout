@@ -1,5 +1,7 @@
 const { query } = require('../../lib/database');
 const qrCodeGenerator = require('../utils/qrCodeGenerator');
+const paymentMethodService = require('./PaymentMethodService');
+const categoryService = require('./CategoryService');
 
 class StoreService {
   /**
@@ -90,10 +92,43 @@ class StoreService {
       // Actualizar con QR
       const updateQuery = 'UPDATE "Store" SET "qrCode" = $1 WHERE "id" = $2 RETURNING *';
       const updatedResult = await query(updateQuery, [qrCode, store.id]);
+      const finalStore = updatedResult.rows[0];
+
+      // Crear método de pago "Efectivo" (Bargeld) por defecto para la nueva tienda
+      try {
+        await paymentMethodService.create({
+          storeId: finalStore.id,
+          name: 'Bargeld',
+          displayName: 'Bargeld',
+          code: 'bargeld',
+          icon: 'Coins',
+          bgColor: '#766B6A',
+          textColor: '#FFFFFF',
+          sortOrder: 1,
+          isActive: true
+        });
+      } catch (bargeldError) {
+        if (bargeldError.message && !bargeldError.message.includes('existiert bereits')) {
+          console.warn('No se pudo crear Bargeld por defecto para la tienda:', bargeldError.message);
+        }
+      }
+
+      // Crear categoría por defecto para la nueva tienda (necesaria para crear productos)
+      try {
+        await categoryService.create(finalStore.id, {
+          name: 'Allgemein',
+          count: 0,
+          isActive: true
+        });
+      } catch (catError) {
+        if (!catError.message || !catError.message.includes('existiert bereits')) {
+          console.warn('No se pudo crear categoría por defecto para la tienda:', catError.message);
+        }
+      }
 
       return {
         success: true,
-        data: updatedResult.rows[0]
+        data: finalStore
       };
     } catch (error) {
       console.error('Error creating store:', error);

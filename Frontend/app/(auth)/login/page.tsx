@@ -242,7 +242,7 @@ function LoginForm() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@vendly.ch"
+                  placeholder="max.muster@muster.ch"
                   required
                   disabled={loading}
                   className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 md:py-3.5 border-2 border-gray-200 rounded-lg sm:rounded-xl 

@@ -29,7 +29,7 @@ class OrderService {
       }
 
       if (!Number.isFinite(quantity) || quantity <= 0) {
-        throw new Error('Die Menge jeder Position muss eine Zahl größer als null sein');
+        throw new Error('Die Menge jeder Position muss eine Zahl grösser als null sein');
       }
 
       uniqueProductIds.add(productId);

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useDeleteCategory } from "@/hooks/mutations";
+import { useDeleteCategory, useUpdateCategory } from "@/hooks/mutations";
 import { useCategories } from "@/hooks/queries/useCategories";
 import type { Category } from "@/lib/services/categoryService";
 import CategoryForm from "./CategoryForm";
@@ -10,6 +10,7 @@ import DeleteCategoryModal from "./DeleteCategoryModal";
 import CategoryCard from "./CategoryCard";
 import CategoryFilters, { CategoryFilterStatus } from "./CategoryFilters";
 import FooterAddCategory from "./FooterAddCategory";
+import ToggleCategoryModal from "./ToggleCategoryModal";
 import { SearchInput } from "@/components/ui/search-input";
 import FixedHeaderContainer from "@/components/dashboard/products_list/FixedHeaderContainer";
 import { Plus } from "lucide-react";
@@ -19,9 +20,11 @@ export default function CategoriesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
+  const [togglingCategory, setTogglingCategory] = useState<Category | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<CategoryFilterStatus>("all");
   const deleteCategoryMutation = useDeleteCategory();
+  const updateCategoryMutation = useUpdateCategory();
 
   // Obtener todas las categorías
   const { data: categories = [], isLoading, error } = useCategories();
@@ -58,15 +61,23 @@ export default function CategoriesPage() {
     setShowForm(true);
   };
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteRequest = (category: Category) => {
+    setDeletingCategory(category);
+  };
+
+  const handleDeleteConfirm = async (moveProductsToCategoryId?: string) => {
     if (!deletingCategory) return;
 
     try {
-      await deleteCategoryMutation.mutateAsync(deletingCategory.id);
+      await deleteCategoryMutation.mutateAsync(
+        moveProductsToCategoryId
+          ? { id: deletingCategory.id, moveProductsToCategoryId }
+          : deletingCategory.id
+      );
       setDeletingCategory(null);
     } catch (error) {
-      console.error('Fehler beim Löschen der Kategorie:', error);
-      alert(error instanceof Error ? error.message : 'Fehler beim Löschen der Kategorie');
+      console.error("Fehler beim Löschen der Kategorie:", error);
+      alert(error instanceof Error ? error.message : "Fehler beim Löschen der Kategorie");
     }
   };
 
@@ -74,15 +85,55 @@ export default function CategoriesPage() {
     setDeletingCategory(null);
   };
 
+  const otherCategoriesForDelete = useMemo(() => {
+    if (!deletingCategory) return [];
+    return categories
+      .filter((c) => c.id !== deletingCategory.id)
+      .map((c) => ({ id: c.id, name: c.name }));
+  }, [categories, deletingCategory?.id]);
+
+  const handleToggleVisibility = (category: Category) => {
+    const isActive = category.isActive !== undefined ? category.isActive : (category.count || 0) > 0;
+    if (isActive) {
+      setTogglingCategory(category);
+    } else {
+      handleToggleConfirmDirect(category);
+    }
+  };
+
+  const handleToggleConfirmDirect = async (category: Category) => {
+    try {
+      await updateCategoryMutation.mutateAsync({
+        id: category.id,
+        data: { isActive: true },
+      });
+    } catch (error) {
+      console.error("Fehler beim Aktivieren der Kategorie:", error);
+      alert(error instanceof Error ? error.message : "Fehler beim Aktivieren der Kategorie");
+    }
+  };
+
+  const handleToggleConfirm = async () => {
+    if (!togglingCategory) return;
+    try {
+      await updateCategoryMutation.mutateAsync({
+        id: togglingCategory.id,
+        data: { isActive: false },
+      });
+      setTogglingCategory(null);
+    } catch (error) {
+      console.error("Fehler beim Deaktivieren der Kategorie:", error);
+      alert(error instanceof Error ? error.message : "Fehler beim Deaktivieren der Kategorie");
+    }
+  };
+
+  const handleToggleCancel = () => {
+    setTogglingCategory(null);
+  };
+
   const handleFormClose = () => {
     setShowForm(false);
     setEditingCategory(null);
-  };
-
-  const handleToggleVisibility = (category: Category) => {
-    // Por ahora, solo editamos la categoría
-    // En el futuro, podríamos agregar un campo isActive
-    handleEdit(category);
   };
 
   if (isLoading) {
@@ -186,6 +237,7 @@ export default function CategoriesPage() {
                     category={category}
                     onEdit={handleEdit}
                     onToggleVisibility={handleToggleVisibility}
+                    onDelete={handleDeleteRequest}
                   />
                 </div>
               ))}
@@ -215,10 +267,23 @@ export default function CategoriesPage() {
       {/* Delete Confirmation Modal */}
       <DeleteCategoryModal
         isOpen={!!deletingCategory}
-        categoryName={deletingCategory?.name || ""}
+        categoryName={deletingCategory?.name ?? ""}
+        categoryId={deletingCategory?.id ?? ""}
+        productCount={deletingCategory?.count ?? 0}
+        otherCategories={otherCategoriesForDelete}
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
         isLoading={deleteCategoryMutation.isPending}
+      />
+
+      {/* Toggle Category Modal */}
+      <ToggleCategoryModal
+        isOpen={!!togglingCategory}
+        categoryName={togglingCategory?.name ?? ""}
+        isCurrentlyActive={togglingCategory?.isActive !== undefined ? togglingCategory.isActive : (togglingCategory?.count || 0) > 0}
+        onClose={handleToggleCancel}
+        onConfirm={handleToggleConfirm}
+        isLoading={updateCategoryMutation.isPending}
       />
     </div>
   );

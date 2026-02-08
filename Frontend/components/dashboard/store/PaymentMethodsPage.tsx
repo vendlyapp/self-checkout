@@ -229,11 +229,6 @@ const PaymentMethodsPage = () => {
     const method = paymentMethods.find(m => m.id === id)
     if (!method) return
 
-    // Bargeld no se puede desactivar (siempre debe estar activo)
-    if (method.apiMethod.code.toLowerCase() === 'bargeld') {
-      return; // No hacer nada si intentan desactivar Bargeld
-    }
-
     setUpdatingMethodName(method.name)
 
     try {
@@ -366,8 +361,10 @@ const PaymentMethodsPage = () => {
 
           {/* Modal */}
           <div className="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl animate-scale-in gpu-accelerated">
-            <div className="p-8 text-center">
-              <Loader size="lg" className="mb-6" />
+            <div className="flex flex-col items-center justify-center p-8 text-center">
+              <div className="flex justify-center mb-6">
+                <Loader size="lg" />
+              </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 {configureModalOpen
                   ? 'Konfiguration wird gespeichert...'
@@ -379,7 +376,7 @@ const PaymentMethodsPage = () => {
                           : 'Zahlungsmethode wird aktiviert...'}
                       </>
                     )
-                  : 'Actualizando método de pago...'}
+                  : 'Zahlungsmethode wird aktualisiert...'}
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Bitte warten Sie einen Moment

@@ -204,7 +204,7 @@ export default function CreateDiscountModal({
           <button
             onClick={onClose}
             className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-            aria-label="Schließen"
+            aria-label="Schliessen"
           >
             <X className="w-5 h-5 text-gray-600" />
           </button>

@@ -82,21 +82,36 @@ export default function CategoriesListComponent({
     router.push(`/categories/add?id=${category.id}`);
   };
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteRequest = (category: Category) => {
+    setDeletingCategory(category);
+  };
+
+  const handleDeleteConfirm = async (moveProductsToCategoryId?: string) => {
     if (!deletingCategory) return;
 
     try {
-      await deleteCategoryMutation.mutateAsync(deletingCategory.id);
+      await deleteCategoryMutation.mutateAsync(
+        moveProductsToCategoryId
+          ? { id: deletingCategory.id, moveProductsToCategoryId }
+          : deletingCategory.id
+      );
       setDeletingCategory(null);
     } catch (error) {
-      console.error('Fehler beim Löschen der Kategorie:', error);
-      alert(error instanceof Error ? error.message : 'Fehler beim Löschen der Kategorie');
+      console.error("Fehler beim Löschen der Kategorie:", error);
+      alert(error instanceof Error ? error.message : "Fehler beim Löschen der Kategorie");
     }
   };
 
   const handleDeleteCancel = () => {
     setDeletingCategory(null);
   };
+
+  const otherCategoriesForDelete = useMemo(() => {
+    if (!deletingCategory) return [];
+    return categories
+      .filter((c) => c.id !== deletingCategory.id)
+      .map((c) => ({ id: c.id, name: c.name }));
+  }, [categories, deletingCategory?.id]);
 
   const handleToggleVisibility = (category: Category) => {
     const currentActiveState = category.isActive !== undefined ? category.isActive : true;
@@ -234,13 +249,34 @@ export default function CategoriesListComponent({
                       category={category}
                       onEdit={handleEdit}
                       onToggleVisibility={handleToggleVisibility}
+                      onDelete={handleDeleteRequest}
                     />
                   </div>
                 ))}
               </div>
+            ) : !searchQuery && categories.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 px-4 text-center animate-fade-in-scale">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-100 mb-4">
+                  <Plus className="h-8 w-8 text-brand-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Erstellen Sie Ihre erste Kategorie
+                </h3>
+                <p className="mt-2 text-sm text-gray-500 max-w-sm">
+                  Kategorien helfen Ihnen, Ihre Produkte zu ordnen. Erstellen Sie mindestens eine Kategorie, um Produkte anlegen zu können.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleCreate}
+                  className="mt-6 inline-flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-3 text-sm font-semibold text-white hover:bg-brand-600 shadow-lg shadow-brand-500/25"
+                >
+                  <Plus className="h-5 w-5" />
+                  Kategorie erstellen
+                </button>
+              </div>
             ) : (
-              <div className="text-center py-12">
-                <p className="text-gray-500 text-base font-medium">
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">
                   {searchQuery
                     ? `Keine Kategorien für "${searchQuery}" gefunden`
                     : "Keine Kategorien verfügbar"}
@@ -253,7 +289,10 @@ export default function CategoriesListComponent({
         {/* Delete Confirmation Modal */}
         <DeleteCategoryModal
           isOpen={!!deletingCategory}
-          categoryName={deletingCategory?.name || ""}
+          categoryName={deletingCategory?.name ?? ""}
+          categoryId={deletingCategory?.id ?? ""}
+          productCount={deletingCategory?.count ?? 0}
+          otherCategories={otherCategoriesForDelete}
           onClose={handleDeleteCancel}
           onConfirm={handleDeleteConfirm}
           isLoading={deleteCategoryMutation.isPending}
@@ -305,42 +344,44 @@ export default function CategoriesListComponent({
                     category={category}
                     onEdit={handleEdit}
                     onToggleVisibility={handleToggleVisibility}
+                    onDelete={handleDeleteRequest}
                   />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">
-                {searchQuery
-                  ? `Keine Kategorien für "${searchQuery}" gefunden`
-                  : "Keine Kategorien verfügbar"}
-              </p>
-            </div>
-          )}
-        </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500 text-base font-medium">
+                  {searchQuery
+                    ? `Keine Kategorien für "${searchQuery}" gefunden`
+                    : "Keine Kategorien verfügbar"}
+                </p>
+              </div>
+            )}
+          </div>
       </div>
 
-      {/* Form Modal */}
       {/* Delete Confirmation Modal */}
       <DeleteCategoryModal
         isOpen={!!deletingCategory}
-        categoryName={deletingCategory?.name || ""}
+        categoryName={deletingCategory?.name ?? ""}
+        categoryId={deletingCategory?.id ?? ""}
+        productCount={deletingCategory?.count ?? 0}
+        otherCategories={otherCategoriesForDelete}
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
         isLoading={deleteCategoryMutation.isPending}
       />
 
-      {/* Toggle Category Modal */}
-      <ToggleCategoryModal
-        isOpen={!!togglingCategory}
-        categoryName={togglingCategory?.name || ""}
-        isCurrentlyActive={togglingCategory?.isActive !== undefined ? togglingCategory.isActive : (togglingCategory?.count || 0) > 0}
-        onClose={handleToggleCancel}
-        onConfirm={handleToggleConfirm}
-        isLoading={updateCategoryMutation.isPending}
+        {/* Toggle Category Modal */}
+        <ToggleCategoryModal
+          isOpen={!!togglingCategory}
+          categoryName={togglingCategory?.name || ""}
+          isCurrentlyActive={togglingCategory?.isActive !== undefined ? togglingCategory.isActive : (togglingCategory?.count || 0) > 0}
+          onClose={handleToggleCancel}
+          onConfirm={handleToggleConfirm}
+          isLoading={updateCategoryMutation.isPending}
       />
     </div>
   );
 }
-

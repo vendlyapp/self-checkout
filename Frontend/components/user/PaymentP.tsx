@@ -245,7 +245,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   onClose();
                 }}
                 className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 rounded-full transition-ios-fast active:scale-95 touch-target"
-                aria-label="Schließen"
+                aria-label="Schliessen"
               >
                 <X className="w-6 h-6 text-gray-700" />
               </button>
@@ -402,7 +402,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               </div>
               
               <p className="text-base text-gray-600 text-center max-w-xs">
-                Bitte schließen Sie dieses Fenster nicht
+                Bitte schliessen Sie dieses Fenster nicht
               </p>
             </div>
           </>

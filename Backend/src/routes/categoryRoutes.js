@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const categoryController = require('../controllers/CategoryController');
 const { validateUUID } = require('../middleware/validation');
+const { authMiddleware } = require('../middleware/authMiddleware');
 
 /**
  * @swagger
@@ -29,7 +30,7 @@ const { validateUUID } = require('../middleware/validation');
  *       500:
  *         description: Error interno del servidor
  */
-router.get('/', categoryController.getAllCategories);
+router.get('/', authMiddleware, categoryController.getAllCategories);
 
 /**
  * @swagger
@@ -60,7 +61,7 @@ router.get('/', categoryController.getAllCategories);
  *       500:
  *         description: Error interno del servidor
  */
-router.get('/stats', categoryController.getStats);
+router.get('/stats', authMiddleware, categoryController.getStats);
 
 /**
  * @swagger
@@ -94,7 +95,7 @@ router.get('/stats', categoryController.getStats);
  *       500:
  *         description: Error interno del servidor
  */
-router.get('/:id', validateUUID('id'), categoryController.getCategoryById);
+router.get('/:id', authMiddleware, validateUUID('id'), categoryController.getCategoryById);
 
 /**
  * @swagger
@@ -144,7 +145,7 @@ router.get('/:id', validateUUID('id'), categoryController.getCategoryById);
  *       500:
  *         description: Error interno del servidor
  */
-router.post('/', categoryController.createCategory);
+router.post('/', authMiddleware, categoryController.createCategory);
 
 /**
  * @swagger
@@ -197,7 +198,7 @@ router.post('/', categoryController.createCategory);
  *       500:
  *         description: Error interno del servidor
  */
-router.put('/:id', validateUUID('id'), categoryController.updateCategory);
+router.put('/:id', authMiddleware, validateUUID('id'), categoryController.updateCategory);
 
 /**
  * @swagger
@@ -234,7 +235,7 @@ router.put('/:id', validateUUID('id'), categoryController.updateCategory);
  *       500:
  *         description: Error interno del servidor
  */
-router.delete('/:id', validateUUID('id'), categoryController.deleteCategory);
+router.delete('/:id', authMiddleware, validateUUID('id'), categoryController.deleteCategory);
 
 /**
  * @swagger
@@ -259,6 +260,6 @@ router.delete('/:id', validateUUID('id'), categoryController.deleteCategory);
  *       500:
  *         description: Error interno del servidor
  */
-router.patch('/update-counts', categoryController.updateCounts);
+router.patch('/update-counts', authMiddleware, categoryController.updateCounts);
 
 module.exports = router;

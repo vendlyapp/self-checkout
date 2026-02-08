@@ -51,26 +51,34 @@ export const useUpdateCategory = () => {
   });
 };
 
+export interface DeleteCategoryParams {
+  id: string;
+  moveProductsToCategoryId?: string;
+}
+
 /**
- * Hook para eliminar categoría (mutation)
+ * Hook para eliminar categoría (mutation).
+ * Solo categorías inactivas. Si tiene productos, pasar moveProductsToCategoryId.
  */
 export const useDeleteCategory = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      const response = await CategoryService.deleteCategory(id);
+    mutationFn: async (params: string | DeleteCategoryParams) => {
+      const id = typeof params === 'string' ? params : params.id;
+      const moveProductsToCategoryId = typeof params === 'string' ? undefined : params.moveProductsToCategoryId;
+      const response = await CategoryService.deleteCategory(id, { moveProductsToCategoryId });
       if (!response.success) {
         throw new Error(response.error || 'Error al eliminar categoría');
       }
       return id;
     },
     onSuccess: (id) => {
-      // Invalidar cache de categorías y remover la categoría específica
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       queryClient.removeQueries({ queryKey: ['category', id] });
       queryClient.invalidateQueries({ queryKey: ['categoryStats'] });
       queryClient.invalidateQueries({ queryKey: ['productsAnalytics'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
     },
   });
 };

@@ -115,12 +115,19 @@ export class CategoryService {
   }
 
   /**
-   * Eliminar categoría
+   * Eliminar categoría. Solo se pueden eliminar categorías inactivas.
+   * Si la categoría tiene productos, debe indicarse moveProductsToCategoryId para reasignarlos.
    */
-  static async deleteCategory(id: string, requestOptions?: { signal?: AbortSignal }): Promise<ApiResponse<void>> {
+  static async deleteCategory(
+    id: string,
+    options?: { moveProductsToCategoryId?: string; signal?: AbortSignal }
+  ): Promise<ApiResponse<void>> {
     return makeRequest<void>(API_CONFIG.ENDPOINTS.CATEGORY_BY_ID(id), {
       method: 'DELETE',
-      ...requestOptions,
+      ...(options?.moveProductsToCategoryId
+        ? { body: JSON.stringify({ moveProductsToCategoryId: options.moveProductsToCategoryId }) }
+        : {}),
+      ...options,
     });
   }
 }

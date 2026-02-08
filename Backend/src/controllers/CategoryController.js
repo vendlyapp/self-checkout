@@ -17,7 +17,8 @@ class CategoryController {
    */
   async getAllCategories(req, res) {
     try {
-      const result = await categoryService.findAll();
+      const storeId = req.user?.storeId || req.query.storeId || null;
+      const result = await categoryService.findAll(storeId);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
@@ -41,7 +42,8 @@ class CategoryController {
   async getCategoryById(req, res) {
     try {
       const { id } = req.params;
-      const result = await categoryService.findById(id);
+      const storeId = req.user?.storeId || null;
+      const result = await categoryService.findById(id, storeId);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       const statusCode = error.message.includes('no encontrada')
@@ -69,7 +71,14 @@ class CategoryController {
    */
   async createCategory(req, res) {
     try {
-      const result = await categoryService.create(req.body);
+      const storeId = req.user?.storeId;
+      if (!storeId) {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({
+          success: false,
+          error: 'Nur Geschäftsinhaber können Kategorien anlegen'
+        });
+      }
+      const result = await categoryService.create(storeId, req.body);
       res.status(HTTP_STATUS.CREATED).json(result);
     } catch (error) {
       const statusCode = error.message.includes('ya existe')
@@ -100,7 +109,8 @@ class CategoryController {
   async updateCategory(req, res) {
     try {
       const { id } = req.params;
-      const result = await categoryService.update(id, req.body);
+      const storeId = req.user?.storeId || null;
+      const result = await categoryService.update(id, req.body, storeId);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       const statusCode = error.message.includes('no encontrada')
@@ -130,12 +140,15 @@ class CategoryController {
   async deleteCategory(req, res) {
     try {
       const { id } = req.params;
-      const result = await categoryService.delete(id);
+      const storeId = req.user?.storeId || null;
+      const moveProductsToCategoryId = req.body?.moveProductsToCategoryId || null;
+      const result = await categoryService.delete(id, storeId, { moveProductsToCategoryId });
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      const statusCode = error.message.includes('no encontrada')
+      const msg = error.message || '';
+      const statusCode = msg.includes('nicht gefunden') || msg.includes('no encontrada')
         ? HTTP_STATUS.NOT_FOUND
-        : error.message.includes('productos asociados')
+        : msg.includes('Produkte') || msg.includes('productos') || msg.includes('inaktive') || msg.includes('Zielkategorie')
         ? HTTP_STATUS.BAD_REQUEST
         : HTTP_STATUS.INTERNAL_SERVER_ERROR;
 
@@ -157,7 +170,8 @@ class CategoryController {
    */
   async updateCounts(req, res) {
     try {
-      const result = await categoryService.updateCounts();
+      const storeId = req.user?.storeId || null;
+      const result = await categoryService.updateCounts(storeId);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
@@ -178,7 +192,8 @@ class CategoryController {
    */
   async getStats(req, res) {
     try {
-      const result = await categoryService.getStats();
+      const storeId = req.user?.storeId || null;
+      const result = await categoryService.getStats(storeId);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({

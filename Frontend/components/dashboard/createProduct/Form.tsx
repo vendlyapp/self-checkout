@@ -2,8 +2,10 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createPortal } from "react-dom";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, FolderPlus } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import MobileForm from "./MobileForm";
 import DesktopForm from "./DesktopForm";
 import { FormProps, CreatedProduct, ProductVariant, FormErrors, Category } from "./types";
@@ -54,6 +56,7 @@ export default function Form({ isDesktop = false }: FormProps) {
   const [createdProduct, setCreatedProduct] = useState<CreatedProduct | null>(null);
   const [createdProductsCount, setCreatedProductsCount] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
+  const [showNoCategoryModal, setShowNoCategoryModal] = useState(true);
 
   // Validation wrapper
   const handleValidateField = useCallback(
@@ -155,7 +158,7 @@ export default function Form({ isDesktop = false }: FormProps) {
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        alert(`${file.name} ist zu groß. Maximum 5MB`);
+        alert(`${file.name} ist zu gross. Maximum 5MB`);
         return;
       }
 
@@ -218,7 +221,7 @@ export default function Form({ isDesktop = false }: FormProps) {
                 return {
                   index: index + 1,
                   name: nameValid ? '✓' : '✗ Name erforderlich',
-                  price: priceValid ? '✓' : '✗ Preis erforderlich und größer als 0'
+                  price: priceValid ? '✓' : '✗ Preis erforderlich und grösser als 0'
                 };
               }
               return null;
@@ -617,6 +620,82 @@ export default function Form({ isDesktop = false }: FormProps) {
     categories,
     vatRates,
   };
+
+  const hasNoCategories = !categoriesLoading && categories.length === 0;
+
+  if (hasNoCategories) {
+    return (
+      <>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/90 p-6 text-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
+              <FolderPlus className="h-7 w-7 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-amber-900">
+                Bitte erstellen Sie zuerst mindestens eine Kategorie
+              </h3>
+              <p className="mt-2 text-sm text-amber-800">
+                Produkte gehören immer zu einer Kategorie Ihrer Tienda. Erstellen Sie eine Kategorie, um fortzufahren.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/categories"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white hover:bg-amber-700"
+              >
+                <FolderPlus className="h-4 w-4" />
+                Kategorie erstellen
+              </Link>
+              <button
+                type="button"
+                onClick={() => setShowNoCategoryModal(true)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-amber-300 bg-white px-5 py-3 text-sm font-semibold text-amber-800 hover:bg-amber-50"
+              >
+                Hinweis erneut anzeigen
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <Dialog open={showNoCategoryModal} onOpenChange={setShowNoCategoryModal}>
+          <DialogContent className="max-w-[calc(100%-2rem)] w-full sm:max-w-md rounded-2xl border border-gray-200 bg-white p-0 shadow-xl gap-0 overflow-hidden">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-3 border-b border-gray-200 px-6 py-5 pr-12">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-amber-100">
+                  <FolderPlus className="h-6 w-6 text-amber-600" />
+                </div>
+                <div>
+                  <DialogTitle className="text-xl font-semibold text-gray-900">
+                    Mindestens eine Kategorie erforderlich
+                  </DialogTitle>
+                  <DialogDescription className="mt-1 text-sm text-gray-500">
+                    Sie müssen mindestens eine Kategorie anlegen, um ein Produkt zu erstellen. Produkte werden immer einer Kategorie Ihrer Tienda zugeordnet.
+                  </DialogDescription>
+                </div>
+              </div>
+              <div className="flex flex-col gap-3 px-6 py-5 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowNoCategoryModal(false)}
+                  className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                >
+                  Schliessen
+                </button>
+                <Link
+                  href="/categories"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-700"
+                >
+                  <FolderPlus className="h-4 w-4" />
+                  Kategorie erstellen
+                </Link>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
 
   return (
     <>
