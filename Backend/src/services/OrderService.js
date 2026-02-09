@@ -339,7 +339,7 @@ class OrderService {
     if (ownerId) {
       // Filtrar órdenes que tengan al menos un producto del owner
       const selectQuery = `
-        SELECT DISTINCT o.*, u.name as userName, u.email as userEmail
+        SELECT DISTINCT o.*, u.name as "userName", u.email as "userEmail"
         FROM "Order" o
         INNER JOIN "OrderItem" oi ON o.id = oi."orderId"
         INNER JOIN "Product" p ON oi."productId" = p.id
@@ -415,7 +415,7 @@ class OrderService {
     }
 
     const selectQuery = `
-      SELECT o.*, u.name as userName, u.email as userEmail
+      SELECT o.*, u.name as "userName", u.email as "userEmail"
       FROM "Order" o
       LEFT JOIN "User" u ON o."userId" = u.id
       ${whereClause}
@@ -455,7 +455,7 @@ class OrderService {
 
   async findById(id) {
     const selectQuery = `
-      SELECT o.*, u.name as userName, u.email as userEmail
+      SELECT o.*, u.name as "userName", u.email as "userEmail"
       FROM "Order" o
       LEFT JOIN "User" u ON o."userId" = u.id
       WHERE o.id = $1
@@ -607,6 +607,60 @@ class OrderService {
     return this.update(id, { status });
   }
 
+  /**
+   * Actualiza los datos del cliente en la orden.
+   * La orden se crea primero (sin datos → usuario invitado). Si luego el cliente registra
+   * sus datos en la factura, se llama esto para que la orden quede a nombre del cliente.
+   * Si el cliente no registra datos, la orden sigue como invitado/Kunde (no se llama).
+   */
+  async updateOrderCustomerData(orderId, customerData) {
+    if (!customerData || (typeof customerData !== 'object')) {
+      return { success: true };
+    }
+    const name = customerData.name != null ? String(customerData.name).trim() : null;
+    const email = customerData.email != null ? String(customerData.email).trim() : null;
+    const address = customerData.address != null ? String(customerData.address).trim() : null;
+    const phone = customerData.phone != null ? String(customerData.phone).trim() : null;
+    if (!name && !email && !address && !phone) {
+      return { success: true };
+    }
+
+    const orderResult = await this.findById(orderId);
+    if (!orderResult.success || !orderResult.data) {
+      return { success: false, error: 'Bestellung nicht gefunden' };
+    }
+
+    const order = orderResult.data;
+    let metadata = order.metadata;
+    if (typeof metadata === 'string') {
+      try {
+        metadata = JSON.parse(metadata);
+      } catch {
+        metadata = {};
+      }
+    }
+    if (!metadata || typeof metadata !== 'object') {
+      metadata = {};
+    }
+
+    const customer = {
+      name: name || metadata.customer?.name || metadata.customerData?.name || null,
+      email: email || metadata.customer?.email || metadata.customerData?.email || null,
+      address: address || metadata.customer?.address || metadata.customerData?.address || null,
+      phone: phone || metadata.customer?.phone || metadata.customerData?.phone || null,
+    };
+    metadata.customer = customer;
+    metadata.customerData = customer;
+
+    const metadataJson = JSON.stringify(metadata);
+    await query(
+      'UPDATE "Order" SET metadata = $1::jsonb, "updatedAt" = CURRENT_TIMESTAMP WHERE id = $2',
+      [metadataJson, orderId]
+    );
+
+    return { success: true };
+  }
+
   async delete(id) {
     // Verificar que la orden existe
     const existingOrder = await this.findById(id);
@@ -632,28 +686,33 @@ class OrderService {
     const { date = null, ownerId = null } = options;
 
     // Si tenemos ownerId, filtrar órdenes por productos de ese owner
+    // Contamos todas las órdenes no canceladas (pending, processing, completed cuentan)
     if (ownerId) {
-      // Usar subquery para filtrar órdenes que tengan productos del owner
-      let dateFilter = '';
       const params = [ownerId];
-      
-      if (date) {
-        dateFilter = `AND o."createdAt"::date = $2::date`;
-        params.push(date);
-      }
+      // Fecha en zona horaria Europa/Zurich para que "hoy" del frontend coincida
+      const dateFilter = date
+        ? `AND (o."createdAt" AT TIME ZONE 'Europe/Zurich')::date = $2::date`
+        : '';
+      if (date) params.push(date);
 
+      // Subquery: una fila por orden para que SUM(total) no duplique por OrderItems
       const statsQuery = `
+        WITH orders_of_owner AS (
+          SELECT DISTINCT o.id, o.total, o."userId", o."createdAt"
+          FROM "Order" o
+          INNER JOIN "OrderItem" oi ON o.id = oi."orderId"
+          INNER JOIN "Product" p ON oi."productId" = p.id
+          WHERE p."ownerId" = $1
+          AND (o.status IS NULL OR o.status != 'cancelled')
+          ${dateFilter}
+        )
         SELECT
-          COUNT(DISTINCT o.id) as totalOrders,
-          COALESCE(SUM(DISTINCT o.total), 0) as totalRevenue,
-          COALESCE(AVG(DISTINCT o.total), 0) as averageOrderValue,
-          COUNT(DISTINCT o.id) FILTER (WHERE o."createdAt" >= CURRENT_DATE - INTERVAL '30 days') as recentOrders,
-          COUNT(DISTINCT o."userId") as uniqueCustomers
-        FROM "Order" o
-        INNER JOIN "OrderItem" oi ON o.id = oi."orderId"
-        INNER JOIN "Product" p ON oi."productId" = p.id
-        WHERE p."ownerId" = $1
-        ${dateFilter}
+          COUNT(*)::int as totalOrders,
+          COALESCE(SUM(total), 0)::double precision as totalRevenue,
+          COALESCE(AVG(total), 0)::double precision as averageOrderValue,
+          COUNT(*) FILTER (WHERE "createdAt" >= CURRENT_DATE - INTERVAL '30 days')::int as recentOrders,
+          COUNT(DISTINCT "userId")::int as uniqueCustomers
+        FROM orders_of_owner
       `;
 
       const result = await query(statsQuery, params);
@@ -672,15 +731,13 @@ class OrderService {
     }
 
     // Si no hay ownerId, usar el filtro original (sin filtro por tienda)
-    let whereClause = '';
+    // Contamos todas las órdenes no canceladas
     const params = [];
     let paramCount = 0;
-
-    // Filtrar por fecha si se proporciona (para obtener estadísticas del día)
+    let dateFilter = '';
     if (date) {
       paramCount++;
-      // Usar CAST para mejor compatibilidad con Supabase
-      whereClause = `WHERE "createdAt"::date = $${paramCount}::date`;
+      dateFilter = `AND ("createdAt" AT TIME ZONE 'Europe/Zurich')::date = $${paramCount}::date`;
       params.push(date);
     }
 
@@ -692,7 +749,8 @@ class OrderService {
         COUNT(*) FILTER (WHERE "createdAt" >= CURRENT_DATE - INTERVAL '30 days') as recentOrders,
         COUNT(DISTINCT "userId") as uniqueCustomers
       FROM "Order"
-      ${whereClause}
+      WHERE (status IS NULL OR status != 'cancelled')
+      ${dateFilter}
     `;
 
     const result = await query(statsQuery, params);
@@ -754,7 +812,7 @@ class OrderService {
       params.push(limit);
 
       const selectQuery = `
-        SELECT DISTINCT o.*, u.name as userName, u.email as userEmail
+        SELECT DISTINCT o.*, u.name as "userName", u.email as "userEmail"
         FROM "Order" o
         INNER JOIN "OrderItem" oi ON o.id = oi."orderId"
         INNER JOIN "Product" p ON oi."productId" = p.id
@@ -778,6 +836,8 @@ class OrderService {
         const itemsResult = await query(itemsQuery, [order.id]);
         order.items = itemsResult.rows;
       }
+
+      await this._applyInvoiceCustomerNameFallback(orders);
 
       return {
         success: true,
@@ -811,7 +871,7 @@ class OrderService {
     params.push(limit);
 
     const selectQuery = `
-      SELECT o.*, u.name as userName, u.email as userEmail
+      SELECT o.*, u.name as "userName", u.email as "userEmail"
       FROM "Order" o
       LEFT JOIN "User" u ON o."userId" = u.id
       ${whereClause}
@@ -834,11 +894,39 @@ class OrderService {
       order.items = itemsResult.rows;
     }
 
+    await this._applyInvoiceCustomerNameFallback(orders);
+
     return {
       success: true,
       data: orders,
       count: orders.length
     };
+  }
+
+  /**
+   * Si la orden muestra "Invitado de X" pero existe una factura con nombre real, usar ese nombre.
+   */
+  async _applyInvoiceCustomerNameFallback(orders) {
+    if (!orders || orders.length === 0) return;
+    const orderIds = orders.map((o) => o.id);
+    const invResult = await query(
+      'SELECT "orderId", "customerName" FROM "Invoice" WHERE "orderId" = ANY($1) AND "customerName" IS NOT NULL AND TRIM("customerName") != \'\'',
+      [orderIds]
+    );
+    const nameByOrderId = {};
+    for (const row of invResult.rows) {
+      const name = row.customerName && String(row.customerName).trim();
+      if (name && !nameByOrderId[row.orderId]) nameByOrderId[row.orderId] = name;
+    }
+    for (const order of orders) {
+      const meta = order.metadata && typeof order.metadata === 'object' ? order.metadata : {};
+      const hasCustomerName = (meta.customer && meta.customer.name) || (meta.customerData && meta.customerData.name);
+      const userName = order.userName || '';
+      const isInvitado = /^Invitado(\s|$)/i.test(userName);
+      if (!hasCustomerName && isInvitado && nameByOrderId[order.id]) {
+        order.userName = nameByOrderId[order.id];
+      }
+    }
   }
 
   async createOrderSimple(orderData) {

@@ -22,6 +22,7 @@ import {
   AdminSegmentedControl,
 } from "@/components/admin/common";
 import { cn } from "@/lib/utils";
+import { getAnalyticsDescription } from "@/lib/config/brand";
 
 type Period = "month" | "quarter" | "year";
 
@@ -627,7 +628,7 @@ const SuperAdminAnalytics: React.FC = () => {
     <div className="space-y-6 md:space-y-8">
       <AdminPageHeader
         title="Analytics & Insights"
-        description="Visualisieren Sie wichtige Trends und die Gesamtleistung der Vendly-Plattform."
+        description={getAnalyticsDescription()}
         meta={
           lastUpdatedAt ? (
             <span className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 font-medium text-gray-600 dark:bg-gray-900/70 dark:text-gray-300">

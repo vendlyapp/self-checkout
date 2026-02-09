@@ -24,10 +24,10 @@ export const useRecentOrders = (limit: number = 10) => {
       return response.data;
     },
     enabled: !!store?.id && !storeLoading, // Solo ejecutar si tenemos storeId y no está cargando
-    staleTime: 3 * 60 * 1000, // 3 minutos - datos frescos por más tiempo
+    staleTime: 60 * 1000, // 1 minuto - para que Verkauf muestre ventas recientes al abrir
     gcTime: 15 * 60 * 1000, // 15 minutos en cache
-    refetchOnWindowFocus: false,
-    refetchOnMount: false, // No refetch en mount si los datos están frescos
+    refetchOnWindowFocus: true, // Actualizar al volver a la pestaña (p. ej. tras una venta en otra pestaña)
+    refetchOnMount: true, // Refetch al montar para ver ventas recientes
     refetchOnReconnect: false,
     retry: (failureCount, error) => {
       if (error instanceof Error && error.message === 'CANCELLED') {

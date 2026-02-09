@@ -3,6 +3,7 @@ import { Users, Flame, FileText, Tag, Calculator, ShoppingCart } from 'lucide-re
 import type { SearchResult, DashboardData, UseDashboardReturn } from '@/types';
 import { useOrderStats, useRecentOrders } from '@/hooks/queries';
 import { useMyStore } from '@/hooks/queries/useMyStore';
+import { getLocalDateString, formatOrderDateTime } from '@/lib/utils';
 
 /**
  * Hook principal para gestión del dashboard
@@ -46,34 +47,10 @@ const mockDashboardData: DashboardData = {
     { id: '6', icon: <ShoppingCart className="w-5 h-5" />, title: 'Warenkorb', subtitle: 'Verwalten', color: 'teal', iconColor: 'teal', action: () => {} },
   ],
   recentSales: [
-    {
-      id: '1',
-      name: 'Sandra Keller',
-      receipt: 'Beleg #0388',
-      time: '3h',
-      amount: 158,
-      paymentMethod: 'TWINT',
-      status: 'completed'
-    },
-    {
-      id: '2',
-      name: 'Michael Weber',
-      receipt: 'Beleg #0387',
-      time: '5h',
-      amount: 89,
-      paymentMethod: 'Karte',
-      status: 'completed'
-    },
-    {
-      id: '3',
-      name: 'Anna Müller',
-      receipt: 'Beleg #0386',
-      time: '7h',
-      amount: 234,
-      paymentMethod: 'Bar',
-      status: 'completed'
-    }
-  ]
+    { id: '1', name: 'Sandra Keller', receipt: 'Beleg #0388', time: '3. Feb 2025, 14:30', amount: 158, paymentMethod: 'TWINT', status: 'completed' },
+    { id: '2', name: 'Michael Weber', receipt: 'Beleg #0387', time: '3. Feb 2025, 12:15', amount: 89, paymentMethod: 'Karte', status: 'completed' },
+    { id: '3', name: 'Anna Müller', receipt: 'Beleg #0386', time: '2. Feb 2025, 18:45', amount: 234, paymentMethod: 'Bar', status: 'completed' },
+  ],
 };
 
 export const useDashboard = (): UseDashboardReturn => {
@@ -83,12 +60,12 @@ export const useDashboard = (): UseDashboardReturn => {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
-  // Obtener store del usuario para filtrar estadísticas
+  // Obtener store del usuario para filtrar estadísticas (ownerId = dueño de la tienda para contar órdenes)
   const { data: store } = useMyStore();
-  const ownerId = store?.ownerId || store?.id;
+  const ownerId = store?.ownerId ?? (store as { ownerid?: string } | undefined)?.ownerid ?? store?.id;
 
-  // Obtener fecha de hoy en formato YYYY-MM-DD
-  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
+  // Obtener fecha de hoy en formato YYYY-MM-DD (local, no UTC)
+  const today = useMemo(() => getLocalDateString(), []);
 
   // Usar React Query para obtener estadísticas del día (con cache) - filtrado por tienda
   const { 
@@ -116,28 +93,46 @@ export const useDashboard = (): UseDashboardReturn => {
       ? Math.min(100, Math.round((currentAmount / goalAmount) * 100))
       : 0;
 
-    // Procesar órdenes recientes
-    const recentSales: DashboardData['recentSales'] = recentOrders?.map((order) => {
-      // Calcular tiempo transcurrido
-      const orderDate = new Date(order.createdAt);
-      const now = new Date();
-      const diffHours = Math.floor((now.getTime() - orderDate.getTime()) / (1000 * 60 * 60));
-      const timeAgo = diffHours > 0 ? `${diffHours}h` : 'Ahora';
+    // Helper: capitalizar primera letra de cada palabra (ej. "bargeld" → "Bargeld")
+    const capitalizeWords = (s: string): string =>
+      s
+        .trim()
+        .split(/\s+/)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ');
 
-      // Asegurar que amount sea un número
-      const amount = typeof order.total === 'number' 
-        ? order.total 
-        : typeof order.total === 'string' 
-          ? parseFloat(order.total) || 0 
+    // Procesar órdenes recientes (fecha/hora real de la orden, zona local de-CH)
+    const recentSales: DashboardData['recentSales'] = recentOrders?.map((order) => {
+      const dateTimeLabel = formatOrderDateTime(order.createdAt);
+
+      const amount = typeof order.total === 'number'
+        ? order.total
+        : typeof order.total === 'string'
+          ? parseFloat(order.total) || 0
           : 0;
+
+      // Nombre del cliente: metadata.customer.name o metadata.customerData.name (formulario factura), userName (User), sino "Kunde"
+      let meta = order.metadata as { customer?: { name?: string }; customerData?: { name?: string } } | string | undefined;
+      if (typeof meta === 'string') {
+        try {
+          meta = JSON.parse(meta) as typeof meta;
+        } catch {
+          meta = undefined;
+        }
+      }
+      const customerName =
+        (meta && typeof meta === 'object' && (meta.customer?.name?.trim() || meta.customerData?.name?.trim())) ||
+        null;
+      const userName = order.userName ?? (order as { username?: string }).username;
+      const displayName = customerName || userName?.trim() || 'Kunde';
 
       return {
         id: order.id,
-        name: order.userName || 'Kunde',
+        name: displayName,
         receipt: `Beleg #${String(order.id).slice(-4).toUpperCase()}`,
-        time: timeAgo,
+        time: dateTimeLabel,
         amount,
-        paymentMethod: order.paymentMethod || 'Karte', // Usar paymentMethod del backend si está disponible
+        paymentMethod: capitalizeWords(order.paymentMethod || 'Karte'),
         status: (order.status || 'completed') as 'pending' | 'completed' | 'cancelled',
       };
     }) || [];

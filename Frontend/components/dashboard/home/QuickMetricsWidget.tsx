@@ -1,6 +1,6 @@
 'use client';
 
-import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users, Package } from 'lucide-react';
+import { TrendingUp, TrendingDown, Banknote, ShoppingCart, Users, Package } from 'lucide-react';
 
 interface QuickMetricsWidgetProps {
   className?: string;
@@ -14,7 +14,7 @@ const QuickMetricsWidget = ({ className = '' }: QuickMetricsWidgetProps) => {
       value: 'CHF 1,580',
       change: '+12.5%',
       trend: 'up' as 'up' | 'down',
-      icon: DollarSign,
+      icon: Banknote,
       color: 'text-green-600 bg-green-100'
     },
     {

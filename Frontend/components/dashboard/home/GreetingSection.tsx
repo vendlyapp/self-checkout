@@ -41,7 +41,7 @@ const GreetingSection = ({
       const now = new Date();
       
       // Update time
-      const timeString = now.toLocaleTimeString('de-DE', {
+      const timeString = now.toLocaleTimeString('de-CH', {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit'
@@ -49,7 +49,7 @@ const GreetingSection = ({
       setCurrentTime(timeString);
       
       // Update date
-      const dateString = now.toLocaleDateString('de-DE', {
+      const dateString = now.toLocaleDateString('de-CH', {
         weekday: 'long',
         day: 'numeric',
         month: 'long',

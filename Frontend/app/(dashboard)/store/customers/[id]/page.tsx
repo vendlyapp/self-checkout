@@ -6,7 +6,7 @@ import { useResponsive } from '@/hooks'
 import { useMyStore } from '@/hooks/queries/useMyStore'
 import { CustomerService, type Customer } from '@/lib/services/customerService'
 import { Invoice } from '@/lib/services/invoiceService'
-import { Mail, Phone, MapPin, ShoppingBag, TrendingUp, Calendar, FileText, ChevronRight, DollarSign, User } from 'lucide-react'
+import { Mail, Phone, MapPin, ShoppingBag, TrendingUp, Calendar, FileText, ChevronRight, Banknote, User } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatCHF, formatDate } from '@/lib/invoice-utils'
 import { formatSwissPriceWithCHF } from '@/lib/utils'
@@ -62,7 +62,7 @@ export default function CustomerDetailPage() {
   const formatInvoiceDate = (dateString: string) => {
     try {
       const date = new Date(dateString)
-      return date.toLocaleDateString('de-DE', {
+      return date.toLocaleDateString('de-CH', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -210,7 +210,7 @@ export default function CustomerDetailPage() {
                           <span>{formatInvoiceDate(invoice.issuedAt)}</span>
                         </div>
                         <div className="flex items-center gap-2 text-gray-600">
-                          <DollarSign className="w-3 h-3" />
+                          <Banknote className="w-3 h-3" />
                           <span className="font-semibold text-gray-900">
                             {formatSwissPriceWithCHF(invoice.total)}
                           </span>
@@ -349,7 +349,7 @@ export default function CustomerDetailPage() {
                             <span>{formatInvoiceDate(invoice.issuedAt)}</span>
                           </div>
                           <div className="flex items-center gap-2 text-gray-600">
-                            <DollarSign className="w-4 h-4" />
+                            <Banknote className="w-4 h-4" />
                             <span className="font-semibold text-gray-900">
                               {formatSwissPriceWithCHF(invoice.total)}
                             </span>

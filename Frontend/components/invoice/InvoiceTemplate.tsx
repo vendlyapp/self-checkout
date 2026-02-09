@@ -22,6 +22,7 @@ import {
   type InvoiceStatus,
 } from '@/lib/invoice-utils';
 import { Invoice as ServiceInvoice, InvoiceItem } from '@/lib/services/invoiceService';
+import { getDefaultStoreName } from '@/lib/config/brand';
 
 // =============================================================================
 // Swiss Invoice Template
@@ -101,7 +102,7 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
 
   // Build issuer (store) info - ensure all fields are properly structured
   const issuer: InvoiceParty = {
-    name: serviceInvoice.storeName?.trim() || 'Vendly',
+    name: serviceInvoice.storeName?.trim() || getDefaultStoreName(),
     street: storeAddress.street?.trim() || undefined,
     zip: storeAddress.zip?.trim() || undefined,
     city: storeAddress.city?.trim() || undefined,

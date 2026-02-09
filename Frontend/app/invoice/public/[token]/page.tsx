@@ -7,6 +7,7 @@ import InvoiceTemplate from '@/components/invoice/InvoiceTemplate';
 import { Loader2, AlertCircle, Download, Printer, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
+import { getDefaultStoreName } from '@/lib/config/brand';
 
 export default function PublicInvoicePage() {
   const params = useParams();
@@ -77,7 +78,7 @@ export default function PublicInvoicePage() {
       try {
         await navigator.share({
           title: `Rechnung ${invoice.invoiceNumber}`,
-          text: `Rechnung ${invoice.invoiceNumber} von ${invoice.storeName || 'Vendly'}`,
+          text: `Rechnung ${invoice.invoiceNumber} von ${invoice.storeName || getDefaultStoreName()}`,
           url: publicUrl,
         });
         toast.success('Rechnung geteilt');

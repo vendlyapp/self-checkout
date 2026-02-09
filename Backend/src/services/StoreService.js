@@ -221,13 +221,35 @@ class StoreService {
   }
 
   /**
-   * Actualizar tienda
+   * Normaliza un slug: solo minúsculas, números y guiones
+   */
+  _normalizeSlug(input) {
+    if (!input || typeof input !== 'string') return null;
+    const slug = input
+      .toLowerCase()
+      .trim()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    return slug.length > 0 ? slug : null;
+  }
+
+  /**
+   * Actualizar tienda.
+   * El slug solo se puede cambiar en la primera configuración (settingsCompletedAt IS NULL).
    */
   async update(ownerId, storeData) {
     try {
-      const { name, logo, isOpen, address, phone, email, description } = storeData;
+      const { name, logo, isOpen, address, phone, email, description, slug: slugInput } = storeData;
 
-      // Construir query de actualización dinámicamente
+      const existing = await query('SELECT id, slug, "settingsCompletedAt" FROM "Store" WHERE "ownerId" = $1', [ownerId]);
+      if (existing.rows.length === 0) {
+        throw new Error('Tienda no encontrada');
+      }
+      const currentStore = existing.rows[0];
+      const isFirstTimeSetup = currentStore.settingsCompletedAt == null;
+
       const updateFields = [];
       const values = [];
       let paramCount = 0;
@@ -274,6 +296,19 @@ class StoreService {
         values.push(description);
       }
 
+      if (isFirstTimeSetup && slugInput !== undefined && slugInput !== null) {
+        const newSlug = this._normalizeSlug(slugInput);
+        if (newSlug) {
+          const existingSlug = await query('SELECT id FROM "Store" WHERE slug = $1 AND id != $2', [newSlug, currentStore.id]);
+          if (existingSlug.rows.length > 0) {
+            throw new Error('Diese URL ist bereits vergeben. Bitte wählen Sie eine andere.');
+          }
+          paramCount++;
+          updateFields.push(`"slug" = $${paramCount}`);
+          values.push(newSlug);
+        }
+      }
+
       if (updateFields.length === 0) {
         throw new Error('No hay campos para actualizar');
       }
@@ -293,6 +328,9 @@ class StoreService {
       try {
         result = await query(updateQuery, values);
       } catch (error) {
+        if (error.code === '23505' && error.constraint?.includes('slug')) {
+          throw new Error('Diese URL ist bereits vergeben. Bitte wählen Sie eine andere.');
+        }
         // Si falla por campos que no existen, intentar actualizar solo los campos básicos
         if (error.message.includes('column') && (error.message.includes('address') || error.message.includes('phone') || error.message.includes('email') || error.message.includes('description'))) {
           console.warn('Algunos campos no existen en la tabla Store, actualizando solo campos básicos:', error.message);
@@ -357,8 +395,9 @@ class StoreService {
         }
       }
 
-      // Regenerar QR code si el slug cambió o si no existe
-      if (!updatedStore.qrCode || (name !== undefined && name !== updatedStore.name)) {
+      // Regenerar QR code si el slug cambió, el nombre cambió o no existe
+      const slugChanged = updatedStore.slug !== currentStore.slug;
+      if (!updatedStore.qrCode || slugChanged || (name !== undefined && name !== updatedStore.name)) {
         const qrUrl = `${process.env.FRONTEND_URL || 'https://self-checkout-kappa.vercel.app'}/store/${updatedStore.slug}`;
         const qrCode = await qrCodeGenerator.generateQRCode(qrUrl, updatedStore.name);
         

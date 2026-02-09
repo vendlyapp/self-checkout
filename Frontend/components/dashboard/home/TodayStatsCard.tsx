@@ -1,19 +1,19 @@
 'use client';
 
-import { DollarSign, Users, TrendingUp, Clock } from 'lucide-react';
+import { Banknote, Users, TrendingUp, Clock } from 'lucide-react';
 import StatCard from './StatCard';
 import { useMemo } from 'react';
 import { useOrderStats } from '@/hooks/queries';
 import { useMyStore } from '@/hooks/queries/useMyStore';
-import { formatSwissPrice } from '@/lib/utils';
+import { formatSwissPrice, getLocalDateString } from '@/lib/utils';
 
 const TodayStatsCard = () => {
-  // Obtener store del usuario para filtrar estadísticas
+  // Obtener store del usuario para filtrar estadísticas (ownerId = dueño de la tienda para contar órdenes)
   const { data: store } = useMyStore();
-  const ownerId = store?.ownerId || store?.id;
+  const ownerId = store?.ownerId ?? (store as { ownerid?: string } | undefined)?.ownerid ?? store?.id;
 
-  // Obtener fecha de hoy en formato YYYY-MM-DD
-  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
+  // Obtener fecha de hoy en formato YYYY-MM-DD (local, no UTC)
+  const today = useMemo(() => getLocalDateString(), []);
   
   // Usar React Query para obtener estadísticas del día (con cache) - filtrado por tienda
   const { data: orderStats, isLoading: loading } = useOrderStats(today, ownerId);
@@ -79,7 +79,7 @@ const TodayStatsCard = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         {/* Móvil: 2 cards principales, Desktop: 4 cards en una fila */}
         <StatCard
-          icon={<DollarSign className="w-4 h-4" />}
+          icon={<Banknote className="w-4 h-4" />}
           label="Verkäufe"
           amount={formatSwissPrice(totalSales)}
           count={`${totalTransactions} Transaktionen`}

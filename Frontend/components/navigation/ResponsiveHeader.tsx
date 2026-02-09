@@ -139,7 +139,7 @@ export default function ResponsiveHeader({
                 </span>
               </div>
               <div className="flex items-center gap-4">
-                <span>Última actualización: {new Date(storeStatus.lastUpdated).toLocaleTimeString('de-DE', {
+                <span>Última actualización: {new Date(storeStatus.lastUpdated).toLocaleTimeString('de-CH', {
                   hour: '2-digit',
                   minute: '2-digit'
                 })}</span>

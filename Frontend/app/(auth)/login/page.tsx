@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
 import { Loader } from '@/components/ui/Loader';
+import { getLoginSubtitle } from '@/lib/config/brand';
 
 function LoginForm() {
   const router = useRouter();
@@ -212,7 +213,7 @@ function LoginForm() {
               Anmelden
             </h1>
             <p className="text-sm sm:text-base text-gray-500">
-              Melde dich bei deinem Vendly-Konto an
+              {getLoginSubtitle()}
             </p>
           </div>
 
@@ -352,12 +353,6 @@ function LoginForm() {
           </div>
         </div>
 
-        {/* Info adicional */}
-        <div className="mt-5 sm:mt-6 md:mt-8 text-center">
-          <p className="text-xs sm:text-sm text-gray-500">
-            Für Geschäfte und Einzelhändler
-          </p>
-        </div>
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useResponsive } from '@/hooks';
 import { useInvoices } from '@/hooks/queries/useInvoices';
-import { FileText, Search, Calendar, DollarSign, User, ChevronRight, ShoppingCart, ExternalLink } from 'lucide-react';
+import { FileText, Search, Calendar, Banknote, User, ChevronRight, ShoppingCart, ExternalLink } from 'lucide-react';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 import Link from 'next/link';
 import { Loader } from '@/components/ui/Loader';
@@ -39,7 +39,7 @@ export default function SalesInvoicesPage() {
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('de-DE', {
+      return date.toLocaleDateString('de-CH', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -137,8 +137,8 @@ export default function SalesInvoicesPage() {
                   </h3>
                   <p className="text-gray-600 text-sm">
                     {searchQuery
-                      ? 'Versuchen Sie es mit einer anderen Suche'
-                      : 'Es wurden noch keine Belege für dieses Geschäft erstellt'}
+                      ? 'Versuchen Sie es mit anderer Suche'
+                      : 'Es wurden noch keine Belege für dieses Geschäft erstellt.'}
                   </p>
                 </div>
               </div>
@@ -161,7 +161,7 @@ export default function SalesInvoicesPage() {
                             {invoice.invoiceNumber}
                           </h3>
                           <p className="text-sm text-gray-600 truncate">
-                            {invoice.customerName || 'Kein Kundenname'}
+                            {invoice.customerName || 'Kein Name'}
                           </p>
                         </div>
                       </div>
@@ -177,7 +177,7 @@ export default function SalesInvoicesPage() {
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        <Banknote className="w-4 h-4 text-gray-400 flex-shrink-0" />
                         <span className="text-sm font-bold text-gray-900">
                           {formatSwissPriceWithCHF(invoice.total)}
                         </span>
@@ -233,7 +233,7 @@ export default function SalesInvoicesPage() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Nach Rechnungsnummer, Kunde oder E-Mail suchen..."
+                placeholder="Nach Belegnummer, Kunde oder E-Mail suchen..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white"
@@ -250,8 +250,8 @@ export default function SalesInvoicesPage() {
               </h3>
               <p className="text-gray-600">
                 {searchQuery
-                  ? 'Versuchen Sie es mit einer anderen Suche'
-                  : 'Es wurden noch keine Belege für dieses Geschäft erstellt'}
+                  ? 'Versuchen Sie es mit anderer Suche'
+                  : 'Es wurden noch keine Belege für dieses Geschäft erstellt.'}
               </p>
             </div>
           ) : (
@@ -273,7 +273,7 @@ export default function SalesInvoicesPage() {
                             {invoice.invoiceNumber}
                           </h3>
                           <p className="text-sm text-gray-500 truncate">
-                            {invoice.customerName || 'Kein Kundenname'}
+                            {invoice.customerName || 'Kein Name'}
                           </p>
                         </div>
                       </div>
@@ -284,7 +284,7 @@ export default function SalesInvoicesPage() {
                           <span>{formatDate(invoice.issuedAt)}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <DollarSign className="w-4 h-4 text-gray-400" />
+                          <Banknote className="w-4 h-4 text-gray-400" />
                           <span className="font-semibold text-gray-900">
                             {formatSwissPriceWithCHF(invoice.total)}
                           </span>

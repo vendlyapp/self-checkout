@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { LogIn, Store, ScanBarcode } from 'lucide-react';
+import { getCopyrightText } from '@/lib/config/brand';
 
 const WelcomeAuth: React.FC = () => {
   const router = useRouter();
@@ -98,7 +99,7 @@ const WelcomeAuth: React.FC = () => {
         {/* Footer */}
         <div className="mt-6 sm:mt-8 text-center">
           <p className="text-xs sm:text-sm text-gray-500">
-            © 2026 Vendly. Alle Rechte vorbehalten.
+            {getCopyrightText()}
           </p>
         </div>
       </div>

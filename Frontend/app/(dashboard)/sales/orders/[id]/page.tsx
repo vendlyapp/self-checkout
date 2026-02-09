@@ -39,7 +39,7 @@ export default function SalesOrderDetailPage() {
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('de-DE', {
+      return date.toLocaleDateString('de-CH', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',

@@ -5,6 +5,7 @@ import { useInvoice } from '@/hooks/queries/useInvoice';
 import { Download, Share2, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
+import { getDefaultStoreName } from '@/lib/config/brand';
 
 export default function InvoiceActionsFooter() {
   const pathname = usePathname();
@@ -76,7 +77,7 @@ export default function InvoiceActionsFooter() {
       try {
         await navigator.share({
           title: `Rechnung ${invoice.invoiceNumber}`,
-          text: `Rechnung ${invoice.invoiceNumber} von ${invoice.storeName || 'Vendly'}`,
+          text: `Rechnung ${invoice.invoiceNumber} von ${invoice.storeName || getDefaultStoreName()}`,
           url: publicUrl,
         });
         toast.success('Rechnung geteilt', { id: 'share-link' });

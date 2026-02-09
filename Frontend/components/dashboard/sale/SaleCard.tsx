@@ -70,7 +70,7 @@ const SaleCard = ({ sale }: SaleCardProps) => {
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-gray-900 lg:text-base truncate">{sale.name}</h3>
-              <p className="text-sm lg:text-base text-gray-600 truncate">{sale.receipt} • {sale.time}</p>
+              <p className="text-xs text-gray-500" title={sale.time}>{sale.receipt} · {sale.time}</p>
               <div className="flex items-center gap-1 mt-1">
                 <span className={`text-xs lg:text-sm font-medium ${statusConfig.textColor}`}>
                   {statusConfig.label}

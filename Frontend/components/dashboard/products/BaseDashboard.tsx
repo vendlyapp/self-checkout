@@ -26,7 +26,7 @@ export default function ProductsDashboard() {
 
   // Usando hooks para datos y acciones
   const { data, loading, error, refresh } = useProductsData();
-  const { handleNewProduct, handleProductList, handleCategories } =
+  const { handleNewProduct, handleProductList, handleCategories, handleDiscounts } =
     useProductActions();
   
   // Obtener estadísticas de productos (mismo hook que MainActionCards)
@@ -203,9 +203,10 @@ export default function ProductsDashboard() {
             <NavigationItem
               icon={<Percent className="w-5 h-5 text-muted-foreground" />}
               title="Aktionen"
-              subtitle="erstellen & bearbeiten"
+              subtitle="Rabatte & Codes"
               badge={`${activeProductsCount} aktiv`}
               badgeVariant="success"
+              onClick={handleDiscounts}
             />
           </div>
         </div>
@@ -306,10 +307,11 @@ export default function ProductsDashboard() {
               <div className="space-y-3">
                 <NavigationItem
                   icon={<Percent className="w-5 h-5 text-muted-foreground" />}
-                  title="Aktionen"
+                  title="Rabatte & Codes"
                   subtitle="erstellen & bearbeiten"
                   badge={`${activeProductsCount} aktiv`}
                   badgeVariant="success"
+                  onClick={handleDiscounts}
                 />
               </div>
             </div>

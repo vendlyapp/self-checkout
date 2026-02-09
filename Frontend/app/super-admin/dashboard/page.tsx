@@ -15,6 +15,7 @@ import {
   AdminPageHeader,
 } from "@/components/admin/common";
 import { cn } from "@/lib/utils";
+import { getPlatformDescription } from "@/lib/config/brand";
 
 const SuperAdminDashboard: React.FC = () => {
   const {
@@ -99,7 +100,7 @@ const SuperAdminDashboard: React.FC = () => {
     <div className="space-y-6 md:space-y-8">
       <AdminPageHeader
         title="Dashboard"
-        description="Allgemeine Indikatoren und Leistung der Vendly-Plattform."
+        description={getPlatformDescription()}
         meta={
           lastUpdatedAt ? (
             <span className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 font-medium text-gray-600 dark:bg-gray-900/70 dark:text-gray-300">

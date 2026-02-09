@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { Mail, ArrowLeft, CheckCircle, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { getCheckEmailFrom } from '@/lib/config/brand';
 
 function CheckEmailContent() {
   const searchParams = useSearchParams();
@@ -71,7 +72,7 @@ function CheckEmailContent() {
                 <span className="text-white text-xs font-bold">2</span>
               </div>
               <p className="text-sm text-gray-700">
-                Suche nach der E-Mail von Vendly/Supabase
+                {getCheckEmailFrom()}
               </p>
             </div>
             <div className="flex items-start gap-3">

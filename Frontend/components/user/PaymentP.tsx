@@ -31,6 +31,7 @@ import { lightHaptic, mediumHaptic, successHaptic, errorHaptic } from "@/lib/uti
 import { InvoiceService } from "@/lib/services/invoiceService";
 import { toast } from "sonner";
 import { Loader } from "@/components/ui/Loader";
+import { SwissAddressInput } from "@/components/ui/SwissAddressInput";
 
 interface PaymentMethodDisplay {
   id: string;
@@ -550,18 +551,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Adresse *
-                  </label>
-                  <input
-                    type="text"
-                    value={personalData.address}
-                    onChange={(e) => setPersonalData({...personalData, address: e.target.value})}
-                    placeholder="Bahnhofstrasse 1, 8001 Zürich"
-                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-2xl text-base focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white transition-colors hover:border-gray-300 ios-input-fix"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
                     Telefon *
                   </label>
                   <input
@@ -570,6 +559,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     onChange={(e) => setPersonalData({...personalData, phone: e.target.value})}
                     placeholder="+41 79 123 45 67"
                     className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-2xl text-base focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white transition-colors hover:border-gray-300 ios-input-fix"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Adresse (optional)
+                  </label>
+                  <SwissAddressInput
+                    value={personalData.address}
+                    onChange={(val) => setPersonalData({...personalData, address: val})}
+                    placeholderStrasse="Strasse"
+                    placeholderNr="Nr."
+                    placeholderPlzOrt="PLZ Ort"
+                    inputClassName="border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-base focus:ring-[#25D076] focus:border-[#25D076] bg-white"
                   />
                 </div>
               </div>
@@ -603,7 +605,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 }}
                 className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-2xl py-4 text-base transition-colors shadow-lg shadow-[#25D076]/25 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.97] active:shadow-md touch-target"
                 style={{ minHeight: '56px' }}
-                disabled={!personalData.name || !personalData.email || !personalData.address || !personalData.phone}
+                disabled={!personalData.name || !personalData.email || !personalData.phone}
               >
                 WEITER
               </button>

@@ -103,7 +103,7 @@ const SuperAdminHeader: React.FC = () => {
   };
 
   const userName = profile?.name || (typeof window !== 'undefined' ? localStorage.getItem('userName') || 'Admin' : 'Admin');
-  const userEmail = profile?.email || (typeof window !== 'undefined' ? localStorage.getItem('userEmail') || 'admin@vendly.com' : 'admin@vendly.com');
+  const userEmail = profile?.email || (typeof window !== 'undefined' ? localStorage.getItem('userEmail') || '' : '') || 'admin@example.com';
 
   return (
     <>

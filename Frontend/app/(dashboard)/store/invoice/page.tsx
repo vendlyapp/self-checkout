@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { InvoiceService, Invoice } from '@/lib/services/invoiceService';
 import { useMyStore } from '@/hooks/queries/useMyStore';
 import { useResponsive } from '@/hooks';
-import { Loader2, FileText, Search, Calendar, DollarSign, User, ChevronRight } from 'lucide-react';
+import { Loader2, FileText, Search, Calendar, Banknote, User, ChevronRight } from 'lucide-react';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 import Link from 'next/link';
 
@@ -69,7 +69,7 @@ export default function StoreInvoicesPage() {
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('de-DE', {
+      return date.toLocaleDateString('de-CH', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -203,7 +203,7 @@ export default function StoreInvoicesPage() {
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        <Banknote className="w-4 h-4 text-gray-400 flex-shrink-0" />
                         <span className="text-sm font-bold text-gray-900">
                           {formatSwissPriceWithCHF(invoice.total)}
                         </span>
@@ -310,7 +310,7 @@ export default function StoreInvoicesPage() {
                           <span>{formatDate(invoice.issuedAt)}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <DollarSign className="w-4 h-4 text-gray-400" />
+                          <Banknote className="w-4 h-4 text-gray-400" />
                           <span className="font-semibold text-gray-900">
                             {formatSwissPriceWithCHF(invoice.total)}
                           </span>

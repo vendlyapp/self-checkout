@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { useAnalytics, useQuickAccess } from "@/hooks";
 import ActiveCustomers from "./ActiveCustomers";
@@ -17,10 +18,18 @@ interface SearchResult {
 }
 
 const AnalyticsDashboard: React.FC = () => {
+  const queryClient = useQueryClient();
+
   // Estados para búsqueda
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+
+  // Al abrir Verkauf/Sales, actualizar órdenes para que se vean las ventas de hoy
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ['recentOrders'] });
+    queryClient.invalidateQueries({ queryKey: ['orderStats'] });
+  }, [queryClient]);
 
   const {
     data,
@@ -29,6 +38,7 @@ const AnalyticsDashboard: React.FC = () => {
     salesPeriod,
     paymentPeriod,
     cartPeriod,
+    salesPeriodLabels,
     setSalesPeriod,
     setPaymentPeriod,
     setCartPeriod,
@@ -172,6 +182,7 @@ const AnalyticsDashboard: React.FC = () => {
                 totalSales={totalSales}
                 salesGrowth={salesGrowth}
                 period={salesPeriod}
+                periodLabels={salesPeriodLabels}
                 onPeriodChange={setSalesPeriod}
                 loading={loading}
               />
@@ -276,6 +287,7 @@ const AnalyticsDashboard: React.FC = () => {
                 totalSales={totalSales}
                 salesGrowth={salesGrowth}
                 period={salesPeriod}
+                periodLabels={salesPeriodLabels}
                 onPeriodChange={setSalesPeriod}
                 loading={loading}
               />

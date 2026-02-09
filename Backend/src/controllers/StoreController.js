@@ -163,7 +163,9 @@ class StoreController {
       const result = await storeService.update(ownerId, req.body);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      const isValidationError = error.message?.includes('vergeben') || error.message?.includes('Tienda no encontrada') || error.message?.includes('campos');
+      const status = isValidationError ? HTTP_STATUS.BAD_REQUEST : HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({
         success: false,
         error: error.message
       });

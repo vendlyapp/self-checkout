@@ -385,39 +385,50 @@ class ProductService {
   }
 
   async getStats(ownerId = null) {
-    let whereClause = '';
-    const params = [];
-
-    // Filtrar por ownerId si se proporciona (para obtener estadísticas de una tienda específica)
-    if (ownerId) {
-      whereClause = 'WHERE "ownerId" = $1';
-      params.push(ownerId);
-    }
-
-    const statsQuery = `
-      SELECT
-        COUNT(*) as total,
-        COUNT(*) FILTER (WHERE "isActive" = true) as available,
-        COUNT(*) FILTER (WHERE "stock" < 10 AND "stock" > 0) as lowStock,
-        COUNT(*) FILTER (WHERE "stock" = 0) as outOfStock,
-        COUNT(*) FILTER (WHERE "isActive" = false) as unavailable
-      FROM "Product"
-      ${whereClause}
-    `;
-
-    const result = await query(statsQuery, params);
-    const stats = result.rows[0];
-
-    return {
-      success: true,
-      data: {
-        total: parseInt(stats.total) || 0,
-        available: parseInt(stats.available) || 0,
-        lowStock: parseInt(stats.lowstock) || 0,
-        outOfStock: parseInt(stats.outofstock) || 0,
-        unavailable: parseInt(stats.unavailable) || 0
-      }
+    const emptyData = {
+      total: 0,
+      available: 0,
+      lowStock: 0,
+      outOfStock: 0,
+      unavailable: 0
     };
+
+    try {
+      let whereClause = '';
+      const params = [];
+
+      if (ownerId) {
+        whereClause = 'WHERE "ownerId" = $1';
+        params.push(ownerId);
+      }
+
+      const statsQuery = `
+        SELECT
+          COUNT(*) as total,
+          COUNT(*) FILTER (WHERE "isActive" = true) as available,
+          COUNT(*) FILTER (WHERE "stock" < 10 AND "stock" > 0) as lowStock,
+          COUNT(*) FILTER (WHERE "stock" = 0) as outOfStock,
+          COUNT(*) FILTER (WHERE "isActive" = false) as unavailable
+        FROM "Product"
+        ${whereClause}
+      `;
+
+      const result = await query(statsQuery, params);
+      const stats = result.rows && result.rows[0] ? result.rows[0] : null;
+      const total = stats ? (parseInt(stats.total, 10) || 0) : 0;
+      const available = stats ? (parseInt(stats.available, 10) || 0) : 0;
+      const lowStock = stats ? (parseInt(stats.lowstock, 10) || 0) : 0;
+      const outOfStock = stats ? (parseInt(stats.outofstock, 10) || 0) : 0;
+      const unavailable = stats ? (parseInt(stats.unavailable, 10) || 0) : 0;
+
+      return {
+        success: true,
+        data: { total, available, lowStock, outOfStock, unavailable }
+      };
+    } catch (err) {
+      console.error('ProductService.getStats error:', err?.message || err);
+      return { success: true, data: emptyData };
+    }
   }
 
   async search(searchTerm) {

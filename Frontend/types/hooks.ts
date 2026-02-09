@@ -149,6 +149,8 @@ export interface UseAnalyticsReturn {
   paymentPeriod: TimePeriod;
   /** Período del carrito seleccionado */
   cartPeriod: TimePeriod;
+  /** Labels de rango de fechas para el gráfico de ventas */
+  salesPeriodLabels: { current: string; last: string };
   /** Función para cambiar período de ventas */
   setSalesPeriod: (period: TimePeriod) => void;
   /** Función para cambiar período de pagos */
@@ -212,6 +214,8 @@ export interface ProductActionsReturn {
   handleProductList: () => Promise<void>;
   /** Función para gestionar categorías */
   handleCategories: () => Promise<void>;
+  /** Función para ir a descuentos / Rabatte */
+  handleDiscounts: () => Promise<void>;
 }
 
 // ===== SHARED TYPES =====

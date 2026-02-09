@@ -96,6 +96,17 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
         </div>
 
         <div className="space-y-6">
+          {data.length === 0 ? (
+            <div className="py-8 text-center">
+              <p className="text-sm text-muted-foreground font-medium">
+                Keine Zahlungen in diesem Zeitraum
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Wählen Sie einen anderen Zeitraum (z. B. Woche oder Monat)
+              </p>
+            </div>
+          ) : (
+            <>
           {/* Progress Bar - Segmented */}
           <div className="space-y-3">
             <div className="flex h-4 bg-muted rounded-lg overflow-hidden">
@@ -154,6 +165,8 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
             ))}
           </div>
 
+            </>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useResponsive } from '@/hooks';
 import { useOrders } from '@/hooks/queries/useOrders';
-import { ShoppingCart, Search, Calendar, DollarSign, User, ChevronRight } from 'lucide-react';
+import { ShoppingCart, Search, Calendar, Banknote, User, ChevronRight } from 'lucide-react';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 import Link from 'next/link';
 import { Loader } from '@/components/ui/Loader';
@@ -40,7 +40,7 @@ export default function SalesVerkaufePage() {
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('de-DE', {
+      return date.toLocaleDateString('de-CH', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -162,7 +162,7 @@ export default function SalesVerkaufePage() {
                               <span>{formatDate(order.createdAt)}</span>
                             </div>
                             <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <DollarSign className="w-4 h-4 text-gray-400" />
+                              <Banknote className="w-4 h-4 text-gray-400" />
                               <span className="font-semibold text-gray-900">
                                 {formatSwissPriceWithCHF(order.total)}
                               </span>

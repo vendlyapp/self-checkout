@@ -98,6 +98,7 @@ export const calculateTotalSales = (data: SalesData[]): number => {
 export const calculateSalesGrowth = (data: SalesData[]): number => {
   const currentTotal = data.reduce((total, day) => total + day.currentWeek, 0);
   const lastTotal = data.reduce((total, day) => total + day.lastWeek, 0);
+  if (lastTotal === 0) return currentTotal > 0 ? 100 : 0;
   return Math.round(((currentTotal - lastTotal) / lastTotal) * 100);
 };
 

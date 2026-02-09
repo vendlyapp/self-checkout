@@ -58,8 +58,8 @@ export const useProductStats = () => {
               error.message === 'Failed to fetch' ||
               error.message.includes('fetch')
             ));
-          
-          if (isConnectionError) {
+          const isServerError = error.message.includes('status: 500') || error.message.includes('HTTP error! status: 500');
+          if (isConnectionError || isServerError) {
             return emptyStats;
           }
         } else if (error && typeof error === 'object' && 'message' in error) {
@@ -78,7 +78,7 @@ export const useProductStats = () => {
     staleTime: 2 * 60 * 1000, // 2 minutos
     gcTime: 5 * 60 * 1000, // 5 minutos
     retry: (failureCount, error) => {
-      if (error instanceof Error && error.message === 'CANCELLED') {
+      if (error instanceof Error && (error.message === 'CANCELLED' || error.message.includes('status: 500'))) {
         return false;
       }
       if (error instanceof Error && (

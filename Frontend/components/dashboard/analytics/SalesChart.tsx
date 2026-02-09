@@ -17,6 +17,7 @@ interface SalesChartProps {
   totalSales: number;
   salesGrowth: number;
   period: TimePeriod;
+  periodLabels?: { current: string; last: string };
   onPeriodChange: (period: TimePeriod) => void;
   loading?: boolean;
 }
@@ -77,6 +78,7 @@ const SalesChart: React.FC<SalesChartProps> = ({
   totalSales,
   salesGrowth,
   period,
+  periodLabels = { current: '', last: '' },
   onPeriodChange,
   loading = false,
 }) => {
@@ -230,16 +232,22 @@ const SalesChart: React.FC<SalesChartProps> = ({
           </div>
 
           {/* Legende */}
-          <div className="flex justify-between text-xs lg:text-sm text-muted-foreground">
-            <span className="flex items-center gap-2">
-              <span className="w-4 h-0.5 lg:w-5 lg:h-0.5 bg-emerald-500 rounded"></span>
-              6. Juni - 5. Juli 2025
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="w-4 h-0.5 lg:w-5 lg:h-0.5 bg-muted-foreground rounded border-dashed border-t border-muted-foreground"></span>
-              7. Mai - 5. Juni 2025
-            </span>
-          </div>
+          {(periodLabels.current || periodLabels.last) && (
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-2 text-xs lg:text-sm text-muted-foreground">
+              {periodLabels.current && (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-0.5 lg:w-5 lg:h-0.5 bg-emerald-500 rounded shrink-0"></span>
+                  <span className="truncate">{periodLabels.current}</span>
+                </span>
+              )}
+              {periodLabels.last && (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-0.5 lg:w-5 lg:h-0.5 bg-muted-foreground rounded border-dashed border-t border-muted-foreground shrink-0"></span>
+                  <span className="truncate">{periodLabels.last}</span>
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

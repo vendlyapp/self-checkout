@@ -71,17 +71,22 @@ export const useProductActions = (): ProductActionsReturn => {
   }, [router]);
 
   const handleProductList = useCallback(async () => {
-    // Future implementation: navigate to products list page or open modal
-  }, []);
+    router.push('/products_list');
+  }, [router]);
 
   const handleCategories = useCallback(async () => {
     router.push('/categories');
+  }, [router]);
+
+  const handleDiscounts = useCallback(async () => {
+    router.push('/store/discounts');
   }, [router]);
 
   return {
     loading,
     handleNewProduct,
     handleProductList,
-    handleCategories
+    handleCategories,
+    handleDiscounts,
   };
 };

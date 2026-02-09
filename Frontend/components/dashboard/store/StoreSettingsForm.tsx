@@ -5,6 +5,7 @@ import { Save, X, Store, Image as ImageIcon, MapPin, Phone, Mail, FileText, Uplo
 import { toast } from 'sonner'
 import { buildApiUrl, getAuthHeaders } from '@/lib/config/api'
 import { Loader } from '@/components/ui/Loader'
+import { SwissAddressInput } from '@/components/ui/SwissAddressInput'
 import { useResponsive } from '@/hooks'
 import type { StoreData } from '@/hooks/queries/useMyStore'
 
@@ -87,6 +88,7 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [description, setDescription] = useState('')
+  const [slug, setSlug] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -125,6 +127,7 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
         setPhone(result.data.phone || '')
         setEmail(result.data.email || '')
         setDescription(result.data.description || '')
+        setSlug(result.data.slug || '')
       } else {
         toast.error(result.error || 'Fehler beim Laden des Geschäfts')
       }
@@ -224,24 +227,31 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
       const url = buildApiUrl('/api/store/my-store')
       const headers = getAuthHeaders(session.access_token)
 
+      const isFirstTimeSetup = store != null && (store.settingsCompletedAt == null || store.settingsCompletedAt === '')
+      const body: Record<string, unknown> = {
+        name: name.trim(),
+        logo: finalLogo || null,
+        address: address.trim() || null,
+        phone: phone.trim() || null,
+        email: email.trim() || null,
+        description: description.trim() || null
+      }
+      if (isFirstTimeSetup && slug.trim()) {
+        body.slug = slug.trim()
+      }
+
       const response = await fetch(url, {
         method: 'PUT',
         headers,
-        body: JSON.stringify({
-          name: name.trim(),
-          logo: finalLogo || null,
-          address: address.trim() || null,
-          phone: phone.trim() || null,
-          email: email.trim() || null,
-          description: description.trim() || null
-        })
+        body: JSON.stringify(body)
       })
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
       const result = await response.json()
+
+      if (!response.ok) {
+        toast.error(result?.error || 'Fehler beim Aktualisieren')
+        return
+      }
 
       if (result.success) {
         setStore(result.data)
@@ -272,6 +282,7 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
       setPhone(store.phone || '')
       setEmail(store.email || '')
       setDescription(store.description || '')
+      setSlug(store.slug || '')
     }
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
@@ -486,14 +497,29 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
           editing={editing}
         />
 
-        <FormField
-          icon={MapPin}
-          label="Adresse"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          placeholder="z.B. Grundhof 3, 8305 Dietlikon"
-          editing={editing}
-        />
+        <div className="bg-white rounded-2xl overflow-hidden border border-gray-200/60 shadow-sm">
+          <div className="px-4 py-3 border-b border-gray-100/50">
+            <label className="flex items-center gap-2.5 text-sm font-semibold text-gray-700">
+              <MapPin className="w-4 h-4 text-brand-500" />
+              <span>Adresse</span>
+            </label>
+          </div>
+          <div className="px-4 py-3.5">
+            {editing ? (
+              <SwissAddressInput
+                value={address}
+                onChange={setAddress}
+                placeholderStrasse="Strasse"
+                placeholderNr="Nr."
+                placeholderPlzOrt="PLZ Ort"
+              />
+            ) : (
+              <p className={`text-base ${address.trim() ? 'text-gray-900 font-medium' : 'text-gray-400 italic'}`}>
+                {address || 'Nicht angegeben'}
+              </p>
+            )}
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <FormField
@@ -542,25 +568,54 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
           )}
         </div>
 
-        {/* Slug */}
-        <div className="bg-gray-50 rounded-2xl border border-gray-200/60 overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-200/50">
-            <label className="flex items-center gap-2.5 text-sm font-semibold text-gray-600">
-              <Store className="w-4 h-4 text-gray-500" />
-              <span>URL-Slug</span>
-              <span className="text-xs text-gray-400 font-normal ml-auto">(Nur-Lesen)</span>
-            </label>
-          </div>
-          <div className="px-4 py-3.5">
-            <p className="text-sm text-gray-800 font-mono break-all bg-white px-3 py-2 rounded-lg border border-gray-200">
-              {store.slug}
-            </p>
-            <p className="text-xs text-gray-500 mt-2 flex items-center gap-1.5">
-              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-              Dieser Wert kann nicht geändert werden
-            </p>
-          </div>
-        </div>
+        {/* Store URL (slug): editable only on first setup */}
+        {(() => {
+          const isFirstTimeSetup = store.settingsCompletedAt == null || store.settingsCompletedAt === ''
+          const displaySlug = (editing && isFirstTimeSetup ? slug : store.slug) || ''
+          return (
+            <div className="bg-white rounded-2xl overflow-hidden border border-gray-200/60 shadow-sm">
+              <div className="px-4 py-3 border-b border-gray-100/50">
+                <label className="flex items-center gap-2.5 text-sm font-semibold text-gray-700">
+                  <Store className="w-4 h-4 text-brand-500" />
+                  <span>URL Ihrer Tienda</span>
+                  {!isFirstTimeSetup && (
+                    <span className="text-xs text-gray-400 font-normal ml-auto">(Nur-Lesen)</span>
+                  )}
+                </label>
+              </div>
+              <div className="px-4 py-3.5">
+                {editing && isFirstTimeSetup ? (
+                  <>
+                    <input
+                      type="text"
+                      value={slug}
+                      onChange={(e) => setSlug(e.target.value)}
+                      placeholder={store.slug || 'z.B. mein-geschäft'}
+                      className="w-full px-4 py-3.5 text-base text-gray-900 placeholder:text-gray-400 bg-transparent border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent font-mono"
+                      aria-label="URL der Tienda anpassen"
+                    />
+                    <p className="text-xs text-gray-500 mt-2 flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                      Nur bei der ersten Einrichtung änderbar. Leer lassen für die automatische URL.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-gray-800 font-mono break-all bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
+                      {displaySlug}
+                    </p>
+                    {!isFirstTimeSetup && (
+                      <p className="text-xs text-gray-500 mt-2 flex items-center gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                        Um die URL zu ändern, kontaktieren Sie den Super-Admin.
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          )
+        })()}
       </div>
     </div>
   )

@@ -37,113 +37,180 @@ import { useCartStore } from '@/lib/stores/cartStore';
  */
 // UseAnalyticsReturn interface moved to @/types
 
-// Helper function to transform orders into SalesData based on period
-const transformOrdersToSalesData = (orders: RecentOrder[], period: TimePeriod): SalesData[] => {
-  if (orders.length === 0) {
-    return [];
-  }
+// Helper para formatear rango de fechas (de-CH)
+const formatDateRange = (start: Date, end: Date): string => {
+  const fmt = (d: Date) => d.toLocaleDateString('de-CH', { day: 'numeric', month: 'short', year: 'numeric' });
+  return `${fmt(start)} – ${fmt(end)}`;
+};
 
+// Fecha local YYYY-MM-DD (evita que el gráfico muestre "un día adelantado" por UTC)
+const toLocalDateString = (d: Date): string => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+// Helper function to transform orders into SalesData based on period (always returns labels)
+const transformOrdersToSalesData = (
+  orders: RecentOrder[],
+  period: TimePeriod
+): { data: SalesData[]; currentPeriodLabel: string; lastPeriodLabel: string } => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const year = today.getFullYear();
 
   let periodStart: Date;
-  let periodEnd: Date = new Date(today);
-  periodEnd.setHours(23, 59, 59, 999);
+  let periodEnd: Date;
 
-  // Determinar el rango de fechas según el período
   switch (period) {
     case 'heute':
       periodStart = new Date(today);
+      periodEnd = new Date(today);
+      periodEnd.setHours(23, 59, 59, 999);
       break;
     case 'woche':
+      // Lunes como inicio de semana (ISO)
+      const dayNum = today.getDay() || 7; // 0=Dom -> 7, 1=Lun -> 1
       periodStart = new Date(today);
-      periodStart.setDate(today.getDate() - today.getDay()); // Domingo
+      periodStart.setDate(today.getDate() - dayNum + 1);
+      periodEnd = new Date(periodStart);
+      periodEnd.setDate(periodStart.getDate() + 6);
+      periodEnd.setHours(23, 59, 59, 999);
       break;
     case 'monat':
-      periodStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      periodStart = new Date(year, today.getMonth(), 1);
+      periodEnd = new Date(year, today.getMonth() + 1, 0);
+      periodEnd.setHours(23, 59, 59, 999);
       break;
     case 'jahr':
-      periodStart = new Date(today.getFullYear(), 0, 1);
+      periodStart = new Date(year, 0, 1);
+      periodEnd = new Date(year, 11, 31);
+      periodEnd.setHours(23, 59, 59, 999);
       break;
     default:
       periodStart = new Date(today);
-      periodStart.setDate(today.getDate() - today.getDay());
+      periodStart.setDate(today.getDate() - (today.getDay() || 7) + 1);
+      periodEnd = new Date(periodStart);
+      periodEnd.setDate(periodStart.getDate() + 6);
+      periodEnd.setHours(23, 59, 59, 999);
   }
 
-  // Filtrar órdenes del período
-  const periodOrders = orders.filter(order => {
-    const orderDate = new Date(order.createdAt);
-    return orderDate >= periodStart && orderDate <= periodEnd;
+  // Período anterior
+  const lastPeriodStart = new Date(periodStart);
+  const lastPeriodEnd = new Date(periodEnd);
+  if (period === 'heute') {
+    lastPeriodStart.setDate(periodStart.getDate() - 1);
+    lastPeriodEnd.setDate(periodEnd.getDate() - 1);
+    lastPeriodEnd.setHours(23, 59, 59, 999);
+  } else if (period === 'woche') {
+    lastPeriodStart.setDate(periodStart.getDate() - 7);
+    lastPeriodEnd.setDate(periodEnd.getDate() - 7);
+  } else if (period === 'monat') {
+    lastPeriodStart.setMonth(periodStart.getMonth() - 1);
+    lastPeriodEnd.setMonth(periodEnd.getMonth() - 1);
+    lastPeriodEnd.setHours(23, 59, 59, 999);
+  } else {
+    lastPeriodStart.setFullYear(periodStart.getFullYear() - 1);
+    lastPeriodEnd.setFullYear(periodEnd.getFullYear() - 1);
+  }
+
+  const currentOrders = orders.filter((o) => {
+    const d = new Date(o.createdAt);
+    return d >= periodStart && d <= periodEnd;
+  });
+  const lastOrders = orders.filter((o) => {
+    const d = new Date(o.createdAt);
+    return d >= lastPeriodStart && d <= lastPeriodEnd;
   });
 
-  if (periodOrders.length === 0) {
-    return [];
-  }
+  const currentPeriodLabel = formatDateRange(periodStart, periodEnd);
+  const lastPeriodLabel = formatDateRange(lastPeriodStart, lastPeriodEnd);
 
-  // Agrupar por día según el período
-  if (period === 'heute' || period === 'woche') {
-    // Para hoy/semana: agrupar por día de la semana
-    const daysMap: Record<number, string> = {
-      0: 'S', 1: 'M', 2: 'D', 3: 'M', 4: 'D', 5: 'F', 6: 'S',
+  if (period === 'heute') {
+    const total = currentOrders.reduce(
+      (s, o) => s + (typeof o.total === 'number' ? o.total : parseFloat(String(o.total)) || 0),
+      0
+    );
+    const lastTotal = lastOrders.reduce(
+      (s, o) => s + (typeof o.total === 'number' ? o.total : parseFloat(String(o.total)) || 0),
+      0
+    );
+    return {
+      data: [{ day: 'Heute', currentWeek: total, lastWeek: lastTotal, date: toLocalDateString(periodStart) }],
+      currentPeriodLabel,
+      lastPeriodLabel,
     };
-
-    const salesByDay: Array<{ dayOfWeek: number; current: number; last: number; date: string }> = [];
-    
-    // Inicializar días del período
-    for (let i = 0; i < (period === 'heute' ? 1 : 7); i++) {
-      const day = new Date(periodStart);
-      day.setDate(periodStart.getDate() + i);
-      const dayOfWeek = day.getDay();
-      salesByDay.push({ dayOfWeek, current: 0, last: 0, date: day.toISOString().split('T')[0] });
-    }
-
-    // Agrupar órdenes por día
-    periodOrders.forEach((order) => {
-      const orderDate = new Date(order.createdAt);
-      const orderTotal = typeof order.total === 'number' ? order.total : parseFloat(String(order.total)) || 0;
-      const dayOfWeek = orderDate.getDay();
-      const dayData = salesByDay.find(d => d.dayOfWeek === dayOfWeek);
-      if (dayData) {
-        dayData.current += orderTotal;
-      }
-    });
-
-    salesByDay.sort((a, b) => a.dayOfWeek - b.dayOfWeek);
-
-    return salesByDay.map((data) => ({
-      day: daysMap[data.dayOfWeek],
-      currentWeek: data.current,
-      lastWeek: data.last,
-      date: data.date,
-    }));
-  } else {
-    // Para mes/año: agrupar por semana del período
-    const salesByWeek: Map<string, number> = new Map();
-    
-    periodOrders.forEach((order) => {
-      const orderDate = new Date(order.createdAt);
-      const orderTotal = typeof order.total === 'number' ? order.total : parseFloat(String(order.total)) || 0;
-      
-      // Calcular semana del año
-      const weekNumber = getWeekNumber(orderDate);
-      const weekKey = `${orderDate.getFullYear()}-W${weekNumber}`;
-      
-      salesByWeek.set(weekKey, (salesByWeek.get(weekKey) || 0) + orderTotal);
-    });
-
-    // Convertir a array y ordenar
-    return Array.from(salesByWeek.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([weekKey, total]) => {
-        const [year, weekStr] = weekKey.split('-W');
-        return {
-          day: `W${weekStr}`,
-          currentWeek: total,
-          lastWeek: 0,
-          date: weekKey,
-        };
-      });
   }
+
+  if (period === 'woche') {
+    const daysMap: Record<number, string> = {
+      1: 'Mo',
+      2: 'Di',
+      3: 'Mi',
+      4: 'Do',
+      5: 'Fr',
+      6: 'Sa',
+      0: 'So',
+    };
+    const buckets: Array<{ day: number; current: number; last: number; date: string }> = [];
+    for (let i = 1; i <= 7; i++) {
+      const d = new Date(periodStart);
+      d.setDate(periodStart.getDate() + i - 1);
+      buckets.push({
+        day: i === 7 ? 0 : i,
+        current: 0,
+        last: 0,
+        date: toLocalDateString(d),
+      });
+    }
+    const addToBucket = (orderList: RecentOrder[], key: 'current' | 'last') => {
+      orderList.forEach((o) => {
+        const date = new Date(o.createdAt);
+        const dow = date.getDay();
+        const total = typeof o.total === 'number' ? o.total : parseFloat(String(o.total)) || 0;
+        const b = buckets.find((x) => x.day === dow);
+        if (b) b[key] += total;
+      });
+    };
+    addToBucket(currentOrders, 'current');
+    addToBucket(lastOrders, 'last');
+    buckets.sort((a, b) => (a.day === 0 ? 7 : a.day) - (b.day === 0 ? 7 : b.day));
+    return {
+      data: buckets.map((b) => ({
+        day: daysMap[b.day],
+        currentWeek: b.current,
+        lastWeek: b.last,
+        date: b.date,
+      })),
+      currentPeriodLabel,
+      lastPeriodLabel,
+    };
+  }
+
+  if (period === 'monat' || period === 'jahr') {
+    const weekMap = new Map<string, { current: number; last: number }>();
+    const addOrder = (orderList: RecentOrder[], key: 'current' | 'last') => {
+      orderList.forEach((o) => {
+        const wn = getWeekNumber(new Date(o.createdAt));
+        const y = new Date(o.createdAt).getFullYear();
+        const k = `${y}-W${wn}`;
+        if (!weekMap.has(k)) weekMap.set(k, { current: 0, last: 0 });
+        const entry = weekMap.get(k)!;
+        entry[key] += typeof o.total === 'number' ? o.total : parseFloat(String(o.total)) || 0;
+      });
+    };
+    addOrder(currentOrders, 'current');
+    addOrder(lastOrders, 'last');
+    const sorted = Array.from(weekMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+    return {
+      data: sorted.map(([k, v]) => ({ day: `W${k.split('-W')[1]}`, currentWeek: v.current, lastWeek: v.last, date: k })),
+      currentPeriodLabel,
+      lastPeriodLabel,
+    };
+  }
+
+  return { data: [], currentPeriodLabel: '', lastPeriodLabel: '' };
 };
 
 // Helper para calcular número de semana
@@ -167,6 +234,7 @@ const formatPaymentMethodName = (method: string): string => {
     'twint': 'Twint',
     'bargeld': 'Bargeld',
     'cash': 'Bargeld',
+    'efectivo': 'Bargeld',
     'karte': 'Karte',
     'card': 'Karte',
     'kreditkarte': 'Kreditkarte',
@@ -214,27 +282,38 @@ const filterOrdersByPeriod = (orders: RecentOrder[], period: TimePeriod): Recent
   today.setHours(0, 0, 0, 0);
 
   let periodStart: Date;
-  let periodEnd: Date = new Date(today);
-  periodEnd.setHours(23, 59, 59, 999);
+  let periodEnd: Date;
 
-  // Determinar el rango de fechas según el período
   switch (period) {
     case 'heute':
       periodStart = new Date(today);
+      periodEnd = new Date(today);
+      periodEnd.setHours(23, 59, 59, 999);
       break;
-    case 'woche':
+    case 'woche': {
+      // Lunes–domingo (igual que el gráfico Umsatz)
+      const dayNum = today.getDay() || 7;
       periodStart = new Date(today);
-      periodStart.setDate(today.getDate() - today.getDay()); // Domingo
+      periodStart.setDate(today.getDate() - dayNum + 1);
+      periodEnd = new Date(periodStart);
+      periodEnd.setDate(periodStart.getDate() + 6);
+      periodEnd.setHours(23, 59, 59, 999);
       break;
+    }
     case 'monat':
       periodStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      periodEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      periodEnd.setHours(23, 59, 59, 999);
       break;
     case 'jahr':
       periodStart = new Date(today.getFullYear(), 0, 1);
+      periodEnd = new Date(today.getFullYear(), 11, 31);
+      periodEnd.setHours(23, 59, 59, 999);
       break;
     default:
       periodStart = new Date(today);
-      periodStart.setDate(today.getDate() - today.getDay());
+      periodEnd = new Date(today);
+      periodEnd.setHours(23, 59, 59, 999);
   }
 
   // Filtrar órdenes del período
@@ -369,14 +448,19 @@ const createCartData = (orders: RecentOrder[]): CartData => {
 };
 
 export const useAnalytics = (): UseAnalyticsReturn => {
-  // Period states for different components
-  const [salesPeriod, setSalesPeriod] = useState<TimePeriod>('woche');
-  const [paymentPeriod, setPaymentPeriod] = useState<TimePeriod>('heute');
-  const [cartPeriod, setCartPeriod] = useState<TimePeriod>('heute');
+  // Un solo período compartido: Umsatz, Zahlungsmethoden y Warenkorb sincronizados.
+  // Al cambiar cualquier selector, los tres gráficos muestran el mismo período.
+  const [analyticsPeriod, setAnalyticsPeriod] = useState<TimePeriod>('heute');
+  const salesPeriod = analyticsPeriod;
+  const paymentPeriod = analyticsPeriod;
+  const cartPeriod = analyticsPeriod;
+  const setSalesPeriod = setAnalyticsPeriod;
+  const setPaymentPeriod = setAnalyticsPeriod;
+  const setCartPeriod = setAnalyticsPeriod;
 
-  // Obtener store del usuario para filtrar órdenes
+  // Obtener store del usuario para filtrar órdenes (ownerId = dueño de la tienda)
   const { data: store } = useMyStore();
-  const ownerId = store?.ownerId || store?.id;
+  const ownerId = store?.ownerId ?? (store as { ownerid?: string } | undefined)?.ownerid ?? store?.id;
 
   // Obtener estadísticas de órdenes
   const { data: orderStats, isLoading: statsLoading, error: statsError } = useOrderStats(undefined, ownerId);
@@ -385,47 +469,33 @@ export const useAnalytics = (): UseAnalyticsReturn => {
   // Usar más órdenes para tener datos históricos según el período seleccionado
   const { data: recentOrders = [], isLoading: ordersLoading, error: ordersError } = useRecentOrders(500);
 
-  // Transformar datos reales en AnalyticsData
-  const data = useMemo<AnalyticsData | null>(() => {
-    if (!recentOrders || recentOrders.length === 0) {
-      // Si no hay órdenes, retornar datos vacíos con estructura correcta
-      return {
-        shopActivity: {
-          activeCustomers: [],
-          totalActive: 0,
-          totalInactive: 0,
-          openCartsValue: 0,
-          progressPercentage: 0,
-        },
-        salesData: [],
-        paymentMethods: [],
-        cartData: {
-          averageValue: 0,
-          percentageChange: 0,
-          trend: 'up',
-          comparisonPeriod: 'gestern',
-          maxValue: 100,
-          minValue: 0,
-        },
-        quickAccess: [
-          { id: 'sales', title: 'Verkäufe', subtitle: 'Ansehen, verwalten', color: 'bg-emerald-100', iconColor: 'text-emerald-600' },
-          { id: 'cancel', title: 'Storno', subtitle: 'Verkauf stornieren', color: 'bg-red-100', iconColor: 'text-red-600' },
-          { id: 'receipts', title: 'Belege', subtitle: 'Ansehen, senden', color: 'bg-emerald-100', iconColor: 'text-emerald-600' },
-          { id: 'cart', title: 'Warenkorb', subtitle: 'Ansehen', color: 'bg-emerald-100', iconColor: 'text-emerald-600' },
-        ],
-      };
-    }
+  // Contamos todas las órdenes que NO están canceladas (pending, processing, completed = venta/ganancia).
+  // Solo las canceladas se excluyen y no cuentan en gráficos ni estadísticas.
+  const completedOrders = useMemo(
+    () => (recentOrders || []).filter((o) => o.status !== 'cancelled'),
+    [recentOrders]
+  );
 
-    const salesData = transformOrdersToSalesData(recentOrders, salesPeriod);
-    const paymentMethods = transformOrdersToPaymentMethods(recentOrders, paymentPeriod);
-    const shopActivity = transformOrdersToShopActivity(recentOrders);
-    const cartData = createCartData(recentOrders);
-
-    return {
-      shopActivity,
-      salesData,
-      paymentMethods,
-      cartData,
+  // Transformar datos reales en AnalyticsData (siempre obtenemos labels de período)
+  const { data: analyticsData, salesPeriodLabels } = useMemo(() => {
+    const emptyStructure = {
+      shopActivity: {
+        activeCustomers: [] as Customer[],
+        totalActive: 0,
+        totalInactive: 0,
+        openCartsValue: 0,
+        progressPercentage: 0,
+      },
+      salesData: [] as SalesData[],
+      paymentMethods: [] as PaymentMethod[],
+      cartData: {
+        averageValue: 0,
+        percentageChange: 0,
+        trend: 'up' as const,
+        comparisonPeriod: 'gestern',
+        maxValue: 100,
+        minValue: 0,
+      },
       quickAccess: [
         { id: 'sales', title: 'Verkäufe', subtitle: 'Ansehen, verwalten', color: 'bg-emerald-100', iconColor: 'text-emerald-600' },
         { id: 'cancel', title: 'Storno', subtitle: 'Verkauf stornieren', color: 'bg-red-100', iconColor: 'text-red-600' },
@@ -433,7 +503,33 @@ export const useAnalytics = (): UseAnalyticsReturn => {
         { id: 'cart', title: 'Warenkorb', subtitle: 'Ansehen', color: 'bg-emerald-100', iconColor: 'text-emerald-600' },
       ],
     };
-  }, [recentOrders, salesPeriod, paymentPeriod]);
+
+    const { data: salesData, currentPeriodLabel, lastPeriodLabel } = transformOrdersToSalesData(completedOrders, salesPeriod);
+
+    if (completedOrders.length === 0) {
+      return {
+        data: { ...emptyStructure } as AnalyticsData,
+        salesPeriodLabels: { current: currentPeriodLabel, last: lastPeriodLabel },
+      };
+    }
+
+    const paymentMethods = transformOrdersToPaymentMethods(completedOrders, paymentPeriod);
+    const shopActivity = transformOrdersToShopActivity(completedOrders);
+    const ordersForCart = filterOrdersByPeriod(completedOrders, cartPeriod);
+    const cartData = createCartData(ordersForCart);
+    return {
+      data: {
+        shopActivity,
+        salesData,
+        paymentMethods,
+        cartData,
+        quickAccess: emptyStructure.quickAccess,
+      },
+      salesPeriodLabels: { current: currentPeriodLabel, last: lastPeriodLabel },
+    };
+  }, [completedOrders, salesPeriod, paymentPeriod, cartPeriod]);
+
+  const data = analyticsData;
 
   // Calculate derived values
   const totalSales = useMemo(() => {
@@ -463,6 +559,7 @@ export const useAnalytics = (): UseAnalyticsReturn => {
     salesPeriod,
     paymentPeriod,
     cartPeriod,
+    salesPeriodLabels: salesPeriodLabels ?? { current: '', last: '' },
     setSalesPeriod,
     setPaymentPeriod,
     setCartPeriod,

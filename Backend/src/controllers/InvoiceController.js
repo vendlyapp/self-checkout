@@ -1,6 +1,7 @@
 const invoiceService = require('../services/InvoiceService');
 const orderService = require('../services/OrderService');
 const storeService = require('../services/StoreService');
+const userService = require('../services/UserService');
 const { HTTP_STATUS } = require('../types');
 
 class InvoiceController {
@@ -124,6 +125,27 @@ class InvoiceController {
       };
 
       const result = await invoiceService.create(invoiceData);
+
+      // Regla: la orden se crea sin datos del cliente (usuario invitado). Si el cliente SÍ registra
+      // sus datos aquí (factura con nombre/email/etc.), actualizamos la orden y el usuario para que
+      // la orden quede "a nombre de" ese cliente. Si el cliente NO registra datos, la orden queda
+      // como invitado/Kunde (no hacemos nada).
+      const hasCustomerData = customerName?.trim() || customerEmail?.trim() || customerAddress?.trim() || customerPhone?.trim();
+      if (result.success && hasCustomerData) {
+        try {
+          await orderService.updateOrderCustomerData(orderId, {
+            name: customerName?.trim() || null,
+            email: customerEmail?.trim() || null,
+            address: customerAddress?.trim() || null,
+            phone: customerPhone?.trim() || null,
+          });
+          if (customerName?.trim() && order.userId) {
+            await userService.update(order.userId, { name: customerName.trim() });
+          }
+        } catch (updateErr) {
+          console.warn('InvoiceController: no se pudo actualizar orden/usuario con datos del cliente:', updateErr.message);
+        }
+      }
 
       res.status(HTTP_STATUS.CREATED).json(result);
     } catch (error) {
@@ -292,6 +314,27 @@ class InvoiceController {
 
       if (!result.success) {
         return res.status(HTTP_STATUS.NOT_FOUND).json(result);
+      }
+
+      const hasCustomerData = updateData.customerName?.trim() || updateData.customerEmail?.trim() ||
+        updateData.customerAddress?.trim() || updateData.customerPhone?.trim();
+      if (hasCustomerData && result.data?.orderId) {
+        try {
+          await orderService.updateOrderCustomerData(result.data.orderId, {
+            name: updateData.customerName?.trim() || null,
+            email: updateData.customerEmail?.trim() || null,
+            address: updateData.customerAddress?.trim() || null,
+            phone: updateData.customerPhone?.trim() || null,
+          });
+          if (updateData.customerName?.trim()) {
+            const orderResult = await orderService.findById(result.data.orderId);
+            if (orderResult.success && orderResult.data?.userId) {
+              await userService.update(orderResult.data.userId, { name: updateData.customerName.trim() });
+            }
+          }
+        } catch (updateErr) {
+          console.warn('InvoiceController.updateInvoice: no se pudo actualizar orden/usuario:', updateErr.message);
+        }
       }
 
       res.status(HTTP_STATUS.OK).json(result);
