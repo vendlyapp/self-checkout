@@ -1081,12 +1081,10 @@ export default function PaymentP() {
     handlePaymentSuccess();
   };
 
-  // Función para crear la factura después de que el usuario decida sobre sus datos
-  // Retorna shareToken para evitar race conditions al redirigir
-  const handleCreateInvoice = async (customerData?: { name: string; email: string; address: string; phone: string }): Promise<string | null> => {
+  const handleCreateInvoice = async (customerData?: { name: string; email: string; address: string; phone: string }): Promise<void> => {
     if (!createdOrderId) {
       console.error('No hay orderId para crear la factura');
-      return null;
+      return;
     }
 
     try {
@@ -1117,10 +1115,10 @@ export default function PaymentP() {
           }
         }
         if (token) setCreatedInvoiceShareToken(token);
-        return token;
+      } else {
+        console.error('Error al crear factura:', result.error);
+        throw new Error(result.error || 'Fehler beim Erstellen der Rechnung');
       }
-      console.error('Error al crear factura:', result.error);
-      throw new Error(result.error || 'Fehler beim Erstellen der Rechnung');
     } catch (error) {
       console.error('Error al crear factura:', error);
       throw error;
