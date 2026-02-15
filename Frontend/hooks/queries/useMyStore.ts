@@ -15,6 +15,8 @@ export interface StoreData {
   phone?: string | null
   email?: string | null
   description?: string | null
+  /** Número de IVA de la tienda (ej. CHE-123.456.789 MWST) */
+  vatNumber?: string | null
   isActive: boolean
   isOpen?: boolean
   createdAt: string

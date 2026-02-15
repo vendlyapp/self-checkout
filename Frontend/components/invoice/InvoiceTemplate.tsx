@@ -15,6 +15,8 @@ import {
   formatMwStRate,
   calculateMwStBreakdown,
   getStatusConfig,
+  getPaymentMethodDisplay,
+  isDeferredPaymentMethod,
   type Invoice as SwissInvoice,
   type MwStGroup,
   type InvoiceParty,
@@ -86,13 +88,6 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
     return { street: address, zip: undefined, city: undefined };
   };
 
-  // Parse store address with all available fields
-  const storeAddress = parseAddress(
-    serviceInvoice.storeAddress,
-    undefined, // Store doesn't have separate postalCode field in invoice
-    undefined  // Store doesn't have separate city field in invoice
-  );
-
   // Parse customer address with all available fields
   const customerAddress = parseAddress(
     serviceInvoice.customerAddress,
@@ -100,15 +95,25 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
     serviceInvoice.customerCity
   );
 
-  // Build issuer (store) info - ensure all fields are properly structured
+  const storeVatNumber = (serviceInvoice.metadata as { storeVatNumber?: string } | undefined)?.storeVatNumber;
+  // Leer store data normalizando camelCase/lowercase (PostgreSQL puede devolver storephone, etc.)
+  const si = serviceInvoice as unknown as Record<string, unknown>;
+  const storeName = (si.storeName ?? si.storename ?? '')?.toString().trim() || getDefaultStoreName();
+  const storeAddressVal = (si.storeAddress ?? si.storeaddress ?? '')?.toString().trim() || undefined;
+  const storePhoneVal = (si.storePhone ?? si.storephone ?? '')?.toString().trim();
+  const storeEmailVal = (si.storeEmail ?? si.storeemail ?? '')?.toString().trim();
+  const storeLogoVal = (si.storeLogo ?? si.storelogo ?? '')?.toString().trim();
+
+  const storeAddressParsed = parseAddress(storeAddressVal, undefined, undefined);
   const issuer: InvoiceParty = {
-    name: serviceInvoice.storeName?.trim() || getDefaultStoreName(),
-    street: storeAddress.street?.trim() || undefined,
-    zip: storeAddress.zip?.trim() || undefined,
-    city: storeAddress.city?.trim() || undefined,
+    name: storeName || getDefaultStoreName(),
+    street: storeAddressParsed.street?.trim() || undefined,
+    zip: storeAddressParsed.zip?.trim() || undefined,
+    city: storeAddressParsed.city?.trim() || undefined,
     country: 'Schweiz',
-    email: serviceInvoice.storeEmail?.trim() || undefined,
-    phone: serviceInvoice.storePhone?.trim() || undefined,
+    email: storeEmailVal || undefined,
+    phone: storePhoneVal || undefined,
+    mwstNummer: storeVatNumber?.trim() || undefined,
   };
 
   // Build recipient (customer) info - ensure all fields are properly structured
@@ -129,10 +134,9 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
   
   // Helper function to determine MwSt rate and code from item metadata or defaults
   const getMwStRateAndCode = (item: InvoiceItem, index: number): { rate: number; code: string } => {
-    // Try to get taxRate from item metadata if available
-    const itemWithMetadata = item as InvoiceItem & { metadata?: Record<string, unknown> };
-    const itemMetadata = itemWithMetadata.metadata || {};
-    const taxRate = itemMetadata.taxRate || itemMetadata.tax_rate;
+    // taxRate del producto (Product.taxRate) — cada producto tiene su propio IVA
+    const itemMetadata = (item.metadata || {}) as { taxRate?: number; tax_rate?: number };
+    const taxRate = item.taxRate ?? itemMetadata.taxRate ?? itemMetadata.tax_rate;
     
     if (taxRate !== undefined && taxRate !== null) {
       const rate = typeof taxRate === 'number' 
@@ -140,13 +144,11 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
         : typeof taxRate === 'string' 
         ? parseFloat(taxRate) 
         : 0.026;
-      // Map rate to code
-      if (rate === 0.081 || rate === 0.077) return { rate: 0.081, code: 'A' }; // Normalsatz
-      if (rate === 0.026) return { rate: 0.026, code: 'B' }; // Reduziert
-      if (rate === 0.038) return { rate: 0.038, code: 'C' }; // Beherbergung
+      // Map rate to Swiss MwSt code; usar rate real para el cálculo
       if (rate === 0) return { rate: 0, code: 'D' }; // Befreit
-      // Default to reduced rate for food products if unknown
-      return { rate: 0.026, code: 'B' };
+      if (rate >= 0.075 || rate === 0.08 || rate === 0.077 || rate === 0.081) return { rate, code: 'A' }; // Normalsatz ~8%
+      if (rate >= 0.035) return { rate, code: 'C' }; // Beherbergung 3.8%
+      return { rate, code: 'B' }; // Reduziert 2.6% o 3%
     }
     
     // Default: use reduced Swiss VAT rate (2.6% Reduziert) for food products
@@ -222,14 +224,22 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
     orderDate.setTime(issuedDate.getTime());
   }
   
-  // Calculate due date (30 days from issue date by default)
+  const paymentMethod = (serviceInvoice as { paymentMethod?: string }).paymentMethod;
+  const deferred = isDeferredPaymentMethod(paymentMethod);
+  const paymentDisplay = getPaymentMethodDisplay(paymentMethod);
+
+  // Due date: for deferred (QR-Rechnung) 30 days from issue; for immediate = issue date (paid)
   const dueDate = new Date(issuedDate);
-  dueDate.setDate(dueDate.getDate() + 30);
-  
-  // Ensure due date is valid
+  if (deferred) {
+    dueDate.setDate(dueDate.getDate() + 30);
+  }
   if (isNaN(dueDate.getTime())) {
     dueDate.setTime(issuedDate.getTime() + 30 * 24 * 60 * 60 * 1000);
   }
+
+  // Document type: Rechnung (QR with due) vs Quittung/Beleg (immediate)
+  const documentType = deferred ? 'Rechnung' : 'Quittung';
+  const showQRSection = deferred;
 
   // Calculate totals using Swiss formula
   // totalBrutto is already the total including VAT
@@ -256,10 +266,10 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
   return {
     id: serviceInvoice.id,
     nummer: serviceInvoice.invoiceNumber || `INV-${issuedDate.toISOString().split('T')[0].replace(/-/g, '')}`,
-    datum: issuedDate.toISOString(), // Date of issue (current/actual date)
-    leistungsDatum: orderDate.toISOString(), // Service date (order date)
-    faelligkeitsDatum: dueDate.toISOString(), // Due date (30 days from issue)
-    zahlungsfrist: 30,
+    datum: issuedDate.toISOString(),
+    leistungsDatum: orderDate.toISOString(),
+    faelligkeitsDatum: dueDate.toISOString(),
+    zahlungsfrist: deferred ? 30 : 0,
     waehrung: 'CHF',
     referenz: serviceInvoice.invoiceNumber || serviceInvoice.id,
     status,
@@ -268,11 +278,15 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
     items,
     notes: serviceInvoice.metadata?.notes as string | undefined,
     orderId: serviceInvoice.orderId,
+    documentType,
+    paymentMethodDisplay: paymentDisplay,
+    isDeferredPayment: deferred,
+    showQRSection,
     discountAmount: serviceInvoice.discountAmount || 0,
-    totalBrutto: Math.round(totalBrutto * 100) / 100, // Round to 2 decimals
-    totalNetto: Math.round(totalNetto * 100) / 100, // Round to 2 decimals
-    totalMwst: Math.round(totalMwst * 100) / 100, // Round to 2 decimals
-    storeLogo: serviceInvoice.storeLogo,
+    totalBrutto: Math.round(totalBrutto * 100) / 100,
+    totalNetto: Math.round(totalNetto * 100) / 100,
+    totalMwst: Math.round(totalMwst * 100) / 100,
+    storeLogo: storeLogoVal || undefined,
   };
 }
 
@@ -294,27 +308,10 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function MwStCodeBadge({ code, rate }: { code: string; rate: number }) {
-  // Color scheme based on rate type
-  const isReduced = rate <= 0.026;
-  const isSpecial = rate === 0.038;
-  const isExempt = rate === 0;
-
-  const colorClass = isExempt
-    ? 'bg-emerald-50 text-emerald-600 ring-emerald-200'
-    : isReduced
-    ? 'bg-sky-50 text-sky-600 ring-sky-200'
-    : isSpecial
-    ? 'bg-amber-50 text-amber-600 ring-amber-200'
-    : 'bg-gray-100 text-gray-500 ring-gray-200';
-
+function MwStCodeBadge({ code }: { code: string; rate: number }) {
   return (
     <span
-      className={`
-        inline-flex items-center justify-center
-        w-6 h-5 rounded text-[10px] font-bold tracking-wide
-        ring-1 ${colorClass}
-      `}
+      className="inline-flex items-center justify-center w-6 h-5 rounded text-[10px] font-bold tracking-wide ring-1 bg-gray-100 text-gray-700 ring-gray-300"
     >
       {code}
     </span>
@@ -331,11 +328,10 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function QRCodePlaceholder() {
   return (
-    <div className="w-[120px] h-[120px] md:w-[132px] md:h-[132px] bg-white border-2 border-[#25D076] p-1 relative flex-shrink-0">
+    <div className="w-[120px] h-[120px] md:w-[132px] md:h-[132px] bg-white border-2 border-black p-1 relative flex-shrink-0">
       <div className="w-full h-full relative">
-        {/* Green center marker */}
         <div className="absolute inset-0 flex items-center justify-center z-10">
-          <div className="w-6 h-6 md:w-7 md:h-7 bg-[#25D076] rounded-sm flex items-center justify-center">
+          <div className="w-6 h-6 md:w-7 md:h-7 bg-black rounded-sm flex items-center justify-center">
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
               <rect x="6" y="1" width="4" height="14" fill="white" />
               <rect x="1" y="6" width="14" height="4" fill="white" />
@@ -673,12 +669,26 @@ export default function InvoiceTemplate({
                   )}
                 </div>
               </div>
-              <div className="text-[11px] text-gray-400 leading-relaxed">
+              <div className="text-[11px] text-gray-500 leading-relaxed space-y-0.5">
                 {issuer.street && <div>{issuer.street}</div>}
                 <div>
                   {issuer.zip} {issuer.city}
                 </div>
                 {issuer.country && <div>{issuer.country}</div>}
+                {(issuer.phone || issuer.email) && (
+                  <div className="mt-2 pt-1.5 border-t border-gray-100 space-y-0.5">
+                    {issuer.phone && (
+                      <div>
+                        <span className="text-gray-400">Tel.</span> {issuer.phone}
+                      </div>
+                    )}
+                    {issuer.email && (
+                      <div>
+                        <span className="text-gray-400">E-Mail</span> {issuer.email}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -688,38 +698,58 @@ export default function InvoiceTemplate({
                 className="text-2xl md:text-[32px] font-extralight text-gray-900 leading-none"
                 style={{ letterSpacing: '-0.03em' }}
               >
-                Rechnung
+                {invoice.documentType ?? 'Rechnung'}
               </h1>
               <div className="mt-3 space-y-0.5">
-                {([
-                  { label: 'Nr.', value: invoice.nummer, bold: false },
-                  { label: 'Datum', value: formatDate(invoice.datum), bold: false },
-                  invoice.leistungsDatum && {
-                    label: 'Leistung',
-                    value: formatDate(invoice.leistungsDatum),
-                    bold: false,
-                  },
-                  {
-                    label: 'Fällig',
-                    value: formatDate(invoice.faelligkeitsDatum),
-                    bold: true,
-                  },
-                ] as Array<{ label: string; value: string; bold: boolean } | false>)
-                  .filter((item): item is { label: string; value: string; bold: boolean } => Boolean(item))
-                  .map((meta) => (
-                    <div key={meta.label} className="text-[11px] text-gray-400 flex items-baseline justify-end gap-2">
+                {(() => {
+                  const datumStr = formatDate(invoice.datum);
+                  const leistungStr = invoice.leistungsDatum
+                    ? formatDate(invoice.leistungsDatum)
+                    : null;
+                  const faelligStr = invoice.faelligkeitsDatum
+                    ? formatDate(invoice.faelligkeitsDatum)
+                    : null;
+                  const showLeistung =
+                    invoice.leistungsDatum && leistungStr !== datumStr;
+                  const showFaellig =
+                    invoice.isDeferredPayment && faelligStr && faelligStr !== datumStr;
+                  const metaItems: Array<{ label: string; value: string; bold: boolean }> = [
+                    { label: 'Nr.', value: invoice.nummer, bold: false },
+                    { label: 'Datum', value: datumStr, bold: false },
+                    ...(showLeistung
+                      ? [{ label: 'Leistung', value: leistungStr!, bold: false }]
+                      : []),
+                    ...(showFaellig
+                      ? [{ label: 'Fällig', value: faelligStr!, bold: true }]
+                      : []),
+                    ...(invoice.paymentMethodDisplay && invoice.paymentMethodDisplay !== '—'
+                      ? [
+                          {
+                            label: 'Zahlungsart',
+                            value: invoice.paymentMethodDisplay,
+                            bold: false,
+                          },
+                        ]
+                      : []),
+                  ];
+                  return metaItems.map((meta) => (
+                    <div
+                      key={meta.label}
+                      className="text-[11px] text-gray-400 flex items-baseline justify-end gap-2"
+                    >
                       <span className="w-16 text-right">{meta.label}</span>
                       <span
-                        className={`${
+                        className={
                           meta.bold
                             ? 'text-gray-900 font-bold'
                             : 'text-gray-600 font-medium'
-                        }`}
+                        }
                       >
                         {meta.value}
                       </span>
                     </div>
-                  ))}
+                  ));
+                })()}
               </div>
 
               {/* Mobile-only status badge */}
@@ -757,7 +787,7 @@ export default function InvoiceTemplate({
           <div
             className={`
               grid gap-2 py-2.5
-              border-y-2 border-[#25D076]
+              border-y-2 border-black
               text-[9px] md:text-[10px] uppercase tracking-[0.12em] text-gray-400 font-semibold
               select-none
               ${isMobile ? 'grid-cols-12' : 'grid-cols-12'}
@@ -860,18 +890,16 @@ export default function InvoiceTemplate({
 
               {/* Descuento aplicado */}
               {discountAmount > 0 && (
-                <>
-                  <div className="flex justify-between items-center py-1.5 text-[12px] mt-1">
-                    <span className="text-[#3C7E44] font-semibold">Rabatt</span>
-                    <span className="text-[#3C7E44] font-semibold tabular-nums">
-                      - {formatCHF(discountAmount)}
-                    </span>
-                  </div>
-                </>
+                <div className="flex justify-between items-center py-1.5 text-[12px] mt-1">
+                  <span className="text-gray-600 font-semibold">Rabatt</span>
+                  <span className="text-gray-600 font-semibold tabular-nums">
+                    - {formatCHF(discountAmount)}
+                  </span>
+                </div>
               )}
 
               {/* Divider */}
-              <div className="border-t-2 border-[#25D076] my-2.5" />
+              <div className="border-t-2 border-black my-2.5" />
 
               {/* Grand total */}
               <div className="flex justify-between items-baseline">
@@ -934,16 +962,16 @@ export default function InvoiceTemplate({
           </div>
         )}
 
-        {/* ═══ QR-RECHNUNG (PAYMENT SLIP) ═══ */}
-        {issuer.iban && (
+        {/* ═══ QR-RECHNUNG (PAYMENT SLIP) — solo para pago diferido ═══ */}
+        {invoice.showQRSection && issuer.iban && (
           <>
             <div className={`${px}`}>
               <CutLine />
             </div>
 
             <div className={`${px} pb-8`}>
-              <div className="border-2 border-[#25D076] rounded-sm overflow-hidden">
-                <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} ${isMobile ? '' : 'divide-x-2'} divide-[#25D076]`}>
+              <div className="border-2 border-black rounded-sm overflow-hidden">
+                <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} ${isMobile ? '' : 'divide-x-2'} divide-black`}>
                   {/* Left: Zahlteil (Payment section) */}
                   <div className="p-4 md:p-5">
                     <div className="text-[10px] font-bold tracking-[0.15em] uppercase mb-3 text-gray-900">
@@ -1010,7 +1038,7 @@ export default function InvoiceTemplate({
         </div>
 
                   {/* Right: Empfangsschein (Receipt) */}
-                  <div className={`p-4 md:p-5 ${isMobile ? 'border-t-2 border-[#25D076]' : ''}`}>
+                  <div className={`p-4 md:p-5 ${isMobile ? 'border-t-2 border-black' : ''}`}>
                     <div className="text-[10px] font-bold tracking-[0.15em] uppercase mb-3 text-gray-900">
                       Empfangsschein
                     </div>
@@ -1081,15 +1109,19 @@ export default function InvoiceTemplate({
 
         {/* ═══ FOOTER ═══ */}
         <div className={`${px} py-4 border-t border-gray-100`}>
-          <div className={`flex ${isMobile ? 'flex-col gap-1' : 'justify-between'} text-[10px] text-gray-300`}>
+          <div className={`flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-gray-500 ${isMobile ? 'flex-col' : 'justify-between items-center'}`}>
             <div>
               {issuer.name}
               {issuer.mwstNummer && <> · {issuer.mwstNummer}</>}
+              {issuer.phone && <> · {issuer.phone}</>}
+              {issuer.email && <> · {issuer.email}</>}
             </div>
-            <div>
-              {issuer.bank && <>{issuer.bank} · </>}
-              {issuer.iban}
-            </div>
+            {(issuer.bank || issuer.iban) && (
+              <div>
+                {issuer.bank && <>{issuer.bank} · </>}
+                {issuer.iban}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -43,6 +43,8 @@ export interface MwStGroup {
   mwst: number;
 }
 
+export type InvoiceDocumentType = 'Rechnung' | 'Quittung' | 'Beleg';
+
 export interface Invoice {
   id: string;
   nummer: string;
@@ -58,12 +60,51 @@ export interface Invoice {
   items: InvoiceLineItem[];
   notes?: string;
   orderId?: string;
+  // Document type by payment method
+  documentType?: InvoiceDocumentType;
+  paymentMethodDisplay?: string;
+  isDeferredPayment?: boolean;
+  showQRSection?: boolean;
   // Computed or stored totals
   discountAmount?: number;
   totalBrutto?: number;
   totalNetto?: number;
   totalMwst?: number;
   storeLogo?: string;
+}
+
+/** Maps payment method code to display name (German) */
+export const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  bargeld: 'Bargeld',
+  twint: 'TWINT',
+  'debit-credit': 'Debit-/Kreditkarte',
+  debit: 'Debitkarte',
+  card: 'Karte',
+  karte: 'Karte',
+  'qr-rechnung': 'QR-Rechnung',
+  qr: 'QR-Rechnung',
+  rechnung: 'Rechnung',
+  'apple-pay': 'Apple Pay',
+  klarna: 'Klarna',
+};
+
+/** Payment methods that use deferred payment (invoice with due date, QR slip) */
+const DEFERRED_PAYMENT_CODES = new Set([
+  'qr-rechnung',
+  'qr',
+  'rechnung',
+]);
+
+export function getPaymentMethodDisplay(code: string | undefined): string {
+  if (!code) return '—';
+  const normalized = String(code).toLowerCase().replace(/\s+/g, '-');
+  return PAYMENT_METHOD_LABELS[normalized] ?? code;
+}
+
+export function isDeferredPaymentMethod(code: string | undefined): boolean {
+  if (!code) return false;
+  const normalized = String(code).toLowerCase().replace(/\s+/g, '-');
+  return DEFERRED_PAYMENT_CODES.has(normalized);
 }
 
 // ─── Formatting ──────────────────────────────────────────────────────────────
@@ -176,41 +217,42 @@ export interface StatusConfig {
 }
 
 export function getStatusConfig(status: InvoiceStatus): StatusConfig {
+  // Solo verde (OK) y rojo (cancelado) como acentos; resto gris
   const configs: Record<InvoiceStatus, StatusConfig> = {
     draft: {
       label: 'Entwurf',
-      dotColor: 'bg-gray-400',
-      bgColor: 'bg-gray-50',
-      textColor: 'text-gray-600',
-      ringColor: 'ring-gray-200',
+      dotColor: 'bg-gray-500',
+      bgColor: 'bg-gray-100',
+      textColor: 'text-gray-700',
+      ringColor: 'ring-gray-300',
     },
     open: {
       label: 'Ausgestellt',
-      dotColor: 'bg-amber-400',
-      bgColor: 'bg-amber-50',
-      textColor: 'text-amber-700',
-      ringColor: 'ring-amber-200',
+      dotColor: 'bg-gray-500',
+      bgColor: 'bg-gray-100',
+      textColor: 'text-gray-700',
+      ringColor: 'ring-gray-300',
     },
     paid: {
       label: 'Bezahlt',
-      dotColor: 'bg-emerald-400',
-      bgColor: 'bg-emerald-50',
-      textColor: 'text-emerald-700',
-      ringColor: 'ring-emerald-200',
+      dotColor: 'bg-green-600',
+      bgColor: 'bg-green-50',
+      textColor: 'text-green-800',
+      ringColor: 'ring-green-200',
     },
     overdue: {
       label: 'Überfällig',
-      dotColor: 'bg-red-400',
-      bgColor: 'bg-red-50',
-      textColor: 'text-red-700',
-      ringColor: 'ring-red-200',
+      dotColor: 'bg-gray-500',
+      bgColor: 'bg-gray-100',
+      textColor: 'text-gray-700',
+      ringColor: 'ring-gray-300',
     },
     cancelled: {
       label: 'Storniert',
-      dotColor: 'bg-gray-400',
-      bgColor: 'bg-gray-100',
-      textColor: 'text-gray-500',
-      ringColor: 'ring-gray-200',
+      dotColor: 'bg-red-600',
+      bgColor: 'bg-red-50',
+      textColor: 'text-red-800',
+      ringColor: 'ring-red-200',
     },
   };
   return configs[status] || configs.open;

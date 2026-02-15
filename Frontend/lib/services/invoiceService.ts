@@ -7,6 +7,9 @@ export interface InvoiceItem {
   quantity: number;
   price: number;
   subtotal: number;
+  /** taxRate del producto (decimal, ej. 0.026 para 2.6%) — usado para cálculo MwSt en factura */
+  taxRate?: number;
+  metadata?: { taxRate?: number };
 }
 
 export interface Invoice {

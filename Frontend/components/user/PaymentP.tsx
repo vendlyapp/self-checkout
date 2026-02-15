@@ -476,18 +476,16 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 <button
                   onClick={async () => {
                     lightHaptic();
-                    
-                    // Create invoice as guest (without customer data)
+
                     if (onCreateInvoice) {
                       try {
                         await onCreateInvoice();
+                        await new Promise((r) => setTimeout(r, 50));
                       } catch (error) {
                         console.error('Error creating invoice:', error);
-                        // Continuar de todas formas
                       }
                     }
-                    
-                    // Ir al paso final de ver factura
+
                     onStepChange?.("viewInvoice");
                   }}
                   className="w-full bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 font-semibold rounded-2xl py-4 text-base transition-colors border-2 border-gray-200 active:scale-[0.97] active:border-gray-300 touch-target"
@@ -591,16 +589,13 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   if (onCreateInvoice) {
                     try {
                       await onCreateInvoice(personalData);
-                      // Esperar un momento para asegurar que el estado se actualice
-                      await new Promise(resolve => setTimeout(resolve, 100));
+                      await new Promise((r) => setTimeout(r, 50));
                     } catch (error) {
                       console.error('Error al crear factura:', error);
                       toast.error('Fehler beim Erstellen der Rechnung');
-                      // Continuar de todas formas para que el usuario pueda salir
                     }
                   }
-                  
-                  // Ir al paso final de ver factura
+
                   onStepChange?.("viewInvoice");
                 }}
                 className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-2xl py-4 text-base transition-colors shadow-lg shadow-[#25D076]/25 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.97] active:shadow-md touch-target"
@@ -633,7 +628,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
               {/* Botones - Opciones finales */}
               <div className="w-full max-w-xs space-y-3">
-                {createdInvoiceShareToken ? (
+                {(createdInvoiceShareToken || createdInvoiceId) ? (
                   <button
                     onClick={onViewInvoice}
                     className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-2xl py-4 text-base transition-colors shadow-lg shadow-[#25D076]/25 active:scale-[0.97] active:shadow-md touch-target"
@@ -1055,18 +1050,28 @@ export default function PaymentP() {
     setPaymentStep("viewInvoice");
   };
 
-  const handleViewInvoice = () => {
-    // Si tiene shareToken, redirigir a la página pública de la factura
-    if (createdInvoiceShareToken) {
-      router.push(`/invoice/public/${createdInvoiceShareToken}`);
-      // Cerrar el modal después de redirigir
+  const handleViewInvoice = async () => {
+    let token = createdInvoiceShareToken;
+
+    if (!token && createdInvoiceId) {
+      try {
+        const result = await InvoiceService.getInvoiceById(createdInvoiceId);
+        if (result.success && result.data?.shareToken) {
+          token = result.data.shareToken;
+          setCreatedInvoiceShareToken(token);
+        }
+      } catch (err) {
+        console.error('Error fetching shareToken:', err);
+      }
+    }
+
+    if (token) {
+      router.push(`/invoice/public/${token}`);
       setTimeout(() => {
         setIsModalOpen(false);
         clearCart();
       }, 300);
     } else {
-      // Si no tiene shareToken pero tiene invoiceId, intentar obtenerlo
-      // Por ahora, mostrar mensaje de error
       toast.error('Rechnung konnte nicht geladen werden');
     }
   };
@@ -1077,14 +1082,14 @@ export default function PaymentP() {
   };
 
   // Función para crear la factura después de que el usuario decida sobre sus datos
-  const handleCreateInvoice = async (customerData?: { name: string; email: string; address: string; phone: string }) => {
+  // Retorna shareToken para evitar race conditions al redirigir
+  const handleCreateInvoice = async (customerData?: { name: string; email: string; address: string; phone: string }): Promise<string | null> => {
     if (!createdOrderId) {
       console.error('No hay orderId para crear la factura');
-      return;
+      return null;
     }
 
     try {
-      // Create invoice with customer data (or as guest if no data)
       const invoicePayload = {
         orderId: createdOrderId,
         customerName: customerData?.name || 'Gast',
@@ -1097,35 +1102,25 @@ export default function PaymentP() {
       const result = await InvoiceService.createInvoice(invoicePayload);
 
       if (result.success && result.data) {
-        setCreatedInvoiceId(result.data.id);
-        console.log('📄 Factura creada - datos recibidos:', {
-          id: result.data.id,
-          invoiceNumber: result.data.invoiceNumber,
-          shareToken: result.data.shareToken,
-          hasShareToken: !!result.data.shareToken,
-        });
-        
-        if (result.data.shareToken) {
-          setCreatedInvoiceShareToken(result.data.shareToken);
-          console.log('✅ ShareToken establecido:', result.data.shareToken);
-        } else {
-          console.warn('⚠️ Factura creada pero sin shareToken. Intentando obtenerlo...');
-          // Si no viene el shareToken, intentar obtenerlo de la factura
+        const { id, shareToken } = result.data;
+        setCreatedInvoiceId(id);
+
+        let token = shareToken ?? null;
+        if (!token) {
           try {
-            const invoiceResult = await InvoiceService.getInvoiceById(result.data.id);
-            if (invoiceResult.success && invoiceResult.data?.shareToken) {
-              setCreatedInvoiceShareToken(invoiceResult.data.shareToken);
-              console.log('✅ ShareToken obtenido después:', invoiceResult.data.shareToken);
+            const invResult = await InvoiceService.getInvoiceById(id);
+            if (invResult.success && invResult.data?.shareToken) {
+              token = invResult.data.shareToken;
             }
-          } catch (error) {
-            console.error('Error al obtener shareToken:', error);
+          } catch {
+            // Ignorar
           }
         }
-        console.log('✅ Factura creada:', result.data.invoiceNumber);
-      } else {
-        console.error('Error al crear factura:', result.error);
-        throw new Error(result.error || 'Fehler beim Erstellen der Rechnung');
+        if (token) setCreatedInvoiceShareToken(token);
+        return token;
       }
+      console.error('Error al crear factura:', result.error);
+      throw new Error(result.error || 'Fehler beim Erstellen der Rechnung');
     } catch (error) {
       console.error('Error al crear factura:', error);
       throw error;

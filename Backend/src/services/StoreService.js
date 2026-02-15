@@ -241,7 +241,7 @@ class StoreService {
    */
   async update(ownerId, storeData) {
     try {
-      const { name, logo, isOpen, address, phone, email, description, slug: slugInput } = storeData;
+      const { name, logo, isOpen, address, phone, email, description, slug: slugInput, vatNumber } = storeData;
 
       const existing = await query('SELECT id, slug, "settingsCompletedAt" FROM "Store" WHERE "ownerId" = $1', [ownerId]);
       if (existing.rows.length === 0) {
@@ -294,6 +294,12 @@ class StoreService {
         paramCount++;
         updateFields.push(`"description" = $${paramCount}`);
         values.push(description);
+      }
+
+      if (vatNumber !== undefined) {
+        paramCount++;
+        updateFields.push(`"vatNumber" = $${paramCount}`);
+        values.push(vatNumber && String(vatNumber).trim() ? String(vatNumber).trim() : null);
       }
 
       if (isFirstTimeSetup && slugInput !== undefined && slugInput !== null) {

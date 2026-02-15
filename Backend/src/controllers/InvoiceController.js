@@ -1,3 +1,4 @@
+const { query } = require('../../lib/database');
 const invoiceService = require('../services/InvoiceService');
 const orderService = require('../services/OrderService');
 const storeService = require('../services/StoreService');
@@ -56,10 +57,26 @@ class InvoiceController {
         }
       }
 
-      // Preparar items de la factura
-      // Los items vienen con productName, productSku y taxRate del JOIN en OrderService.findById
+      // Obtener taxRate de cada producto directamente desde Product
+      const productIds = [...new Set(order.items.map((it) => it.productId))];
+      const taxRateByProduct = new Map();
+      try {
+        const productsTaxQuery = await query(
+          'SELECT id, "taxRate" FROM "Product" WHERE id = ANY($1)',
+          [productIds]
+        );
+        for (const row of productsTaxQuery.rows) {
+          const tr = row.taxRate ?? row.taxrate;
+          const val = tr != null && tr !== ''
+            ? (typeof tr === 'number' ? tr : parseFloat(tr))
+            : 0.026;
+          taxRateByProduct.set(row.id, Number.isFinite(val) && val >= 0 ? val : 0.026);
+        }
+      } catch (taxErr) {
+        console.warn('⚠️ [InvoiceController] Error al obtener taxRate de productos, usando 2.6% por defecto:', taxErr.message);
+      }
+
       const invoiceItems = order.items.map((item) => {
-        // Debug: verificar que el productName esté llegando
         if (!item.productName) {
           console.warn('⚠️ [InvoiceController] Item sin productName:', {
             productId: item.productId,
@@ -67,7 +84,7 @@ class InvoiceController {
             itemKeys: Object.keys(item),
           });
         }
-        
+        const taxRate = taxRateByProduct.get(item.productId) ?? 0.026;
         return {
           productId: item.productId,
           productName: item.productName || 'Producto',
@@ -75,9 +92,8 @@ class InvoiceController {
           quantity: item.quantity,
           price: Number(item.price),
           subtotal: Number(item.price) * item.quantity,
-          metadata: {
-            taxRate: item.taxRate !== null && item.taxRate !== undefined ? Number(item.taxRate) : 0.026 // Default 2.6% if null
-          }
+          taxRate,
+          metadata: { taxRate },
         };
       });
       
@@ -97,6 +113,7 @@ class InvoiceController {
       const total = metadata.totalWithVAT || order.total;
 
       // Preparar datos de la factura
+      const storeVatNumber = storeInfo?.vatNumber || storeInfo?.vatnumber || null;
       const invoiceData = {
         orderId: order.id,
         customerName: customerName || order.metadata?.customerData?.name || null,
@@ -120,6 +137,7 @@ class InvoiceController {
         metadata: {
           ...metadata,
           saveCustomerData,
+          storeVatNumber: storeVatNumber || undefined,
           createdAt: new Date().toISOString(),
         },
       };

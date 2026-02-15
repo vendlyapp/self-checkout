@@ -215,6 +215,88 @@ class InvoiceService {
   }
 
   /**
+   * Enriquece la factura con datos de la tienda cuando faltan (dirección, teléfono, email, logo)
+   * Facturas antiguas pueden no tener estos campos; PostgreSQL puede devolver claves en lowercase
+   */
+  async _enrichInvoiceWithStoreData(invoice) {
+    const storeId = invoice.storeId ?? invoice.storeid;
+    if (!storeId) return invoice;
+
+    // Leer valores normalizando camelCase / lowercase (PostgreSQL puede devolver storephone, etc.)
+    const get = (key) => invoice[key] ?? invoice[key.replace(/([A-Z])/g, (m) => m.toLowerCase())];
+    const has = (key) => {
+      const v = get(key);
+      return v != null && String(v).trim() !== '';
+    };
+    const metadata = invoice.metadata && typeof invoice.metadata === 'object' ? invoice.metadata : {};
+    const hasStoreVat = metadata.storeVatNumber != null && String(metadata.storeVatNumber).trim() !== '';
+    const needsEnrichment =
+      !has('storeAddress') ||
+      !has('storePhone') ||
+      !has('storeEmail') ||
+      !has('storeLogo') ||
+      !hasStoreVat;
+
+    if (!needsEnrichment) return invoice;
+
+    const storeResult = await query(
+      'SELECT name, address, phone, email, logo, "vatNumber" as "vatNumber" FROM "Store" WHERE id = $1',
+      [storeId]
+    );
+    if (storeResult.rows.length === 0) return invoice;
+
+    const s = storeResult.rows[0];
+    const vatVal = s.vatNumber ?? s.vatnumber;
+    if (!has('storeName')) invoice.storeName = s.name ?? s.Name;
+    if (!has('storeAddress')) invoice.storeAddress = s.address ?? s.Address;
+    if (!has('storePhone')) invoice.storePhone = s.phone ?? s.Phone;
+    if (!has('storeEmail')) invoice.storeEmail = s.email ?? s.Email;
+    if (!has('storeLogo')) invoice.storeLogo = s.logo ?? s.Logo;
+    if (!hasStoreVat && vatVal) {
+      invoice.metadata = { ...metadata, storeVatNumber: vatVal };
+    }
+    return invoice;
+  }
+
+  /**
+   * Enriquece los items de una factura con taxRate desde Product cuando falta
+   * (facturas antiguas no tenían taxRate guardado por producto)
+   */
+  async _enrichItemsWithProductTaxRate(invoice) {
+    if (!invoice?.items?.length) return invoice;
+    const needsEnrichment = invoice.items.some((it) => {
+      const tr = it.taxRate ?? it.metadata?.taxRate ?? it.metadata?.tax_rate;
+      return tr == null || tr === '' || (typeof tr === 'number' && Number.isNaN(tr));
+    });
+    if (!needsEnrichment) return invoice;
+
+    const productIds = [...new Set(invoice.items.map((it) => it.productId).filter(Boolean))];
+    if (productIds.length === 0) return invoice;
+
+    const taxResult = await query('SELECT id, "taxRate" FROM "Product" WHERE id = ANY($1)', [productIds]);
+    const taxMap = new Map();
+    for (const row of taxResult.rows) {
+      const tr = row.taxRate ?? row.taxrate;
+      const val = tr != null && tr !== '' ? (typeof tr === 'number' ? tr : parseFloat(tr)) : 0.026;
+      taxMap.set(row.id, Number.isFinite(val) && val >= 0 ? val : 0.026);
+    }
+
+    invoice.items = invoice.items.map((it) => {
+      const existing = it.taxRate ?? it.metadata?.taxRate ?? it.metadata?.tax_rate;
+      if (existing != null && existing !== '' && (typeof existing === 'number' ? !Number.isNaN(existing) : !Number.isNaN(parseFloat(existing)))) {
+        return it;
+      }
+      const taxRate = taxMap.get(it.productId) ?? 0.026;
+      return {
+        ...it,
+        taxRate,
+        metadata: { ...(it.metadata || {}), taxRate },
+      };
+    });
+    return invoice;
+  }
+
+  /**
    * Obtiene una factura por ID
    */
   async findById(id) {
@@ -251,15 +333,14 @@ class InvoiceService {
       invoice.metadata = JSON.parse(invoice.metadata);
     }
 
+    await this._enrichItemsWithProductTaxRate(invoice);
+    await this._enrichInvoiceWithStoreData(invoice);
     return {
       success: true,
       data: invoice,
     };
   }
 
-  /**
-   * Obtiene una factura por número de factura
-   */
   /**
    * Obtiene una factura por su token de compartir (público)
    */
@@ -298,6 +379,8 @@ class InvoiceService {
       invoice.metadata = JSON.parse(invoice.metadata);
     }
 
+    await this._enrichItemsWithProductTaxRate(invoice);
+    await this._enrichInvoiceWithStoreData(invoice);
     return {
       success: true,
       data: invoice,
@@ -338,6 +421,8 @@ class InvoiceService {
       invoice.metadata = JSON.parse(invoice.metadata);
     }
 
+    await this._enrichItemsWithProductTaxRate(invoice);
+    await this._enrichInvoiceWithStoreData(invoice);
     return {
       success: true,
       data: invoice,

@@ -89,6 +89,15 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
       productDescription !== (originalProductData.description || "") ||
       productPrice !== (originalProductData.price?.toString() || "") ||
       productCategory !== (originalProductData.category || "") ||
+      vatRate !== (() => {
+        const tr = (originalProductData as Product & { taxRate?: number }).taxRate;
+        if (tr === undefined || tr === null) return "2.6";
+        const rate = typeof tr === 'number' ? tr : parseFloat(String(tr));
+        if (rate === 0) return "0";
+        if (rate >= 0.079) return "8.1";
+        if (rate >= 0.035) return "3.8";
+        return "2.6";
+      })() ||
       isActive !== (originalProductData.isActive ?? true) ||
       hasPromotion !== !!(originalProductData.isPromotional || originalProductData.isOnSale) ||
       promotionPrice !== (originalProductData.promotionalPrice?.toString() || "") ||
@@ -99,6 +108,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
     productDescription,
     productPrice,
     productCategory,
+    vatRate,
     isActive,
     hasPromotion,
     promotionPrice,
@@ -294,7 +304,18 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
         }
       }
       
-      setVatRate("2.6"); // Valor por defecto
+      // Cargar taxRate del producto (decimal → porcentaje string para el select)
+      const tr = (product as Product & { taxRate?: number }).taxRate;
+      if (tr !== undefined && tr !== null) {
+        const rate = typeof tr === 'number' ? tr : parseFloat(String(tr));
+        if (rate === 0) setVatRate("0");
+        else if (rate >= 0.079) setVatRate("8.1");
+        else if (rate >= 0.035) setVatRate("3.8");
+        else if (rate >= 0.02) setVatRate("2.6");
+        else setVatRate("2.6");
+      } else {
+        setVatRate("2.6");
+      }
     }
   }, [existingProduct, backendCategories, originalProductData, allProducts]);
 
@@ -517,6 +538,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
           image: productImages.length > 0 ? productImages[0] : undefined,
           categoryId: productCategoryId || productData.categoryId, // Asegurar que categoryId se incluya
           // Si hay promoción, configurar campos de promoción
+          taxRate: parseFloat(vatRate) / 100,
           ...(hasPromotion && {
             isPromotional: true,
             promotionalPrice: parseFloat(promotionPrice),

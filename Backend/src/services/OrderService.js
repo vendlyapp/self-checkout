@@ -469,9 +469,9 @@ class OrderService {
 
     const order = result.rows[0];
 
-    // Obtener items con información del producto
+    // Obtener items con información del producto (alias "itemTaxRate" para evitar lowercase de pg)
     const itemsQuery = `
-      SELECT oi.*, p.name as "productName", p.sku as "productSku", p."taxRate"
+      SELECT oi.*, p.name as "productName", p.sku as "productSku", p."taxRate" as "itemTaxRate"
       FROM "OrderItem" oi
       LEFT JOIN "Product" p ON oi."productId" = p.id
       WHERE oi."orderId" = $1

@@ -87,6 +87,7 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
   const [address, setAddress] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
+  const [vatNumber, setVatNumber] = useState('')
   const [description, setDescription] = useState('')
   const [slug, setSlug] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -126,6 +127,7 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
         setAddress(result.data.address || '')
         setPhone(result.data.phone || '')
         setEmail(result.data.email || '')
+        setVatNumber(result.data.vatNumber || '')
         setDescription(result.data.description || '')
         setSlug(result.data.slug || '')
       } else {
@@ -234,6 +236,7 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
         address: address.trim() || null,
         phone: phone.trim() || null,
         email: email.trim() || null,
+        vatNumber: vatNumber.trim() || null,
         description: description.trim() || null
       }
       if (isFirstTimeSetup && slug.trim()) {
@@ -281,6 +284,7 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
       setAddress(store.address || '')
       setPhone(store.phone || '')
       setEmail(store.email || '')
+      setVatNumber(store.vatNumber || '')
       setDescription(store.description || '')
       setSlug(store.slug || '')
     }
@@ -542,6 +546,15 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
             editing={editing}
           />
         </div>
+
+        <FormField
+          icon={FileText}
+          label="MwSt-Nummer"
+          value={vatNumber}
+          onChange={(e) => setVatNumber(e.target.value)}
+          placeholder="z.B. CHE-123.456.789 MWST"
+          editing={editing}
+        />
 
         {/* Descripción */}
         <div className="bg-white rounded-2xl overflow-hidden border border-gray-200/60 shadow-sm">
