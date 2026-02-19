@@ -39,7 +39,8 @@ export function useResponsive(): ResponsiveState {
     return () => window.removeEventListener('resize', updateScreenWidth);
   }, []);
 
-  // Calcular breakpoints
+  // Breakpoints: móvil < 768, tablet 768–1023, desktop ≥ 1024
+  // En Tailwind: md: = 768px+ (tablet+desktop), lg: = 1024px+ (desktop)
   const isMobile = screenWidth < 768;
   const isTablet = screenWidth >= 768 && screenWidth < 1024;
   const isDesktop = screenWidth >= 1024;

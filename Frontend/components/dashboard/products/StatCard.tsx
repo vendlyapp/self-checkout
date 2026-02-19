@@ -40,10 +40,10 @@ const StatCard: React.FC<StatCardProps> = ({
   const percentChange = previousValue ? ((lastValue - previousValue) / previousValue * 100).toFixed(1) : 0;
 
   return (
-    <Card className={`bg-card rounded-3xl shadow-2xl drop-shadow-sm transition-ios border border-gray-200/50 ${className}`}>
-      <CardContent className="p-5 lg:p-6">
-        <div className="flex items-center justify-between mb-3 lg:mb-4">
-          <div className="w-10 h-10 lg:w-12 lg:h-12 bg-[#C4BAAF] rounded-xl flex items-center justify-center">
+    <Card className={`bg-card rounded-2xl shadow-sm transition-ios border border-border ${className ?? ''}`}>
+      <CardContent className="p-5 md:p-6 lg:p-7">
+        <div className="flex items-center justify-between mb-3 md:mb-4 lg:mb-5">
+          <div className="w-10 h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 bg-[#C4BAAF] rounded-xl flex items-center justify-center">
             <div className="lg:scale-110">{icon}</div>
           </div>
           {badge && (
@@ -53,13 +53,13 @@ const StatCard: React.FC<StatCardProps> = ({
           )}
         </div>
 
-        <div className="mb-4 lg:mb-5">
-          <h3 className="text-3xl lg:text-4xl font-bold text-foreground mb-1 lg:mb-2">{value}</h3>
+        <div className="mb-4 md:mb-5 lg:mb-6">
+          <h3 className="text-3xl lg:text-4xl xl:text-[2.5rem] font-bold text-foreground mb-1 md:mb-2">{value}</h3>
           <p className="text-sm lg:text-base text-muted-foreground">{subtitle}</p>
         </div>
 
         {/* Mini gráfico de tendencia con Recharts */}
-        <div className="h-12 lg:h-14 -mx-2">
+        <div className="h-12 md:h-14 lg:h-16 -mx-2">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
               <Tooltip

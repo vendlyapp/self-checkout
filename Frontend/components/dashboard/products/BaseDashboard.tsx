@@ -5,7 +5,7 @@ import { Package, Grid3X3, Plus, Percent } from "lucide-react";
 import StatCard from "./StatCard";
 import ActionButton from "./ActionButton";
 import NavigationItem from "./NavigationItem";
-import { useProductsData, useProductActions } from "@/hooks";
+import { useProductsData, useProductActions, useResponsive } from "@/hooks";
 import { useProductStats } from "@/hooks/queries/useProductStats";
 import { useCategoryStats } from "@/hooks/queries/useCategoryStats";
 import { getActiveProductsCount, getActiveCategoriesCount } from "./data";
@@ -37,6 +37,10 @@ export default function ProductsDashboard() {
   
   // Obtener datos del store como fallback inmediato
   const { data: storeData, isStale } = useProductsAnalyticsStore();
+
+  // Hooks que no pueden ir después de un return (Rules of Hooks)
+  const { screenWidth } = useResponsive();
+  const showThreeCardsInRow = screenWidth >= 1280;
   
   // Si hay datos en el store y no están viejos, usarlos mientras carga
   const immediateData = storeData && !isStale() ? storeData : null;
@@ -136,22 +140,23 @@ export default function ProductsDashboard() {
   // Renderizar con datos reales
   return (
     <div className="w-full">
-      {/* ===== MOBILE LAYOUT ===== */}
-      <div className="block lg:hidden">
-        <div className="p-4 space-y-6">
-          <div>
+      {/* ===== MÓVIL (< 768px) ===== */}
+      <div className="block md:hidden min-w-0">
+        <div className="p-4 space-y-5">
+          <div className="w-full min-w-0">
             <SearchInput
               placeholder="Suche Produkte / Verkäufe"
               value={searchQuery}
               onChange={setSearchQuery}
               onSearch={() => {}}
-              className="w-full h-[54px]"
+              className="w-full h-12 min-h-12"
+              esHome={false}
             />
           </div>
-          {/* Tarjetas de Estadísticas */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-3 min-w-0">
             <StatCard
-              icon={<Package className="w-5 h-5 text-white " />}
+              icon={<Package className="w-5 h-5 text-white" />}
               title="Produkte"
               value={finalData.products.total}
               subtitle="Produkte"
@@ -160,9 +165,8 @@ export default function ProductsDashboard() {
               badge={`${finalData.products.newProducts} Neu`}
               className="bg-background-cream"
             />
-
             <StatCard
-              icon={<Grid3X3 className="w-5 h-5 text-white " />}
+              icon={<Grid3X3 className="w-5 h-5 text-white" />}
               title="Kategorien"
               value={finalData.categories.total}
               subtitle="Kategorien"
@@ -172,7 +176,6 @@ export default function ProductsDashboard() {
               className="bg-background-cream"
             />
           </div>
-          {/* Botón de Acción Principal */}
           <ActionButton
             icon={<Plus className="w-5 h-5" />}
             title="Neues Produkt"
@@ -180,8 +183,8 @@ export default function ProductsDashboard() {
             onClick={handleNewProduct}
             variant="primary"
           />
-          {/* Elementos de Navegación */}
-          <div className="space-y-3">
+          {/* Verwalten */}
+          <div className="space-y-2">
             <NavigationItem
               icon={<Package className="w-5 h-5 text-muted-foreground" />}
               title="Produktliste"
@@ -190,7 +193,6 @@ export default function ProductsDashboard() {
               badgeVariant="success"
               onClick={handleProductList}
             />
-
             <NavigationItem
               icon={<Grid3X3 className="w-5 h-5 text-muted-foreground" />}
               title="Kategorien"
@@ -199,7 +201,6 @@ export default function ProductsDashboard() {
               badgeVariant="success"
               onClick={handleCategories}
             />
-
             <NavigationItem
               icon={<Percent className="w-5 h-5 text-muted-foreground" />}
               title="Aktionen"
@@ -212,29 +213,29 @@ export default function ProductsDashboard() {
         </div>
       </div>
 
-      {/* ===== DESKTOP LAYOUT ===== */}
-      <div className="hidden lg:block">
-        <div className="p-6 space-y-8">
-          {/* Header Section */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Produktverwaltung</h1>
-              <p className="text-gray-600 mt-1">Verwalten Sie Ihre Produkte, Kategorien und Aktionen</p>
+      {/* ===== TABLET + DESKTOP (≥ 768px) ===== */}
+      <div className="hidden md:block">
+        <div className="p-4 md:p-6 lg:p-8 xl:p-10 space-y-8 md:space-y-10 lg:space-y-12 min-w-0 max-w-[1600px]">
+          {/* Header: título + barra de búsqueda */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 lg:gap-8">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground">Produktverwaltung</h1>
+              <p className="text-muted-foreground mt-1.5 text-sm md:text-base">Verwalten Sie Ihre Produkte, Kategorien und Aktionen</p>
             </div>
-            <div className="w-full lg:w-[500px]">
+            <div className="w-full md:w-[280px] lg:w-[340px] xl:w-[380px] flex-shrink-0 md:flex md:items-center">
               <SearchInput
                 placeholder="Produkte durchsuchen..."
                 value={searchQuery}
                 onChange={setSearchQuery}
                 onSearch={() => {}}
-                className="w-full"
+                className="w-full h-11 min-h-11"
                 esHome={false}
               />
             </div>
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Stats: 3 columnas desde 1008px (1024 con scrollbar) para que se vea en 1024x1366 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 min-[1008px]:grid-cols-3 gap-5 md:gap-6 min-[1008px]:gap-8 min-w-0">
             <StatCard
               icon={<Package className="w-6 h-6 text-white" />}
               title="Produkte"
@@ -243,9 +244,8 @@ export default function ProductsDashboard() {
               trend={finalData.products.trend}
               trendData={finalData.products.trendData}
               badge={`${finalData.products.newProducts} Neu`}
-              className="bg-white shadow-sm border border-gray-200"
+              className="min-h-[200px] md:min-h-[220px] min-[1008px]:min-h-[240px]"
             />
-
             <StatCard
               icon={<Grid3X3 className="w-6 h-6 text-white" />}
               title="Kategorien"
@@ -254,29 +254,28 @@ export default function ProductsDashboard() {
               trend={finalData.categories.trend}
               trendData={finalData.categories.trendData}
               badge={`${finalData.categories.newCategories} Neu`}
-              className="bg-white shadow-sm border border-gray-200"
+              className="min-h-[200px] md:min-h-[220px] min-[1008px]:min-h-[240px]"
             />
-
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Schnellaktionen</h3>
-                <Plus className="w-5 h-5 text-gray-400" />
+            <div className="bg-card rounded-2xl p-6 md:p-7 shadow-sm border border-border md:col-span-2 min-[1008px]:col-span-1 min-h-[200px] md:min-h-[220px] min-[1008px]:min-h-[240px] flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg md:text-xl font-semibold text-foreground mb-4 md:mb-5">Schnellaktionen</h3>
+                <ActionButton
+                  icon={<Plus className="w-5 h-5 md:w-6 md:h-6" />}
+                  title="Neues Produkt"
+                  subtitle="Artikel anlegen"
+                  onClick={handleNewProduct}
+                  variant="primary"
+                />
               </div>
-              <ActionButton
-                icon={<Plus className="w-5 h-5" />}
-                title="Neues Produkt"
-                subtitle="Artikel anlegen"
-                onClick={handleNewProduct}
-                variant="primary"
-              />
             </div>
           </div>
 
-          {/* Navigation Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Produktverwaltung</h3>
-              <div className="space-y-3">
+          {/* Navegación: columna hasta 1279px (incl. 1024x1366); 3 cards en fila desde 1280px */}
+          {showThreeCardsInRow ? (
+            <div className="grid grid-cols-3 gap-6 xl:gap-8 min-w-0">
+            <div className="bg-card rounded-2xl p-6 xl:p-7 shadow-sm border border-border min-h-[200px] flex flex-col">
+              <h3 className="text-lg xl:text-xl font-semibold text-foreground mb-4">Produktverwaltung</h3>
+              <div className="flex-1 flex items-center">
                 <NavigationItem
                   icon={<Package className="w-5 h-5 text-muted-foreground" />}
                   title="Produktliste"
@@ -284,13 +283,14 @@ export default function ProductsDashboard() {
                   badge={`${activeProductsCount} aktiv`}
                   badgeVariant="success"
                   onClick={handleProductList}
+                  compact
                 />
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Kategorien</h3>
-              <div className="space-y-3">
+            <div className="bg-card rounded-2xl p-6 xl:p-7 shadow-sm border border-border min-h-[200px] flex flex-col">
+              <h3 className="text-lg xl:text-xl font-semibold text-foreground mb-4">Kategorien</h3>
+              <div className="flex-1 flex items-center">
                 <NavigationItem
                   icon={<Grid3X3 className="w-5 h-5 text-muted-foreground" />}
                   title="Kategorien"
@@ -298,24 +298,59 @@ export default function ProductsDashboard() {
                   badge={`${activeCategoriesCount} aktiv`}
                   badgeVariant="success"
                   onClick={handleCategories}
+                  compact
                 />
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Aktionen</h3>
-              <div className="space-y-3">
+            <div className="bg-card rounded-2xl p-6 xl:p-7 shadow-sm border border-border min-h-[200px] flex flex-col">
+              <h3 className="text-lg xl:text-xl font-semibold text-foreground mb-4">Aktionen</h3>
+              <div className="flex-1 flex items-center">
                 <NavigationItem
                   icon={<Percent className="w-5 h-5 text-muted-foreground" />}
                   title="Rabatte & Codes"
                   subtitle="erstellen & bearbeiten"
                   badge={`${activeProductsCount} aktiv`}
                   badgeVariant="success"
-                  onClick={handleDiscounts}
+                onClick={handleDiscounts}
+                compact
                 />
               </div>
             </div>
           </div>
+          ) : (
+            <div className="min-w-0 max-w-2xl">
+              <div className="bg-card rounded-2xl p-6 md:p-7 shadow-sm border border-border min-h-[280px] flex flex-col">
+                <h3 className="text-lg font-semibold text-foreground mb-5">Verwalten</h3>
+                <div className="space-y-3 min-w-0 flex-1">
+                  <NavigationItem
+                    icon={<Package className="w-5 h-5 text-muted-foreground" />}
+                    title="Produktliste"
+                    subtitle="bearbeiten"
+                    badge={`${activeProductsCount} aktiv`}
+                    badgeVariant="success"
+                    onClick={handleProductList}
+                  />
+                  <NavigationItem
+                    icon={<Grid3X3 className="w-5 h-5 text-muted-foreground" />}
+                    title="Kategorien"
+                    subtitle="verwalten"
+                    badge={`${activeCategoriesCount} aktiv`}
+                    badgeVariant="success"
+                    onClick={handleCategories}
+                  />
+                  <NavigationItem
+                    icon={<Percent className="w-5 h-5 text-muted-foreground" />}
+                    title="Rabatte & Codes"
+                    subtitle="erstellen & bearbeiten"
+                    badge={`${activeProductsCount} aktiv`}
+                    badgeVariant="success"
+                    onClick={handleDiscounts}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -60,11 +60,11 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
   const currentPeriodLabel = periodOptions.find(option => option.value === period)?.label || 'Heute';
 
   return (
-    <Card className="bg-card rounded-2xl border border-border/50 transition-fast hover:shadow-md">
-      <CardContent className="p-6">
+    <Card className="bg-card rounded-2xl border border-border shadow-sm transition-fast hover:shadow-md">
+      <CardContent className="p-4 lg:p-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-semibold text-foreground">Zahlungsmethoden</h3>
+        <div className="flex justify-between items-center mb-4 lg:mb-6">
+          <h3 className="text-base lg:text-lg font-semibold text-foreground">Zahlungsmethoden</h3>
           
           {/* Period Selector */}
           <div className="relative">

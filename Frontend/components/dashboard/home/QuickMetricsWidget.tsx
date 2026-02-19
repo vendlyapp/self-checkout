@@ -44,20 +44,20 @@ const QuickMetricsWidget = ({ className = '' }: QuickMetricsWidgetProps) => {
   ];
 
   return (
-    <div className={`bg-white rounded-xl p-4 border border-gray-200 shadow-sm ${className}`}>
+    <div className={`bg-white rounded-xl p-4 md:p-5 border border-gray-200 shadow-sm ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-900">Quick Metrics</h3>
+      <div className="flex items-center justify-between mb-3 md:mb-4">
+        <h3 className="text-sm md:text-base font-semibold text-gray-900">Quick Metrics</h3>
         <div className="text-xs text-gray-500">Last 24h</div>
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 md:gap-4">
         {metrics.map((metric, index) => (
-          <div key={index} className="p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-ios-fast">
-            <div className="flex items-start justify-between mb-2">
+          <div key={index} className="p-3 md:p-3.5 rounded-lg bg-gray-50 hover:bg-gray-100 transition-ios-fast">
+            <div className="flex items-start justify-between mb-1.5 md:mb-2">
               <div className={`p-1.5 rounded-lg ${metric.color}`}>
-                <metric.icon className="w-3 h-3" />
+                <metric.icon className="w-3 h-3 md:w-4 md:h-4" />
               </div>
               <div className={`flex items-center gap-1 text-xs font-medium ${
                 metric.trend === 'up' ? 'text-green-600' : 'text-red-600'
@@ -70,9 +70,9 @@ const QuickMetricsWidget = ({ className = '' }: QuickMetricsWidgetProps) => {
                 <span>{metric.change}</span>
               </div>
             </div>
-            <div>
-              <p className="text-lg font-bold text-gray-900">{metric.value}</p>
-              <p className="text-xs text-gray-500">{metric.label}</p>
+            <div className="min-w-0">
+              <p className="text-base md:text-lg font-bold text-gray-900 truncate">{metric.value}</p>
+              <p className="text-xs text-gray-500 truncate">{metric.label}</p>
             </div>
           </div>
         ))}

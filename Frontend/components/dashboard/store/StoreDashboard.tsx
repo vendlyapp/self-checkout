@@ -4,7 +4,7 @@ import ServiceCard from "@/components/dashboard/store/ServiceCard";
 import SystemSettingsList from "@/components/dashboard/store/SystemSettingsList";
 import ContactCard from "@/components/dashboard/store/ContactCard";
 import { SearchInput } from "@/components/ui/search-input";
-import { User, Percent, QrCode, CreditCard, Store } from "lucide-react";
+import { User, Percent, QrCode, CreditCard, Store, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 const services = [
@@ -36,33 +36,26 @@ const services = [
 
 const StoreDashboard = () => (
   <div className="w-full">
-    {/* ===== MOBILE LAYOUT ===== */}
-    <div className="block lg:hidden">
+    {/* ===== MÓVIL (< 768px) ===== */}
+    <div className="block md:hidden min-w-0">
       <div className="p-4 space-y-6">
-        {/* Header Card */}
         <StoreHeaderCard />
 
-        {/* Search Bar */}
-        <div className="w-full" >
-          <SearchInput placeholder="Einstellungen durchsuchen..." esHome={false} className="w-full h-[48px]" />
+        <div className="w-full min-w-0">
+          <SearchInput placeholder="Einstellungen durchsuchen..." esHome={false} className="w-full h-12 min-h-12" />
         </div>
 
-         {/* Mein Geschäft Card */}
-         <Link href="/store/settings" className="block">
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-lg bg-brand-100 flex items-center justify-center flex-shrink-0">
-                <Store className="w-8 h-8 text-brand-600" />
+        <Link href="/store/settings" className="block">
+          <div className="bg-card rounded-2xl p-4 shadow-sm border border-border hover:shadow-md transition-ios">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Store className="w-6 h-6 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">Mein Geschäft</h3>
-                <p className="text-sm text-gray-500">Personalisieren Sie die Informationen Ihres Geschäfts</p>
+                <h3 className="text-base font-semibold text-foreground mb-0.5">Mein Geschäft</h3>
+                <p className="text-xs text-muted-foreground leading-snug">Personalisieren Sie die Informationen Ihres Geschäfts</p>
               </div>
-              <div className="flex-shrink-0">
-                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" aria-hidden />
             </div>
           </div>
         </Link>
@@ -70,10 +63,9 @@ const StoreDashboard = () => (
         {/* Plan Card */}
         <PlanCard />
 
-        {/* Services */}
         <div>
-          <h2 className="text-base font-semibold text-gray-900 mb-3">Dienste:</h2>
-          <div className="grid grid-cols-2 gap-4">
+          <h2 className="text-sm font-semibold text-foreground mb-3">Dienste</h2>
+          <div className="grid grid-cols-2 gap-3">
             {services.map((service) => (
               <ServiceCard key={service.title} {...service} />
             ))}
@@ -88,83 +80,67 @@ const StoreDashboard = () => (
         {/* Contact Card */}
         <ContactCard />
 
-        {/* Footer */}
-        <p className="text-[12px] font-regular text-[#6E7996] text-center pt-4">
+        <p className="text-xs text-muted-foreground text-center pt-4">
           Version 1.02.2 • Self-Checkout • 29.6.2025
         </p>
       </div>
     </div>
 
-    {/* ===== DESKTOP LAYOUT ===== */}
-    <div className="hidden lg:block">
-      <div className="p-6 space-y-8">
-        {/* Header Section */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Geschäftseinstellungen</h1>
-            <p className="text-gray-600 mt-1">Verwalten Sie Ihre Geschäftseinstellungen und Services</p>
+    {/* ===== TABLET + DESKTOP (≥ 768px) ===== */}
+    <div className="hidden md:block min-w-0">
+      <div className="p-4 md:p-5 lg:p-6 xl:p-8 space-y-5 md:space-y-6 lg:space-y-8 xl:space-y-10 max-w-[1600px]">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4 lg:gap-6">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl lg:text-2xl font-bold text-foreground">Geschäftseinstellungen</h1>
+            <p className="text-muted-foreground mt-0.5 text-xs lg:text-sm">Verwalten Sie Ihre Geschäftseinstellungen und Services</p>
           </div>
-          <div className="w-full lg:w-[500px]">
-            <SearchInput placeholder="Einstellungen durchsuchen..." esHome={false} />
+          <div className="w-full md:w-[220px] lg:w-[280px] xl:w-[340px] flex-shrink-0">
+            <SearchInput placeholder="Einstellungen durchsuchen..." esHome={false} className="w-full h-10 min-h-10 lg:h-11 lg:min-h-11" />
           </div>
         </div>
 
-        {/* Mein Geschäft Card */}
         <Link href="/store/settings" className="block">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-lg bg-brand-100 flex items-center justify-center flex-shrink-0">
-                <Store className="w-10 h-10 text-brand-600" />
+          <div className="bg-card rounded-2xl p-4 shadow-sm border border-border hover:shadow-md transition-ios lg:p-5">
+            <div className="flex items-center gap-3 lg:gap-4">
+              <div className="w-12 h-12 lg:w-14 lg:h-14 xl:w-16 xl:h-16 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Store className="w-6 h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">Mein Geschäft</h3>
-                <p className="text-base text-gray-500">Personalisieren Sie die Informationen Ihres Geschäfts</p>
+                <h3 className="text-base lg:text-lg font-semibold text-foreground mb-0.5">Mein Geschäft</h3>
+                <p className="text-xs lg:text-sm text-muted-foreground leading-snug">Personalisieren Sie die Informationen Ihres Geschäfts</p>
               </div>
-              <div className="flex-shrink-0">
-                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
+              <ChevronRight className="w-5 h-5 lg:w-6 lg:h-6 text-muted-foreground flex-shrink-0" aria-hidden />
             </div>
           </div>
         </Link>
 
-        {/* Top Row: Header Card & Plan Card */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <StoreHeaderCard />
-          </div>
-          <div className="rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <PlanCard />
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 lg:gap-6">
+          <StoreHeaderCard />
+          <PlanCard />
         </div>
 
-        {/* Services Section */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Dienste</h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-card rounded-2xl p-4 shadow-sm border border-border lg:p-5">
+          <h2 className="text-base lg:text-lg font-semibold text-foreground mb-3 lg:mb-4">Dienste</h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 md:gap-3 lg:gap-4">
             {services.map((service) => (
               <ServiceCard key={service.title} {...service} />
             ))}
           </div>
         </div>
 
-        {/* System Settings */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Systemeinstellungen</h2>
+        <div className="bg-card rounded-2xl p-4 shadow-sm border border-border lg:p-5">
+          <h2 className="text-base lg:text-lg font-semibold text-foreground mb-3 lg:mb-4">Systemeinstellungen</h2>
           <SystemSettingsList />
         </div>
 
-        {/* Contact & Footer */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-
-            <ContactCard />
-          <div className="flex items-center justify-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 lg:gap-6">
+          <ContactCard />
+          <div className="bg-card rounded-2xl p-4 shadow-sm border border-border flex items-center justify-center lg:p-5">
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Systeminformationen</h3>
-              <p className="text-sm text-gray-600 mb-2">Version 1.02.2</p>
-              <p className="text-sm text-gray-600 mb-2">Self-Checkout</p>
-              <p className="text-sm text-gray-600">29.6.2025</p>
+              <h3 className="text-sm lg:text-base font-semibold text-foreground mb-1 lg:mb-1.5">Systeminformationen</h3>
+              <p className="text-[11px] lg:text-xs text-muted-foreground mb-0.5">Version 1.02.2</p>
+              <p className="text-[11px] lg:text-xs text-muted-foreground mb-0.5">Self-Checkout</p>
+              <p className="text-[11px] lg:text-xs text-muted-foreground">29.6.2025</p>
             </div>
           </div>
         </div>

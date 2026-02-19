@@ -1,6 +1,6 @@
 'use client';
 
-import { Banknote, Users, TrendingUp, Clock } from 'lucide-react';
+import { Banknote, Users } from 'lucide-react';
 import StatCard from './StatCard';
 import { useMemo } from 'react';
 import { useOrderStats } from '@/hooks/queries';
@@ -54,11 +54,11 @@ const TodayStatsCard = () => {
   if (loading) {
     return (
       <div className="w-full">
-        <div className="flex items-center justify-between mb-4 lg:mb-6">
-          <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Heute</h2>
+        <div className="flex items-center justify-between mb-4 md:mb-5 lg:mb-6">
+          <h2 className="text-lg md:text-xl font-semibold text-gray-900">Heute</h2>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-          {[1, 2, 3, 4].map((i) => (
+        <div className="grid grid-cols-2 gap-3 md:gap-4">
+          {[1, 2].map((i) => (
             <div key={i} className="h-24 bg-gray-200 animate-pulse rounded-xl" />
           ))}
         </div>
@@ -66,18 +66,17 @@ const TodayStatsCard = () => {
     );
   }
 
-  const { totalSales, totalCustomers, totalTransactions, averagePerSale, revenuePerHour } = stats;
+  const { totalSales, totalCustomers, totalTransactions } = stats;
 
   return (
     <div className="w-full">
       {/* Section Header */}
-      <div className="flex items-center justify-between mb-4 lg:mb-6">
-        <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Heute</h2>
+      <div className="flex items-center justify-between mb-4 md:mb-5 lg:mb-6">
+        <h2 className="text-lg md:text-xl font-semibold text-gray-900">Heute</h2>
       </div>
 
-      {/* Stats Grid - Responsive */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        {/* Móvil: 2 cards principales, Desktop: 4 cards en una fila */}
+      {/* Solo Verkäufe y Kunden */}
+      <div className="grid grid-cols-2 gap-3 md:gap-4">
         <StatCard
           icon={<Banknote className="w-4 h-4" />}
           label="Verkäufe"
@@ -98,32 +97,6 @@ const TodayStatsCard = () => {
           showCurrency={false}
           showCount={false}
         />
-
-        {/* Desktop: 2 cards adicionales con información complementaria */}
-        <div className="hidden lg:block">
-          <StatCard
-            icon={<TrendingUp className="w-4 h-4" />}
-            label="Durchschnitt"
-            amount={formatSwissPrice(averagePerSale)}
-            count="pro Verkauf"
-            trend={totalTransactions > 0 ? "Heute" : "N/A"}
-            showCurrency={true}
-            showCount={true}
-          />
-        </div>
-
-        <div className="hidden lg:block">
-          <StatCard
-            icon={<Clock className="w-4 h-4" />}
-            label="Umsatz/Stunde"
-            amount={formatSwissPrice(revenuePerHour)}
-            count="pro Stunde"
-            trend="Heute"
-            isDark={true}
-            showCurrency={true}
-            showCount={true}
-          />
-        </div>
       </div>
     </div>
   );

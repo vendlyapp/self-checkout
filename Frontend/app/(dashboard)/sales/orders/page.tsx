@@ -16,7 +16,7 @@ import { OrdersProvider, useOrdersContext } from '@/components/dashboard/orders/
 function SalesOrdersPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isMobile } = useResponsive();
+  const { isMobile, isTablet, isDesktop } = useResponsive();
   const cancelOrder = useCancelOrder();
   
   // Obtener filtro de status desde query params
@@ -320,49 +320,50 @@ function SalesOrdersPageContent() {
         </div>
       )}
 
-      {!isMobile && (
-        <div className="p-6 max-w-6xl mx-auto">
-          {/* Header con contexto */}
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Bestellungen verwalten</h1>
-            <p className="text-gray-600 mb-4">
-              Alle Bestellungen anzeigen, Details einsehen und bei Bedarf stornieren
-            </p>
-          </div>
-
-          {/* Filtros por Status */}
-          <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-            <div className="flex items-center gap-2 mb-3">
-              <Filter className="w-4 h-4 text-gray-400" />
-              <span className="text-sm font-medium text-gray-700">Status filtern:</span>
+      {/* Tablet: lista en cards + filtros compactos */}
+      {isTablet && (
+        <div className="p-4 md:p-6 lg:p-8 max-w-4xl mx-auto min-w-0">
+          <div className="flex flex-col gap-4 mb-6">
+            <div className="min-w-0">
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">Bestellungen verwalten</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                {statusFilter === 'cancelled'
+                  ? 'Stornierte Bestellungen'
+                  : statusFilter === 'completed'
+                  ? 'Abgeschlossene Bestellungen'
+                  : 'Alle Bestellungen anzeigen'}
+              </p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            {/* Filtros en una fila */}
+            <div className="flex flex-wrap items-center gap-2">
+              <Filter className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden />
+              <span className="text-xs font-medium text-muted-foreground shrink-0">Status:</span>
               <button
                 onClick={() => router.push('/sales/orders')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-2 rounded-xl text-sm font-medium transition-ios ${
                   !statusFilter
-                    ? 'bg-brand-500 text-white shadow-sm hover:bg-brand-600'
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'bg-card text-muted-foreground hover:bg-muted border border-border'
                 }`}
               >
                 Alle
               </button>
               <button
                 onClick={() => router.push('/sales/orders?status=completed')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-2 rounded-xl text-sm font-medium transition-ios ${
                   statusFilter === 'completed'
-                    ? 'bg-green-500 text-white shadow-sm hover:bg-green-600'
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'bg-card text-muted-foreground hover:bg-muted border border-border'
                 }`}
               >
                 Abgeschlossen
               </button>
               <button
                 onClick={() => router.push('/sales/orders?status=cancelled')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-2 rounded-xl text-sm font-medium transition-ios ${
                   statusFilter === 'cancelled'
-                    ? 'bg-red-500 text-white shadow-sm hover:bg-red-600'
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                    ? 'bg-red-600 text-white shadow-sm'
+                    : 'bg-card text-muted-foreground hover:bg-muted border border-border'
                 }`}
               >
                 Storniert
@@ -370,11 +371,10 @@ function SalesOrdersPageContent() {
             </div>
           </div>
 
-          {/* Orders Table */}
           {filteredOrders.length === 0 ? (
-            <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-              <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-600 text-lg font-medium">
+            <div className="bg-card rounded-2xl border border-border p-10 md:p-12 text-center">
+              <ShoppingCart className="w-14 h-14 text-muted-foreground/50 mx-auto mb-4" aria-hidden />
+              <p className="text-muted-foreground font-medium">
                 {statusFilter === 'cancelled'
                   ? 'Noch keine stornierten Bestellungen'
                   : statusFilter === 'completed'
@@ -383,75 +383,194 @@ function SalesOrdersPageContent() {
               </p>
             </div>
           ) : (
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="space-y-3">
+              {filteredOrders.map((order) => {
+                const statusConfig = getStatusConfig(order.status);
+                return (
+                  <div
+                    key={order.id}
+                    className="bg-card rounded-2xl border border-border overflow-hidden hover:shadow-md hover:border-border/80 transition-ios"
+                  >
+                    <Link
+                      href={`/sales/orders/${order.id}`}
+                      className="flex items-center gap-3 md:gap-4 p-4 md:p-5 tap-highlight-transparent"
+                    >
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${statusConfig.bgColor}`}>
+                        <span className={statusConfig.iconColor}>{statusConfig.icon}</span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-mono text-muted-foreground">#{order.id.slice(-8).toUpperCase()}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusConfig.color}`}>
+                            {statusConfig.label}
+                          </span>
+                        </div>
+                        <div className="text-sm text-foreground truncate mt-0.5">{order.userName || 'Gast'}</div>
+                      </div>
+                      <div className="text-sm text-muted-foreground shrink-0 hidden sm:block">
+                        {formatDate(order.createdAt)}
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-sm font-semibold text-foreground">
+                          {formatSwissPriceWithCHF(order.total)}
+                        </span>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" aria-hidden />
+                    </Link>
+                    {order.status !== 'cancelled' && (
+                      <div className="px-4 pb-3 pt-0 border-t border-border">
+                        <button
+                          type="button"
+                          onClick={(e) => handleCancelOrder(order.id, e)}
+                          className="w-full flex items-center justify-center gap-2 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-ios"
+                          aria-label="Bestellung stornieren"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Stornieren
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Desktop: tabla + filtros mejorados */}
+      {isDesktop && (
+        <div className="p-4 md:p-6 lg:p-8 max-w-6xl mx-auto min-w-0">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+            <div className="min-w-0">
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">Bestellungen verwalten</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Alle Bestellungen anzeigen, Details einsehen und bei Bedarf stornieren
+              </p>
+            </div>
+            {/* Filtros por status */}
+            <div className="flex flex-wrap items-center gap-2">
+              <Filter className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden />
+              <span className="text-xs font-medium text-muted-foreground shrink-0 sr-only lg:not-sr-only">Status:</span>
+              <button
+                onClick={() => router.push('/sales/orders')}
+                className={`px-3 py-2 rounded-xl text-sm font-medium transition-ios ${
+                  !statusFilter
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'bg-card text-muted-foreground hover:bg-muted border border-border'
+                }`}
+              >
+                Alle
+              </button>
+              <button
+                onClick={() => router.push('/sales/orders?status=completed')}
+                className={`px-3 py-2 rounded-xl text-sm font-medium transition-ios ${
+                  statusFilter === 'completed'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'bg-card text-muted-foreground hover:bg-muted border border-border'
+                }`}
+              >
+                Abgeschlossen
+              </button>
+              <button
+                onClick={() => router.push('/sales/orders?status=cancelled')}
+                className={`px-3 py-2 rounded-xl text-sm font-medium transition-ios ${
+                  statusFilter === 'cancelled'
+                    ? 'bg-red-600 text-white shadow-sm'
+                    : 'bg-card text-muted-foreground hover:bg-muted border border-border'
+                }`}
+              >
+                Storniert
+              </button>
+            </div>
+          </div>
+
+          {filteredOrders.length === 0 ? (
+            <div className="bg-card rounded-2xl border border-border p-12 text-center">
+              <ShoppingCart className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" aria-hidden />
+              <p className="text-muted-foreground font-medium">
+                {statusFilter === 'cancelled'
+                  ? 'Noch keine stornierten Bestellungen'
+                  : statusFilter === 'completed'
+                  ? 'Noch keine abgeschlossenen Bestellungen'
+                  : 'Noch keine Bestellungen'}
+              </p>
+            </div>
+          ) : (
+            <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
               <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                <table className="w-full min-w-[640px]" role="grid" aria-label="Bestellungen">
+                  <thead className="bg-muted/50 border-b border-border sticky top-0 z-10">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      <th className="px-4 md:px-6 py-3 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Bestellung
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      <th className="px-4 md:px-6 py-3 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Datum
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      <th className="px-4 md:px-6 py-3 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Kunde
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      <th className="px-4 md:px-6 py-3 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Betrag
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      <th className="px-4 md:px-6 py-3 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      <th className="px-4 md:px-6 py-3 md:py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Aktionen
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-border">
                     {filteredOrders.map((order) => {
                       const statusConfig = getStatusConfig(order.status);
                       return (
                         <tr
                           key={order.id}
-                          className="hover:bg-gray-50 transition-colors cursor-pointer"
+                          className="hover:bg-muted/30 transition-colors cursor-pointer"
                           onClick={() => router.push(`/sales/orders/${order.id}`)}
                         >
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 md:px-6 py-3 md:py-4">
                             <div className="flex items-center gap-2">
-                              <ShoppingCart className="w-5 h-5 text-gray-400" />
-                              <span className="text-sm font-mono text-gray-900">
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${statusConfig.bgColor}`}>
+                                <span className={statusConfig.iconColor}>{statusConfig.icon}</span>
+                              </div>
+                              <span className="text-sm font-mono text-foreground">
                                 {order.id.slice(-8).toUpperCase()}
                               </span>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          <td className="px-4 md:px-6 py-3 md:py-4 text-sm text-muted-foreground whitespace-nowrap">
                             {formatDate(order.createdAt)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{order.userName || 'Gast'}</div>
+                          <td className="px-4 md:px-6 py-3 md:py-4">
+                            <div className="text-sm text-foreground">{order.userName || 'Gast'}</div>
                             {order.userEmail && (
-                              <div className="text-xs text-gray-500">{order.userEmail}</div>
+                              <div className="text-xs text-muted-foreground truncate max-w-[180px]">
+                                {order.userEmail}
+                              </div>
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm font-semibold text-gray-900">
+                          <td className="px-4 md:px-6 py-3 md:py-4">
+                            <span className="text-sm font-semibold text-foreground">
                               {formatSwissPriceWithCHF(order.total)}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusConfig.color}`}>
+                          <td className="px-4 md:px-6 py-3 md:py-4">
+                            <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.color}`}>
                               {statusConfig.label}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center gap-2">
+                          <td className="px-4 md:px-6 py-3 md:py-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
                               <Link
                                 href={`/sales/orders/${order.id}`}
-                                className="text-brand-600 hover:text-brand-700 font-medium text-sm px-3 py-1.5 rounded-lg hover:bg-brand-50 transition-colors"
+                                className="text-primary hover:text-primary/90 font-medium text-sm transition-ios inline-flex items-center gap-1"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                Details anzeigen
+                                Details
+                                <ChevronRight className="w-4 h-4" />
                               </Link>
                               {order.status !== 'cancelled' && (
                                 <button
@@ -461,11 +580,11 @@ function SalesOrdersPageContent() {
                                     e.stopPropagation();
                                     handleCancelOrder(order.id, e);
                                   }}
-                                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
-                                  title="Bestellung stornieren"
+                                  className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-ios"
+                                  aria-label="Stornieren"
                                 >
                                   <Trash2 className="w-4 h-4" />
-                                  <span>Stornieren</span>
+                                  Stornieren
                                 </button>
                               )}
                             </div>

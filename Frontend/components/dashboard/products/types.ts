@@ -24,6 +24,8 @@ export interface NavigationItemProps {
   badge?: string;
   badgeVariant?: 'success' | 'default';
   onClick?: () => void;
+  /** En desktop dentro de una card: menos padding y fondo suave para no duplicar card */
+  compact?: boolean;
 }
 
 export interface ChartTooltipProps {

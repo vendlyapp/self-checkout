@@ -131,8 +131,8 @@ const GreetingSection = ({
 
   return (
     <section className="mb-6 mt-4">
-      {/* Mobile Layout */}
-      <div className="block lg:hidden">
+      {/* Solo móvil (< 768px) */}
+      <div className="block md:hidden">
         {/* Top Row: Greeting + Store Toggle */}
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1 flex items-center">
@@ -207,15 +207,15 @@ const GreetingSection = ({
         </div>
       </div>
 
-      {/* Desktop Layout - Más compacto y organizado */}
-      <div className="hidden lg:block">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-gray-900">
+      {/* Tablet + Desktop (≥ 768px) - mismo layout organizado */}
+      <div className="hidden md:block">
+        <div className="flex flex-wrap items-center justify-between gap-3 md:gap-4">
+          <div className="flex items-center gap-3 md:gap-4 min-w-0">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900 truncate">
               Hoi {getUserName()}
-              <span className="ml-2">👋</span>
+              <span className="ml-1 md:ml-2">👋</span>
             </h1>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600 flex-shrink-0">
               <Sun className="w-4 h-4 text-yellow-500" />
               <span>{weather}</span>
               <span>•</span>
@@ -223,15 +223,15 @@ const GreetingSection = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="flex items-center gap-3 md:gap-6 flex-shrink-0">
+            <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600">
               <Clock className="w-4 h-4" />
               <span>{currentTime}</span>
             </div>
 
-            {/* Store Status Toggle - más compacto en desktop */}
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-600">Geschäft:</span>
+            {/* Store Status Toggle */}
+            <div className="flex items-center gap-2 md:gap-3">
+              <span className="text-xs md:text-sm text-gray-600">Geschäft:</span>
               <button
                 onClick={async () => {
                   await toggleStore();

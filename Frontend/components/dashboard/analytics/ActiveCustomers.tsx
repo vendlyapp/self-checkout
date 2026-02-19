@@ -49,10 +49,10 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
   } = data;
 
   return (
-    <div className="bg-card border border-border/50 transition-ios hover:shadow-md w-full max-w-md lg:max-w-none rounded-xl">
-      <div className="p-5 lg:p-6">
-        <div className="flex justify-between items-center mb-4 lg:mb-6">
-          <h3 className="text-lg lg:text-xl font-semibold text-foreground">
+    <div className="bg-card border border-border rounded-2xl shadow-sm transition-ios hover:shadow-md w-full min-w-0">
+      <div className="p-4 lg:p-6">
+        <div className="flex justify-between items-center mb-3 lg:mb-5">
+          <h3 className="text-base lg:text-xl font-semibold text-foreground">
             Jetzt im Shop:
           </h3>
           <button
@@ -63,7 +63,7 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
           </button>
         </div>
 
-        <div className="space-y-4 lg:space-y-6">
+        <div className="space-y-3 lg:space-y-5">
           {/* Avatare und Zähler - Mejorado para desktop */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 lg:gap-4">

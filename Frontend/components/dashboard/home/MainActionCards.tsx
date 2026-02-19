@@ -38,7 +38,7 @@ const MainActionCards = () => {
 
   const actions = [
     {
-      emoji:<Image src="/Receipt.svg" alt="Receipt" width={60} height={60} className="w-[60px] h-[60px] lg:w-[40px] lg:h-[40px]" />,
+      emoji:<Image src="/Receipt.svg" alt="Receipt" width={60} height={60} className="w-[60px] h-[60px] md:w-10 md:h-10 lg:w-12 lg:h-12" />,
       title: 'Kassieren',
       subtitle: 'Verkauf starten',
       isPrimary: true,
@@ -46,7 +46,7 @@ const MainActionCards = () => {
       link: '/charge',
     },
     {
-      emoji: <Image src="/Package.svg" alt="Package" width={60} height={60} className="w-[60px] h-[60px] lg:w-[40px] lg:h-[40px]" />,
+      emoji: <Image src="/Package.svg" alt="Package" width={60} height={60} className="w-[60px] h-[60px] md:w-10 md:h-10 lg:w-12 lg:h-12" />,
       title: 'Produkte',
       subtitle: `${productCount} Artikel`,
       onClick: () => router.push('/products_list'),
@@ -56,12 +56,12 @@ const MainActionCards = () => {
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-3 lg:gap-4 text-xl h-[200px]">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 min-h-[160px] md:min-h-[180px] lg:min-h-[200px]">
         {actions.map((action, idx) => (
           <ActionCard
             key={action.title}
             {...action}
-            className={`${pressedIndex === idx ? 'scale-95 transition-ios-fast' : 'transition-ios-fast'} lg:aspect-[2/1] lg:h-[200px] lg:justify-center lg:items-center lg:flex lg:p-12 lg:text-2xl cursor-pointer`}
+            className={`${pressedIndex === idx ? 'scale-95 transition-ios-fast' : 'transition-ios-fast'} md:aspect-[2/1] md:min-h-[160px] lg:min-h-[180px] cursor-pointer`}
             onTouchStart={() => setPressedIndex(idx)}
             onTouchEnd={() => setPressedIndex(null)}
             onMouseDown={() => setPressedIndex(idx)}

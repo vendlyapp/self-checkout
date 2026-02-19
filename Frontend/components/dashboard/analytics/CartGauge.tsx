@@ -75,9 +75,9 @@ const CartGauge: React.FC<CartGaugeProps> = ({
   const currentPeriodLabel = periodOptions.find(option => option.value === period)?.label || 'Heute';
 
   return (
-    <Card className="bg-card rounded-2xl border border-border/50 transition-ios hover:shadow-md">
-      <CardContent className="p-5 lg:p-6">
-        <div className="flex justify-between items-center mb-4 lg:mb-6">
+    <Card className="bg-card rounded-2xl border border-border shadow-sm transition-ios hover:shadow-md">
+      <CardContent className="p-4 lg:p-6">
+        <div className="flex justify-between items-center mb-3 lg:mb-6">
           <h3 className="text-lg lg:text-xl font-semibold text-foreground">Ø Warenkorb</h3>
 
           {/* Period Selector */}
@@ -109,15 +109,15 @@ const CartGauge: React.FC<CartGaugeProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-6 lg:gap-8">
-          {/* Radial Gauge Chart - Mejorado para desktop */}
-          <div className="relative w-32 h-32 lg:w-40 lg:h-40">
+        <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-8 min-w-0">
+          {/* Radial Gauge - tamaño fijo para que no se deforme en tablet/desktop */}
+          <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 flex-shrink-0 mx-auto md:mx-0">
             <ResponsiveContainer width="100%" height="100%">
               <RadialBarChart
                 cx="50%"
                 cy="50%"
-                innerRadius="60%"
-                outerRadius="90%"
+                innerRadius="58%"
+                outerRadius="88%"
                 data={gaugeData}
                 startAngle={225}
                 endAngle={-45}
@@ -130,60 +130,53 @@ const CartGauge: React.FC<CartGaugeProps> = ({
               </RadialBarChart>
             </ResponsiveContainer>
 
-            {/* Min/Max Labels - Mejorados para desktop */}
-            <div className="absolute bottom-2 left-1 text-xs lg:text-sm text-muted-foreground">
+            {/* Min/Max solo en móvil/tablet compacto; en desktop van abajo en la sección de info */}
+            <div className="md:hidden absolute bottom-0 left-0 text-[10px] text-muted-foreground">
               {formatSwissPrice(data.minValue)}
             </div>
-            <div className="absolute bottom-2 right-1 text-xs lg:text-sm text-muted-foreground">
+            <div className="md:hidden absolute bottom-0 right-0 text-[10px] text-muted-foreground">
               {formatSwissPrice(data.maxValue)}
             </div>
 
-            {/* Central Value Display - Mejorado para desktop */}
-            <div className="absolute inset-0 flex items-center justify-center">
+            {/* Valor central */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center">
-                <div className="text-lg lg:text-2xl font-bold text-foreground">
+                <div className="text-base sm:text-lg md:text-xl font-bold text-foreground">
                   {formatSwissPrice(data.averageValue)}
                 </div>
-                <div className="text-xs lg:text-sm text-muted-foreground -mt-1">
+                <div className="text-[10px] sm:text-xs text-muted-foreground -mt-0.5">
                   CHF
                 </div>
               </div>
             </div>
-
-            {/* Indicador de porcentaje en desktop */}
-            <div className="hidden lg:block absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs font-medium text-emerald-500 bg-emerald-50 px-2 py-1 rounded-full">
-              {gaugePercentage}% des Maximums
-            </div>
           </div>
 
-          {/* Information Section - Mejorado para desktop */}
-          <div className="flex-1 space-y-3 lg:space-y-4">
+          {/* Info derecha - con min-w-0 para truncate en tablet/desktop */}
+          <div className="flex-1 min-w-0 space-y-2 md:space-y-3">
             <div>
-              <p className="text-sm lg:text-base text-muted-foreground mb-1 lg:mb-2">Ø Einkaufswert</p>
-              <p className="text-2xl lg:text-3xl font-bold text-emerald-500">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-0.5">Ø Einkaufswert</p>
+              <p className="text-xl sm:text-2xl md:text-2xl font-bold text-emerald-500 truncate">
                 {formatSwissPriceWithCHF(data.averageValue)}
               </p>
             </div>
 
-            {/* Growth Indicator - Mejorado para desktop */}
-            <div className="flex items-center gap-1 lg:gap-2 text-sm lg:text-base">
+            <div className="flex items-center gap-1.5 text-xs sm:text-sm flex-wrap">
               {isPositiveGrowth ? (
-                <TrendingUp className="w-4 h-4 lg:w-5 lg:h-5 text-emerald-500" />
+                <TrendingUp className="w-4 h-4 text-emerald-500 shrink-0" />
               ) : (
-                <TrendingDown className="w-4 h-4 lg:w-5 lg:h-5 text-red-500" />
+                <TrendingDown className="w-4 h-4 text-red-500 shrink-0" />
               )}
-              <span className={`font-medium ${isPositiveGrowth ? 'text-emerald-500' : 'text-red-500'}`}>
+              <span className={`font-medium shrink-0 ${isPositiveGrowth ? 'text-emerald-500' : 'text-red-500'}`}>
                 {isPositiveGrowth ? '+' : ''}{data.percentageChange}%
               </span>
-              <span className="text-muted-foreground">vs {data.comparisonPeriod}</span>
+              <span className="text-muted-foreground truncate">vs {data.comparisonPeriod}</span>
             </div>
 
-            {/* Información adicional para desktop */}
-            <div className="hidden lg:block pt-2 border-t border-border/50">
-              <div className="flex justify-between items-center text-xs text-muted-foreground">
-                <span>Minimum: {formatSwissPrice(data.minValue)}</span>
-                <span>Maximum: {formatSwissPrice(data.maxValue)}</span>
-              </div>
+            {/* Min/Max en desktop; porcentaje integrado */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-2 border-t border-border/50 text-xs text-muted-foreground">
+              <span className="truncate">Min: {formatSwissPrice(data.minValue)}</span>
+              <span className="truncate">Max: {formatSwissPrice(data.maxValue)}</span>
+              <span className="text-emerald-600 font-medium">{gaugePercentage}% des Max.</span>
             </div>
           </div>
         </div>

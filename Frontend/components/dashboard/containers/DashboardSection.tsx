@@ -51,8 +51,8 @@ const DashboardSection = ({
           {title && (
             <h2 className={clsx(
               'font-semibold text-gray-900',
-              variant === 'compact' ? 'text-lg' : 'text-xl',
-              variant === 'spacious' ? 'text-2xl' : ''
+              variant === 'compact' ? 'text-base md:text-lg' : 'text-lg md:text-xl',
+              variant === 'spacious' ? 'text-xl md:text-2xl' : ''
             )}>
               {title}
             </h2>
@@ -60,7 +60,7 @@ const DashboardSection = ({
           {subtitle && (
             <p className={clsx(
               'text-gray-600',
-              variant === 'compact' ? 'text-sm' : 'text-base'
+              variant === 'compact' ? 'text-xs md:text-sm' : 'text-sm md:text-base'
             )}>
               {subtitle}
             </p>

@@ -102,8 +102,8 @@ export default function Slider() {
 
   return (
     <div className="w-full">
-      {/* Mobile/Tablet: Slider horizontal */}
-      <div className="block lg:hidden">
+      {/* Solo móvil: Slider horizontal */}
+      <div className="block md:hidden">
         <Swiper
           modules={[Autoplay, FreeMode]}
           spaceBetween={4}
@@ -171,14 +171,14 @@ export default function Slider() {
         </Swiper>
       </div>
 
-      {/* Desktop: Grid de cards modernas */}
-      <div className="hidden lg:block">
-        <div className="grid grid-cols-2 gap-3">
+      {/* Tablet + Desktop: Grid de cards */}
+      <div className="hidden md:block">
+        <div className="grid grid-cols-2 gap-3 md:gap-4">
           {sliderData.map((item, index) => (
             <div
               key={index}
               onClick={() => handleItemClick(item.route)}
-              className="group bg-white rounded-xl p-4 transition-ios cursor-pointer hover:shadow-md hover:scale-[1.02] active:scale-95 border border-gray-100 hover:border-gray-200"
+              className="group bg-white rounded-xl p-3 md:p-4 transition-ios cursor-pointer hover:shadow-md hover:scale-[1.02] active:scale-95 border border-gray-100 hover:border-gray-200"
               role="button"
               tabIndex={0}
               aria-label={`Navigiere zu ${item.text}`}

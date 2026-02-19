@@ -16,20 +16,18 @@ const PlanCard = () => {
   };
 
   return (
-    <div className="flex items-center bg-background-cream px-4 py-4 lg:px-6 lg:py-5 w-full h-full shadow-sm border border-gray-200 rounded-2xl">
-      <div className="flex items-center gap-3 lg:gap-4 flex-1">
-        <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-white flex items-center justify-center">
-          <Crown className="w-6 h-6 lg:w-7 lg:h-7" />
-        </div>
-        <div className="flex-1">
-          <div className="text-xs lg:text-sm text-gray-500">Aktueller Plan:</div>
-          <div className="font-semibold text-gray-900 leading-tight lg:text-lg">Premium</div>
-          <div className="text-xs lg:text-sm text-gray-400 mt-0.5 lg:mt-1">Ablauf: 22.11.2026</div>
-        </div>
+    <div className="flex items-center gap-3 bg-transparent md:bg-card px-4 py-4 lg:px-5 lg:py-5 w-full h-full min-h-[96px] lg:min-h-[112px] border border-border rounded-2xl md:shadow-sm">
+      <div className="w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <Crown className="w-5 h-5 lg:w-6 lg:h-6 text-primary" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[11px] lg:text-xs text-muted-foreground uppercase tracking-wide">Aktueller Plan</div>
+        <div className="font-semibold text-foreground leading-snug text-sm lg:text-base mt-0.5">Premium</div>
+        <div className="text-[11px] lg:text-xs text-muted-foreground mt-0.5">Ablauf: 22.11.2026</div>
       </div>
       <button
         onClick={handleUpgrade}
-        className="ml-4 px-4 py-2 lg:px-5 lg:py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-sm lg:text-base font-semibold rounded-xl shadow hover:shadow-md transition-ios focus:outline-none focus:ring-2 focus:ring-brand-500"
+        className="px-3 py-2 lg:px-4 lg:py-2 bg-primary text-primary-foreground text-xs lg:text-sm font-semibold rounded-xl hover:bg-primary/90 transition-ios flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
         tabIndex={0}
         aria-label="Upgrade Plan"
         type="button"

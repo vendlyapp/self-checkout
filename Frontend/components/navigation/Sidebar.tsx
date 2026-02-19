@@ -132,15 +132,14 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
   if (!mounted) {
     return (
       <aside className={clsx(
-        "bg-white border-r border-gray-200 transition-ios-slow",
-        isMobile ? "fixed inset-y-0 left-0 z-50 w-64" : "relative",
-        isCollapsed && !isMobile ? "w-16" : "w-64"
+        "bg-white border-r border-gray-200 transition-ios-slow flex-shrink-0",
+        isMobile ? "fixed inset-y-0 left-0 z-50 w-64" : "relative w-64 lg:w-72 xl:w-80"
       )}>
-        <div className="h-full flex flex-col">
-          <div className="p-4 border-b border-gray-200">
+        <div className="h-full flex flex-col min-h-0">
+          <div className="p-4 border-b border-gray-200 shrink-0">
             <div className="h-8 bg-gray-200 rounded animate-pulse" />
           </div>
-          <nav className="flex-1 p-4 space-y-2">
+          <nav className="flex-1 min-h-0 p-4 space-y-2">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="h-12 bg-gray-200 rounded animate-pulse" />
             ))}
@@ -156,36 +155,36 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
       <LogoutModal isOpen={isLoggingOut} />
       
       <aside className={clsx(
-        "bg-white border-r border-gray-200 transition-ios-slow flex flex-col",
-        isMobile ? "fixed inset-y-0 left-0 z-50 w-64" : "relative w-80"
+        "bg-white border-r border-gray-200 transition-ios-slow flex flex-col flex-shrink-0 min-h-0",
+        isMobile ? "fixed inset-y-0 left-0 z-50 w-64" : "relative w-64 lg:w-72 xl:w-80"
       )}>
-      {/* Header del Sidebar */}
-      <div className="p-6 border-b h-[80px] border-gray-200">
-        <Link href="/dashboard" className="flex items-center gap-3">
+      {/* Header del Sidebar - centrado y sin choque con la línea divisora */}
+      <div className="flex items-center min-h-[72px] py-4 px-5 border-b border-gray-200 shrink-0">
+        <Link href="/dashboard" className="flex items-center gap-3 w-full min-w-0">
           <Image
             src="/logo.svg"
             alt="Self-Checkout Logo"
-            width={48}
-            height={48}
+            width={40}
+            height={40}
             priority
-            className="h-[48px] w-auto"
+            className="h-10 w-auto flex-shrink-0"
           />
-          <div>
-            <span className="font-bold text-gray-900 text-lg">Self-Checkout</span>
-            <p className="text-sm text-gray-500">Admin Panel</p>
+          <div className="min-w-0">
+            <span className="font-bold text-gray-900 text-base block truncate">Self-Checkout</span>
+            <p className="text-xs text-gray-500 truncate">Admin Panel</p>
           </div>
         </Link>
       </div>
 
       {/* Cart Summary - Solo en desktop/tablet y en la ruta /charge */}
       {pathname === '/charge' && (
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-4 sm:px-5 lg:px-6 py-4 border-b border-gray-200 flex-shrink-0">
           <CartSummary isMobile={false} />
         </div>
       )}
 
-      {/* Navegación */}
-      <nav className="flex-1 p-6 space-y-3">
+      {/* Navegación - overflow-y-auto para que en viewports cortos o zoom no se salga */}
+      <nav className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 sm:p-5 lg:p-6 space-y-3">
         {/* Navegación principal */}
         {processedItems.map((item) => {
           const Icon = item.icon;
@@ -315,8 +314,8 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
         </div>
       </nav>
 
-      {/* Footer del Sidebar */}
-      <div className="p-6 border-t border-gray-200">
+      {/* Footer del Sidebar - shrink-0 para que no se comprima al hacer zoom */}
+      <div className="p-4 sm:p-5 lg:p-6 border-t border-gray-200 flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-brand-500 rounded-full flex items-center justify-center">
             <User className="w-5 h-5 text-white" />

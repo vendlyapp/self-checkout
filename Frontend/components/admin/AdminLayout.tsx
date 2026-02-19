@@ -200,9 +200,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const headerNavTitleForStoreSales = getHeaderNavTitleForStoreSales();
   const shouldShowStoreSalesHeaderNav = isMobile && headerNavTitleForStoreSales !== null;
   
-  // Rutas que ocultan el navbar/sidebar
-  const isStoreSubRoute = isDiscountsRoute || isPaymentMethodsRoute || isInvoiceRoute || 
-                          isSettingsRoute || isCustomersRoute || isProfileRoute || 
+  // Rutas que ocultan el navbar/sidebar (discounts muestra sidebar como /categories)
+  const isStoreSubRoute = isPaymentMethodsRoute || isInvoiceRoute ||
+                          isSettingsRoute || isCustomersRoute || isProfileRoute ||
                           isPrinterRoute || isBackupsRoute || isNotificationsRoute || isHelpRoute;
   
   // Determinar si estamos en modo edición (edit o view)
@@ -399,8 +399,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <LoadingProductsModal isOpen={isProductsLoadingModalOpen} />
       )}
       
-      <div className="flex h-responsive bg-background-cream">
-        {/* Sidebar */}
+      <div className="flex h-responsive w-full min-w-0 overflow-x-hidden bg-background-cream">
+        {/* Sidebar - ancho responsivo según viewport para que no se salga */}
         {shouldShowSidebar && (
           <Sidebar
             isCollapsed={isCollapsed}
@@ -417,18 +417,19 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         />
       )}
 
-      {/* Contenido principal */}
+      {/* Contenido principal - min-w-0 para que pueda encogerse y no desbordar */}
       <div className={clsx(
-        "flex flex-col flex-1 overflow-hidden transition-ios-slow",
+        "flex flex-col flex-1 min-w-0 overflow-hidden transition-ios-slow",
         isMobile ? "ml-0" : ""
       )}>
-        {/* Header - Siempre visible (incluye logo) */}
+        {/* Header: oculto en tablet/desktop cuando el sidebar está visible para no duplicar logo */}
         <ResponsiveHeader
           onMenuToggle={handleSidebarToggle}
           showMenuButton={isMobile && !isStoreSubRoute}
           isMobile={isMobile}
           isTablet={isTablet}
           isDesktop={isDesktop}
+          sidebarVisible={shouldShowSidebar}
         />
 
         {/* Header de charge con filtros - Solo en móvil y EXACTAMENTE en /charge */}
@@ -524,7 +525,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         >
           <div className={clsx(
             "w-full min-h-full",
-            isMobile ? "max-w-[430px] mx-auto bg-background-cream mobile-content-padding" : "bg-background-cream"
+            isMobile ? "max-w-[430px] mx-auto bg-background-cream mobile-content-padding" : "bg-background-cream px-4 md:px-6 lg:px-8"
           )}>
             {children}
           </div>

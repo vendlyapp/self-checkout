@@ -152,16 +152,16 @@ export default function DesktopForm(props: SharedFormProps) {
       {/* Renderizar modales fuera del contenedor usando Portal en el contenedor global */}
       {modalContainer && showSuccessModal && createPortal(successModalContent, modalContainer)}
 
-      <div className="max-w-6xl mx-auto p-8">
-        {/* Form Content - Desktop Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="w-full max-w-full mx-auto p-0 md:p-0 min-w-0">
+        {/* Form Content — 1 col 820/1024, 2 cols desde xl (1280) */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
         {/* Left Column - Images and Basic Info */}
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-5 lg:space-y-6">
           {/* Produktbilder */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Produktbilder</h3>
-              <div className="text-gray-500 text-sm font-medium">
+          <div className="bg-white rounded-xl p-4 md:p-5 lg:p-6 shadow-sm border border-gray-200">
+            <div className="flex justify-between items-center mb-3 lg:mb-4">
+              <h3 className="text-base lg:text-lg font-semibold text-gray-900">Produktbilder</h3>
+              <div className="text-gray-500 text-xs lg:text-sm font-medium">
                 {productImages.length}/3
               </div>
             </div>
@@ -244,8 +244,8 @@ export default function DesktopForm(props: SharedFormProps) {
           </div>
 
           {/* Grunddaten */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Grunddaten</h3>
+          <div className="bg-white rounded-xl p-4 md:p-5 lg:p-6 shadow-sm border border-gray-200">
+            <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-3 lg:mb-4">Grunddaten</h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -316,11 +316,11 @@ export default function DesktopForm(props: SharedFormProps) {
         </div>
 
         {/* Right Column - Pricing and Settings */}
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-5 lg:space-y-6">
           {/* Preis */}
           {!hasVariants && (
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Preis</h3>
+            <div className="bg-white rounded-xl p-4 md:p-5 lg:p-6 shadow-sm border border-gray-200">
+              <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-3 lg:mb-4">Preis</h3>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Preis <span className="text-red-500">*</span>
@@ -354,8 +354,8 @@ export default function DesktopForm(props: SharedFormProps) {
           )}
 
           {/* Aktion Toggle */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-white rounded-xl p-4 md:p-5 lg:p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-3 lg:mb-4">
               <div className="flex items-center space-x-3">
                 <Percent className="w-6 h-6 text-gray-600" />
                 <div>
@@ -444,8 +444,8 @@ export default function DesktopForm(props: SharedFormProps) {
           </div>
 
           {/* Varianten Toggle */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-white rounded-xl p-4 md:p-5 lg:p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-3 lg:mb-4">
               <div className="flex items-center space-x-3">
                 <Package className="w-6 h-6 text-gray-600" />
                 <div>
@@ -565,7 +565,7 @@ export default function DesktopForm(props: SharedFormProps) {
 
 
           {/* Status and VAT */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="bg-white rounded-xl p-4 md:p-5 lg:p-6 shadow-sm border border-gray-200">
             <div className="space-y-4">
               {/* Status Toggle */}
               <div className="flex items-center justify-between">
@@ -623,7 +623,7 @@ export default function DesktopForm(props: SharedFormProps) {
           </div>
 
           {/* Save Button - Desktop */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="bg-white rounded-xl p-4 md:p-5 lg:p-6 shadow-sm border border-gray-200">
             <button
               onClick={handleSave}
               disabled={false}
@@ -690,11 +690,11 @@ function ProductAdditionalInfo({ product }: { product: {
     <div className="space-y-6 mt-6">
       {/* QR Code */}
       {product.qrCode && (
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-white rounded-xl p-4 md:p-5 lg:p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between mb-3 lg:mb-4">
             <div className="flex items-center gap-2">
               <QrCode className="w-6 h-6 text-brand-500" />
-              <h3 className="text-lg font-semibold text-gray-900">Código QR</h3>
+              <h3 className="text-base lg:text-lg font-semibold text-gray-900">Código QR</h3>
             </div>
             <button
               onClick={handleDownloadQR}
@@ -704,7 +704,7 @@ function ProductAdditionalInfo({ product }: { product: {
               Descargar
             </button>
           </div>
-          <div className="flex justify-center bg-gray-50 rounded-xl p-6">
+          <div className="flex justify-center bg-gray-50 rounded-xl p-4 md:p-5 lg:p-6">
             <div className="text-center">
               <img 
                 src={product.qrCode} 
@@ -721,11 +721,11 @@ function ProductAdditionalInfo({ product }: { product: {
 
       {/* Barcode */}
       {product.barcodeImage && (
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-white rounded-xl p-4 md:p-5 lg:p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between mb-3 lg:mb-4">
             <div className="flex items-center gap-2">
               <ScanLine className="w-6 h-6 text-brand-500" />
-              <h3 className="text-lg font-semibold text-gray-900">Código de Barras</h3>
+              <h3 className="text-base lg:text-lg font-semibold text-gray-900">Código de Barras</h3>
             </div>
             <button
               onClick={handleDownloadBarcode}
@@ -735,7 +735,7 @@ function ProductAdditionalInfo({ product }: { product: {
               Descargar
             </button>
           </div>
-          <div className="flex justify-center bg-gray-50 rounded-xl p-6">
+          <div className="flex justify-center bg-gray-50 rounded-xl p-4 md:p-5 lg:p-6">
             <div className="text-center">
               <img 
                 src={product.barcodeImage} 
@@ -751,8 +751,8 @@ function ProductAdditionalInfo({ product }: { product: {
       )}
 
       {/* Información adicional */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Información del Producto</h3>
+      <div className="bg-white rounded-xl p-4 md:p-5 lg:p-6 shadow-sm border border-gray-200">
+        <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-3 lg:mb-4">Información del Producto</h3>
         <div className="space-y-3">
           {product.sku && (
             <div className="flex justify-between items-center py-2 border-b border-gray-100">

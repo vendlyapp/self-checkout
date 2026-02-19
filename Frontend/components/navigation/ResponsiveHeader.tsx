@@ -45,13 +45,16 @@ interface ResponsiveHeaderProps {
   isMobile?: boolean;
   isTablet?: boolean;
   isDesktop?: boolean;
+  /** Cuando el sidebar izquierdo está visible (tablet/desktop), ocultar barra superior para no duplicar logo */
+  sidebarVisible?: boolean;
 }
 
 export default function ResponsiveHeader({
   onMenuToggle,
   showMenuButton = false,
   isMobile = false,
-  isDesktop = false
+  isDesktop = false,
+  sidebarVisible = false,
 }: ResponsiveHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -114,42 +117,10 @@ export default function ResponsiveHeader({
       )}
 
       <header className={clsx(
-        "bg-white border-b border-b-white border-[1px] transition-ios-slow",
-        isMobile ? "h-[calc(85px+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)]" : "h-20"
+        "bg-white transition-ios-slow",
+        isMobile ? "h-[calc(85px+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] border-b border-gray-100" : (isDesktop || sidebarVisible) ? "h-0 min-h-0 border-0 overflow-hidden" : "h-16 border-b border-gray-100"
       )}>
-        {isDesktop ? (
-          // Header completo para desktop
-          <div className="w-full h-full">
-            {/* Barra superior con info del negocio */}
-            <div className="h-full bg-gray-50 border-b border-gray-100 flex items-center justify-between px-6 text-xs text-gray-600">
-              <div className="flex items-center gap-4">
-                <span>Heiniger&apos;s Hofladen</span>
-                <span>•</span>
-                <span>Admin Dashboard</span>
-                <span>•</span>
-                <span className={clsx(
-                  "font-medium flex items-center gap-1",
-                  storeStatus.isOpen ? "text-green-600" : "text-red-600"
-                )}>
-                  <div className={clsx(
-                    "w-2 h-2 rounded-full",
-                    storeStatus.isOpen ? "bg-green-500" : "bg-red-500"
-                  )} />
-                  {storeStatus.statusText}
-                </span>
-              </div>
-              <div className="flex items-center gap-4">
-                <span>Última actualización: {new Date(storeStatus.lastUpdated).toLocaleTimeString('de-CH', {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}</span>
-                <span>•</span>
-                <span>CHF 1,234.56 hoy</span>
-              </div>
-            </div>
-
-          </div>
-        ) : isMobile ? (
+        {(isDesktop || sidebarVisible) ? null : isMobile ? (
           // Header original para móvil (sin cambios)
           <div className="dashboard-header-content bg-background-cream h-[85px] w-full">
             {/* Logo */}
@@ -258,15 +229,14 @@ export default function ResponsiveHeader({
             </div>
           </div>
         ) : (
-          // Header para tablet
-          <div className="flex items-center justify-between px-4 h-full w-full">
-            {/* Logo y Menu Button */}
-            <div className="flex items-center gap-3">
+          // Header para tablet: alineado y sin texto cortado
+          <div className="flex items-center justify-between gap-3 px-4 sm:px-5 h-full w-full min-w-0 overflow-hidden">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               {showMenuButton && (
                 <button
                   onClick={onMenuToggle}
                   className={clsx(
-                    "p-2 rounded-lg hover:bg-gray-100 transition-colors",
+                    "p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0",
                     pressedButton === 'menu' && "scale-95"
                   )}
                   onTouchStart={() => handleButtonPress('menu')}
@@ -274,26 +244,26 @@ export default function ResponsiveHeader({
                     handleButtonPress('menu');
                     handleValidInteraction(e);
                   }}
-                  aria-label="Toggle menu"
+                  aria-label="Menü öffnen"
                 >
                   <Menu className="w-5 h-5 text-gray-600" />
                 </button>
               )}
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <Image
                   src="/logo.svg"
                   alt="Self-Checkout Logo"
                   width={32}
                   height={32}
                   priority
-                  className="h-[32px] w-auto"
+                  className="h-8 w-auto flex-shrink-0"
                 />
-                <div className="flex flex-col">
-                  <span className="font-semibold text-gray-900 text-base">
+                <div className="flex flex-col min-w-0">
+                  <span className="font-semibold text-gray-900 text-sm truncate">
                     Self-Checkout
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 truncate">
                     {pathname === '/dashboard' && 'Übersicht'}
                     {pathname?.startsWith('/charge') && 'Verkauf & Kasse'}
                     {pathname?.startsWith('/products') && 'Produktverwaltung'}
@@ -303,24 +273,21 @@ export default function ResponsiveHeader({
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-3">
-              {/* Store Status */}
+            <div className="flex items-center gap-2 flex-shrink-0">
               <div className={clsx(
-                "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium",
+                "flex items-center gap-2 px-2.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap",
                 storeStatus.isOpen ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
               )}>
-                <div className={clsx(
-                  "w-2 h-2 rounded-full",
+                <span className={clsx(
+                  "w-2 h-2 rounded-full flex-shrink-0",
                   storeStatus.isOpen ? "bg-green-500" : "bg-red-500"
                 )} />
-                {storeStatus.statusText}
+                <span className="truncate max-w-[100px]">{storeStatus.statusText}</span>
               </div>
 
-              {/* Notifications Button */}
               <button
                 className={clsx(
-                  "p-2 rounded-lg hover:bg-gray-100 transition-colors relative",
+                  "p-2 rounded-lg hover:bg-gray-100 transition-colors relative flex-shrink-0",
                   pressedButton === 'notifications' && "scale-95"
                 )}
                 onClick={(e) => {
@@ -332,18 +299,17 @@ export default function ResponsiveHeader({
                   handleButtonPress('notifications');
                   handleValidInteraction(e);
                 }}
-                aria-label={`Notificaciones ${unreadCount > 0 ? `(${unreadCount} sin leer)` : ''}`}
+                aria-label={`Benachrichtigungen ${unreadCount > 0 ? `(${unreadCount} ungelesen)` : ''}`}
               >
                 <Bell className="w-5 h-5 text-gray-600" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
+                  <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full" aria-hidden />
                 )}
               </button>
 
-              {/* Logout Button */}
               <button
                 className={clsx(
-                  "p-2 rounded-lg hover:bg-red-50 transition-colors group",
+                  "p-2 rounded-lg hover:bg-red-50 transition-colors group flex-shrink-0",
                   pressedButton === 'logout' && "scale-95",
                   isLoggingOut && "opacity-50 cursor-not-allowed"
                 )}

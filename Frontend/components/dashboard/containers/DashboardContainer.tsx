@@ -22,25 +22,30 @@ const DashboardContainer = ({
 
   const variantClasses = {
     default: "bg-transparent",
-    card: "bg-white/20 rounded-2xl shadow-md border border-gray-200",
-    section: "bg-background-cream rounded-2xl p-6",
-    grid: "bg-white rounded-2xl border border-gray-200 shadow-md p-6",
+    card: "bg-white rounded-2xl shadow-sm border border-gray-200",
+    section: "bg-background-cream rounded-2xl",
+    grid: "bg-white rounded-2xl border border-gray-200 shadow-sm",
   };
 
   const sizeClasses = {
     sm: 'p-4',
-    md: 'p-6',
-    lg: 'p-8',
-    xl: 'p-10'
+    md: 'p-5',
+    lg: 'p-6',
+    xl: 'p-8'
   };
 
+  const responsivePadding = responsive && (variant === 'card' || variant === 'grid' || variant === 'section')
+    ? 'p-5 md:p-6'
+    : responsive
+      ? 'p-5 md:p-6'
+      : '';
 
   return (
     <div className={clsx(
       baseClasses,
       variantClasses[variant],
-      sizeClasses[size],
-      responsive && 'p-4 md:p-6 lg:p-8',
+      !responsive && sizeClasses[size],
+      responsivePadding,
       className
     )}>
       {children}

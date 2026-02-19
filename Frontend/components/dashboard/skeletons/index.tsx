@@ -11,7 +11,11 @@ export {
   TodayStatsSkeletonLoader,
   DailyGoalSkeletonLoader,
   QuickAccessSkeletonLoader,
+  SystemStatusSkeletonLoader,
+  QuickMetricsSkeletonLoader,
+  RecentSalesSectionSkeletonLoader,
   HomeDashboardSkeletonLoader,
+  HomeDashboardSkeletonLoaderDesktop,
   DashboardErrorState
 } from './home';
 
@@ -31,7 +35,8 @@ export {
   QuickAccessGridSkeletonLoader,
   PaymentMethodsSkeletonLoader,
   CartGaugeSkeletonLoader,
-  AnalyticsDashboardSkeletonLoader
+  AnalyticsDashboardSkeletonLoader,
+  AnalyticsDashboardSkeletonLoaderDesktop
 } from './analytics';
 
 // Products section skeletons

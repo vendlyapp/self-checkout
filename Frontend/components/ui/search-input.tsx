@@ -99,15 +99,15 @@ export function SearchInput({
     return (
       <div ref={containerRef} className={clsx("relative w-full", className)}>
         <div className={clsx(
-          "relative flex items-center bg-white rounded-full border transition-ios",
+          "relative flex items-center bg-white rounded-full border border-gray-200 transition-ios",
           "focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20",
           isFocused ? "shadow-lg" : "shadow-sm",
-          "h-12 lg:h-14"
+          "h-11 md:h-11 lg:h-12"
         )}>
-          {/* Icono de búsqueda - Solo en desktop */}
-          <Search className="hidden lg:block absolute left-4 w-5 h-5 text-gray-400 pointer-events-none" />
+          {/* Icono de búsqueda: tablet y desktop */}
+          <Search className="hidden md:block absolute left-4 w-4 h-4 lg:w-5 lg:h-5 text-gray-400 pointer-events-none flex-shrink-0" />
 
-          {/* Input */}
+          {/* Input - padding según breakpoint para que placeholder no se solape */}
           <input
             ref={inputRef}
             type="text"
@@ -121,21 +121,21 @@ export function SearchInput({
             onBlur={() => setIsFocused(false)}
             placeholder={placeholder}
             className={clsx(
-              "w-full h-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400",
-              "pl-4 lg:pl-12 pr-16 lg:pr-20",
-              "text-base lg:text-lg"
+              "w-full min-w-0 h-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400 placeholder:truncate",
+              "pl-4 md:pl-10 lg:pl-12 pr-14 md:pr-16 lg:pr-20",
+              "text-sm md:text-base"
             )}
           />
 
-          {/* Botón de filtros - Solo en desktop */}
+          {/* Botón de filtros - tablet y desktop */}
           {showFilters && onFilterClick && (
             <button
               onClick={onFilterClick}
-              className="hidden lg:flex absolute right-16 items-center gap-1 px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-ios-fast"
+              className="hidden md:flex absolute right-14 lg:right-16 items-center gap-1 px-2 py-1.5 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-ios-fast"
               aria-label="Filter"
             >
-              <Filter className="w-3 h-3" />
-              <span>Filter</span>
+              <Filter className="w-3.5 h-3.5" />
+              <span className="hidden lg:inline">Filter</span>
             </button>
           )}
 
@@ -143,10 +143,10 @@ export function SearchInput({
           {value && (
             <button
               onClick={handleClear}
-              className="absolute right-12 lg:right-16 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-ios-fast"
+              className="absolute right-11 md:right-14 lg:right-16 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-ios-fast"
               aria-label="Suche löschen"
             >
-              <X className="w-4 h-4 lg:w-5 lg:h-5" />
+              <X className="w-4 h-4" />
             </button>
           )}
 
@@ -154,12 +154,12 @@ export function SearchInput({
           <button
             onClick={handleSearch}
             className={clsx(
-              "absolute right-2 w-8 h-8 lg:w-10 lg:h-10 bg-brand-500 hover:bg-brand-600 rounded-full flex items-center justify-center transition-ios",
+              "absolute right-2 w-8 h-8 md:w-9 md:h-9 bg-brand-500 hover:bg-brand-600 rounded-full flex items-center justify-center transition-ios flex-shrink-0",
               "shadow-md hover:shadow-lg hover:scale-105"
             )}
             aria-label="Suchen"
           >
-            <Search className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
+            <Search className="w-4 h-4 text-white" />
           </button>
         </div>
 
@@ -208,17 +208,17 @@ export function SearchInput({
     );
   }
 
-  // Estilo original para Analytics Dashboard
+  // Estilo para Analytics / Sales Dashboard: tamaño consistente
   return (
-    <div ref={containerRef} className={clsx("relative w-full", className)}>
-      <div className="relative flex items-center h-full bg-white rounded-full border border-gray-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-ios">
+    <div ref={containerRef} className={clsx("relative w-full min-h-11", className)}>
+      <div className="relative flex items-center h-full min-h-11 bg-white rounded-full border border-border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-ios shadow-sm">
         {/* Icono de búsqueda */}
-        <Search className="absolute left-4 w-5 h-5 text-gray-400 pointer-events-none" />
+        <Search className="absolute left-4 w-4 h-4 md:w-5 md:h-5 text-muted-foreground pointer-events-none" aria-hidden />
 
         {/* Input */}
         <input
           ref={inputRef}
-          type="text"
+          type="search"
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
@@ -228,17 +228,19 @@ export function SearchInput({
           }}
           onBlur={() => setIsFocused(false)}
           placeholder={placeholder}
-          className="w-full h-full pl-12 pr-12 text-sm text-gray-900 placeholder-gray-400 bg-transparent focus:outline-none"
+          className="w-full h-full min-h-[2.75rem] pl-11 md:pl-12 pr-11 md:pr-12 text-sm text-foreground placeholder:text-muted-foreground bg-transparent focus:outline-none rounded-full"
+          aria-label="Suchen"
         />
 
         {/* Botón de limpiar */}
         {value && (
           <button
+            type="button"
             onClick={handleClear}
-            className="absolute right-4 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-ios-fast"
-            aria-label="Limpiar búsqueda"
+            className="absolute right-3 md:right-4 p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-ios-fast"
+            aria-label="Suche löschen"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 md:w-5 md:h-5" />
           </button>
         )}
       </div>

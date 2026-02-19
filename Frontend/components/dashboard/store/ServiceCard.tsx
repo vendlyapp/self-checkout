@@ -24,9 +24,9 @@ const ServiceCard = ({ icon, title, subtitle, href }: ServiceCardProps) => {
   return (
     <button
       onClick={handleClick}
-      className={`group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md p-4 lg:p-5 flex flex-col items-start justify-between min-h-[110px] lg:min-h-[120px] focus-visible:ring-2 focus-visible:ring-brand-500 transition-ios ${pressed ? 'scale-95' : ''}`}
+      className={`group bg-card rounded-2xl border border-border shadow-sm hover:shadow-md hover:border-border/80 p-3 lg:p-4 flex flex-col items-start justify-between min-h-[88px] lg:min-h-[100px] focus-visible:ring-2 focus-visible:ring-primary transition-ios ${pressed ? 'scale-[0.98]' : ''}`}
       tabIndex={0}
-      aria-label={title}
+      aria-label={`${title}: ${subtitle}`}
       type="button"
       onTouchStart={() => setPressed(true)}
       onTouchEnd={() => setPressed(false)}
@@ -34,15 +34,15 @@ const ServiceCard = ({ icon, title, subtitle, href }: ServiceCardProps) => {
       onMouseUp={() => setPressed(false)}
       onMouseLeave={() => setPressed(false)}
     >
-      <div className="flex items-center justify-between w-full mb-3 lg:mb-4">
-        <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-warm-300 flex items-center justify-center">
-          <span className="text-brand-700 bg-background-cream rounded-lg p-2 lg:scale-110">{icon}</span>
+      <div className="flex items-center justify-between w-full mb-1.5 lg:mb-2">
+        <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground shrink-0 [&>svg]:w-4 [&>svg]:h-4 lg:[&>svg]:w-5 lg:[&>svg]:h-5">
+          {icon}
         </div>
-        <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5 text-gray-400 group-active:translate-x-0.5 group-hover:translate-x-1 transition-transform" />
+        <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform shrink-0" />
       </div>
-      <div className="flex-1 flex flex-col justify-end">
-        <div className="font-semibold text-gray-900 text-base lg:text-lg leading-tight">{title}</div>
-        <div className="text-xs lg:text-sm text-gray-500 text-start mt-0.5 lg:mt-1">{subtitle}</div>
+      <div className="flex-1 flex flex-col justify-end w-full min-w-0 text-left">
+        <div className="font-semibold text-foreground text-xs lg:text-sm leading-snug break-words">{title}</div>
+        <div className="text-[11px] lg:text-xs text-muted-foreground mt-0.5">{subtitle}</div>
       </div>
     </button>
   );

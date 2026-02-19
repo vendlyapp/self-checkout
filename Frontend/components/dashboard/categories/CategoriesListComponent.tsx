@@ -226,7 +226,7 @@ export default function CategoriesListComponent({
 
         {/* Contenedor con scroll */}
         <FixedHeaderContainer>
-          <div className={`p-4 pb-32 lg:p-0 lg:pb-8 ${className}`}>
+          <div className={`p-4 pb-32 md:px-6 md:pb-8 ${className}`}>
             {isLoading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-500 mx-auto"></div>

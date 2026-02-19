@@ -15,11 +15,11 @@ const RecentSalesSection = ({ sales }: RecentSalesSectionProps) => {
   // Si no hay ventas, mostrar mensaje
   if (sales.length === 0) {
     return (
-      <section className="mb-6">
-        <div className="flex items-center justify-between mb-4 lg:mb-6">
-          <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Letzte Verkäufe</h2>
+      <section className="mb-4 md:mb-6">
+        <div className="flex items-center justify-between mb-3 md:mb-4 lg:mb-6">
+          <h2 className="text-lg md:text-xl font-semibold text-gray-900">Letzte Verkäufe</h2>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+        <div className="bg-white rounded-xl border border-gray-200 p-6 md:p-8 text-center">
           <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-600 font-medium">Keine Verkäufe vorhanden</p>
           <p className="text-sm text-gray-500 mt-1">Es wurden noch keine Bestellungen erstellt</p>
@@ -29,14 +29,14 @@ const RecentSalesSection = ({ sales }: RecentSalesSectionProps) => {
   }
 
   return (
-    <section className="mb-6">
+    <section className="mb-4 md:mb-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 lg:mb-6">
-        <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Letzte Verkäufe</h2>
+      <div className="flex items-center justify-between mb-3 md:mb-4 lg:mb-6">
+        <h2 className="text-lg md:text-xl font-semibold text-gray-900">Letzte Verkäufe</h2>
         {hasMoreSales && (
           <button
             onClick={() => router.push('/sales/orders')}
-            className="hidden lg:flex items-center gap-2 text-sm text-[#25D076] hover:text-[#25D076]/80 font-medium transition-colors"
+            className="hidden md:flex items-center gap-2 text-sm text-[#25D076] hover:text-[#25D076]/80 font-medium transition-colors"
           >
             <span>Alle anzeigen</span>
             <ChevronRight className="w-4 h-4" />
@@ -45,7 +45,7 @@ const RecentSalesSection = ({ sales }: RecentSalesSectionProps) => {
       </div>
 
       {/* Lista de ventas - responsive */}
-      <div className="space-y-3 lg:space-y-2">
+      <div className="space-y-2 md:space-y-3">
         {visibleSales.map((sale) => (
           <SaleCard key={sale.id} sale={sale} />
         ))}

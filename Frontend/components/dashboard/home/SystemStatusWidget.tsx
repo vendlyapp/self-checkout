@@ -44,10 +44,10 @@ const SystemStatusWidget = ({ className = '' }: SystemStatusWidgetProps) => {
   };
 
   return (
-    <div className={`bg-white rounded-xl p-4 border border-gray-200 shadow-sm ${className}`}>
+    <div className={`bg-white rounded-xl p-4 md:p-5 border border-gray-200 shadow-sm ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-900">System Status</h3>
+      <div className="flex items-center justify-between mb-3 md:mb-4">
+        <h3 className="text-sm md:text-base font-semibold text-gray-900">System Status</h3>
         <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getHealthColor(systemData.systemHealth)}`}>
           {getHealthIcon(systemData.systemHealth)}
           <span className="capitalize">{systemData.systemHealth}</span>
@@ -55,7 +55,7 @@ const SystemStatusWidget = ({ className = '' }: SystemStatusWidgetProps) => {
       </div>
 
       {/* Status Grid */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 md:gap-4">
         {/* Store Status */}
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full ${storeStatus.isOpen ? 'bg-green-500' : 'bg-red-500'}`} />

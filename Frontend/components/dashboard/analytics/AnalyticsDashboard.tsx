@@ -131,19 +131,18 @@ const AnalyticsDashboard: React.FC = () => {
 
   return (
     <div className="w-full">
-      {/* ===== MOBILE LAYOUT ===== */}
-      <div className="block lg:hidden">
+      {/* ===== SOLO MÓVIL (< 768px) ===== */}
+      <div className="block md:hidden">
         <div className="p-4 space-y-6">
-          {/* Search Section */}
-          <div>
+          {/* Search Section - tamaño fijo y organizado */}
+          <div className="w-full max-w-full">
             <SearchInput
               placeholder="Suche Produkte / Verkäufe"
               value={searchQuery}
               onChange={setSearchQuery}
               onSearch={handleSearch}
-              className="w-full h-[54px]"
+              className="w-full h-12 min-h-12"
               esHome={false}
-              
             />
           </div>
 
@@ -231,22 +230,22 @@ const AnalyticsDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* ===== DESKTOP LAYOUT ===== */}
-      <div className="hidden lg:block">
-        <div className="p-6 space-y-8">
+      {/* ===== TABLET + DESKTOP (≥ 768px) ===== */}
+      <div className="hidden md:block min-w-0">
+        <div className="p-4 md:p-5 lg:p-6 xl:p-8 space-y-5 md:space-y-6 lg:space-y-8 xl:space-y-10 max-w-[1600px]">
           {/* Header Section */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Analytics & Verkäufe</h1>
-              <p className="text-gray-600 mt-1">Überwachen Sie Ihre Verkaufsleistung und Kundenaktivität</p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4 lg:gap-6">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl lg:text-2xl font-bold text-foreground">Analytics & Verkäufe</h1>
+              <p className="text-muted-foreground mt-0.5 text-xs lg:text-sm">Überwachen Sie Ihre Verkaufsleistung und Kundenaktivität</p>
             </div>
-            <div className="w-full lg:w-[500px]">
+            <div className="w-full md:w-[220px] lg:w-[280px] xl:w-[320px] flex-shrink-0 md:flex md:items-center">
               <SearchInput
-                placeholder="Analytics durchsuchen..."
+                placeholder="Suchen..."
                 value={searchQuery}
                 onChange={setSearchQuery}
                 onSearch={handleSearch}
-                className="w-full"
+                className="w-full h-10 min-h-10 lg:h-11 lg:min-h-11"
                 esHome={false}
               />
             </div>
@@ -254,7 +253,7 @@ const AnalyticsDashboard: React.FC = () => {
 
           {/* Search Results */}
           {(isSearching || searchResults.length > 0) && (
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="bg-card rounded-2xl p-4 lg:p-6 shadow-sm border border-border">
               <SearchResultsSection
                 isSearching={isSearching}
                 results={searchResults}
@@ -262,42 +261,34 @@ const AnalyticsDashboard: React.FC = () => {
             </div>
           )}
 
-          {/* Top Row: Active Customers & Sales Chart */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Shop Activity Section */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <ActiveCustomers
-                data={
-                  data?.shopActivity || {
-                    activeCustomers: [],
-                    totalActive: 0,
-                    totalInactive: 0,
-                    openCartsValue: 0,
-                    progressPercentage: 0,
-                  }
+          {/* Top Row: Active Customers & Sales Chart — 1 col hasta xl, 2 cols desde 1280px */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 md:gap-4 lg:gap-6 min-w-0">
+            <ActiveCustomers
+              data={
+                data?.shopActivity || {
+                  activeCustomers: [],
+                  totalActive: 0,
+                  totalInactive: 0,
+                  openCartsValue: 0,
+                  progressPercentage: 0,
                 }
-                loading={loading}
-              />
-            </div>
-
-            {/* Sales Chart Section */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <SalesChart
-                data={data?.salesData || []}
-                totalSales={totalSales}
-                salesGrowth={salesGrowth}
-                period={salesPeriod}
-                periodLabels={salesPeriodLabels}
-                onPeriodChange={setSalesPeriod}
-                loading={loading}
-              />
-            </div>
+              }
+              loading={loading}
+            />
+            <SalesChart
+              data={data?.salesData || []}
+              totalSales={totalSales}
+              salesGrowth={salesGrowth}
+              period={salesPeriod}
+              periodLabels={salesPeriodLabels}
+              onPeriodChange={setSalesPeriod}
+              loading={loading}
+            />
           </div>
 
-          {/* Middle Row: Quick Access & Payment Methods */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Quick Access Section */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          {/* Middle Row: Quick Access & Payment Methods — 1 col hasta xl, 2 cols desde 1280px */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 md:gap-4 lg:gap-6 min-w-0">
+            <div className="bg-card rounded-2xl p-4 lg:p-6 shadow-sm border border-border">
               <QuickAccessGrid
                 onSalesAction={handleViewSales}
                 onCancelAction={handleCancelSale}
@@ -306,36 +297,30 @@ const AnalyticsDashboard: React.FC = () => {
                 loading={loading}
               />
             </div>
-
-            {/* Payment Methods Section */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <PaymentMethods
-                data={data?.paymentMethods || []}
-                period={paymentPeriod}
-                onPeriodChange={setPaymentPeriod}
-                loading={loading}
-              />
-            </div>
-          </div>
-
-          {/* Bottom Row: Cart Gauge - Full Width */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <CartGauge
-              data={
-                data?.cartData || {
-                  averageValue: 0,
-                  percentageChange: 0,
-                  trend: "up",
-                  comparisonPeriod: "gestern",
-                  maxValue: 100,
-                  minValue: 0,
-                }
-              }
-              period={cartPeriod}
-              onPeriodChange={setCartPeriod}
+            <PaymentMethods
+              data={data?.paymentMethods || []}
+              period={paymentPeriod}
+              onPeriodChange={setPaymentPeriod}
               loading={loading}
             />
           </div>
+
+          {/* Bottom Row: Cart Gauge - full width, su propia card */}
+          <CartGauge
+            data={
+              data?.cartData || {
+                averageValue: 0,
+                percentageChange: 0,
+                trend: "up",
+                comparisonPeriod: "gestern",
+                maxValue: 100,
+                minValue: 0,
+              }
+            }
+            period={cartPeriod}
+            onPeriodChange={setCartPeriod}
+            loading={loading}
+          />
         </div>
       </div>
     </div>

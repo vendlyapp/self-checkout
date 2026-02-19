@@ -117,10 +117,10 @@ const SalesChart: React.FC<SalesChartProps> = ({
     periodOptions.find((option) => option.value === period)?.label || "Woche";
 
   return (
-    <Card className="bg-card rounded-2xl border border-border/50 transition-ios hover:shadow-md">
-      <CardContent className="p-5 lg:p-6">
-        <div className="flex justify-between items-center mb-4 lg:mb-5">
-          <h3 className="text-lg lg:text-xl font-semibold text-foreground">Umsatz</h3>
+    <Card className="bg-card rounded-2xl border border-border shadow-sm transition-ios hover:shadow-md">
+      <CardContent className="p-4 lg:p-6">
+        <div className="flex justify-between items-center mb-3 lg:mb-5">
+          <h3 className="text-base lg:text-xl font-semibold text-foreground">Umsatz</h3>
 
           {/* Period Selector */}
           <div className="relative">
@@ -157,7 +157,7 @@ const SalesChart: React.FC<SalesChartProps> = ({
           </div>
         </div>
 
-        <div className="space-y-4 lg:space-y-5">
+        <div className="space-y-3 lg:space-y-5">
           {/* Total und Vergleich */}
           <div className="flex items-center justify-between w-full">
             <div className="flex items-baseline gap-2 lg:gap-3">
@@ -166,32 +166,32 @@ const SalesChart: React.FC<SalesChartProps> = ({
                 {formatSwissPrice(totalSales)}
               </span>
             </div>
-            <div className="flex items-center justify-end gap-2 lg:gap-3 text-sm lg:text-base">
+            <div className="flex items-center justify-end gap-1.5 md:gap-2 text-xs md:text-sm lg:text-base flex-shrink-0 flex-wrap">
               {isPositiveGrowth ? (
-                <TrendingUp className="w-4 h-4 lg:w-5 lg:h-5 text-emerald-500" />
+                <TrendingUp className="w-4 h-4 text-emerald-500 shrink-0" />
               ) : (
-                <TrendingDown className="w-4 h-4 lg:w-5 lg:h-5 text-red-500" />
+                <TrendingDown className="w-4 h-4 text-red-500 shrink-0" />
               )}
               <span
-                className={`font-medium ${
+                className={`font-medium shrink-0 ${
                   isPositiveGrowth ? "text-emerald-500" : "text-red-500"
                 }`}
               >
                 {isPositiveGrowth ? "+" : ""}
                 {salesGrowth}%
               </span>
-              <span className="text-muted-foreground">
+              <span className="text-muted-foreground truncate max-w-[120px] md:max-w-none">
                 vs letzte {currentPeriodLabel.toLowerCase()}
               </span>
             </div>
           </div>
 
-          {/* Recharts Line Chart */}
-          <div className="h-40 lg:h-48">
+          {/* Recharts Line Chart - márgenes para que las fechas no se salgan */}
+          <div className="h-40 md:h-44 lg:h-48 min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={data}
-                margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                margin={{ top: 8, right: 8, left: 4, bottom: 24 }}
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
@@ -201,9 +201,10 @@ const SalesChart: React.FC<SalesChartProps> = ({
                 <XAxis
                   dataKey="day"
                   stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
+                  fontSize={10}
                   tickLine={false}
                   axisLine={false}
+                  interval={0}
                 />
                 <Tooltip content={<CustomTooltip />} />
 
@@ -231,18 +232,18 @@ const SalesChart: React.FC<SalesChartProps> = ({
             </ResponsiveContainer>
           </div>
 
-          {/* Legende */}
+          {/* Legende - truncate para que no se salgan las fechas */}
           {(periodLabels.current || periodLabels.last) && (
-            <div className="flex flex-col sm:flex-row sm:justify-between gap-2 text-xs lg:text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-2 text-xs text-muted-foreground min-w-0">
               {periodLabels.current && (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-0.5 lg:w-5 lg:h-0.5 bg-emerald-500 rounded shrink-0"></span>
+                <span className="flex items-center gap-2 min-w-0">
+                  <span className="w-3 h-0.5 md:w-4 lg:w-5 bg-emerald-500 rounded shrink-0" aria-hidden />
                   <span className="truncate">{periodLabels.current}</span>
                 </span>
               )}
               {periodLabels.last && (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-0.5 lg:w-5 lg:h-0.5 bg-muted-foreground rounded border-dashed border-t border-muted-foreground shrink-0"></span>
+                <span className="flex items-center gap-2 min-w-0">
+                  <span className="w-3 h-0.5 md:w-4 lg:w-5 bg-muted-foreground rounded border-dashed border-t border-muted-foreground shrink-0" aria-hidden />
                   <span className="truncate">{periodLabels.last}</span>
                 </span>
               )}

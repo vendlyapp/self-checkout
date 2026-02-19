@@ -3,16 +3,14 @@
 import React from 'react';
 import HeaderNav from '@/components/navigation/HeaderNav';
 import Form from '@/components/dashboard/createProduct/Form';
-import { useResponsive } from '@/hooks';
 
 export default function AddProduct() {
-  const { } = useResponsive();
 
   return (
-    <div className="w-full animate-page-enter gpu-accelerated">
-      {/* Mobile Layout */}
-      <div className="block lg:hidden">
-        <div className="h-full w-full overflow-hidden">
+    <div className="w-full min-w-0 animate-page-enter gpu-accelerated">
+      {/* Móvil: header + formulario */}
+      <div className="block md:hidden">
+        <div className="h-full w-full overflow-hidden min-w-0">
           <div className="animate-slide-in-right">
             <HeaderNav title="Produkt erstellen" />
           </div>
@@ -22,20 +20,18 @@ export default function AddProduct() {
         </div>
       </div>
 
-      {/* Desktop Layout */}
-      <div className="hidden lg:block">
-        <div className="p-6 space-y-6">
-          <div className="animate-stagger-1">
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight transition-ios">
-                Neues Produkt erstellen
-              </h1>
-              <p className="text-gray-500 mt-2 text-base transition-ios">
-                Füllen Sie das Formular aus, um ein neues Produkt hinzuzufügen
-              </p>
-            </div>
+      {/* Tablet + Desktop: título + formulario — 820×1180 y 1024×1366 */}
+      <div className="hidden md:block min-w-0">
+        <div className="p-4 md:p-5 lg:p-6 xl:p-8 space-y-5 md:space-y-6 lg:space-y-8 max-w-4xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto">
+          <div className="animate-stagger-1 min-w-0">
+            <h1 className="text-xl lg:text-2xl font-bold text-foreground tracking-tight">
+              Neues Produkt erstellen
+            </h1>
+            <p className="text-muted-foreground mt-0.5 text-xs lg:text-sm">
+              Füllen Sie das Formular aus, um ein neues Produkt hinzuzufügen
+            </p>
           </div>
-          <div className="animate-stagger-2">
+          <div className="animate-stagger-2 min-w-0">
             <Form isDesktop={true} />
           </div>
         </div>

@@ -56,32 +56,26 @@ const settings = [
 
 const SystemSettingsList = () => (
   <div className="w-full">
-    {/* Mobile Layout */}
-    <div className="block lg:hidden">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-4 pt-4 pb-4 mb-5">
-        <h3 className="font-semibold text-gray-900 mb-3">System-Einstellungen</h3>
-        <ul className="divide-y divide-gray-100">
-          {settings.map((item) => (
-            <li key={item.title}>
-              <NavigationItem
-                icon={item.icon}
-                title={item.title}
-                subtitle={item.subtitle}
-                showArrow
-                href={item.href}
-              />
-            </li>
-          ))}
-        </ul>
-      </div>
+    <div className="block lg:hidden bg-card rounded-2xl shadow-sm border border-border overflow-hidden p-3">
+      <ul className="divide-y divide-border">
+        {settings.map((item) => (
+          <li key={item.title}>
+            <NavigationItem
+              icon={item.icon}
+              title={item.title}
+              subtitle={item.subtitle}
+              showArrow
+              href={item.href}
+            />
+          </li>
+        ))}
+      </ul>
     </div>
 
-    {/* Desktop Layout - Grid de 2 columnas */}
     <div className="hidden lg:block">
-      <h3 className="font-semibold text-gray-900 mb-4 lg:mb-6 text-lg lg:text-xl">System-Einstellungen</h3>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
         {settings.map((item) => (
-          <div key={item.title} className="bg-white rounded-xl p-4 lg:p-5 shadow-sm border border-gray-200 hover:shadow-md transition-ios">
+          <div key={item.title} className="bg-muted/30 rounded-xl p-4 lg:p-5 border border-border hover:bg-muted/50 transition-ios">
             <NavigationItem
               icon={item.icon}
               title={item.title}

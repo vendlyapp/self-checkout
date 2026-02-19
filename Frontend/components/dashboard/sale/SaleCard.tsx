@@ -60,19 +60,19 @@ const SaleCard = ({ sale }: SaleCardProps) => {
       className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer active:scale-[0.98] touch-target"
       onClick={handleClick}
     >
-      <CardContent className="p-4 lg:p-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 lg:gap-4">
-            <div className={`w-10 h-10 lg:w-12 lg:h-12 ${statusConfig.bgColor} rounded-xl flex items-center justify-center flex-shrink-0`}>
-              <div className={`${statusConfig.textColor} lg:scale-110`}>
+      <CardContent className="p-3 md:p-4 lg:p-5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 md:gap-3 lg:gap-4 min-w-0 flex-1">
+            <div className={`w-9 h-9 md:w-10 md:h-10 lg:w-12 lg:h-12 ${statusConfig.bgColor} rounded-xl flex items-center justify-center flex-shrink-0`}>
+              <div className={`${statusConfig.textColor} md:scale-100 lg:scale-110`}>
                 {statusConfig.icon}
               </div>
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 lg:text-base truncate">{sale.name}</h3>
-              <p className="text-xs text-gray-500" title={sale.time}>{sale.receipt} · {sale.time}</p>
-              <div className="flex items-center gap-1 mt-1">
-                <span className={`text-xs lg:text-sm font-medium ${statusConfig.textColor}`}>
+              <h3 className="font-semibold text-gray-900 text-sm md:text-base truncate">{sale.name}</h3>
+              <p className="text-xs text-gray-500 truncate" title={sale.time}>{sale.receipt} · {sale.time}</p>
+              <div className="flex items-center gap-1 mt-0.5 md:mt-1">
+                <span className={`text-xs md:text-sm font-medium ${statusConfig.textColor}`}>
                   {statusConfig.label}
                 </span>
               </div>
@@ -80,10 +80,10 @@ const SaleCard = ({ sale }: SaleCardProps) => {
           </div>
 
           <div className="text-right flex-shrink-0">
-            <p className={`font-bold lg:text-lg ${statusConfig.amountColor}`}>
+            <p className={`font-bold text-sm md:text-base lg:text-lg ${statusConfig.amountColor}`}>
               {formatSwissPriceWithCHF(sale.amount)}
             </p>
-            <p className="text-xs lg:text-sm text-gray-500">{sale.paymentMethod}</p>
+            <p className="text-xs md:text-sm text-gray-500">{sale.paymentMethod}</p>
           </div>
         </div>
       </CardContent>

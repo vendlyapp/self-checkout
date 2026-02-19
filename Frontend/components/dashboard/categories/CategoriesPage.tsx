@@ -213,7 +213,7 @@ export default function CategoriesPage() {
 
       {/* Contenedor con scroll */}
       <FixedHeaderContainer>
-        <div className="p-4 pb-32 lg:p-0 lg:pb-8">
+        <div className="p-4 pb-32 md:px-6 md:pb-8">
           {filteredCategories.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 text-base font-medium">

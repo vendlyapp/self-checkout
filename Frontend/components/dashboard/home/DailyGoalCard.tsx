@@ -34,23 +34,23 @@ const DailyGoalCard = ({
   ];
 
   return (
-    <div className="w-full bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-200/50">
+    <div className="w-full bg-white rounded-2xl p-4 md:p-6 lg:p-6 shadow-sm border border-gray-200/50">
       {/* Header */}
-      <div className="flex justify-between items-center mb-4 lg:mb-6">
+      <div className="flex justify-between items-center mb-4 md:mb-6 lg:mb-6">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg lg:text-xl font-semibold text-gray-900">
+          <h2 className="text-lg md:text-xl font-semibold text-gray-900">
             Tagesziel
           </h2>
         </div>
-        <button className="p-1 hover:bg-gray-100 rounded-lg transition-ios-fast tap-highlight-transparent">
-          <ChevronRight className="w-5 h-5 lg:w-5 lg:h-5 text-gray-500" />
+        <button className="p-1 hover:bg-gray-100 rounded-lg transition-ios-fast tap-highlight-transparent" aria-label="Tagesziel Details">
+          <ChevronRight className="w-5 h-5 text-gray-500" />
         </button>
       </div>
 
       {/* Layout responsive */}
-      <div className="flex flex-row lg:flex-row items-center gap-4 lg:gap-6">
-        {/* Gráfico circular - tamaño como en la imagen */}
-        <div className="relative w-20 h-20 lg:w-24 lg:h-24 flex-shrink-0" style={{ minWidth: '80px', minHeight: '80px' }}>
+      <div className="flex flex-row items-center gap-4 md:gap-6 lg:gap-6">
+        {/* Gráfico circular - tamaño responsivo */}
+        <div className="relative w-20 h-20 md:w-[88px] md:h-[88px] lg:w-24 lg:h-24 flex-shrink-0 min-w-[80px] min-h-[80px]">
           <ResponsiveContainer width="100%" height="100%" minHeight={80}>
             <PieChart>
               <Pie
@@ -75,27 +75,26 @@ const DailyGoalCard = ({
 
           {/* Contenido central del gráfico */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-xs lg:text-sm text-gray-600 flex flex-col items-center">
-              <span className="text-[11px] lg:text-[13px]">Total</span>
-              <span className="text-[13px] lg:text-[16px] font-bold text-gray-900">{percentage}%</span>
+            <span className="text-xs md:text-sm text-gray-600 flex flex-col items-center">
+              <span className="text-[11px] md:text-[13px]">Total</span>
+              <span className="text-[13px] md:text-[16px] font-bold text-gray-900">{percentage}%</span>
             </span>
           </div>
         </div>
 
-        {/* Información del objetivo - layout como en la imagen */}
-        <div className="flex-1 space-y-3 lg:space-y-4">
-          {/* Amounts - como en la imagen */}
+        {/* Información del objetivo */}
+        <div className="flex-1 min-w-0 space-y-3 md:space-y-4">
           <div className="space-y-1">
-            <div className="text-xl lg:text-3xl font-bold text-gray-900">
+            <div className="text-lg md:text-xl lg:text-3xl font-bold text-gray-900">
               {formatSwissPriceWithCHF(currentAmount)}
-              <span className="text-base lg:text-lg font-normal text-gray-500 ml-1">
+              <span className="text-sm md:text-base lg:text-lg font-normal text-gray-500 ml-1">
                 / {formatSwissPriceWithCHF(goalAmount)}
               </span>
             </div>
           </div>
 
-          {/* Progress bar para desktop */}
-          <div className="hidden lg:block">
+          {/* Progress bar: tablet + desktop */}
+          <div className="hidden md:block">
             <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
               <div
                 className="bg-green-500 h-2 rounded-full transition-all duration-500"
@@ -108,9 +107,9 @@ const DailyGoalCard = ({
             </div>
           </div>
 
-          {/* Remaining amount - como en la imagen */}
+          {/* Remaining amount */}
           {remaining > 0 ? (
-            <div className="text-sm lg:text-base text-gray-600">
+            <div className="text-sm md:text-base text-gray-600">
               <div className="flex items-center gap-2">
                 <span className="text-lg">🥳</span>
                 <p>
@@ -121,7 +120,7 @@ const DailyGoalCard = ({
               </div>
             </div>
           ) : (
-            <div className="text-sm lg:text-base text-green-600 font-medium">
+            <div className="text-sm md:text-base text-green-600 font-medium">
               <div className="flex items-center gap-2">
                 <span className="text-lg">🎉</span>
                 <p>Tagesziel erreicht!</p>
@@ -129,9 +128,9 @@ const DailyGoalCard = ({
             </div>
           )}
 
-          {/* Información adicional para desktop */}
-          <div className="hidden lg:block pt-2 border-t border-gray-100">
-            <div className="grid grid-cols-2 gap-4 text-xs text-gray-500">
+          {/* Información adicional: tablet + desktop */}
+          <div className="hidden md:block pt-2 border-t border-gray-100">
+            <div className="grid grid-cols-2 gap-3 md:gap-4 text-xs text-gray-500">
               <div>
                 <span className="block font-medium text-gray-900">Durchschnitt</span>
                 <span>{formatSwissPriceWithCHF(currentAmount / 24)} pro Verkauf</span>

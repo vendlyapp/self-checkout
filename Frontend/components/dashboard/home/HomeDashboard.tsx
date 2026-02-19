@@ -2,7 +2,7 @@
 
 import React from "react";
 import { SearchInput } from "@/components/ui/search-input";
-import { DashboardContainer, DashboardGrid, DashboardSection } from "@/components/dashboard/containers";
+import { DashboardContainer, DashboardSection } from "@/components/dashboard/containers";
 
 // Import dashboard components and hooks
 import {
@@ -60,8 +60,8 @@ const HomeDashboard: React.FC = () => {
 
   return (
     <div className="w-full min-h-screen">
-      {/* ===== MOBILE LAYOUT ===== */}
-      <div className="block lg:hidden">
+      {/* ===== SOLO MÓVIL (< 768px) ===== */}
+      <div className="block md:hidden">
         <div className="p-4 space-y-6">
           {/* ===== GREETING & STATUS ===== */}
           <GreetingSection
@@ -109,27 +109,25 @@ const HomeDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* ===== DESKTOP LAYOUT ===== */}
-      <div className="hidden lg:block">
-        <div className="p-6 space-y-8">
+      {/* ===== TABLET + DESKTOP (≥ 768px) ===== */}
+      <div className="hidden md:block">
+        <div className="p-4 md:p-6 lg:p-8 space-y-6 md:space-y-10 lg:space-y-12">
           {/* ===== HEADER SECTION ===== */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-600 mt-1">Willkommen zurück! Hier ist dein Überblick für heute.</p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6">
+            <div className="min-w-0">
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-gray-600 mt-1 text-sm md:text-base">Willkommen zurück! Hier ist dein Überblick für heute.</p>
             </div>
-            <div className="w-full lg:w-[500px]">
+            <div className="w-full md:max-w-sm lg:w-[380px]">
               <SearchInput
-                placeholder="Produkte / Verkäufe suchen"
+                placeholder="Suchen..."
                 value={searchQuery}
                 onChange={setSearchQuery}
                 onSearch={handleSearch}
                 className="w-full"
                 esHome={true}
                 showFilters={true}
-                onFilterClick={() => {
-                  // Abrir filtros
-                }}
+                onFilterClick={() => {}}
                 recentSearches={[
                   'Produkte',
                   'Verkäufe heute',
@@ -146,9 +144,7 @@ const HomeDashboard: React.FC = () => {
 
           {/* ===== GREETING SECTION ===== */}
           <DashboardContainer variant="card">
-            <GreetingSection
-              onToggleStore={handleToggleStore}
-            />
+            <GreetingSection onToggleStore={handleToggleStore} />
           </DashboardContainer>
 
           {/* ===== QUICK ACTIONS BAR ===== */}
@@ -166,35 +162,27 @@ const HomeDashboard: React.FC = () => {
             <TodayStatsCard />
           </DashboardContainer>
 
-          {/* ===== MAIN CONTENT ROW: GOALS & METRICS ===== */}
-          <DashboardGrid cols={{ desktop: 2 }} gap="lg">
-            {/* Daily Goal - Takes 1 column */}
-            <DashboardContainer variant="card">
-              <DailyGoalCard
-                currentAmount={currentAmount}
-                goalAmount={goalAmount}
-                percentage={percentage}
-              />
-            </DashboardContainer>
+          {/* ===== TAGESZIEL: una columna, card con más aire interno ===== */}
+          <DailyGoalCard
+            currentAmount={currentAmount}
+            goalAmount={goalAmount}
+            percentage={percentage}
+          />
 
-            {/* Quick Metrics - Takes 1 column */}
-            <QuickMetricsWidget />
-          </DashboardGrid>
+          {/* ===== QUICK METRICS: una columna (widget con su propia card) ===== */}
+          <QuickMetricsWidget />
 
-          {/* ===== BOTTOM ROW: TOOLS & ACTIVITY ===== */}
-          <DashboardGrid cols={{ desktop: 2 }} gap="lg">
-            {/* Tools & Shortcuts */}
-            <DashboardContainer variant="card">
-              <DashboardSection title="Tools & Shortcuts" variant="compact">
-                <Slider />
-              </DashboardSection>
-            </DashboardContainer>
+          {/* ===== TOOLS & SHORTCUTS: una columna ===== */}
+          <DashboardContainer variant="card">
+            <DashboardSection title="Tools & Shortcuts" variant="compact">
+              <Slider />
+            </DashboardSection>
+          </DashboardContainer>
 
-            {/* Recent Sales */}
-            <DashboardContainer variant="card">
-              <RecentSalesSection sales={recentSales} />
-            </DashboardContainer>
-          </DashboardGrid>
+          {/* ===== RECENT SALES: una columna ===== */}
+          <DashboardContainer variant="card">
+            <RecentSalesSection sales={recentSales} />
+          </DashboardContainer>
 
           {/* ===== SEARCH RESULTS - Full Width ===== */}
           {(isSearching || searchResults.length > 0) && (
