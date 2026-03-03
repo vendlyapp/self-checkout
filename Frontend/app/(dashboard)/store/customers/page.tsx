@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
 import { useResponsive } from '@/hooks'
 import { useMyStore } from '@/hooks/queries/useMyStore'
 import { CustomerService, type Customer } from '@/lib/services/customerService'
@@ -14,68 +15,42 @@ export default function CustomersPage() {
   const { isMobile } = useResponsive()
   const router = useRouter()
   const { data: store, isLoading: storeLoading } = useMyStore()
-  const [customers, setCustomers] = useState<Customer[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([])
 
-  useEffect(() => {
-    if (store?.id) {
-      loadCustomers()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store?.id])
+  const { data: customers = [], isLoading: customersLoading } = useQuery<Customer[]>({
+    queryKey: ['customers', store?.id],
+    queryFn: async () => {
+      const result = await CustomerService.getCustomersByStore(store!.id)
+      if (!result.success) throw new Error(result.error || 'Fehler beim Laden der Kunden')
+      return Array.isArray(result.data) ? result.data : []
+    },
+    enabled: !!store?.id,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    throwOnError: false,
+    meta: {
+      onError: () => toast.error('Fehler beim Laden der Kunden'),
+    },
+  })
 
-  useEffect(() => {
-    if (searchQuery.trim()) {
-      const filtered = customers.filter(customer => {
-        const query = searchQuery.toLowerCase()
-        return (
-          customer.name?.toLowerCase().includes(query) ||
-          customer.email?.toLowerCase().includes(query) ||
-          customer.phone?.toLowerCase().includes(query)
-        )
-      })
-      setFilteredCustomers(filtered)
-    } else {
-      setFilteredCustomers(customers)
-    }
+  const filteredCustomers = useMemo(() => {
+    if (!searchQuery.trim()) return customers
+    const q = searchQuery.toLowerCase()
+    return customers.filter(
+      (c) =>
+        c.name?.toLowerCase().includes(q) ||
+        c.email?.toLowerCase().includes(q) ||
+        c.phone?.toLowerCase().includes(q)
+    )
   }, [searchQuery, customers])
-
-  const loadCustomers = async () => {
-    if (!store?.id) return
-
-    setIsLoading(true)
-    try {
-      console.log('🔍 Cargando clientes para tienda:', store.id)
-      const result = await CustomerService.getCustomersByStore(store.id)
-      console.log('📦 Resultado de clientes:', result)
-      
-      if (result.success && result.data) {
-        // El backend retorna { success: true, data: Customer[], count: number }
-        // result.data es un array directamente
-        const customersList: Customer[] = Array.isArray(result.data) ? result.data : []
-        
-        console.log('✅ Clientes cargados:', customersList.length, customersList)
-        setCustomers(customersList)
-        setFilteredCustomers(customersList)
-      } else {
-        console.error('❌ Error al cargar clientes:', result.error)
-        toast.error(result.error || 'Fehler beim Laden der Kunden')
-      }
-    } catch (error) {
-      console.error('❌ Error loading customers:', error)
-      toast.error('Fehler beim Laden der Kunden')
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleCustomerClick = (customerId: string) => {
     router.push(`/store/customers/${customerId}`)
   }
 
-  if (storeLoading || isLoading) {
+  const isLoading = storeLoading || customersLoading
+
+  if (isLoading) {
     return (
       <div className="w-full h-full flex items-center justify-center min-h-screen bg-[#F2EDE8]">
         <div className="text-center">

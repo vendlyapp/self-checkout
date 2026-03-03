@@ -683,30 +683,22 @@ class SuperAdminService {
   }
 
   /**
-   * Get product statistics for a store
+   * Get product statistics for a store (pure SQL — no in-memory aggregation)
    */
   async getStoreProductStats(ownerId) {
     try {
-      const productsResult = await productService.findAll({ ownerId, limit: 1000 });
-      
-      if (!productsResult.success) {
-        return null;
-      }
-
-      const products = productsResult.data || [];
-      const total = products.length;
-      const active = products.filter(p => p.isActive).length;
-      const lowStock = products.filter(p => p.stock < 10 && p.stock > 0).length;
-      const outOfStock = products.filter(p => p.stock === 0).length;
-      const inactive = products.filter(p => !p.isActive).length;
-
-      return {
-        total,
-        active,
-        lowStock,
-        outOfStock,
-        inactive
-      };
+      const result = await query(
+        `SELECT
+           COUNT(*)::int                                            AS total,
+           COUNT(*) FILTER (WHERE "isActive")::int                 AS active,
+           COUNT(*) FILTER (WHERE NOT "isActive")::int             AS inactive,
+           COUNT(*) FILTER (WHERE stock = 0)::int                  AS "outOfStock",
+           COUNT(*) FILTER (WHERE stock > 0 AND stock < 10)::int   AS "lowStock"
+         FROM "Product"
+         WHERE "ownerId" = $1`,
+        [ownerId]
+      );
+      return result.rows[0] || null;
     } catch (error) {
       console.error('Error getting product stats:', error);
       return null;
@@ -714,39 +706,21 @@ class SuperAdminService {
   }
 
   /**
-   * Get category statistics for a store
+   * Get category statistics for a store (pure SQL — no in-memory aggregation)
    */
   async getStoreCategoryStats(ownerId) {
     try {
-      const [categoriesResult, productsResult] = await Promise.all([
-        categoryService.findAll(),
-        productService.findAll({ ownerId, limit: 1000 })
-      ]);
-
-      if (!categoriesResult.success || !productsResult.success) {
-        return null;
-      }
-
-      const categories = categoriesResult.data || [];
-      const products = productsResult.data || [];
-      
-      // Count products per category
-      const categoryCounts = new Map();
-      products.forEach(product => {
-        if (product.categoryId) {
-          const count = categoryCounts.get(product.categoryId) || 0;
-          categoryCounts.set(product.categoryId, count + 1);
-        }
-      });
-
-      const withProducts = categories.filter(cat => categoryCounts.get(cat.id) > 0).length;
-      const withoutProducts = categories.length - withProducts;
-
-      return {
-        total: categories.length,
-        withProducts,
-        withoutProducts
-      };
+      const result = await query(
+        `SELECT
+           COUNT(DISTINCT pc.id)::int                                           AS total,
+           COUNT(DISTINCT pc.id) FILTER (WHERE p.id IS NOT NULL)::int          AS "withProducts",
+           COUNT(DISTINCT pc.id) FILTER (WHERE p.id IS NULL)::int              AS "withoutProducts"
+         FROM "ProductCategory" pc
+         LEFT JOIN "Product" p ON p."categoryId" = pc.id AND p."ownerId" = $1
+         WHERE pc."storeId" = (SELECT id FROM "Store" WHERE "ownerId" = $1 LIMIT 1)`,
+        [ownerId]
+      );
+      return result.rows[0] || null;
     } catch (error) {
       console.error('Error getting category stats:', error);
       return null;
@@ -794,23 +768,25 @@ class SuperAdminService {
       const result = await query(ordersQuery, [ownerId, limit, offset]);
       const orders = result.rows;
 
-      // Get items count for each order and generate orderNumber
-      for (const order of orders) {
-        const itemsQuery = `
-          SELECT COUNT(*) as count
-          FROM "OrderItem" oi
-          INNER JOIN "Product" p ON oi."productId" = p.id
-          WHERE oi."orderId" = $1 AND p."ownerId" = $2
-        `;
-        const itemsResult = await query(itemsQuery, [order.id, ownerId]);
-        order.itemsCount = parseInt(itemsResult.rows[0].count) || 0;
-        
-        // Generate orderNumber from order id (first 8 chars)
-        order.orderNumber = `ORD-${order.id.substring(0, 8).toUpperCase()}`;
-        
-        // Use payment method from Order table, fallback to 'Tarjeta' if not available
-        if (!order.paymentMethod) {
-          order.paymentMethod = 'Tarjeta';
+      // Batch: obtener conteo de items para TODAS las órdenes en UNA sola query
+      if (orders.length > 0) {
+        const orderIds = orders.map((o) => o.id);
+        const itemCountsResult = await query(
+          `SELECT oi."orderId", COUNT(*) as count
+           FROM "OrderItem" oi
+           INNER JOIN "Product" p ON oi."productId" = p.id
+           WHERE oi."orderId" = ANY($1) AND p."ownerId" = $2
+           GROUP BY oi."orderId"`,
+          [orderIds, ownerId]
+        );
+        const countByOrderId = {};
+        for (const row of itemCountsResult.rows) {
+          countByOrderId[row.orderId] = parseInt(row.count) || 0;
+        }
+        for (const order of orders) {
+          order.itemsCount = countByOrderId[order.id] || 0;
+          order.orderNumber = `ORD-${order.id.substring(0, 8).toUpperCase()}`;
+          if (!order.paymentMethod) order.paymentMethod = 'Tarjeta';
         }
       }
 

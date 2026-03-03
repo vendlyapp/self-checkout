@@ -20,6 +20,7 @@
     "db:test": "node scripts/check-connection.js",
     "db:diagnose": "node scripts/diagnose-db-connection.js",
     "db:migrate": "node scripts/run_migration.js",
+    "db:indexes": "node scripts/add-performance-indexes.js",
     "db:seed": "node scripts/seed_realistic_products.js",
     "db:clean": "node scripts/clean_database.js",
     "db:clean-data": "node scripts/clean_database.js --data",

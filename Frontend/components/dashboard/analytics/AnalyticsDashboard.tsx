@@ -1,5 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import React, { useState, useCallback } from "react";
 
 import { useAnalytics, useQuickAccess } from "@/hooks";
 import ActiveCustomers from "./ActiveCustomers";
@@ -18,18 +17,10 @@ interface SearchResult {
 }
 
 const AnalyticsDashboard: React.FC = () => {
-  const queryClient = useQueryClient();
-
   // Estados para búsqueda
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-
-  // Al abrir Verkauf/Sales, actualizar órdenes para que se vean las ventas de hoy
-  useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: ['recentOrders'] });
-    queryClient.invalidateQueries({ queryKey: ['orderStats'] });
-  }, [queryClient]);
 
   const {
     data,

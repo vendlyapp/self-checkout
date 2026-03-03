@@ -359,17 +359,7 @@ class OrderService {
       const result = await query(selectQuery, queryParams);
       const orders = result.rows;
 
-      // Obtener items para cada orden
-      for (const order of orders) {
-        const itemsQuery = `
-          SELECT oi.*, p.name as productName, p.sku as productSku
-          FROM "OrderItem" oi
-          LEFT JOIN "Product" p ON oi."productId" = p.id
-          WHERE oi."orderId" = $1
-        `;
-        const itemsResult = await query(itemsQuery, [order.id]);
-        order.items = itemsResult.rows;
-      }
+      await this._fetchItemsForOrders(orders);
 
       // Contar total de órdenes para este owner
       const countQuery = `
@@ -427,17 +417,7 @@ class OrderService {
     const result = await query(selectQuery, params);
     const orders = result.rows;
 
-    // Obtener items para cada orden
-    for (const order of orders) {
-      const itemsQuery = `
-        SELECT oi.*, p.name as productName, p.sku as productSku
-        FROM "OrderItem" oi
-        LEFT JOIN "Product" p ON oi."productId" = p.id
-        WHERE oi."orderId" = $1
-      `;
-      const itemsResult = await query(itemsQuery, [order.id]);
-      order.items = itemsResult.rows;
-    }
+    await this._fetchItemsForOrders(orders);
 
     // Contar total
     const countWhereClause = status ? `WHERE status = $1` : '';
@@ -507,17 +487,7 @@ class OrderService {
     const result = await query(selectQuery, [userId, limit, offset]);
     const orders = result.rows;
 
-    // Obtener items para cada orden
-    for (const order of orders) {
-      const itemsQuery = `
-        SELECT oi.*, p.name as productName, p.sku as productSku
-        FROM "OrderItem" oi
-        LEFT JOIN "Product" p ON oi."productId" = p.id
-        WHERE oi."orderId" = $1
-      `;
-      const itemsResult = await query(itemsQuery, [order.id]);
-      order.items = itemsResult.rows;
-    }
+    await this._fetchItemsForOrders(orders);
 
     return {
       success: true,
@@ -577,19 +547,16 @@ class OrderService {
     const result = await query(updateQuery, values);
     const order = result.rows[0];
 
-    // Si se cancela la orden, también cancelar las facturas asociadas
+    // Si se cancela la orden, cancelar todas las facturas asociadas en un solo UPDATE
     if (orderData.status === 'cancelled') {
       try {
-        const invoiceService = require('./InvoiceService');
-        const invoicesResult = await invoiceService.findByOrderId(id);
-        if (invoicesResult.success && invoicesResult.data) {
-          for (const invoice of invoicesResult.data) {
-            await invoiceService.updateStatus(invoice.id, 'cancelled');
-          }
-        }
+        await query(
+          `UPDATE "Invoice" SET status = 'cancelled', "updatedAt" = CURRENT_TIMESTAMP
+           WHERE "orderId" = $1 AND status != 'cancelled'`,
+          [id]
+        );
       } catch (error) {
         console.error('Error al cancelar facturas asociadas:', error);
-        // No fallar la operación si hay error al cancelar facturas
       }
     }
 
@@ -825,18 +792,7 @@ class OrderService {
       const result = await query(selectQuery, params);
       const orders = result.rows;
 
-      // Obtener items para cada orden
-      for (const order of orders) {
-        const itemsQuery = `
-          SELECT oi.*, p.name as productName, p.sku as productSku
-          FROM "OrderItem" oi
-          LEFT JOIN "Product" p ON oi."productId" = p.id
-          WHERE oi."orderId" = $1
-        `;
-        const itemsResult = await query(itemsQuery, [order.id]);
-        order.items = itemsResult.rows;
-      }
-
+      await this._fetchItemsForOrders(orders);
       await this._applyInvoiceCustomerNameFallback(orders);
 
       return {
@@ -882,18 +838,7 @@ class OrderService {
     const result = await query(selectQuery, params);
     const orders = result.rows;
 
-    // Obtener items para cada orden
-    for (const order of orders) {
-      const itemsQuery = `
-        SELECT oi.*, p.name as productName, p.sku as productSku
-        FROM "OrderItem" oi
-        LEFT JOIN "Product" p ON oi."productId" = p.id
-        WHERE oi."orderId" = $1
-      `;
-      const itemsResult = await query(itemsQuery, [order.id]);
-      order.items = itemsResult.rows;
-    }
-
+    await this._fetchItemsForOrders(orders);
     await this._applyInvoiceCustomerNameFallback(orders);
 
     return {
@@ -901,6 +846,31 @@ class OrderService {
       data: orders,
       count: orders.length
     };
+  }
+
+  /**
+   * Carga todos los items de una lista de órdenes en UNA sola query (batch).
+   * Reemplaza el patrón N+1 donde se hacía una query por cada orden.
+   */
+  async _fetchItemsForOrders(orders) {
+    if (!orders || orders.length === 0) return;
+    const orderIds = orders.map((o) => o.id);
+    const itemsResult = await query(
+      `SELECT oi.*, p.name as "productName", p.sku as "productSku", p."taxRate" as "itemTaxRate"
+       FROM "OrderItem" oi
+       LEFT JOIN "Product" p ON oi."productId" = p.id
+       WHERE oi."orderId" = ANY($1)`,
+      [orderIds]
+    );
+    // Agrupar items por orderId en memoria (O(n) en lugar de N queries)
+    const itemsByOrderId = {};
+    for (const item of itemsResult.rows) {
+      if (!itemsByOrderId[item.orderId]) itemsByOrderId[item.orderId] = [];
+      itemsByOrderId[item.orderId].push(item);
+    }
+    for (const order of orders) {
+      order.items = itemsByOrderId[order.id] || [];
+    }
   }
 
   /**
@@ -939,44 +909,47 @@ class OrderService {
       throw new Error('Los items de la orden son requeridos');
     }
 
-    // Obtener precios de productos y calcular total
-    let total = 0;
-    const itemsWithPrices = [];
+    // Validar y normalizar items
+    const normalizedItems = [];
+    const uniqueProductIds = new Set();
 
     for (const item of orderData.items) {
       if (!item.productId || !item.quantity) {
         throw new Error('Jede Position muss productId und quantity haben');
       }
-
       const qty = parseInt(item.quantity);
       if (!Number.isFinite(qty) || qty <= 0) {
         throw new Error('Die Menge jeder Position muss eine Zahl grösser als null sein');
       }
+      uniqueProductIds.add(item.productId);
+      normalizedItems.push({ productId: item.productId, quantity: qty });
+    }
 
-      // Obtener precio y stock del producto
-      const productQuery = 'SELECT price, stock FROM "Product" WHERE id = $1';
-      const productResult = await query(productQuery, [item.productId]);
+    // Batch: obtener precio y stock de todos los productos en UNA sola query
+    const productsResult = await query(
+      'SELECT id, price, stock FROM "Product" WHERE id = ANY($1)',
+      [[...uniqueProductIds]]
+    );
 
-      if (productResult.rows.length === 0) {
-        throw new Error(`Produkt mit ID ${item.productId} nicht gefunden`);
-      }
+    if (productsResult.rows.length !== uniqueProductIds.size) {
+      throw new Error('Ein oder mehrere Produkte der Bestellung existieren nicht');
+    }
 
-      const productPrice = parseFloat(productResult.rows[0].price);
-      const productStock = parseInt(productResult.rows[0].stock);
+    const productCatalog = new Map(
+      productsResult.rows.map((p) => [p.id, { price: parseFloat(p.price), stock: parseInt(p.stock) }])
+    );
 
-      // Validar stock disponible antes de crear la transacción
-      if (productStock < qty) {
+    // Calcular total y validar stock
+    let total = 0;
+    const itemsWithPrices = [];
+
+    for (const item of normalizedItems) {
+      const product = productCatalog.get(item.productId);
+      if (product.stock < item.quantity) {
         throw new Error(`Unzureichender Lagerbestand für Produkt ${item.productId}`);
       }
-
-      const itemTotal = productPrice * qty;
-      total += itemTotal;
-
-      itemsWithPrices.push({
-        productId: item.productId,
-        quantity: qty,
-        price: productPrice
-      });
+      total += product.price * item.quantity;
+      itemsWithPrices.push({ productId: item.productId, quantity: item.quantity, price: product.price });
     }
 
     // Usar el total del orderData si viene (ya incluye descuentos), sino calcularlo

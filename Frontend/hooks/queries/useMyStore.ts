@@ -1,7 +1,6 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
 import { buildApiUrl, getAuthHeaders } from '@/lib/config/api'
 
 export interface StoreData {
@@ -28,72 +27,50 @@ export interface StoreData {
 }
 
 export const useMyStore = () => {
-  const [hasSession, setHasSession] = useState<boolean | null>(null)
-
-  // Verificar si hay sesión antes de ejecutar la query
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const { supabase } = await import('@/lib/supabase/client')
-        const { data: { session } } = await supabase.auth.getSession()
-        setHasSession(!!session?.access_token)
-      } catch {
-        setHasSession(false)
-      }
-    }
-    checkSession()
-  }, [])
-
   return useQuery({
     queryKey: ['myStore'],
     queryFn: async ({ signal }) => {
+      // La sesión se verifica directamente en la queryFn — sin useEffect ni estado extra.
+      // Esto elimina el waterfall: render → effect → setState → re-render → query start.
       const { supabase } = await import('@/lib/supabase/client')
       const { data: { session } } = await supabase.auth.getSession()
-      
+
       if (!session?.access_token) {
-        throw new Error('No estás autenticado')
+        // Lanzar error marcado para que retry no lo reintente
+        const err = new Error('NO_SESSION')
+        ;(err as Error & { noRetry: boolean }).noRetry = true
+        throw err
       }
 
       const url = buildApiUrl('/api/store/my-store')
       const headers = getAuthHeaders(session.access_token)
 
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 segundos timeout
+      const response = await fetch(url, { headers, signal })
 
-      try {
-        const response = await fetch(url, {
-          headers,
-          signal: signal || controller.signal,
-        })
-
-        clearTimeout(timeoutId)
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-
-        const result = await response.json()
-
-        if (!result.success) {
-          throw new Error(result.error || 'Error al cargar tienda')
-        }
-
-        return result.data as StoreData
-      } catch (error) {
-        clearTimeout(timeoutId)
-        if (error instanceof Error && error.name === 'AbortError') {
-          throw new Error('Request timeout')
-        }
-        throw error
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
+
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error || 'Error al cargar tienda')
+      }
+
+      return result.data as StoreData
     },
-    enabled: hasSession === true, // Solo ejecutar si hay sesión
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    gcTime: 10 * 60 * 1000, // 10 minutos
-    retry: 2,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: (failureCount, error) => {
+      // No reintentar si no hay sesión o si el error es de auth
+      if (error instanceof Error && (error.message === 'NO_SESSION' || error.message.includes('autenticado'))) {
+        return false
+      }
+      return failureCount < 2
+    },
     retryDelay: 1000,
     refetchOnWindowFocus: false,
-    throwOnError: false, // No lanzar errores automáticamente
+    throwOnError: false,
   })
 }
 

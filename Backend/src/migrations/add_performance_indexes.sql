@@ -1,0 +1,41 @@
+-- ============================================================
+-- Performance Indexes Migration
+-- Run once against your Supabase PostgreSQL database.
+-- All indexes use IF NOT EXISTS so it is safe to re-run.
+-- ============================================================
+
+-- OrderItem (most-hit table: every order read JOINs here)
+CREATE INDEX IF NOT EXISTS idx_orderitem_orderid    ON "OrderItem" ("orderId");
+CREATE INDEX IF NOT EXISTS idx_orderitem_productid  ON "OrderItem" ("productId");
+
+-- Product (every store-scoped query filters by ownerId)
+CREATE INDEX IF NOT EXISTS idx_product_ownerid      ON "Product" ("ownerId");
+CREATE INDEX IF NOT EXISTS idx_product_categoryid   ON "Product" ("categoryId");
+CREATE INDEX IF NOT EXISTS idx_product_isactive     ON "Product" ("isActive");
+
+-- Order (filtering, sorting, and customer lookups)
+CREATE INDEX IF NOT EXISTS idx_order_userid         ON "Order" ("userId");
+CREATE INDEX IF NOT EXISTS idx_order_customerid     ON "Order" ("customerId");
+CREATE INDEX IF NOT EXISTS idx_order_storeid        ON "Order" ("storeId");
+CREATE INDEX IF NOT EXISTS idx_order_status         ON "Order" ("status");
+CREATE INDEX IF NOT EXISTS idx_order_createdat      ON "Order" ("createdAt" DESC);
+
+-- Invoice (public token lookup + store/customer lookups)
+CREATE INDEX IF NOT EXISTS idx_invoice_orderid      ON "Invoice" ("orderId");
+CREATE INDEX IF NOT EXISTS idx_invoice_storeid      ON "Invoice" ("storeId");
+CREATE INDEX IF NOT EXISTS idx_invoice_sharetoken   ON "Invoice" ("shareToken");
+CREATE INDEX IF NOT EXISTS idx_invoice_invoicenumber ON "Invoice" ("invoiceNumber");
+-- Functional index for case-insensitive email search
+CREATE INDEX IF NOT EXISTS idx_invoice_customeremail_lower
+  ON "Invoice" (LOWER("customerEmail"));
+
+-- Customer (upsert by store+email is the hot path)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_customer_storeid_email
+  ON "Customer" ("storeId", LOWER(email));
+
+-- ProductCategory
+CREATE INDEX IF NOT EXISTS idx_productcategory_storeid ON "ProductCategory" ("storeId");
+
+-- ActiveSession (time-window queries for analytics heartbeat)
+CREATE INDEX IF NOT EXISTS idx_activesession_lastseen ON "ActiveSession" ("lastSeen");
+CREATE INDEX IF NOT EXISTS idx_activesession_role     ON "ActiveSession" ("role");
