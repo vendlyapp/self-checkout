@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const orderController = require('../controllers/OrderController');
+const { authMiddleware, optionalAuth } = require('../middleware/authMiddleware');
 const { validateUUID, validateOrder } = require('../middleware/validation');
 
 /**
@@ -45,10 +46,10 @@ const { validateUUID, validateOrder } = require('../middleware/validation');
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/stats', orderController.getOrderStats);
+router.get('/stats', optionalAuth, orderController.getOrderStats);
 
 // Ruta para admin - todas las órdenes
-router.get('/', orderController.getAllOrders);
+router.get('/', optionalAuth, orderController.getAllOrders);
 
 /**
  * @swagger
@@ -109,7 +110,7 @@ router.get('/', orderController.getAllOrders);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/recent', orderController.getRecentOrders);
+router.get('/recent', optionalAuth, orderController.getRecentOrders);
 
 /**
  * @swagger
@@ -172,13 +173,13 @@ router.get('/recent', orderController.getRecentOrders);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/:id', validateUUID('id'), orderController.getOrderById);
+router.get('/:id', optionalAuth, validateUUID('id'), orderController.getOrderById);
 
 /**
  * Actualizar estado de una orden
  * @route PATCH /api/orders/:id/status
  */
-router.patch('/:id/status', validateUUID('id'), orderController.updateOrderStatus);
+router.patch('/:id/status', authMiddleware, validateUUID('id'), orderController.updateOrderStatus);
 
 /**
  * @swagger
@@ -243,8 +244,8 @@ router.patch('/:id/status', validateUUID('id'), orderController.updateOrderStatu
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-// Ruta simplificada para crear órdenes
-router.post('/', validateOrder, orderController.createOrderSimple);
+// Ruta para crear órdenes (pública: el checkout del cliente no requiere auth)
+router.post('/', optionalAuth, validateOrder, orderController.createOrderSimple);
 
 /**
  * @swagger
@@ -316,105 +317,7 @@ router.post('/', validateOrder, orderController.createOrderSimple);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/users/:userId/orders', validateUUID('userId'), orderController.getOrdersByUserId);
-
-/**
- * @swagger
- * /api/users/{userId}/orders:
- *   post:
- *     summary: Crear nueva orden
- *     description: Crea una nueva orden para un usuario con los productos especificados
- *     tags: [Orders]
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: ID único del usuario
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - items
- *             properties:
- *               items:
- *                 type: array
- *                 minItems: 1
- *                 description: Lista de productos en la orden
- *                 items:
- *                   type: object
- *                   required:
- *                     - productId
- *                     - quantity
- *                   properties:
- *                     productId:
- *                       type: string
- *                       format: uuid
- *                       description: ID del producto
- *                       example: "ff0fb280-ed4b-4fa1-8da5-7a8320aa7f11"
- *                     quantity:
- *                       type: integer
- *                       minimum: 1
- *                       description: Cantidad del producto
- *                       example: 2
- *                 example:
- *                   - productId: "ff0fb280-ed4b-4fa1-8da5-7a8320aa7f11"
- *                     quantity: 2
- *                   - productId: "another-product-id"
- *                     quantity: 1
- *     responses:
- *       201:
- *         description: Orden creada exitosamente
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/ApiResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       allOf:
- *                         - $ref: '#/components/schemas/Order'
- *                         - type: object
- *                           properties:
- *                             items:
- *                               type: array
- *                               items:
- *                                 allOf:
- *                                   - type: object
- *                                     properties:
- *                                       id:
- *                                         type: string
- *                                       quantity:
- *                                         type: integer
- *                                       price:
- *                                         type: number
- *                                   - type: object
- *                                     properties:
- *                                       product:
- *                                         $ref: '#/components/schemas/Product'
- *                     message:
- *                       type: string
- *                       example: "Orden creada exitosamente"
- *       400:
- *         description: Datos de entrada inválidos o producto no encontrado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: Error interno del servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- */
 // Ruta para obtener órdenes de un usuario específico
-router.get('/user/:userId', validateUUID('userId'), orderController.getOrdersByUserId);
+router.get('/user/:userId', optionalAuth, validateUUID('userId'), orderController.getOrdersByUserId);
 
 module.exports = router;

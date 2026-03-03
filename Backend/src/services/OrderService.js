@@ -948,8 +948,13 @@ class OrderService {
         throw new Error('Jede Position muss productId und quantity haben');
       }
 
-      // Obtener precio del producto
-      const productQuery = 'SELECT price FROM "Product" WHERE id = $1';
+      const qty = parseInt(item.quantity);
+      if (!Number.isFinite(qty) || qty <= 0) {
+        throw new Error('Die Menge jeder Position muss eine Zahl grösser als null sein');
+      }
+
+      // Obtener precio y stock del producto
+      const productQuery = 'SELECT price, stock FROM "Product" WHERE id = $1';
       const productResult = await query(productQuery, [item.productId]);
 
       if (productResult.rows.length === 0) {
@@ -957,12 +962,19 @@ class OrderService {
       }
 
       const productPrice = parseFloat(productResult.rows[0].price);
-      const itemTotal = productPrice * parseInt(item.quantity);
+      const productStock = parseInt(productResult.rows[0].stock);
+
+      // Validar stock disponible antes de crear la transacción
+      if (productStock < qty) {
+        throw new Error(`Unzureichender Lagerbestand für Produkt ${item.productId}`);
+      }
+
+      const itemTotal = productPrice * qty;
       total += itemTotal;
 
       itemsWithPrices.push({
         productId: item.productId,
-        quantity: parseInt(item.quantity),
+        quantity: qty,
         price: productPrice
       });
     }
@@ -1020,9 +1032,22 @@ class OrderService {
       ]);
       const order = orderResult.rows[0];
 
-      // Crear items de la orden
+      // Crear items de la orden y decrementar stock atómicamente
       const orderItems = [];
       for (const item of itemsWithPrices) {
+        // Decrementar stock con verificación concurrente
+        const updateStockQuery = `
+          UPDATE "Product"
+          SET stock = stock - $1, "updatedAt" = CURRENT_TIMESTAMP
+          WHERE id = $2 AND stock >= $1
+          RETURNING id
+        `;
+        const stockResult = await client.query(updateStockQuery, [item.quantity, item.productId]);
+
+        if (stockResult.rowCount === 0) {
+          throw new Error(`Unzureichender Lagerbestand für Produkt ${item.productId}`);
+        }
+
         const itemQuery = `
           INSERT INTO "OrderItem" ("orderId", "productId", "quantity", "price")
           VALUES ($1, $2, $3, $4)

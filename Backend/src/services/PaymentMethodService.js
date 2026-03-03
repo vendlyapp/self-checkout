@@ -281,21 +281,6 @@ class PaymentMethodService {
       throw new Error('Zahlungsmethode nicht gefunden');
     }
 
-    // Verificar si la columna config existe en la tabla
-    let configColumnExists = true;
-    try {
-      const columnCheck = await query(`
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'PaymentMethod' 
-        AND column_name = 'config'
-      `);
-      configColumnExists = columnCheck.rows.length > 0;
-    } catch (error) {
-      console.warn('No se pudo verificar la existencia de la columna config:', error);
-      configColumnExists = false;
-    }
-
     // Construir query de actualización dinámicamente
     const updateFields = [];
     const values = [];
@@ -303,14 +288,7 @@ class PaymentMethodService {
 
     // Campos que se pueden actualizar
     // El campo disabledBySuperAdmin solo puede ser actualizado por SUPER_ADMIN (se verifica en el controller)
-    let updatableFields = ['name', 'displayName', 'code', 'icon', 'bgColor', 'textColor', 'isActive', 'sortOrder', 'disabledBySuperAdmin'];
-    // Solo agregar config si la columna existe
-    if (configColumnExists) {
-      updatableFields.push('config');
-    } else if (methodData.config !== undefined) {
-      // Si se intenta actualizar config pero la columna no existe, ignorar
-      console.warn('Se intentó actualizar config pero la columna no existe en la tabla');
-    }
+    const updatableFields = ['name', 'displayName', 'code', 'icon', 'bgColor', 'textColor', 'isActive', 'sortOrder', 'disabledBySuperAdmin', 'config'];
 
     // Si se actualiza el código, verificar que no esté duplicado
     if (methodData.code !== undefined && methodData.code.trim() !== existingMethod.data.code) {

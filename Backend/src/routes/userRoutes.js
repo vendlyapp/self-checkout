@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/UserController');
+const { authMiddleware, requireRole } = require('../middleware/authMiddleware');
 const { validateUUID, validateEmail } = require('../middleware/validation');
 
 /**
@@ -41,7 +42,7 @@ const { validateUUID, validateEmail } = require('../middleware/validation');
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/', userController.getAllUsers);
+router.get('/', authMiddleware, requireRole('SUPER_ADMIN'), userController.getAllUsers);
 
 /**
  * @swagger
@@ -90,7 +91,7 @@ router.get('/', userController.getAllUsers);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/:id', validateUUID('id'), userController.getUserById);
+router.get('/:id', authMiddleware, requireRole('SUPER_ADMIN', 'ADMIN'), validateUUID('id'), userController.getUserById);
 
 /**
  * @swagger
@@ -145,8 +146,8 @@ router.get('/:id', validateUUID('id'), userController.getUserById);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/', validateEmail, userController.createUser);
-router.post('/admin', validateEmail, userController.createAdmin);
+router.post('/', authMiddleware, requireRole('SUPER_ADMIN'), validateEmail, userController.createUser);
+router.post('/admin', authMiddleware, requireRole('SUPER_ADMIN'), validateEmail, userController.createAdmin);
 
 /**
  * @swagger
@@ -211,7 +212,7 @@ router.post('/admin', validateEmail, userController.createAdmin);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put('/:id', validateUUID('id'), userController.updateUser);
+router.put('/:id', authMiddleware, requireRole('SUPER_ADMIN', 'ADMIN'), validateUUID('id'), userController.updateUser);
 
 /**
  * @swagger
@@ -254,7 +255,7 @@ router.put('/:id', validateUUID('id'), userController.updateUser);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.delete('/:id', validateUUID('id'), userController.deleteUser);
+router.delete('/:id', authMiddleware, requireRole('SUPER_ADMIN'), validateUUID('id'), userController.deleteUser);
 
 /**
  * @swagger
@@ -295,6 +296,6 @@ router.delete('/:id', validateUUID('id'), userController.deleteUser);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/stats', userController.getStats);
+router.get('/stats', authMiddleware, requireRole('SUPER_ADMIN'), userController.getStats);
 
 module.exports = router;
