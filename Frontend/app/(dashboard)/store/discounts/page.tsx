@@ -59,19 +59,19 @@ export default function DiscountsPage() {
 
       {/* Tablet + Desktop: header, botón y lista con buen espaciado */}
       {!isMobile && (
-        <div className="p-4 md:p-6 lg:p-8 space-y-6 md:space-y-8 max-w-6xl mx-auto min-w-0">
+        <div className="p-4 md:px-6 md:pt-10 md:pb-6 lg:p-8 space-y-5 md:space-y-6 lg:space-y-8 max-w-6xl mx-auto min-w-0">
           <div className="min-w-0">
-            <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">
+            <h1 className="text-xl md:text-xl lg:text-2xl font-bold text-foreground tracking-tight">
               Rabatte & Codes
             </h1>
-            <p className="text-muted-foreground mt-1 text-sm md:text-base">
+            <p className="text-muted-foreground mt-1 text-sm md:text-sm lg:text-base">
               Verwalten Sie Ihre Rabattcodes und Angebote
             </p>
           </div>
 
           <button
             onClick={handleCreateDiscount}
-            className="w-full max-w-md bg-primary text-primary-foreground rounded-xl py-3 md:py-4 px-6 font-semibold flex items-center justify-center gap-2 shadow-md hover:bg-primary/90 transition-ios active:scale-[0.98]"
+            className="w-full max-w-md bg-primary text-primary-foreground rounded-xl py-3 md:py-3 lg:py-4 px-5 md:px-6 font-semibold flex items-center justify-center gap-2 shadow-md hover:bg-primary/90 transition-ios active:scale-[0.98] text-sm md:text-sm lg:text-base"
             aria-label="Neuen Rabattcode erstellen"
           >
             <Plus className="w-5 h-5" />

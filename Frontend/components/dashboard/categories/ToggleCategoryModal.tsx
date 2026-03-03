@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, AlertTriangle } from "lucide-react";
+import { Loader } from "@/components/ui/Loader";
 
 interface ToggleCategoryModalProps {
   isOpen: boolean;
@@ -113,7 +114,7 @@ export default function ToggleCategoryModal({
             >
               {isLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <Loader size="xs" color="white" />
                   {isCurrentlyActive ? "Wird deaktiviert..." : "Wird aktiviert..."}
                 </>
               ) : (

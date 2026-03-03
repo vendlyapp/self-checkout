@@ -130,7 +130,7 @@ export default function Header() {
                 handleButtonPress('notifications');
                 handleValidInteraction(e);
               }}
-              aria-label={`Notificaciones ${unreadCount > 0 ? `(${unreadCount} sin leer)` : ''}`}
+              aria-label={`Benachrichtigungen ${unreadCount > 0 ? `(${unreadCount} ungelesen)` : ''}`}
             >
               <Bell className="header-icon" />
               {unreadCount > 0 && (
@@ -148,11 +148,11 @@ export default function Header() {
           <div className="notification-dropdown">
             <div className="notification-header">
               <h3 className="text-sm font-semibold text-gray-900">
-                Notificaciones
+                Benachrichtigungen
               </h3>
               {unreadCount > 0 && (
                 <span className="text-xs text-gray-500">
-                  {unreadCount} sin leer
+                  {unreadCount} ungelesen
                 </span>
               )}
             </div>

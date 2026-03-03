@@ -286,7 +286,7 @@ export default function SalesOrderDetailPage() {
                             {item.productName || 'Produkt'}
                           </div>
                           {item.productSku && (
-                            <div className="text-xs text-gray-500 mb-2">SKU: {item.productSku}</div>
+                            <div className="text-xs text-gray-500 mb-2">{item.productSku}</div>
                           )}
                           <div className="flex items-center gap-2 text-sm text-gray-600">
                             <span className="font-medium">{item.quantity}</span>
@@ -370,49 +370,49 @@ export default function SalesOrderDetailPage() {
       )}
 
       {!isMobile && (
-        <div className="p-6 max-w-5xl mx-auto">
-          {/* Header mejorado */}
-          <div className="mb-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className={`w-16 h-16 ${statusConfig.bgColor} rounded-xl flex items-center justify-center`}>
-                    <div className={statusConfig.iconColor}>
+        <div className="p-4 max-w-5xl mx-auto min-w-0 lg:p-6">
+          {/* Header mejorado - compacto en tablet */}
+          <div className="mb-4 lg:mb-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 lg:p-6 overflow-hidden">
+              <div className="flex items-center justify-between gap-3 min-w-0">
+                <div className="flex items-center gap-3 lg:gap-4 min-w-0 flex-1">
+                  <div className={`w-12 h-12 lg:w-16 lg:h-16 flex-shrink-0 ${statusConfig.bgColor} rounded-xl flex items-center justify-center`}>
+                    <div className={`${statusConfig.iconColor} [&>svg]:w-4 [&>svg]:h-4 lg:[&>svg]:w-5 lg:[&>svg]:h-5`}>
                       {statusConfig.icon}
                     </div>
                   </div>
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-1">Bestellung</h1>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-mono text-gray-600">
+                  <div className="min-w-0">
+                    <h1 className="text-xl lg:text-2xl font-bold text-gray-900 mb-0.5 lg:mb-1 truncate">Bestellung</h1>
+                    <div className="flex items-center gap-2 lg:gap-3 flex-wrap">
+                      <span className="text-xs lg:text-sm font-mono text-gray-600 truncate">
                         #{order.id.slice(-8).toUpperCase()}
                       </span>
-                      <span className="text-gray-400">•</span>
-                      <span className="text-sm text-gray-600">{formatDate(order.createdAt)}</span>
+                      <span className="text-gray-400 flex-shrink-0">•</span>
+                      <span className="text-xs lg:text-sm text-gray-600 truncate">{formatDate(order.createdAt)}</span>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className={`px-4 py-2 rounded-full text-sm font-semibold ${statusConfig.color}`}>
+                <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
+                  <span className={`px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-full text-xs lg:text-sm font-semibold whitespace-nowrap ${statusConfig.color}`}>
                     {statusConfig.label}
                   </span>
                   {order.status !== 'cancelled' && (
                     <button
                       onClick={handleOpenCancelModal}
-                      className="flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl py-2.5 px-4 font-semibold transition-colors border border-red-200"
+                      className="flex items-center gap-1.5 lg:gap-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl py-2 px-3 lg:py-2.5 lg:px-4 font-semibold transition-colors border border-red-200 text-xs lg:text-sm"
                     >
-                      <Trash2 className="w-4 h-4" />
-                      <span>Stornieren</span>
+                      <Trash2 className="w-3.5 h-3.5 lg:w-4 lg:h-4 flex-shrink-0" />
+                      <span className="hidden sm:inline">Stornieren</span>
                     </button>
                   )}
                 </div>
               </div>
               
               {/* Monto destacado */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="mt-4 pt-4 lg:mt-6 lg:pt-6 border-t border-gray-200">
                 <div className="text-center">
-                  <div className="text-sm text-gray-600 mb-2">Gesamtbetrag</div>
-                  <div className={`text-4xl font-bold ${statusConfig.iconColor}`}>
+                  <div className="text-xs lg:text-sm text-gray-600 mb-1 lg:mb-2">Gesamtbetrag</div>
+                  <div className={`text-2xl lg:text-4xl font-bold ${statusConfig.iconColor}`}>
                     {formatSwissPriceWithCHF(order.total)}
                   </div>
                 </div>
@@ -420,36 +420,36 @@ export default function SalesOrderDetailPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-2 gap-4 lg:gap-6 mb-4 lg:mb-6 min-w-0">
             {/* Order Info */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5 text-gray-600" />
-                Bestellinformationen
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 lg:p-6 overflow-hidden min-w-0">
+              <h2 className="text-base lg:text-lg font-bold text-gray-900 mb-3 lg:mb-4 flex items-center gap-2">
+                <ShoppingCart className="w-4 h-4 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" />
+                <span className="truncate">Bestellinformationen</span>
               </h2>
-              <div className="space-y-4">
+              <div className="space-y-3 lg:space-y-4">
                 {order.userName && (
-                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
-                    <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
-                      <User className="w-5 h-5 text-gray-400" />
+                  <div className="flex items-start gap-2 lg:gap-3 p-2.5 lg:p-3 bg-gray-50 rounded-xl min-w-0">
+                    <div className="w-8 h-8 lg:w-10 lg:h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 lg:w-5 lg:h-5 text-gray-400" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="text-xs text-gray-600 mb-0.5">Kunde</div>
-                      <div className="text-sm font-semibold text-gray-900">{order.userName}</div>
+                      <div className="text-xs lg:text-sm font-semibold text-gray-900 truncate">{order.userName}</div>
                       {order.userEmail && (
-                        <div className="text-xs text-gray-500 mt-0.5">{order.userEmail}</div>
+                        <div className="text-xs text-gray-500 mt-0.5 truncate">{order.userEmail}</div>
                       )}
                     </div>
                   </div>
                 )}
                 {order.paymentMethod && (
-                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
-                    <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
-                      <CreditCard className="w-5 h-5 text-gray-400" />
+                  <div className="flex items-start gap-2 lg:gap-3 p-2.5 lg:p-3 bg-gray-50 rounded-xl min-w-0">
+                    <div className="w-8 h-8 lg:w-10 lg:h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
+                      <CreditCard className="w-4 h-4 lg:w-5 lg:h-5 text-gray-400" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="text-xs text-gray-600 mb-0.5">Zahlungsmethode</div>
-                      <div className="text-sm font-semibold text-gray-900">{order.paymentMethod}</div>
+                      <div className="text-xs lg:text-sm font-semibold text-gray-900 truncate">{order.paymentMethod}</div>
                     </div>
                   </div>
                 )}
@@ -457,36 +457,36 @@ export default function SalesOrderDetailPage() {
             </div>
 
             {/* Invoices */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-gray-600" />
-                Rechnungen ({invoices.length})
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 lg:p-6 overflow-hidden min-w-0">
+              <h2 className="text-base lg:text-lg font-bold text-gray-900 mb-3 lg:mb-4 flex items-center gap-2">
+                <FileText className="w-4 h-4 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" />
+                <span className="truncate">Rechnungen ({invoices.length})</span>
               </h2>
               {invoicesLoading ? (
-                <div className="flex items-center justify-center py-8">
+                <div className="flex items-center justify-center py-6 lg:py-8">
                   <Loader size="md" />
                 </div>
               ) : invoices.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-1.5 lg:space-y-2">
                   {invoices.map((invoice) => (
                     <Link
                       key={invoice.id}
                       href={`/sales/invoices/${invoice.id}`}
-                      className="block p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all border border-gray-100 hover:border-gray-200 hover:shadow-sm"
+                      className="block p-3 lg:p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all border border-gray-100 hover:border-gray-200 hover:shadow-sm min-w-0"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-900 mb-1">{invoice.invoiceNumber}</div>
-                          <div className="text-sm text-gray-500">
+                      <div className="flex items-center justify-between gap-2 min-w-0">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-gray-900 mb-0.5 lg:mb-1 text-sm lg:text-base truncate">{invoice.invoiceNumber}</div>
+                          <div className="text-xs lg:text-sm text-gray-500 truncate">
                             {formatDate(invoice.issuedAt)}
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg font-bold text-gray-900">
+                        <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
+                          <span className="text-base lg:text-lg font-bold text-gray-900 whitespace-nowrap">
                             {formatSwissPriceWithCHF(invoice.total)}
                           </span>
-                          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                            <ExternalLink className="w-4 h-4 text-gray-400" />
+                          <div className="w-6 h-6 lg:w-8 lg:h-8 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
+                            <ExternalLink className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-gray-400" />
                           </div>
                         </div>
                       </div>
@@ -494,11 +494,11 @@ export default function SalesOrderDetailPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <FileText className="w-8 h-8 text-gray-300" />
+                <div className="text-center py-6 lg:py-8">
+                  <div className="w-12 h-12 lg:w-16 lg:h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-2 lg:mb-3">
+                    <FileText className="w-6 h-6 lg:w-8 lg:h-8 text-gray-300" />
                   </div>
-                  <p className="text-sm text-gray-600 font-medium">Keine Rechnung für diese Bestellung</p>
+                  <p className="text-xs lg:text-sm text-gray-600 font-medium">Keine Rechnung für diese Bestellung</p>
                 </div>
               )}
             </div>
@@ -506,35 +506,35 @@ export default function SalesOrderDetailPage() {
 
           {/* Order Items */}
           {order.items && order.items.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                  <Package className="w-5 h-5 text-gray-600" />
-                  Produkte ({order.items.length})
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden min-w-0">
+              <div className="bg-gray-50 px-4 py-3 lg:px-6 lg:py-4 border-b border-gray-200">
+                <h2 className="text-base lg:text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <Package className="w-4 h-4 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" />
+                  <span className="truncate">Produkte ({order.items.length})</span>
                 </h2>
               </div>
-              <div className="p-6">
-                <div className="space-y-3">
+              <div className="p-4 lg:p-6">
+                <div className="space-y-2 lg:space-y-3">
                   {order.items.map((item, index) => (
                     <div 
                       key={item.id || index} 
-                      className="flex items-start justify-between gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100"
+                      className="flex items-start justify-between gap-2 lg:gap-4 p-3 lg:p-4 bg-gray-50 rounded-xl border border-gray-100 min-w-0"
                     >
                       <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-gray-900 mb-1">
+                        <div className="font-semibold text-gray-900 mb-0.5 lg:mb-1 text-sm lg:text-base truncate">
                           {item.productName || 'Produkt'}
                         </div>
                         {item.productSku && (
-                          <div className="text-xs text-gray-500 mb-2">SKU: {item.productSku}</div>
+                          <div className="text-xs text-gray-500 mb-1 lg:mb-2 truncate">{item.productSku}</div>
                         )}
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <div className="flex items-center gap-1.5 lg:gap-2 text-xs lg:text-sm text-gray-600 flex-wrap">
                           <span className="font-medium">{item.quantity}</span>
                           <span>×</span>
                           <span>{formatSwissPriceWithCHF(item.price)}</span>
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <div className="text-xl font-bold text-gray-900">
+                        <div className="text-base lg:text-xl font-bold text-gray-900 whitespace-nowrap">
                           {formatSwissPriceWithCHF(item.price * item.quantity)}
                         </div>
                       </div>
@@ -542,10 +542,10 @@ export default function SalesOrderDetailPage() {
                   ))}
                 </div>
                 {/* Total */}
-                <div className="mt-6 pt-6 border-t-2 border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-semibold text-gray-900">Gesamtbetrag</span>
-                    <span className={`text-3xl font-bold ${statusConfig.iconColor}`}>
+                <div className="mt-4 pt-4 lg:mt-6 lg:pt-6 border-t-2 border-gray-200">
+                  <div className="flex items-center justify-between gap-2 min-w-0">
+                    <span className="text-sm lg:text-lg font-semibold text-gray-900">Gesamtbetrag</span>
+                    <span className={`text-xl lg:text-3xl font-bold whitespace-nowrap ${statusConfig.iconColor}`}>
                       {formatSwissPriceWithCHF(order.total)}
                     </span>
                   </div>

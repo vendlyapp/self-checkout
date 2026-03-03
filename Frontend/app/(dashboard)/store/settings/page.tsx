@@ -72,7 +72,7 @@ export default function StoreSettingsPage() {
     <div className="w-full h-full gpu-accelerated">
       {/* Mensaje primera vez (alemán) */}
       {isFirstTimeSetup && (
-        <div className="mx-auto mt-4 max-w-4xl px-4 sm:mt-6 sm:px-6">
+        <div className="mx-auto mt-4 max-w-4xl px-4 md:px-6 md:mt-8 lg:mt-10">
           <div
             className="rounded-2xl border border-brand-200 bg-brand-50/80 p-4 shadow-sm"
             role="status"
@@ -100,10 +100,10 @@ export default function StoreSettingsPage() {
         </div>
       )}
 
-      {/* Desktop Layout */}
+      {/* Tablet + Desktop Layout */}
       {!isMobile && (
-        <div className="w-full min-h-screen bg-[#F2EDE8] py-6">
-          <div className="max-w-4xl mx-auto px-6">
+        <div className="w-full min-h-screen bg-[#F2EDE8] pt-8 md:pt-10 pb-6 lg:py-10">
+          <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8">
             <StoreSettingsForm onUpdate={handleStoreUpdate} />
           </div>
         </div>

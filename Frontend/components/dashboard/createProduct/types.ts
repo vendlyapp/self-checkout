@@ -91,6 +91,8 @@ export interface SharedFormProps {
   isEditMode?: boolean;
   existingProduct?: Product; // Producto completo para mostrar información adicional
   hasChanges?: boolean; // Si hay cambios en el formulario (solo en modo edición)
+  /** Ocultar botón de guardar dentro del formulario (ej. cuando hay botón externo en products_list/view) */
+  hideSubmitButton?: boolean;
 }
 
 // Form Props

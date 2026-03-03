@@ -157,7 +157,7 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
                 {/* Total amount and transactions */}
                 <div className="text-right">
                   <div className="text-sm font-medium text-foreground">
-                    Total CHF {method.total.toLocaleString()}.–
+                    Total CHF {method.total.toLocaleString('de-CH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}.–
                   </div>
                  
                 </div>

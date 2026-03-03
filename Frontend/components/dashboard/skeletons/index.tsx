@@ -48,8 +48,15 @@ export {
   NavigationItemSkeletonLoader,
   NavigationListSkeletonLoader,
   ProductsDashboardSkeletonLoader,
+  ProductsDashboardSkeletonLoaderDesktop,
   ProductsErrorState
 } from './products';
+
+// Store section skeletons
+export {
+  StoreDashboardSkeletonLoader,
+  StoreDashboardSkeletonLoaderDesktop
+} from './store';
 
 // Legacy exports for backward compatibility
 export { HomeDashboardSkeletonLoader as DashboardSkeletonLoader } from './home'; 

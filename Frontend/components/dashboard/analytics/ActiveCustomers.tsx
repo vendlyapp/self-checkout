@@ -1,5 +1,6 @@
 import React from "react";
 import { ChevronRight } from "lucide-react";
+import { formatSwissPrice } from "@/lib/utils";
 import { ShopActivity } from "./types";
 
 interface ActiveCustomersProps {
@@ -133,7 +134,7 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
               <div className="w-2 h-2 lg:w-3 lg:h-3 bg-primary rounded-full"></div>
               <p className="text-sm lg:text-base text-muted-foreground">
                 <span className="font-semibold text-[#373F49] lg:text-lg">
-                  CHF {openCartsValue}.–
+                  CHF {formatSwissPrice(openCartsValue)}
                 </span>{" "}
                 in offenen Warenkörben
               </p>

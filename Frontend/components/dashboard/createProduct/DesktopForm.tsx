@@ -622,17 +622,19 @@ export default function DesktopForm(props: SharedFormProps) {
             </div>
           </div>
 
-          {/* Save Button - Desktop */}
-          <div className="bg-white rounded-xl p-4 md:p-5 lg:p-6 shadow-sm border border-gray-200">
-            <button
-              onClick={handleSave}
-              disabled={false}
-              className="w-full bg-gradient-to-r from-[#25D076] to-[#20BA68] text-white py-4 px-6 rounded-xl font-semibold hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-ios text-base flex items-center justify-center gap-2"
-            >
-              <CheckCircle className="w-5 h-5" />
-              <span>{props.isEditMode ? 'Änderungen speichern' : 'Produkt speichern'}</span>
-            </button>
-          </div>
+          {/* Save Button - Desktop (oculto si hideSubmitButton, ej. en products_list/view) */}
+          {!props.hideSubmitButton && (
+            <div className="bg-white rounded-xl p-4 md:p-5 lg:p-6 shadow-sm border border-gray-200">
+              <button
+                onClick={handleSave}
+                disabled={false}
+                className="w-full bg-gradient-to-r from-[#25D076] to-[#20BA68] text-white py-4 px-6 rounded-xl font-semibold hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-ios text-base flex items-center justify-center gap-2"
+              >
+                <CheckCircle className="w-5 h-5" />
+                <span>{props.isEditMode ? 'Änderungen speichern' : 'Produkt speichern'}</span>
+              </button>
+            </div>
+          )}
 
           {/* Información adicional del producto (QR, Barcode, etc.) - Solo en modo edición */}
           {props.isEditMode && props.existingProduct && (
@@ -694,7 +696,7 @@ function ProductAdditionalInfo({ product }: { product: {
           <div className="flex items-center justify-between mb-3 lg:mb-4">
             <div className="flex items-center gap-2">
               <QrCode className="w-6 h-6 text-brand-500" />
-              <h3 className="text-base lg:text-lg font-semibold text-gray-900">Código QR</h3>
+              <h3 className="text-base lg:text-lg font-semibold text-gray-900">QR-Code</h3>
             </div>
             <button
               onClick={handleDownloadQR}
@@ -708,11 +710,11 @@ function ProductAdditionalInfo({ product }: { product: {
             <div className="text-center">
               <img 
                 src={product.qrCode} 
-                alt={`QR Code para ${product.name}`}
+                alt={`QR-Code für ${product.name}`}
                 className="w-64 h-64 mx-auto rounded-lg"
               />
               <p className="text-sm text-gray-600 mt-4">
-                Escanea este código para identificar el producto
+                Scannen Sie diesen Code zur Produktidentifikation
               </p>
             </div>
           </div>
@@ -725,7 +727,7 @@ function ProductAdditionalInfo({ product }: { product: {
           <div className="flex items-center justify-between mb-3 lg:mb-4">
             <div className="flex items-center gap-2">
               <ScanLine className="w-6 h-6 text-brand-500" />
-              <h3 className="text-base lg:text-lg font-semibold text-gray-900">Código de Barras</h3>
+              <h3 className="text-base lg:text-lg font-semibold text-gray-900">Strichcode</h3>
             </div>
             <button
               onClick={handleDownloadBarcode}
@@ -739,11 +741,11 @@ function ProductAdditionalInfo({ product }: { product: {
             <div className="text-center">
               <img 
                 src={product.barcodeImage} 
-                alt={`Código de barras para ${product.name}`}
+                alt={`Strichcode für ${product.name}`}
                 className="max-w-full h-auto mx-auto rounded-lg bg-white p-4"
               />
               <p className="text-sm text-gray-600 mt-4">
-                Escanea este código de barras para identificar el producto
+                Scannen Sie diesen Strichcode zur Produktidentifikation
               </p>
             </div>
           </div>
@@ -762,7 +764,7 @@ function ProductAdditionalInfo({ product }: { product: {
           )}
           {product.barcode && (
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-sm font-medium text-gray-600">Código de Barras</span>
+              <span className="text-sm font-medium text-gray-600">Strichcode</span>
               <span className="text-gray-900 font-mono text-sm">{product.barcode}</span>
             </div>
           )}

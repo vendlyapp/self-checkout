@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 import { formatCHF, formatDate } from '@/lib/invoice-utils'
 import { formatSwissPriceWithCHF } from '@/lib/utils'
 import Link from 'next/link'
+import { Loader } from '@/components/ui/Loader'
 
 export default function CustomerDetailPage() {
   const { isMobile } = useResponsive()
@@ -76,7 +77,7 @@ export default function CustomerDetailPage() {
     return (
       <div className="w-full h-full flex items-center justify-center min-h-screen bg-[#F2EDE8]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mx-auto mb-4"></div>
+          <Loader size="lg" className="mx-auto mb-4" />
           <p className="text-gray-600">Wird geladen...</p>
         </div>
       </div>

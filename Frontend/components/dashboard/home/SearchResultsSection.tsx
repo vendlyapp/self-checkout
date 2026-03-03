@@ -2,6 +2,7 @@
 
 import type { SearchResultsSectionProps } from '../types';
 import React, { useState } from 'react';
+import { Loader } from '@/components/ui/Loader';
 
 const SearchResultsSection = ({ 
   isSearching, 
@@ -12,7 +13,7 @@ const SearchResultsSection = ({
     <section className="mb-6">
       {isSearching ? (
         <div className="text-center py-8">
-          <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <Loader size="sm" className="mx-auto mb-3" />
           <p className="text-gray-600">Suche läuft...</p>
         </div>
       ) : (

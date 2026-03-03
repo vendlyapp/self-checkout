@@ -10,6 +10,7 @@ interface SearchInputProps {
   onChange?: (value: string) => void;
   onSearch?: (query: string) => void;
   className?: string;
+  inputClassName?: string;
   esHome?: boolean;
   showFilters?: boolean;
   onFilterClick?: () => void;
@@ -23,6 +24,7 @@ export function SearchInput({
   onChange,
   onSearch,
   className,
+  inputClassName,
   esHome = false,
   showFilters = false,
   onFilterClick,
@@ -121,9 +123,10 @@ export function SearchInput({
             onBlur={() => setIsFocused(false)}
             placeholder={placeholder}
             className={clsx(
-              "w-full min-w-0 h-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400 placeholder:truncate",
+              "w-full min-w-0 h-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400 truncate",
+              "placeholder:truncate text-ellipsis",
               "pl-4 md:pl-10 lg:pl-12 pr-14 md:pr-16 lg:pr-20",
-              "text-sm md:text-base"
+              "text-xs sm:text-sm md:text-base max-md:placeholder:text-xs"
             )}
           />
 
@@ -166,12 +169,12 @@ export function SearchInput({
         {/* Sugerencias - Solo en desktop */}
         {showSuggestions && (
           <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-200 z-50 max-h-64 overflow-y-auto">
-            {/* Búsquedas recientes */}
+            {/* Letzte Suchen */}
             {recentSearches.length > 0 && !value && (
               <div className="p-3 border-b border-gray-100">
                 <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
                   <Command className="w-3 h-3" />
-                  <span>Búsquedas recientes</span>
+                  <span>Letzte Suchen</span>
                 </div>
                 <div className="space-y-1">
                   {recentSearches.slice(0, 3).map((search, index) => (
@@ -228,7 +231,10 @@ export function SearchInput({
           }}
           onBlur={() => setIsFocused(false)}
           placeholder={placeholder}
-          className="w-full h-full min-h-[2.75rem] pl-11 md:pl-12 pr-11 md:pr-12 text-sm text-foreground placeholder:text-muted-foreground bg-transparent focus:outline-none rounded-full"
+          className={clsx(
+            "w-full min-w-0 h-full min-h-[2.75rem] pl-11 md:pl-12 pr-11 md:pr-12 text-foreground placeholder:text-muted-foreground bg-transparent focus:outline-none rounded-full truncate text-ellipsis",
+            inputClassName ?? "text-xs sm:text-sm placeholder:text-xs sm:placeholder:text-sm"
+          )}
           aria-label="Suchen"
         />
 

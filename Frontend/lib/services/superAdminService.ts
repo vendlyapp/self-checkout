@@ -106,7 +106,20 @@ async function makeRequest<T>(
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      let message = `HTTP error! status: ${response.status}`;
+      try {
+        const errorBody = await response.json();
+        const serverMessage =
+          typeof errorBody?.error === 'string'
+            ? errorBody.error
+            : errorBody?.message ?? errorBody?.detail;
+        if (serverMessage) {
+          message = `${message} — ${serverMessage}`;
+        }
+      } catch {
+        // response.json() failed (e.g. non-JSON body), use status only
+      }
+      throw new Error(message);
     }
 
     const data = await response.json();

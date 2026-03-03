@@ -627,8 +627,8 @@ export default function MobileForm(props: SharedFormProps) {
           </select>
         </div>
 
-        {/* Save Button - Mobile (solo en modo edición) */}
-        {props.isEditMode && (
+        {/* Save Button - Mobile (solo en modo edición; oculto si hideSubmitButton) */}
+        {props.isEditMode && !props.hideSubmitButton && (
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 mt-5">
             <button
               onClick={handleSave}

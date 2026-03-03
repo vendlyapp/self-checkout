@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { InvoiceService, Invoice } from '@/lib/services/invoiceService';
 import { useMyStore } from '@/hooks/queries/useMyStore';
 import { useResponsive } from '@/hooks';
-import { Loader2, FileText, Search, Calendar, Banknote, User, ChevronRight } from 'lucide-react';
+import { FileText, Search, Calendar, Banknote, User, ChevronRight } from 'lucide-react';
+import { Loader } from '@/components/ui/Loader';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 import Link from 'next/link';
 
@@ -83,7 +84,7 @@ export default function StoreInvoicesPage() {
     return (
       <div className="w-full h-full overflow-auto gpu-accelerated">
         <div className="flex flex-col items-center justify-center min-h-screen p-4">
-          <Loader2 className="w-8 h-8 text-[#25D076] animate-spin" />
+          <Loader size="lg" />
           <p className="text-gray-600 font-medium mt-4">Rechnungen werden geladen...</p>
         </div>
       </div>
@@ -242,34 +243,34 @@ export default function StoreInvoicesPage() {
         </div>
       )}
 
-      {/* Desktop Layout */}
+      {/* Tablet + Desktop Layout */}
       {!isMobile && (
-        <div className="p-6 max-w-6xl mx-auto">
+        <div className="p-4 md:px-6 md:pt-10 md:pb-6 lg:p-6 max-w-6xl mx-auto min-w-0">
           {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Rechnungen</h1>
-            <p className="text-gray-600">
+          <div className="mb-5 md:mb-6">
+            <h1 className="text-xl md:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 mb-1.5 md:mb-2 tracking-tight">Rechnungen</h1>
+            <p className="text-gray-600 text-sm md:text-sm lg:text-base">
               {invoices.length} {invoices.length === 1 ? 'Rechnung' : 'Rechnungen'} insgesamt
             </p>
           </div>
 
           {/* Search Bar */}
-          <div className="mb-6">
-            <div className="relative max-w-md">
+          <div className="mb-5 md:mb-6">
+            <div className="relative max-w-full md:max-w-xs lg:max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
                 placeholder="Nach Rechnungsnummer, Kunde oder E-Mail suchen..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white"
+                className="w-full pl-10 pr-4 py-2.5 md:py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-[#25D076] bg-white text-sm md:text-base"
               />
             </div>
           </div>
 
           {/* Invoices List */}
           {filteredInvoices.length === 0 ? (
-            <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+            <div className="bg-white rounded-2xl shadow-lg p-8 md:p-10 lg:p-12 text-center">
               <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 {searchQuery ? 'Keine Rechnungen gefunden' : 'Keine Rechnungen vorhanden'}
@@ -286,9 +287,9 @@ export default function StoreInvoicesPage() {
                 <Link
                   key={invoice.id}
                   href={`/store/invoice/${invoice.id}`}
-                  className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all p-6 block"
+                  className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all p-4 md:p-5 lg:p-6 block"
                 >
-                  <div className="flex flex-row items-center justify-between gap-4">
+                  <div className="flex flex-row items-center justify-between gap-3 md:gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-3">
                         <div className="w-12 h-12 rounded-xl bg-[#25D076]/10 flex items-center justify-center flex-shrink-0">
@@ -304,7 +305,7 @@ export default function StoreInvoicesPage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-4 gap-4 ml-16">
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 md:ml-12 lg:ml-16">
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <Calendar className="w-4 h-4 text-gray-400" />
                           <span>{formatDate(invoice.issuedAt)}</span>

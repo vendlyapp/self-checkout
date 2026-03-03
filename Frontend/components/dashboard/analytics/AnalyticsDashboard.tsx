@@ -61,12 +61,12 @@ const AnalyticsDashboard: React.FC = () => {
       return [
         {
           id: 1,
-          name: `Analytics resultado para "${query}" 1`,
+          name: `Analytics-Ergebnis für «${query}» 1`,
           type: "metric",
         },
         {
           id: 2,
-          name: `Analytics resultado para "${query}" 2`,
+          name: `Analytics-Ergebnis für «${query}» 2`,
           type: "report",
         },
       ];
@@ -232,20 +232,21 @@ const AnalyticsDashboard: React.FC = () => {
 
       {/* ===== TABLET + DESKTOP (≥ 768px) ===== */}
       <div className="hidden md:block min-w-0">
-        <div className="p-4 md:p-5 lg:p-6 xl:p-8 space-y-5 md:space-y-6 lg:space-y-8 xl:space-y-10 max-w-[1600px]">
+        <div className="p-4 md:px-6 md:pt-10 md:pb-6 lg:p-6 xl:p-8 space-y-5 md:space-y-6 lg:space-y-8 xl:space-y-10 max-w-[1600px]">
           {/* Header Section */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4 lg:gap-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-5 lg:gap-6">
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl lg:text-2xl font-bold text-foreground">Analytics & Verkäufe</h1>
-              <p className="text-muted-foreground mt-0.5 text-xs lg:text-sm">Überwachen Sie Ihre Verkaufsleistung und Kundenaktivität</p>
+              <h1 className="text-xl md:text-xl lg:text-2xl font-bold text-foreground tracking-tight">Analytics & Verkäufe</h1>
+              <p className="text-muted-foreground mt-0.5 text-xs md:text-xs lg:text-sm">Überwachen Sie Ihre Verkaufsleistung und Kundenaktivität</p>
             </div>
-            <div className="w-full md:w-[220px] lg:w-[280px] xl:w-[320px] flex-shrink-0 md:flex md:items-center">
+            <div className="w-full md:w-[200px] lg:w-[280px] xl:w-[320px] flex-shrink-0 md:flex md:items-center">
               <SearchInput
                 placeholder="Suchen..."
                 value={searchQuery}
                 onChange={setSearchQuery}
                 onSearch={handleSearch}
-                className="w-full h-10 min-h-10 lg:h-11 lg:min-h-11"
+                className="w-full h-9 min-h-9 md:h-9 lg:h-11 lg:min-h-11"
+                inputClassName="text-xs md:text-xs lg:text-sm placeholder:text-xs md:placeholder:text-xs lg:placeholder:text-sm"
                 esHome={false}
               />
             </div>

@@ -8,6 +8,7 @@ import { CustomerService, type Customer } from '@/lib/services/customerService'
 import { Users, Search, Mail, Phone, MapPin, ShoppingBag, TrendingUp, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatCHF } from '@/lib/invoice-utils'
+import { Loader } from '@/components/ui/Loader'
 
 export default function CustomersPage() {
   const { isMobile } = useResponsive()
@@ -78,7 +79,7 @@ export default function CustomersPage() {
     return (
       <div className="w-full h-full flex items-center justify-center min-h-screen bg-[#F2EDE8]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mx-auto mb-4"></div>
+          <Loader size="lg" className="mx-auto mb-4" />
           <p className="text-gray-600">Wird geladen...</p>
         </div>
       </div>
@@ -192,23 +193,23 @@ export default function CustomersPage() {
         </div>
       )}
 
-      {/* Desktop Layout */}
+      {/* Tablet + Desktop Layout */}
       {!isMobile && (
-        <div className="w-full min-h-screen bg-[#F2EDE8] py-8">
-          <div className="max-w-6xl mx-auto px-6">
+        <div className="w-full min-h-screen bg-[#F2EDE8] pt-8 md:pt-10 pb-8 lg:py-10">
+          <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8">
             {/* Header */}
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">
+            <div className="mb-6 md:mb-8">
+              <h1 className="text-xl md:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 tracking-tight mb-1.5 md:mb-2">
                 Kunden
               </h1>
-              <p className="text-gray-500 text-base leading-relaxed">
+              <p className="text-gray-500 text-sm md:text-sm lg:text-base leading-relaxed">
                 {customers.length} {customers.length === 1 ? 'Kunde' : 'Kunden'} in Ihrer Liste
               </p>
             </div>
 
             {/* Search Bar */}
-            <div className="mb-6">
-              <div className="relative max-w-md">
+            <div className="mb-5 md:mb-6">
+              <div className="relative max-w-full md:max-w-xs lg:max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
@@ -222,29 +223,29 @@ export default function CustomersPage() {
 
             {/* Customers Grid */}
             {filteredCustomers.length === 0 ? (
-              <div className="bg-white rounded-xl p-12 shadow-sm border border-gray-200 text-center">
-                <div className="w-24 h-24 rounded-xl bg-brand-100 flex items-center justify-center mx-auto mb-6">
-                  <Users className="w-12 h-12 text-brand-600" />
+              <div className="bg-white rounded-xl p-8 md:p-10 lg:p-12 shadow-sm border border-gray-200 text-center">
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl bg-brand-100 flex items-center justify-center mx-auto mb-4 md:mb-6">
+                  <Users className="w-10 h-10 md:w-12 md:h-12 text-brand-600" />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-3">
+                <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-2 md:mb-3">
                   {searchQuery ? 'Keine Ergebnisse' : 'Noch keine Kunden'}
                 </h2>
-                <p className="text-base text-gray-500">
+                <p className="text-sm md:text-base text-gray-500">
                   {searchQuery
                     ? 'Versuchen Sie es mit einer anderen Suche'
                     : 'Kunden werden automatisch hinzugefügt, wenn sie in Ihrer Tienda kaufen'}
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5 lg:gap-6">
                 {filteredCustomers.map((customer) => (
                   <div
                     key={customer.id}
                     onClick={() => handleCustomerClick(customer.id)}
-                    className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+                    className="bg-white rounded-xl p-4 md:p-5 lg:p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
                   >
-                    <div className="mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    <div className="mb-3 md:mb-4">
+                      <h3 className="text-base md:text-base lg:text-lg font-semibold text-gray-900 mb-1.5 md:mb-2">
                         {customer.name || 'Unbekannter Kunde'}
                       </h3>
                       <div className="space-y-2">

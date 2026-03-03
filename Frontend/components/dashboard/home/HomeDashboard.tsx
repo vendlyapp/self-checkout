@@ -111,14 +111,14 @@ const HomeDashboard: React.FC = () => {
 
       {/* ===== TABLET + DESKTOP (≥ 768px) ===== */}
       <div className="hidden md:block">
-        <div className="p-4 md:p-6 lg:p-8 space-y-6 md:space-y-10 lg:space-y-12">
+        <div className="p-4 md:px-6 md:pt-10 md:pb-6 lg:p-8 space-y-6 md:space-y-8 lg:space-y-10 xl:space-y-12">
           {/* ===== HEADER SECTION ===== */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-5 lg:gap-6">
             <div className="min-w-0">
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-600 mt-1 text-sm md:text-base">Willkommen zurück! Hier ist dein Überblick für heute.</p>
+              <h1 className="text-xl md:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
+              <p className="text-gray-600 mt-1 text-sm md:text-sm lg:text-base">Willkommen zurück! Hier ist dein Überblick für heute.</p>
             </div>
-            <div className="w-full md:max-w-sm lg:w-[380px]">
+            <div className="w-full md:w-[240px] lg:w-[320px] xl:w-[380px] flex-shrink-0">
               <SearchInput
                 placeholder="Suchen..."
                 value={searchQuery}

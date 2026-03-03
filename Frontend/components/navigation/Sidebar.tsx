@@ -100,11 +100,23 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
     setMounted(true);
   }, []);
 
-  // Memoizar función para verificar item activo
+  // Quitar foco del sidebar al cambiar de ruta para que no quede "hover/activo" en el ítem anterior (ej. Verkauf starten)
+  useEffect(() => {
+    const el = document.activeElement as HTMLElement | null;
+    if (el?.closest?.('aside')) el.blur();
+  }, [pathname]);
+
+  // Memoizar función para verificar item activo (nav principal)
   const isItemActive = useCallback((item: NavItem) => {
     if (item.href === '/dashboard' && pathname === '/dashboard') return true;
     if (item.href !== '/dashboard' && pathname?.startsWith(item.href)) return true;
     return false;
+  }, [pathname]);
+
+  // Ítems del flujo charge solo activos cuando la ruta actual es realmente /charge o subruta (evita que quede seleccionado al ir a /dashboard, /products, etc.)
+  const isChargeItemActive = useCallback((item: NavItem) => {
+    if (!pathname || !pathname.startsWith('/charge')) return false;
+    return pathname === item.href || pathname.startsWith(item.href + '/');
   }, [pathname]);
 
   // Manejar interacción con vibración háptica
@@ -158,9 +170,19 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
         "bg-white border-r border-gray-200 transition-ios-slow flex flex-col flex-shrink-0 min-h-0",
         isMobile ? "fixed inset-y-0 left-0 z-50 w-64" : "relative w-64 lg:w-72 xl:w-80"
       )}>
-      {/* Header del Sidebar - centrado y sin choque con la línea divisora */}
-      <div className="flex items-center min-h-[72px] py-4 px-5 border-b border-gray-200 shrink-0">
-        <Link href="/dashboard" className="flex items-center gap-3 w-full min-w-0">
+      {/* Header del Sidebar: solo logo en tablet/escritorio; logo + texto en móvil */}
+      <div className={clsx(
+        "flex items-center min-h-[72px] py-4 px-5 border-b border-gray-200 shrink-0",
+        !isMobile && "justify-center"
+      )}>
+        <Link
+          href="/dashboard"
+          className={clsx(
+            "flex items-center w-full min-w-0",
+            isMobile ? "gap-3" : "justify-center"
+          )}
+          aria-label="Self-Checkout Admin Panel"
+        >
           <Image
             src="/logo.svg"
             alt="Self-Checkout Logo"
@@ -169,16 +191,18 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
             priority
             className="h-10 w-auto flex-shrink-0"
           />
-          <div className="min-w-0">
-            <span className="font-bold text-gray-900 text-base block truncate">Self-Checkout</span>
-            <p className="text-xs text-gray-500 truncate">Admin Panel</p>
-          </div>
+          {isMobile && (
+            <div className="min-w-0">
+              <span className="font-bold text-gray-900 text-base block truncate">Self-Checkout</span>
+              <p className="text-xs text-gray-500 truncate">Admin Panel</p>
+            </div>
+          )}
         </Link>
       </div>
 
-      {/* Cart Summary - Solo en desktop/tablet y en la ruta /charge */}
+      {/* Cart Summary - Solo en desktop/tablet y en la ruta /charge (sin border-b para evitar doble línea bajo el logo) */}
       {pathname === '/charge' && (
-        <div className="px-4 sm:px-5 lg:px-6 py-4 border-b border-gray-200 flex-shrink-0">
+        <div className="px-4 sm:px-5 lg:px-6 py-4 flex-shrink-0">
           <CartSummary isMobile={false} />
         </div>
       )}
@@ -254,14 +278,14 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
         {/* Separador */}
         <div className="my-6 border-t border-gray-200"></div>
 
-        {/* Flujo de Charge */}
-        <div className="space-y-2">
+        {/* Flujo de Charge - key por pathname para que al navegar fuera del sidebar (logo, contenido) se actualice el estado activo */}
+        <div key={pathname ?? 'nav'} className="space-y-2">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
             Verkauf Flow
           </h3>
           {chargeFlowItems.map((item) => {
             const Icon = item.icon;
-            const isActive = isItemActive(item);
+            const isActive = isChargeItemActive(item);
             const isPressed = pressedItem === item.id;
             const isWarenkorb = item.id === "charge-cart";
 

@@ -59,13 +59,13 @@ export function formatSwissPrice(price: number | string | null | undefined): str
   const rounded = Math.round(numPrice * 100) / 100;
   const hasDecimals = rounded % 1 !== 0;
 
-  // Si no tiene decimales o son .00, mostrar con .–
+  // Si no tiene decimales o son .00, mostrar con .– (formato suizo: miles con ')
   if (!hasDecimals) {
-    return `${Math.round(rounded)}.–`
+    return `${Math.round(rounded).toLocaleString('de-CH')}.–`
   }
 
-  // Si tiene decimales reales, mostrar con 2 decimales
-  return rounded.toFixed(2)
+  // Si tiene decimales reales, mostrar con 2 decimales (formato suizo)
+  return rounded.toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 /**

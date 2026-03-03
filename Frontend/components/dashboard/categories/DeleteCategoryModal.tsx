@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AlertTriangle, X, Trash2 } from "lucide-react";
+import { Loader } from "@/components/ui/Loader";
 
 export interface CategoryOption {
   id: string;
@@ -160,7 +161,7 @@ export default function DeleteCategoryModal({
             >
               {isLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                  <Loader size="xs" color="white" />
                   Wird gelöscht...
                 </>
               ) : (

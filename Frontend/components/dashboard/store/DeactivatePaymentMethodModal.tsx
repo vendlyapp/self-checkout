@@ -2,6 +2,7 @@
 
 import { X, AlertTriangle } from 'lucide-react'
 import { createPortal } from 'react-dom'
+import { Loader } from '@/components/ui/Loader'
 import { useState, useEffect } from 'react'
 import { PaymentMethod } from './PaymentMethodsPage'
 
@@ -120,7 +121,7 @@ export default function DeactivatePaymentMethodModal({
             >
               {isLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <Loader size="xs" color="white" />
                   Wird deaktiviert...
                 </>
               ) : (

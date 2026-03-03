@@ -129,14 +129,15 @@ export function formatDate(dateStr: string | undefined): string {
   });
 }
 
-/** Format MwSt rate as percentage string */
+/** Format MwSt rate as percentage string. Normal rate (8% or 8.1%) always shows as 8.1%. */
 export function formatMwStRate(rate: number): string {
+  if (rate >= 0.0795 && rate <= 0.0815) return '8.1%';
   return (rate * 100).toFixed(1) + '%';
 }
 
 /** Get label for MwSt rate */
 export function getMwStLabel(rate: number): string {
-  if (rate === 0.081) return 'Normalsatz';
+  if (rate === 0.081 || (rate >= 0.0795 && rate <= 0.0815)) return 'Normalsatz';
   if (rate === 0.026) return 'Reduziert';
   if (rate === 0.038) return 'Beherbergung';
   if (rate === 0) return 'Befreit';

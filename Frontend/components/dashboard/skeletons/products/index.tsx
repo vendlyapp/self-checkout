@@ -100,14 +100,75 @@ export const NavigationListSkeletonLoader: React.FC = () => (
   </SkeletonBase>
 );
 
-// ===== COMPLETE PRODUCTS DASHBOARD SKELETON =====
+// ===== PRODUCTS DASHBOARD SKELETON — TABLET + DESKTOP =====
+export const ProductsDashboardSkeletonLoaderDesktop: React.FC = () => (
+  <div className="hidden md:block min-w-0 bg-background min-h-screen">
+    <div className="p-4 md:px-6 md:pt-10 md:pb-6 lg:p-8 xl:p-10 space-y-6 md:space-y-8 lg:space-y-10 xl:space-y-12 min-w-0 max-w-[1600px]">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-5 lg:gap-8">
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="h-7 md:h-7 lg:h-8 xl:h-9 bg-muted rounded-lg w-48 md:w-52 lg:w-56 animate-pulse" />
+          <div className="h-4 bg-muted rounded w-64 md:w-72 animate-pulse" />
+        </div>
+        <div className="w-full md:w-[200px] lg:w-[300px] h-9 md:h-9 lg:h-11 bg-muted rounded-full animate-pulse flex-shrink-0" />
+      </div>
+
+      {/* Stats grid: 3 StatCards + 1 Action card */}
+      <div className="grid grid-cols-1 md:grid-cols-2 min-[1008px]:grid-cols-3 gap-4 md:gap-5 min-[1008px]:gap-8">
+        <StatCardSkeletonLoader />
+        <StatCardSkeletonLoader />
+        <div className="md:col-span-2 min-[1008px]:col-span-1">
+          <SkeletonBase className="h-full min-h-[180px] md:min-h-[200px] min-[1008px]:min-h-[240px]">
+            <div className="bg-card rounded-2xl p-5 md:p-6 min-[1008px]:p-7 border border-border h-full flex flex-col justify-between">
+              <div>
+                <div className="h-5 md:h-6 bg-muted rounded w-32 mb-3 md:mb-4 animate-pulse" />
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/10 border border-border">
+                  <div className="w-10 h-10 bg-muted rounded-xl animate-pulse" />
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 bg-muted rounded w-28 animate-pulse" />
+                    <div className="h-3 bg-muted rounded w-20 animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </SkeletonBase>
+        </div>
+      </div>
+
+      {/* Navigation: 3 cards or 1 card with list */}
+      <div className="grid grid-cols-1 min-[1280px]:grid-cols-3 gap-6 min-w-0">
+        {[1, 2, 3].map((i) => (
+          <SkeletonBase key={i}>
+            <div className="bg-card rounded-2xl p-6 border border-border min-h-[200px]">
+              <div className="h-5 md:h-6 bg-muted rounded w-36 mb-4 animate-pulse" />
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
+                <div className="w-9 h-9 bg-muted rounded-xl animate-pulse flex-shrink-0" />
+                <div className="space-y-2 flex-1 min-w-0">
+                  <div className="h-4 bg-muted rounded w-24 animate-pulse" />
+                  <div className="h-3 bg-muted rounded w-16 animate-pulse" />
+                </div>
+                <div className="h-5 bg-muted rounded w-14 animate-pulse" />
+              </div>
+            </div>
+          </SkeletonBase>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+// ===== COMPLETE PRODUCTS DASHBOARD SKELETON (móvil + tablet/desktop) =====
 export const ProductsDashboardSkeletonLoader: React.FC = () => (
-  <div className="p-4 space-y-4 bg-background min-h-screen">
-    <ProductsHeaderSkeletonLoader />
-    <SearchSkeletonLoader />
-    <StatsGridSkeletonLoader />
-    <ActionButtonSkeletonLoader />
-    <NavigationListSkeletonLoader />
+  <div className="w-full min-h-screen bg-background">
+    {/* Vista móvil */}
+    <div className="block md:hidden min-w-0 p-4 space-y-5">
+      <div className="w-full h-12 bg-muted rounded-full animate-pulse" />
+      <StatsGridSkeletonLoader />
+      <ActionButtonSkeletonLoader />
+      <NavigationListSkeletonLoader />
+    </div>
+    {/* Vista tablet + desktop */}
+    <ProductsDashboardSkeletonLoaderDesktop />
   </div>
 );
 

@@ -12,6 +12,7 @@ import CategoryFilters, { CategoryFilterStatus } from "./CategoryFilters";
 import { SearchInput } from "@/components/ui/search-input";
 import FixedHeaderContainer from "@/components/dashboard/products_list/FixedHeaderContainer";
 import { Plus, ArrowLeftIcon } from "lucide-react";
+import { Loader } from "@/components/ui/Loader";
 
 interface CategoriesListComponentProps {
   isStandalone?: boolean; // Si es true, es la página dedicada. Si es false, es parte del dashboard
@@ -229,7 +230,7 @@ export default function CategoriesListComponent({
           <div className={`p-4 pb-32 md:px-6 md:pb-8 ${className}`}>
             {isLoading ? (
               <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-500 mx-auto"></div>
+                <Loader size="md" className="mx-auto" />
                 <p className="mt-4 text-base text-gray-500 font-medium">
                   Kategorien werden geladen...
                 </p>
@@ -324,7 +325,7 @@ export default function CategoriesListComponent({
         <div className="p-4">
           {isLoading ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500 mx-auto"></div>
+              <Loader size="sm" className="mx-auto" />
               <p className="mt-2 text-sm text-muted-foreground">
                 Kategorien werden geladen...
               </p>

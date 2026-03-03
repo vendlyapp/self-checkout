@@ -144,7 +144,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const [showFullInvoiceForm, setShowFullInvoiceForm] = useState(false);
   const [saveDataForFuture, setSaveDataForFuture] = useState(false);
   const [receiveOffers, setReceiveOffers] = useState(false);
-  
+  const [isCreatingInvoice, setIsCreatingInvoice] = useState(false);
+
   // Usar datos externos si están disponibles, sino usar estado local
   const personalData = externalPersonalData || { name: '', email: '', address: '', phone: '' };
   const setPersonalData = setExternalPersonalData || (() => {});
@@ -568,7 +569,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     onChange={(val) => setPersonalData({...personalData, address: val})}
                     placeholderStrasse="Strasse"
                     placeholderNr="Nr."
-                    placeholderPlzOrt="PLZ Ort"
+                    placeholderPlz="PLZ"
+                    placeholderOrt="Ort"
                     inputClassName="border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-base focus:ring-[#25D076] focus:border-[#25D076] bg-white"
                   />
                 </div>
@@ -579,30 +581,37 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               <button
                 onClick={async () => {
                   mediumHaptic();
-                  
-                  // Save customer data to localStorage if provided
-                  if (personalData.name && personalData.email) {
-                    onSaveCustomerData?.(personalData);
-                  }
-                  
-                  // Create invoice with customer data and wait for it to complete
-                  if (onCreateInvoice) {
-                    try {
-                      await onCreateInvoice(personalData);
-                      await new Promise((r) => setTimeout(r, 50));
-                    } catch (error) {
-                      console.error('Error al crear factura:', error);
-                      toast.error('Fehler beim Erstellen der Rechnung');
+                  setIsCreatingInvoice(true);
+                  try {
+                    if (personalData.name && personalData.email) {
+                      onSaveCustomerData?.(personalData);
                     }
+                    if (onCreateInvoice) {
+                      try {
+                        await onCreateInvoice(personalData);
+                        await new Promise((r) => setTimeout(r, 50));
+                      } catch (error) {
+                        console.error('Error al crear factura:', error);
+                        toast.error('Fehler beim Erstellen der Rechnung');
+                      }
+                    }
+                    onStepChange?.("viewInvoice");
+                  } finally {
+                    setIsCreatingInvoice(false);
                   }
-
-                  onStepChange?.("viewInvoice");
                 }}
                 className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-2xl py-4 text-base transition-colors shadow-lg shadow-[#25D076]/25 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.97] active:shadow-md touch-target"
                 style={{ minHeight: '56px' }}
-                disabled={!personalData.name || !personalData.email || !personalData.phone}
+                disabled={!personalData.name || !personalData.email || !personalData.phone || isCreatingInvoice}
               >
-                WEITER
+                {isCreatingInvoice ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader size="sm" />
+                    Wird erstellt...
+                  </span>
+                ) : (
+                  'WEITER'
+                )}
               </button>
             </div>
           </>
@@ -1054,15 +1063,24 @@ export default function PaymentP() {
     let token = createdInvoiceShareToken;
 
     if (!token && createdInvoiceId) {
-      try {
-        const result = await InvoiceService.getInvoiceById(createdInvoiceId);
-        if (result.success && result.data?.shareToken) {
-          token = result.data.shareToken;
-          setCreatedInvoiceShareToken(token);
+      const fetchToken = async (retries = 2): Promise<string | null> => {
+        for (let attempt = 0; attempt <= retries; attempt++) {
+          if (attempt > 0) {
+            await new Promise((r) => setTimeout(r, 600));
+          }
+          try {
+            const result = await InvoiceService.getInvoiceById(createdInvoiceId);
+            if (result.success && result.data?.shareToken) {
+              return result.data.shareToken;
+            }
+          } catch (err) {
+            if (attempt === retries) console.error('Error fetching shareToken:', err);
+          }
         }
-      } catch (err) {
-        console.error('Error fetching shareToken:', err);
-      }
+        return null;
+      };
+      token = await fetchToken();
+      if (token) setCreatedInvoiceShareToken(token);
     }
 
     if (token) {
@@ -1105,6 +1123,7 @@ export default function PaymentP() {
 
         let token = shareToken ?? null;
         if (!token) {
+          await new Promise((r) => setTimeout(r, 400));
           try {
             const invResult = await InvoiceService.getInvoiceById(id);
             if (invResult.success && invResult.data?.shareToken) {

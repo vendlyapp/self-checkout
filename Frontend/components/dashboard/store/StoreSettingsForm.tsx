@@ -515,7 +515,8 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
                 onChange={setAddress}
                 placeholderStrasse="Strasse"
                 placeholderNr="Nr."
-                placeholderPlzOrt="PLZ Ort"
+                placeholderPlz="PLZ"
+                placeholderOrt="Ort"
               />
             ) : (
               <p className={`text-base ${address.trim() ? 'text-gray-900 font-medium' : 'text-gray-400 italic'}`}>

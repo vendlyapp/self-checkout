@@ -951,6 +951,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
     isEditMode: true,
     existingProduct: existingProduct ? normalizeProductData(existingProduct as Product) : undefined,
     hasChanges: hasChanges,
+    hideSubmitButton: true,
   };
 
   return (

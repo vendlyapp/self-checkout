@@ -154,7 +154,7 @@ export default function ResponsiveHeader({
                   handleButtonPress('notifications');
                   handleValidInteraction(e);
                 }}
-                aria-label={`Notificaciones ${unreadCount > 0 ? `(${unreadCount} sin leer)` : ''}`}
+                aria-label={`Benachrichtigungen ${unreadCount > 0 ? `(${unreadCount} ungelesen)` : ''}`}
               >
                 <Bell className="header-icon" />
                 {unreadCount > 0 && (
@@ -259,17 +259,7 @@ export default function ResponsiveHeader({
                   priority
                   className="h-8 w-auto flex-shrink-0"
                 />
-                <div className="flex flex-col min-w-0">
-                  <span className="font-semibold text-gray-900 text-sm truncate">
-                    Self-Checkout
-                  </span>
-                  <span className="text-xs text-gray-500 truncate">
-                    {pathname === '/dashboard' && 'Übersicht'}
-                    {pathname?.startsWith('/charge') && 'Verkauf & Kasse'}
-                    {pathname?.startsWith('/products') && 'Produktverwaltung'}
-                    {pathname?.startsWith('/store') && 'Geschäftseinstellungen'}
-                  </span>
-                </div>
+               
               </div>
             </div>
 
@@ -383,11 +373,11 @@ export default function ResponsiveHeader({
           )}>
             <div className="p-4 border-b border-gray-100">
               <h3 className="text-sm font-semibold text-gray-900">
-                Notificaciones
+                Benachrichtigungen
               </h3>
               {unreadCount > 0 && (
                 <span className="text-xs text-gray-500">
-                  {unreadCount} sin leer
+                  {unreadCount} ungelesen
                 </span>
               )}
             </div>

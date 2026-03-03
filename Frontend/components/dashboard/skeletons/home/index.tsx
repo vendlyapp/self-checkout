@@ -204,7 +204,7 @@ export const RecentSalesSectionSkeletonLoader: React.FC = () => (
 
 // ===== DESKTOP/TABLET HOME DASHBOARD SKELETON =====
 export const HomeDashboardSkeletonLoaderDesktop: React.FC = () => (
-  <div className="hidden md:block p-4 md:p-6 lg:p-8 space-y-6 md:space-y-10 lg:space-y-12 bg-background-cream min-h-screen">
+  <div className="hidden md:block p-4 md:px-6 md:pt-10 md:pb-6 lg:p-8 space-y-6 md:space-y-8 lg:space-y-10 xl:space-y-12 bg-background-cream min-h-screen">
     {/* Header */}
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6">
       <div className="space-y-2">

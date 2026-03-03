@@ -1,16 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { InvoiceService, Invoice } from '@/lib/services/invoiceService';
 import InvoiceTemplate from '@/components/invoice/InvoiceTemplate';
-import { Loader2, AlertCircle, Download, Printer, Share2 } from 'lucide-react';
+import { Loader2, AlertCircle, Download, Printer, Share2, Store } from 'lucide-react';
 import { toast } from 'sonner';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
 import { getDefaultStoreName } from '@/lib/config/brand';
 
 export default function PublicInvoicePage() {
   const params = useParams();
+  const router = useRouter();
   const token = params.token as string;
   
   const [invoice, setInvoice] = useState<Invoice | null>(null);
@@ -95,6 +96,16 @@ export default function PublicInvoicePage() {
     }
   };
 
+  const handleBackToStore = () => {
+    lightFeedback();
+    const slug = (invoice?.metadata as { storeSlug?: string } | undefined)?.storeSlug;
+    if (slug) {
+      router.push(`/store/${slug}`);
+    } else {
+      router.back();
+    }
+  };
+
   const handleDownload = async () => {
     lightFeedback();
     
@@ -169,7 +180,19 @@ export default function PublicInvoicePage() {
       <div className="invoice-actions-footer fixed bottom-0 left-0 right-0 z-50 no-print">
         <div className="rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.12)] bg-white overflow-hidden">
           <div className="bg-white rounded-t-3xl border-t border-gray-200" style={{ borderTopWidth: '0.5px' }}>
-            <div className="flex items-center justify-around w-full px-6 max-w-[430px] mx-auto pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] gap-3">
+            <div className="flex items-center justify-around w-full px-4 max-w-[430px] mx-auto pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] gap-2">
+              {/* Botón Zurück zum Shop */}
+              <button
+                onClick={handleBackToStore}
+                className="flex flex-col items-center justify-center gap-1.5 flex-1 min-w-0 touch-target active:scale-95 transition-transform"
+                aria-label="Zurück zum Shop"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center active:bg-gray-100 transition-colors">
+                  <Store className="w-6 h-6 text-gray-700" strokeWidth={2} />
+                </div>
+                <span className="text-xs font-medium text-gray-700">Zurück zum Shop</span>
+              </button>
+
               {/* Botón Drucken */}
               <button
                 onClick={handlePrint}

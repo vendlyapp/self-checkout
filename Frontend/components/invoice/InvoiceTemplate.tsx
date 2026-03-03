@@ -144,9 +144,9 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
         : typeof taxRate === 'string' 
         ? parseFloat(taxRate) 
         : 0.026;
-      // Map rate to Swiss MwSt code; usar rate real para el cálculo
+      // Map rate to Swiss MwSt code; Normalsatz siempre 8.1% (0.081) en cálculos y display
       if (rate === 0) return { rate: 0, code: 'D' }; // Befreit
-      if (rate >= 0.075 || rate === 0.08 || rate === 0.077 || rate === 0.081) return { rate, code: 'A' }; // Normalsatz ~8%
+      if (rate >= 0.075 || rate === 0.08 || rate === 0.077 || rate === 0.081) return { rate: 0.081, code: 'A' }; // Normalsatz 8.1%
       if (rate >= 0.035) return { rate, code: 'C' }; // Beherbergung 3.8%
       return { rate, code: 'B' }; // Reduziert 2.6% o 3%
     }

@@ -196,10 +196,10 @@ export default function SalesVerkaufePage() {
 
       {/* Tablet: lista en cards horizontales, una columna */}
       {isTablet && (
-        <div className="p-4 md:p-6 lg:p-8 max-w-4xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div className="p-4 md:px-6 md:pt-10 md:pb-6 lg:p-8 max-w-4xl mx-auto min-w-0">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4 mb-5 md:mb-6">
             <div className="min-w-0">
-              <h1 className="text-xl md:text-2xl font-bold text-foreground">Verkäufe</h1>
+              <h1 className="text-xl md:text-xl lg:text-2xl font-bold text-foreground tracking-tight">Verkäufe</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {filteredOrders.length} {filteredOrders.length === 1 ? 'abgeschlossener Verkauf' : 'abgeschlossene Verkäufe'}
                 {searchQuery && ' gefunden'}
@@ -266,10 +266,10 @@ export default function SalesVerkaufePage() {
 
       {/* Desktop: tabla mejorada */}
       {isDesktop && (
-        <div className="p-4 md:p-6 lg:p-8 max-w-6xl mx-auto">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+        <div className="p-4 md:px-6 md:pt-10 md:pb-6 lg:p-8 max-w-6xl mx-auto min-w-0">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5 md:mb-6">
             <div className="min-w-0">
-              <h1 className="text-xl md:text-2xl font-bold text-foreground">Verkäufe</h1>
+              <h1 className="text-xl lg:text-2xl font-bold text-foreground tracking-tight">Verkäufe</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {filteredOrders.length} {filteredOrders.length === 1 ? 'abgeschlossener Verkauf' : 'abgeschlossene Verkäufe'}
                 {searchQuery && ' gefunden'}

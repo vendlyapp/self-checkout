@@ -7,18 +7,18 @@ interface QuickMetricsWidgetProps {
 }
 
 const QuickMetricsWidget = ({ className = '' }: QuickMetricsWidgetProps) => {
-  // Mock data - en una app real esto vendría de un hook o API
+  // Mock-Daten – in einer echten App kämen diese aus einem Hook oder API
   const metrics = [
     {
-      label: 'Revenue Today',
-      value: 'CHF 1,580',
+      label: 'Umsatz heute',
+      value: "CHF 1'580.–",
       change: '+12.5%',
       trend: 'up' as 'up' | 'down',
       icon: Banknote,
       color: 'text-green-600 bg-green-100'
     },
     {
-      label: 'Orders',
+      label: 'Bestellungen',
       value: '24',
       change: '+8.2%',
       trend: 'up' as 'up' | 'down',
@@ -26,7 +26,7 @@ const QuickMetricsWidget = ({ className = '' }: QuickMetricsWidgetProps) => {
       color: 'text-blue-600 bg-blue-100'
     },
     {
-      label: 'New Customers',
+      label: 'Neue Kunden',
       value: '18',
       change: '+15.3%',
       trend: 'up' as 'up' | 'down',
@@ -34,7 +34,7 @@ const QuickMetricsWidget = ({ className = '' }: QuickMetricsWidgetProps) => {
       color: 'text-purple-600 bg-purple-100'
     },
     {
-      label: 'Products Sold',
+      label: 'Verkaufte Produkte',
       value: '156',
       change: '-2.1%',
       trend: 'down' as 'up' | 'down',
@@ -47,8 +47,8 @@ const QuickMetricsWidget = ({ className = '' }: QuickMetricsWidgetProps) => {
     <div className={`bg-white rounded-xl p-4 md:p-5 border border-gray-200 shadow-sm ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-3 md:mb-4">
-        <h3 className="text-sm md:text-base font-semibold text-gray-900">Quick Metrics</h3>
-        <div className="text-xs text-gray-500">Last 24h</div>
+        <h3 className="text-sm md:text-base font-semibold text-gray-900">Schnellübersicht</h3>
+        <div className="text-xs text-gray-500">Letzte 24 h</div>
       </div>
 
       {/* Metrics Grid */}

@@ -88,14 +88,19 @@ const StoreDashboard = () => (
 
     {/* ===== TABLET + DESKTOP (≥ 768px) ===== */}
     <div className="hidden md:block min-w-0">
-      <div className="p-4 md:p-5 lg:p-6 xl:p-8 space-y-5 md:space-y-6 lg:space-y-8 xl:space-y-10 max-w-[1600px]">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4 lg:gap-6">
+      <div className="p-4 md:px-6 md:pt-10 md:pb-6 lg:p-6 xl:p-8 space-y-5 md:space-y-6 lg:space-y-8 xl:space-y-10 max-w-[1600px]">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-5 lg:gap-6">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl lg:text-2xl font-bold text-foreground">Geschäftseinstellungen</h1>
-            <p className="text-muted-foreground mt-0.5 text-xs lg:text-sm">Verwalten Sie Ihre Geschäftseinstellungen und Services</p>
+            <h1 className="text-xl md:text-xl lg:text-2xl font-bold text-foreground tracking-tight">Geschäftseinstellungen</h1>
+            <p className="text-muted-foreground mt-0.5 text-xs md:text-xs lg:text-sm">Verwalten Sie Ihre Geschäftseinstellungen und Services</p>
           </div>
-          <div className="w-full md:w-[220px] lg:w-[280px] xl:w-[340px] flex-shrink-0">
-            <SearchInput placeholder="Einstellungen durchsuchen..." esHome={false} className="w-full h-10 min-h-10 lg:h-11 lg:min-h-11" />
+          <div className="w-full md:w-[200px] lg:w-[280px] xl:w-[340px] flex-shrink-0">
+            <SearchInput
+              placeholder="Einstellungen durchsuchen..."
+              esHome={false}
+              className="w-full h-9 min-h-9 md:h-9 lg:h-11 lg:min-h-11"
+              inputClassName="text-xs md:text-xs lg:text-sm placeholder:text-xs md:placeholder:text-xs lg:placeholder:text-sm"
+            />
           </div>
         </div>
 

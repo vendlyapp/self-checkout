@@ -322,10 +322,10 @@ function SalesOrdersPageContent() {
 
       {/* Tablet: lista en cards + filtros compactos */}
       {isTablet && (
-        <div className="p-4 md:p-6 lg:p-8 max-w-4xl mx-auto min-w-0">
-          <div className="flex flex-col gap-4 mb-6">
+        <div className="p-4 md:px-6 md:pt-10 md:pb-6 lg:p-8 max-w-4xl mx-auto min-w-0">
+          <div className="flex flex-col gap-3 md:gap-4 mb-5 md:mb-6">
             <div className="min-w-0">
-              <h1 className="text-xl md:text-2xl font-bold text-foreground">Bestellungen verwalten</h1>
+              <h1 className="text-xl md:text-xl lg:text-2xl font-bold text-foreground tracking-tight">Bestellungen verwalten</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {statusFilter === 'cancelled'
                   ? 'Stornierte Bestellungen'
@@ -440,10 +440,10 @@ function SalesOrdersPageContent() {
 
       {/* Desktop: tabla + filtros mejorados */}
       {isDesktop && (
-        <div className="p-4 md:p-6 lg:p-8 max-w-6xl mx-auto min-w-0">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+        <div className="p-4 md:px-6 md:pt-10 md:pb-6 lg:p-8 max-w-6xl mx-auto min-w-0">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5 md:mb-6">
             <div className="min-w-0">
-              <h1 className="text-xl md:text-2xl font-bold text-foreground">Bestellungen verwalten</h1>
+              <h1 className="text-xl lg:text-2xl font-bold text-foreground tracking-tight">Bestellungen verwalten</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 Alle Bestellungen anzeigen, Details einsehen und bei Bedarf stornieren
               </p>

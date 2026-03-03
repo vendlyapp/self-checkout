@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
+import { Loader } from '@/components/ui/Loader';
 import { createPortal } from 'react-dom';
 import { useEffect, useState } from 'react';
 
@@ -25,7 +25,7 @@ const LoadingProductsModal = ({ isOpen }: LoadingProductsModalProps) => {
   const modalContent = (
     <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in-scale" style={{ pointerEvents: 'auto' }}>
       <div className="bg-white rounded-2xl p-8 shadow-xl max-w-sm w-full mx-4 flex flex-col items-center gap-4 animate-scale-in gpu-accelerated">
-        <Loader2 className="w-12 h-12 text-[#25D076] animate-spin transition-interactive" />
+        <Loader size="lg" className="transition-interactive" />
         <div className="text-center">
           <h3 className="text-lg font-semibold text-gray-900 mb-2 transition-interactive">
             Produkte werden geladen

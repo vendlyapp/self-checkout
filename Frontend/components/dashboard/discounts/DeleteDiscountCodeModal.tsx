@@ -2,6 +2,7 @@
 
 import { X } from 'lucide-react'
 import { createPortal } from 'react-dom'
+import { Loader } from '@/components/ui/Loader'
 import { DiscountCode } from './types'
 import { useState, useEffect } from 'react'
 
@@ -86,7 +87,7 @@ export default function DeleteDiscountCodeModal({
           >
             {isDeleting ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <Loader size="xs" color="white" className="mr-2" />
                 Archivieren...
               </>
             ) : (
