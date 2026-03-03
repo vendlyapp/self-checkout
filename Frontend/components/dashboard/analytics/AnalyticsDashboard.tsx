@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 
 import { useAnalytics, useQuickAccess } from "@/hooks";
 import ActiveCustomers from "./ActiveCustomers";
