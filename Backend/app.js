@@ -2,9 +2,12 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
+const compression = require("compression");
+const helmet = require("helmet");
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpecs = require('./config/swagger');
 const { errorHandler, notFoundHandler } = require('./src/middleware/errorHandler');
+const { globalLimiter } = require('./src/middleware/rateLimiter');
 
 const indexRoutes = require("./routes/index");
 const authRoutes = require("./src/routes/authRoutes");
@@ -21,6 +24,19 @@ const paymentMethodRoutes = require("./src/routes/paymentMethodRoutes");
 const customerRoutes = require("./src/routes/customerRoutes");
 
 const app = express();
+
+// Security headers — sets X-Content-Type-Options, X-Frame-Options, HSTS,
+// Content-Security-Policy, removes X-Powered-By, and more.
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }, // allow image/font serving cross-origin
+  contentSecurityPolicy: false, // CSP managed at the frontend (Next.js) layer
+}));
+
+// Compress all responses — reduces payload size by 60-80% for JSON responses
+app.use(compression({ level: 6, threshold: 1024 }));
+
+// Global backstop rate limiter — 500 req/min per IP
+app.use(globalLimiter);
 
 app.use(morgan("combined"));
 app.use(cors({

@@ -250,8 +250,8 @@ class InvoiceController {
       const { limit = 50, offset = 0 } = req.query;
 
       const result = await invoiceService.findByCustomerEmail(email, {
-        limit: parseInt(limit),
-        offset: parseInt(offset),
+        limit: Math.min(parseInt(limit) || 50, 200),
+        offset: parseInt(offset) || 0,
       });
 
       res.status(HTTP_STATUS.OK).json(result);
@@ -305,8 +305,8 @@ class InvoiceController {
       const { limit = 100, offset = 0 } = req.query;
 
       const result = await invoiceService.findByStoreId(storeId, {
-        limit: parseInt(limit),
-        offset: parseInt(offset),
+        limit: Math.min(parseInt(limit) || 100, 500),
+        offset: parseInt(offset) || 0,
       });
 
       res.status(HTTP_STATUS.OK).json(result);

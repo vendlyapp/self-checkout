@@ -122,6 +122,8 @@ class StoreController {
         limit: 100
       });
 
+      // Public endpoint — allow CDN and browsers to cache for 60 s, stale-while-revalidate 30 s
+      res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=30');
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({

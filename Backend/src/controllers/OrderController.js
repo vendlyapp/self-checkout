@@ -57,12 +57,25 @@ class OrderController {
    */
   async getAllOrders(req, res) {
     try {
-      const { limit, offset, status, storeId } = req.query;
+      const { limit, offset, status } = req.query;
       const options = {};
-      if (limit) options.limit = parseInt(limit);
-      if (offset) options.offset = parseInt(offset);
+      if (limit)  options.limit  = Math.min(parseInt(limit)  || 100, 500);
+      if (offset) options.offset = parseInt(offset) || 0;
       if (status) options.status = status;
-      if (storeId) options.storeId = storeId;
+
+      // ── Tenant isolation ──────────────────────────────────────────────────
+      // SUPER_ADMIN may pass an explicit storeId filter; everyone else is
+      // automatically scoped to their own store. Unauthenticated callers on
+      // optionalAuth routes receive an empty result.
+      const role = req.user?.role;
+      if (role === 'SUPER_ADMIN') {
+        if (req.query.storeId) options.storeId = req.query.storeId;
+      } else if (req.user?.storeId) {
+        options.storeId = req.user.storeId;
+      } else {
+        // No authenticated user with a known store — return empty safely
+        return res.status(HTTP_STATUS.OK).json({ success: true, data: [], count: 0, total: 0 });
+      }
 
       const result = await orderService.findAll(options);
       res.status(HTTP_STATUS.OK).json(result);

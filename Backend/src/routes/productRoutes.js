@@ -433,7 +433,7 @@ router.put('/:id', authMiddleware, validateUUID('id'), productController.updateP
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.patch('/:id/stock', validateUUID('id'), productController.updateStock);
+router.patch('/:id/stock', authMiddleware, validateUUID('id'), productController.updateStock);
 
 /**
  * @swagger

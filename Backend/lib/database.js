@@ -26,6 +26,14 @@ const pool = new Pool({
   // El manejo de prepared statements se hace en la función query() usando pg-format
 });
 
+// Set a per-query statement timeout so slow queries release pool connections promptly.
+// This fires once per new physical connection from the pool.
+pool.on('connect', (client) => {
+  client.query('SET statement_timeout = 25000').catch(() => {
+    // Non-fatal — pooler may not support SET; ignore silently
+  });
+});
+
 // Manejo de errores del pool (solo registrar, no crashear)
 let poolErrorHandlerRegistered = false;
 if (!poolErrorHandlerRegistered) {

@@ -247,8 +247,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  // Determinar si mostrar el sidebar (ocultar en discounts y payment-methods)
-  const shouldShowSidebar = (isDesktop || isTablet) && !isStoreSubRoute;
+  // En tablet y desktop el sidebar siempre es visible.
+  // isStoreSubRoute solo afecta la navegación móvil (HeaderNav con botón atrás).
+  const shouldShowSidebar = isDesktop || isTablet;
 
   // No mostrar CartSummary móvil aquí, se maneja en el sidebar
   const shouldShowCartSummary = false;

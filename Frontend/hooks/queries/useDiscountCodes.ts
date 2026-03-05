@@ -9,9 +9,10 @@ export const useDiscountCodes = () => {
       const codes = await discountCodeService.getAll();
       return codes;
     },
-    staleTime: 30 * 1000, // 30 segundos - datos frescos para ver usos actualizados
-    refetchOnWindowFocus: true, // Refrescar cuando el usuario vuelve a la ventana
-    refetchOnMount: true, // Refrescar al montar el componente
+    staleTime: 2 * 60 * 1000, // 2 min — mutations (create/update/archive) invalidate the cache
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 };
 
@@ -23,6 +24,9 @@ export const useDiscountCode = (id: string | null) => {
       return await discountCodeService.getById(id);
     },
     enabled: !!id,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -32,9 +36,10 @@ export const useDiscountCodeStats = () => {
     queryFn: async () => {
       return await discountCodeService.getStats();
     },
-    staleTime: 30 * 1000, // 30 segundos - datos frescos para estadísticas actualizadas
-    refetchOnWindowFocus: true, // Refrescar cuando el usuario vuelve a la ventana
-    refetchOnMount: true, // Refrescar al montar el componente
+    staleTime: 2 * 60 * 1000, // 2 min — invalidated by mutations
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 };
 
@@ -99,6 +104,10 @@ export const useArchivedDiscountCodes = () => {
       const codes = await discountCodeService.getArchived();
       return codes;
     },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 };
 

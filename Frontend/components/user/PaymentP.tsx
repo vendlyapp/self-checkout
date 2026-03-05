@@ -217,9 +217,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       }}
     >
       <div 
-        className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden gpu-accelerated"
+        className="relative bg-white rounded-2xl max-w-md w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden gpu-accelerated"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Full-screen overlay while invoice is being created */}
+        {isCreatingInvoice && (
+          <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-4 rounded-2xl">
+            <Loader size="xl" />
+            <div className="text-center px-6">
+              <p className="text-lg font-bold text-gray-900">Beleg wird erstellt...</p>
+              <p className="text-sm text-gray-500 mt-1">Bitte einen Moment warten</p>
+            </div>
+          </div>
+        )}
         {paymentStep === "confirm" && (
           <>
             {/* Header unificado con diseño consistente */}

@@ -441,22 +441,24 @@ class OrderService {
       WHERE o.id = $1
     `;
 
-    const result = await query(selectQuery, [id]);
-
-    if (result.rows.length === 0) {
-      throw new Error('Bestellung nicht gefunden');
-    }
-
-    const order = result.rows[0];
-
-    // Obtener items con información del producto (alias "itemTaxRate" para evitar lowercase de pg)
+    // Fire both queries in parallel — they are independent
     const itemsQuery = `
       SELECT oi.*, p.name as "productName", p.sku as "productSku", p."taxRate" as "itemTaxRate"
       FROM "OrderItem" oi
       LEFT JOIN "Product" p ON oi."productId" = p.id
       WHERE oi."orderId" = $1
     `;
-    const itemsResult = await query(itemsQuery, [id]);
+
+    const [result, itemsResult] = await Promise.all([
+      query(selectQuery, [id]),
+      query(itemsQuery, [id]),
+    ]);
+
+    if (result.rows.length === 0) {
+      throw new Error('Bestellung nicht gefunden');
+    }
+
+    const order = result.rows[0];
     order.items = itemsResult.rows;
     
     // Debug: verificar que los items tengan productName

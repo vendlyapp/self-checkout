@@ -3,6 +3,7 @@ const router = express.Router();
 const orderController = require('../controllers/OrderController');
 const { authMiddleware, optionalAuth } = require('../middleware/authMiddleware');
 const { validateUUID, validateOrder } = require('../middleware/validation');
+const { checkoutLimiter } = require('../middleware/rateLimiter');
 
 /**
  * @swagger
@@ -245,7 +246,7 @@ router.patch('/:id/status', authMiddleware, validateUUID('id'), orderController.
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 // Ruta para crear órdenes (pública: el checkout del cliente no requiere auth)
-router.post('/', optionalAuth, validateOrder, orderController.createOrderSimple);
+router.post('/', checkoutLimiter, optionalAuth, validateOrder, orderController.createOrderSimple);
 
 /**
  * @swagger

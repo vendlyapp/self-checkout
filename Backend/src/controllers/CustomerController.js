@@ -12,7 +12,7 @@ class CustomerController {
       const { limit, offset, search } = req.query;
 
       const result = await customerService.getByStoreId(storeId, {
-        limit: limit ? parseInt(limit) : undefined,
+        limit: limit ? Math.min(parseInt(limit), 500) : undefined,
         offset: offset ? parseInt(offset) : undefined,
         search: search || null,
       });

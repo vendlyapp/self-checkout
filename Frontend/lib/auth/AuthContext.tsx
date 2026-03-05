@@ -34,33 +34,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Timeout de seguridad para evitar que se quede en loading indefinidamente
+    // Safety timeout — if Supabase is unreachable, unblock the UI after 5s
     const timeoutId = setTimeout(() => {
-      if (loading) {
-        console.warn('[AuthProvider] Timeout al inicializar, estableciendo loading a false');
-        setLoading(false);
-      }
-    }, 5000); // 5 segundos máximo
+      setLoading(false);
+      console.warn('[AuthProvider] Session check timed out — rendering login form');
+    }, 5000);
 
-    // Obtener sesión inicial
+    // Fetch initial session once
     const initializeAuth = async () => {
       try {
-        // Crear AbortController con timeout
-        const controller = new AbortController();
-        const abortTimeout = setTimeout(() => controller.abort(), 4000); // 4 segundos
-
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
-        
-        clearTimeout(abortTimeout);
-
-        if (error) {
-          console.error('Error al obtener sesión:', error);
-        }
-        
+        if (error) console.error('[AuthProvider] Error fetching session:', error);
         setSession(initialSession);
         setUser(initialSession?.user ?? null);
       } catch (error) {
-        console.error('Error al inicializar auth:', error);
+        console.error('[AuthProvider] initializeAuth threw:', error);
       } finally {
         clearTimeout(timeoutId);
         setLoading(false);
@@ -69,13 +57,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     initializeAuth();
 
-    return () => {
-      clearTimeout(timeoutId);
-    };
-
-    // Escuchar cambios en la autenticación
+    // Subscribe to auth state changes (sign-in, sign-out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -83,6 +67,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     );
 
     return () => {
+      clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);

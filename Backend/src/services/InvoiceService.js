@@ -67,103 +67,83 @@ class InvoiceService {
       throw new Error('Los items de la factura son requeridos');
     }
 
-    // Generar número de factura único
-    let invoiceNumber;
-    let attempts = 0;
-    const maxAttempts = 10;
+    const insertQuery = `
+      INSERT INTO "Invoice" (
+        "orderId",
+        "invoiceNumber",
+        "shareToken",
+        "customerName",
+        "customerEmail",
+        "customerAddress",
+        "customerCity",
+        "customerPostalCode",
+        "customerPhone",
+        "storeId",
+        "storeName",
+        "storeAddress",
+        "storePhone",
+        "storeEmail",
+        "storeLogo",
+        "items",
+        "subtotal",
+        "discountAmount",
+        "taxAmount",
+        "total",
+        "paymentMethod",
+        "status",
+        "metadata"
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16::jsonb, $17, $18, $19, $20, $21, $22, $23::jsonb)
+      RETURNING *
+    `;
 
-    do {
-      invoiceNumber = this.generateInvoiceNumber();
-      const checkQuery = await query(
-        'SELECT id FROM "Invoice" WHERE "invoiceNumber" = $1',
-        [invoiceNumber]
-      );
-      if (checkQuery.rows.length === 0) {
-        break;
+    // Retry on unique-constraint violations (invoiceNumber or shareToken collision).
+    // Collisions are rare but possible — up to 3 attempts with fresh values each time.
+    const MAX_RETRIES = 3;
+    let result;
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      const invoiceNumber = this.generateInvoiceNumber();
+      const shareToken    = this.generateShareToken();
+
+      try {
+        result = await transaction(async (client) => {
+          const invoiceResult = await client.query(insertQuery, [
+            orderId,
+            invoiceNumber,
+            shareToken,
+            customerName || null,
+            customerEmail || null,
+            customerAddress || null,
+            customerCity || null,
+            customerPostalCode || null,
+            customerPhone || null,
+            storeId || null,
+            storeName || null,
+            storeAddress || null,
+            storePhone || null,
+            storeEmail || null,
+            storeLogo || null,
+            JSON.stringify(items),
+            subtotal,
+            discountAmount,
+            taxAmount,
+            total,
+            paymentMethod || null,
+            'issued',
+            JSON.stringify(metadata),
+          ]);
+          return invoiceResult.rows[0];
+        });
+        break; // Success — exit retry loop
+      } catch (err) {
+        // 23505 = unique_violation in PostgreSQL
+        if (err.code === '23505' && attempt < MAX_RETRIES) {
+          console.warn(`⚠️ [InvoiceService.create] Unique constraint collision (attempt ${attempt}), retrying…`);
+          continue;
+        }
+        throw err; // Rethrow non-collision errors or final attempt failure
       }
-      attempts++;
-      if (attempts >= maxAttempts) {
-        throw new Error('No se pudo generar un número de factura único');
-      }
-    } while (true);
-
-    // Generar token de compartir único
-    let shareToken;
-    attempts = 0;
-    do {
-      shareToken = this.generateShareToken();
-      const checkTokenQuery = await query(
-        'SELECT id FROM "Invoice" WHERE "shareToken" = $1',
-        [shareToken]
-      );
-      if (checkTokenQuery.rows.length === 0) {
-        break;
-      }
-      attempts++;
-      if (attempts >= maxAttempts) {
-        throw new Error('No se pudo generar un token de compartir único');
-      }
-    } while (true);
-
-    const result = await transaction(async (client) => {
-      const insertQuery = `
-        INSERT INTO "Invoice" (
-          "orderId",
-          "invoiceNumber",
-          "shareToken",
-          "customerName",
-          "customerEmail",
-          "customerAddress",
-          "customerCity",
-          "customerPostalCode",
-          "customerPhone",
-          "storeId",
-          "storeName",
-          "storeAddress",
-          "storePhone",
-          "storeEmail",
-          "storeLogo",
-          "items",
-          "subtotal",
-          "discountAmount",
-          "taxAmount",
-          "total",
-          "paymentMethod",
-          "status",
-          "metadata"
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16::jsonb, $17, $18, $19, $20, $21, $22, $23::jsonb)
-        RETURNING *
-      `;
-
-      const invoiceResult = await client.query(insertQuery, [
-        orderId,
-        invoiceNumber,
-        shareToken,
-        customerName || null,
-        customerEmail || null,
-        customerAddress || null,
-        customerCity || null,
-        customerPostalCode || null,
-        customerPhone || null,
-        storeId || null,
-        storeName || null,
-        storeAddress || null,
-        storePhone || null,
-        storeEmail || null,
-        storeLogo || null,
-        JSON.stringify(items),
-        subtotal,
-        discountAmount,
-        taxAmount,
-        total,
-        paymentMethod || null,
-        'issued',
-        JSON.stringify(metadata),
-      ]);
-
-      return invoiceResult.rows[0];
-    });
+    }
 
     // Crear o actualizar cliente automáticamente DESPUÉS de crear la factura (fuera de la transacción)
     // El email es obligatorio para crear/identificar un cliente

@@ -3,6 +3,7 @@ const router = express.Router();
 const discountCodeController = require('../controllers/DiscountCodeController');
 const { validateUUID } = require('../middleware/validation');
 const { authMiddleware } = require('../middleware/authMiddleware');
+const { discountValidationLimiter } = require('../middleware/rateLimiter');
 
 /**
  * @swagger
@@ -31,7 +32,7 @@ const { authMiddleware } = require('../middleware/authMiddleware');
  *         description: Código inválido o expirado
  */
 // Endpoint público para validar códigos (debe estar ANTES del middleware de autenticación)
-router.get('/validate/:code', discountCodeController.validateDiscountCode);
+router.get('/validate/:code', discountValidationLimiter, discountCodeController.validateDiscountCode);
 
 // Todas las demás rutas requieren autenticación
 router.use(authMiddleware);

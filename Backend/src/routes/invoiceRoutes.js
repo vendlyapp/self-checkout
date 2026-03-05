@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const invoiceController = require('../controllers/InvoiceController');
 const { validateUUID } = require('../middleware/validation');
+const { authMiddleware, optionalAuth } = require('../middleware/authMiddleware');
 
 /**
  * @swagger
@@ -51,7 +52,9 @@ const { validateUUID } = require('../middleware/validation');
  *       500:
  *         description: Error interno del servidor
  */
-router.post('/', invoiceController.createInvoice);
+// POST is called from the public checkout flow — optionalAuth allows both
+// anonymous customers and authenticated admins to create invoices.
+router.post('/', optionalAuth, invoiceController.createInvoice);
 
 /**
  * @swagger
@@ -125,7 +128,8 @@ router.get('/order/:orderId', validateUUID('orderId'), invoiceController.getInvo
  *       200:
  *         description: Lista de facturas
  */
-router.get('/customer/:email', invoiceController.getInvoicesByCustomerEmail);
+// Requires auth — exposes all invoices (PII) for a given email
+router.get('/customer/:email', authMiddleware, invoiceController.getInvoicesByCustomerEmail);
 
 /**
  * @swagger
@@ -179,7 +183,7 @@ router.get('/customer/:email', invoiceController.getInvoicesByCustomerEmail);
  */
 router.get('/public/:shareToken', invoiceController.getInvoiceByShareToken);
 
-router.get('/store/:storeId', validateUUID('storeId'), invoiceController.getInvoicesByStoreId);
+router.get('/store/:storeId', authMiddleware, validateUUID('storeId'), invoiceController.getInvoicesByStoreId);
 
 /**
  * @swagger
@@ -238,8 +242,8 @@ router.get('/store/:storeId', validateUUID('storeId'), invoiceController.getInvo
  *       404:
  *         description: Factura no encontrada
  */
-router.get('/:id', validateUUID('id'), invoiceController.getInvoiceById);
-router.patch('/:id', validateUUID('id'), invoiceController.updateInvoice);
+router.get('/:id', authMiddleware, validateUUID('id'), invoiceController.getInvoiceById);
+router.patch('/:id', authMiddleware, validateUUID('id'), invoiceController.updateInvoice);
 
 module.exports = router;
 

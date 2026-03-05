@@ -1,5 +1,14 @@
 const { query, transaction } = require('../../lib/database');
 
+// Explicit column list for list/search queries — avoids pulling heavy or
+// sensitive fields (e.g. raw notes text) when only summary data is needed.
+const CUSTOMER_COLS = `
+  id, "storeId", name, email, phone,
+  address, city, "postalCode", country,
+  "totalPurchases", "totalOrders", "lastPurchaseAt",
+  "createdAt", "updatedAt"
+`;
+
 class CustomerService {
   /**
    * Crear o actualizar un cliente en una tienda
@@ -139,7 +148,7 @@ class CustomerService {
     }
 
     const result = await query(
-      `SELECT * FROM "Customer"
+      `SELECT ${CUSTOMER_COLS} FROM "Customer"
        ${whereClause}
        ORDER BY "lastPurchaseAt" DESC, "createdAt" DESC
        LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`,
@@ -168,7 +177,7 @@ class CustomerService {
     }
 
     const result = await query(
-      `SELECT * FROM "Customer" WHERE "id" = $1`,
+      `SELECT ${CUSTOMER_COLS} FROM "Customer" WHERE "id" = $1`,
       [customerId]
     );
 
@@ -314,32 +323,20 @@ class CustomerService {
       throw new Error('Store-ID ist erforderlich');
     }
 
-    // Primero obtener el email del cliente
-    const customerResult = await query(
-      `SELECT email FROM "Customer" WHERE id = $1 AND "storeId" = $2`,
-      [customerId, storeId]
-    );
-
-    if (customerResult.rows.length === 0 || !customerResult.rows[0].email) {
-      return {
-        success: true,
-        data: [],
-      };
-    }
-
-    const customerEmail = customerResult.rows[0].email;
-
-    // Obtener facturas del cliente por email y storeId
+    // Single JOIN query: resolve customer email and fetch invoices in one round-trip
     const result = await query(
-      `SELECT 
+      `SELECT
         i.*,
         o."createdAt" as "orderDate",
         o.status as "orderStatus"
        FROM "Invoice" i
        LEFT JOIN "Order" o ON i."orderId" = o.id
-       WHERE LOWER(i."customerEmail") = LOWER($1) AND i."storeId" = $2
-       ORDER BY i."createdAt" DESC`,
-      [customerEmail, storeId]
+       INNER JOIN "Customer" c ON LOWER(i."customerEmail") = LOWER(c.email)
+         AND c.id = $1 AND c."storeId" = $2
+       WHERE i."storeId" = $2
+       ORDER BY i."createdAt" DESC
+       LIMIT 200`,
+      [customerId, storeId]
     );
 
     // Parsear JSONB fields

@@ -33,7 +33,7 @@ class ProductController {
       }
 
       const options = { ownerId };
-      if (limit) options.limit = parseInt(limit);
+      if (limit) options.limit = Math.min(parseInt(limit) || 100, 500);
       
       const result = await productService.findAll(options);
       res.status(HTTP_STATUS.OK).json(result);
@@ -93,7 +93,7 @@ class ProductController {
     try {
       const { limit, search } = req.query;
       const options = {};
-      if (limit) options.limit = parseInt(limit);
+      if (limit) options.limit = Math.min(parseInt(limit) || 100, 500);
       if (search) options.search = search;
 
       const result = await productService.findAvailable(options);
