@@ -4,8 +4,8 @@ const { query, transaction } = require('../../lib/database');
 // sensitive fields (e.g. raw notes text) when only summary data is needed.
 const CUSTOMER_COLS = `
   id, "storeId", name, email, phone,
-  address, city, "postalCode", country,
-  "totalPurchases", "totalOrders", "lastPurchaseAt",
+  address, city, "postalCode",
+  "totalSpent", "totalOrders", "lastPurchaseAt",
   "createdAt", "updatedAt"
 `;
 
