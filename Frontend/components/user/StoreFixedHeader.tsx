@@ -28,7 +28,7 @@ export default function StoreFixedHeader({
       {/* Barra de búsqueda y botón Scan - FIJOS - Optimizado para móvil */}
       <div 
         className={`${isFixed ? 'fixed' : ''} left-0 right-0 px-3 sm:px-4 py-2.5 sm:py-3 flex gap-3 sm:gap-4 items-center justify-between bg-background-cream ${isFixed ? 'z-40' : ''} transition-ios`}
-        style={isFixed ? { top: 'calc(86px + env(safe-area-inset-top) + 65px)' } : {}}
+        style={isFixed ? { top: 'calc(85px + env(safe-area-inset-top) + 65px)' } : {}}
       >
         <div className="flex-1 min-w-0 mr-2 sm:mr-0">
           <SearchInput
@@ -55,8 +55,8 @@ export default function StoreFixedHeader({
       {categoryFilters.length > 0 && (
         <div 
           className={`${isFixed ? 'fixed' : ''} left-0 right-0 bg-background-cream ${isFixed ? 'z-40' : ''} transition-ios`}
-          style={isFixed ? { 
-            top: 'calc(80px + env(safe-area-inset-top) + 65px + 70px)'
+          style={isFixed ? {
+            top: 'calc(85px + env(safe-area-inset-top) + 65px + 70px)'
           } : {}}
         >
           <div>

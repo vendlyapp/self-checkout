@@ -11,7 +11,7 @@ export default function StoreInfoHeader({ isFixed = false }: StoreInfoHeaderProp
 
   return (
     <div 
-      className={`${isFixed ? 'fixed' : ''} left-0 right-0 bg-background-cream border-t border-b border-white ${isFixed ? 'z-45' : ''}`}
+      className={`${isFixed ? 'fixed' : ''} left-0 right-0 bg-background-cream border-t border-b border-white ${isFixed ? 'z-[45]' : ''}`}
       style={isFixed ? { top: 'calc(85px + env(safe-area-inset-top))' } : {}}
     >
       <div className="flex items-center justify-between w-full px-3 sm:px-4 py-2.5 sm:py-3 ">

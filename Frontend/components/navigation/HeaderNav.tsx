@@ -25,16 +25,27 @@ interface HeaderNavProps {
   };
   /** Padding estándar: default (px-4 py-3), comfortable (px-5 py-4), compact (px-3 py-2) */
   padding?: HeaderNavPadding;
+
   /** Clase adicional en el contenedor raíz (útil cuando el padre controla fixed/sticky) */
   className?: string;
   /** Clase adicional en el contenedor del contenido centrado */
   contentClassName?: string;
+  /** Deshabilita el safe-area-top interno — usar cuando el padre ya gestiona el offset de safe area */
+  noSafeArea?: boolean;
 }
 
-const PADDING_CLASSES: Record<HeaderNavPadding, string> = {
-  default: "px-4 py-3",
-  comfortable: "px-5 py-4",
-  compact: "px-3 py-2",
+// Padding horizontal + bottom — el top-padding se maneja separado para evitar conflicto con safeTop
+const PADDING_BASE: Record<HeaderNavPadding, string> = {
+  default: "px-4 pb-3",
+  comfortable: "px-5 pb-4",
+  compact: "px-3 pb-2",
+};
+
+// Top padding simétrico — solo cuando noSafeArea=true (el padre ya controla safe area)
+const PADDING_TOP: Record<HeaderNavPadding, string> = {
+  default: "pt-3",
+  comfortable: "pt-4",
+  compact: "pt-2",
 };
 
 export default function HeaderNav({
@@ -48,6 +59,7 @@ export default function HeaderNav({
   padding = "default",
   className,
   contentClassName,
+  noSafeArea = false,
 }: HeaderNavProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -65,8 +77,12 @@ export default function HeaderNav({
   const displayCount = promotionCount !== undefined ? promotionCount : products.length;
   const isSubtle = variant === "subtle";
 
-  const paddingClass = PADDING_CLASSES[padding];
-  const safeTop = isSubtle ? "pt-[calc(0.5rem+env(safe-area-inset-top))]" : "pt-[calc(0.75rem+env(safe-area-inset-top))]";
+  // Top padding: si noSafeArea, usa pt simétrico; si no, incluye safe-area-inset-top
+  const topPadding = noSafeArea
+    ? PADDING_TOP[padding]
+    : isSubtle
+    ? "pt-[calc(0.5rem+env(safe-area-inset-top))]"
+    : "pt-[calc(0.75rem+env(safe-area-inset-top))]";
 
   return (
     <div
@@ -74,16 +90,15 @@ export default function HeaderNav({
         "flex items-center justify-center w-full min-h-[52px]",
         isFixed && "fixed left-0 right-0 z-40",
         !isSubtle && "bg-white",
-        safeTop,
-        paddingClass,
-        "safe-area-top",
+        topPadding,
+        PADDING_BASE[padding],
         className
       )}
       style={isFixed ? { top: `${TOP_HEADER_NAV_PX}px` } : undefined}
     >
       <div
         className={clsx(
-          "flex items-center justify-between w-full min-w-0 max-w-[430px] gap-3 touch-target pt-4",
+          "flex items-center justify-between w-full min-w-0 max-w-[430px] gap-3 touch-target",
           contentClassName
         )}
       >

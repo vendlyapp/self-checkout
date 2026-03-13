@@ -28,8 +28,8 @@ export default function HeaderUser({ isDarkMode = false }: HeaderUserProps) {
 
   return (
     <>
-      <header className="dashboard-header h-[calc(85px+env(safe-area-inset-top))] w-full flex items-center justify-center pt-[env(safe-area-inset-top)]">
-        <div className={`dashboard-header-content ${headerBgClass} h-[85px] w-full flex items-center px-4`}>
+      <header className="dashboard-header h-[calc(80px+env(safe-area-inset-top))] w-full flex items-center justify-center pt-[env(safe-area-inset-top)]">
+        <div className={`dashboard-header-content ${headerBgClass} h-[80px] w-full flex items-center px-4`}>
            {/* Logo de la tienda - 50% izquierda */}
           <div className="w-1/2 flex items-center justify-start p-2 rounded">
             {storeLogo ? (

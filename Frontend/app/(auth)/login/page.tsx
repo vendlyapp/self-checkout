@@ -27,19 +27,26 @@ function LoginForm() {
 
         const { data: { session } } = await supabase.auth.getSession();
 
-        if (session && session.expires_at && session.expires_at * 1000 > Date.now()) {
-          const userRole = localStorage.getItem('userRole') || 'ADMIN';
-          if (userRole === 'SUPER_ADMIN') {
-            router.push('/super-admin/dashboard');
-          } else {
-            router.push(returnUrl);
-          }
-          return;
-        }
+        if (session) {
+          const isExpired =
+            typeof session.expires_at === 'number'
+              ? session.expires_at * 1000 <= Date.now()
+              : false;
 
-        if (session && session.expires_at && session.expires_at * 1000 <= Date.now()) {
-          const { clearAllSessionData } = await import('@/lib/utils/sessionUtils');
-          await clearAllSessionData();
+          if (!isExpired) {
+            const userRole = localStorage.getItem('userRole') || 'ADMIN';
+            if (userRole === 'SUPER_ADMIN') {
+              router.push('/super-admin/dashboard');
+            } else {
+              router.push(returnUrl);
+            }
+            return;
+          }
+
+          if (isExpired) {
+            const { clearAllSessionData } = await import('@/lib/utils/sessionUtils');
+            await clearAllSessionData();
+          }
         }
         
         setIsAuthenticated(false);

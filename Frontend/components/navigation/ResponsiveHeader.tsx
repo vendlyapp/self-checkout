@@ -108,11 +108,11 @@ export default function ResponsiveHeader({
 
       <header className={clsx(
         "bg-white transition-ios-slow",
-        isMobile ? "h-[calc(85px+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] border-b border-gray-100" : (isDesktop || sidebarVisible) ? "h-0 min-h-0 border-0 overflow-hidden" : "h-16 border-b border-gray-100"
+        isMobile ? "h-[calc(80px+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] border-b border-gray-100" : (isDesktop || sidebarVisible) ? "h-0 min-h-0 border-0 overflow-hidden" : "h-16 border-b border-gray-100"
       )}>
         {(isDesktop || sidebarVisible) ? null : isMobile ? (
           // Header original para móvil (sin cambios)
-          <div className="dashboard-header-content bg-background-cream h-[85px] w-full">
+          <div className="dashboard-header-content bg-background-cream h-[80px] w-full">
             {/* Logo */}
             <Link href="/dashboard" className="dashboard-logo-d touch-target tap-highlight-transparent">
               <Image

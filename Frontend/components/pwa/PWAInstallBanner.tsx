@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Download, X } from "lucide-react";
 
@@ -20,13 +21,17 @@ function isStandalone(): boolean {
 }
 
 export function PWAInstallBanner() {
+  const pathname = usePathname();
   const { isAuthenticated } = useAuth();
   const [showBanner, setShowBanner] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null);
 
+  const isStoreRoute = typeof pathname === "string" && pathname.startsWith("/store/");
+  const shouldOfferPWA = isAuthenticated || isStoreRoute;
+
   useEffect(() => {
-    if (!isAuthenticated || isStandalone()) return;
+    if (!shouldOfferPWA || isStandalone()) return;
     if (typeof window !== "undefined" && localStorage.getItem(STORAGE_KEY)) return;
 
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -38,7 +43,7 @@ export function PWAInstallBanner() {
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-  }, [isAuthenticated]);
+  }, [shouldOfferPWA]);
 
   const handleInstall = async () => {
     const prompt = deferredPrompt.current;
@@ -76,7 +81,9 @@ export function PWAInstallBanner() {
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground text-[15px]">App installieren</p>
             <p className="text-muted-foreground text-sm mt-0.5">
-              Für die beste Erfahrung installieren Sie die App auf Ihrem Gerät.
+              {isStoreRoute
+                ? "Installieren Sie die App, um schnell zu scannen und zu bestellen."
+                : "Für die beste Erfahrung installieren Sie die App auf Ihrem Gerät."}
             </p>
             <div className="flex items-center gap-2 mt-3">
               <button

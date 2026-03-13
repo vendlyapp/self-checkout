@@ -434,58 +434,57 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           sidebarVisible={shouldShowSidebar}
         />
 
-        {/* Header de charge con filtros - Solo en móvil y EXACTAMENTE en /charge */}
-        {isMobile && isChargeMainPage && chargeContext && (
-          <>
-            <HeaderNav 
-              title="Verkauf starten" 
-              showAddButton={false} 
-              isFixed={true} 
-            />
-            <Filter_Busqueda
-              searchQuery={chargeContext.searchQuery}
-              onSearch={chargeContext.onSearch}
-              selectedFilters={chargeContext.selectedFilters}
-              onFilterChange={chargeContext.onFilterChange}
-              onOpenFilterModal={chargeContext.onOpenFilterModal}
-              activeFiltersCount={chargeContext.activeFiltersCount}
-              productsListFilters={chargeContext.chargeFilters}
-              isFixed={true}
-            />
-          </>
-        )}
-
-        {/* Header add_product / view producto - fijo fuera del scroll (posición alineada con layoutHeights) */}
-        {((isProductsListAddProductPage && isMobile) || (isProductsListViewProductRoute && (isMobile || isTablet))) && (
-          <div className="fixed left-0 right-0 z-50 bg-white border-b border-gray-200" style={{ top: `${TOP_HEADER_NAV_PX}px` }}>
-            <HeaderNav
-              title={isProductsListAddProductPage ? 'Produkt erstellen' : 'Produktdetails'}
-              isFixed={false}
-              padding="comfortable"
-            />
+        {/* Contenedor unificado: charge y products_list — HeaderNav + filtros sin gaps entre componentes */}
+        {isMobile && (isChargeMainPage || isProductsListMainPage) && (
+          <div
+            className="fixed left-0 right-0 z-40 bg-background-cream flex flex-col"
+            style={{ top: `calc(${TOP_HEADER_NAV_PX}px + env(safe-area-inset-top))` }}
+          >
+            {isChargeMainPage && chargeContext && (
+              <>
+                <HeaderNav title="Verkauf starten" showAddButton={false} isFixed={false} noSafeArea={true} />
+                <Filter_Busqueda
+                  searchQuery={chargeContext.searchQuery}
+                  onSearch={chargeContext.onSearch}
+                  selectedFilters={chargeContext.selectedFilters}
+                  onFilterChange={chargeContext.onFilterChange}
+                  onOpenFilterModal={chargeContext.onOpenFilterModal}
+                  activeFiltersCount={chargeContext.activeFiltersCount}
+                  productsListFilters={chargeContext.chargeFilters}
+                  isFixed={false}
+                />
+              </>
+            )}
+            {isProductsListMainPage && productsListContext && (
+              <>
+                <HeaderNav title="Produkte" showAddButton={true} isFixed={false} noSafeArea={true} />
+                <Filter_Busqueda
+                  searchQuery={productsListContext.searchQuery}
+                  onSearch={productsListContext.onSearch}
+                  selectedFilters={productsListContext.selectedFilters}
+                  onFilterChange={productsListContext.onFilterChange}
+                  onOpenFilterModal={productsListContext.onOpenFilterModal}
+                  activeFiltersCount={productsListContext.activeFiltersCount}
+                  productsListFilters={productsListContext.productsListFilters}
+                  isFixed={false}
+                />
+              </>
+            )}
           </div>
         )}
 
-        {/* Header de products_list con filtros - Solo en móvil y EXACTAMENTE en /products_list */}
-        {isMobile && isProductsListMainPage && productsListContext && (
-          <>
-            <HeaderNav 
-              title="Produkte" 
-              showAddButton={true} 
-              isFixed={true}
-              padding="default"
+        {/* Contenedor: add_product / view producto — bg crema cubre el espacio sobre el header blanco */}
+        {((isProductsListAddProductPage && isMobile) || (isProductsListViewProductRoute && (isMobile || isTablet))) && (
+          <div
+            className="fixed left-0 right-0 z-50 bg-background-cream flex flex-col"
+            style={{ top: `calc(${TOP_HEADER_NAV_PX}px + env(safe-area-inset-top))` }}
+          >
+            <HeaderNav
+              title={isProductsListAddProductPage ? 'Produkt erstellen' : 'Produktdetails'}
+              isFixed={false}
+              noSafeArea={true}
             />
-            <Filter_Busqueda
-              searchQuery={productsListContext.searchQuery}
-              onSearch={productsListContext.onSearch}
-              selectedFilters={productsListContext.selectedFilters}
-              onFilterChange={productsListContext.onFilterChange}
-              onOpenFilterModal={productsListContext.onOpenFilterModal}
-              activeFiltersCount={productsListContext.activeFiltersCount}
-              productsListFilters={productsListContext.productsListFilters}
-              isFixed={true}
-            />
-          </>
+          </div>
         )}
 
         {/* Header de invoice detail - Solo en móvil y en detalle de factura */}

@@ -158,15 +158,15 @@ export default function FooterNav() {
     <div className="bg-white rounded-t-3xl">
       {/* Resumen de carrito arriba solo cuando estoy en /user/cart Y hay items en el carrito - fuera del nav para separación visual */}
       {isCartRoute && hasValidCartItems && (
-        <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl pb-2">
+        <div className="w-full max-w-[480px] mx-auto bg-white rounded-t-3xl pb-2">
           <UserCartSummaryCart variant="inline" />
         </div>
       )}
 
       {/* Footer Nav con borde y sombra para separación visual */}
       <div className="rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.12)] bg-white overflow-hidden transition-ios">
-        <nav className="bg-white rounded-t-3xl safe-area-bottom border-t border-[#E5E6F8] transition-ios" style={{ borderTopWidth: '0.5px' }}>
-          <div className="flex items-center justify-between w-full px-6 max-w-[430px] mx-auto pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2">
+        <nav className="bg-white rounded-t-3xl border-t border-[#E5E6F8] transition-ios safe-area-bottom" style={{ borderTopWidth: '0.5px' }}>
+          <div className="flex items-center justify-between w-full px-6 max-w-[480px] mx-auto pb-4 pt-2">
         {processedItems.map((item) => {
           const Icon = item.icon;
 
@@ -289,7 +289,7 @@ export default function FooterNav() {
 
           {/* Resumen de carrito abajo solo cuando NO estoy en /user/cart Y NO estoy en /user/payment - con contenedor limitado */}
           {!isCartRoute && !isPaymentRoute && (
-            <div className="w-full max-w-[430px] mx-auto flex flex-col gap-2 px-4 pb-[env(safe-area-inset-bottom)]">
+            <div className="w-full max-w-[480px] mx-auto flex flex-col gap-2 px-4 pb-2">
               <UserCartSummary variant="inline" />
             </div>
           )}

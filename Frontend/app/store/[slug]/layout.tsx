@@ -94,29 +94,19 @@ function StoreLayoutContent({ children }: StoreLayoutContentProps) {
     }
   }, [])
 
-  // Calcular altura total de headers fijos (optimizado para móvil):
-  // Solo en la página principal de productos:
-  // - HeaderUser: ~85px (con safe area)
-  // - StoreInfoHeader (título tienda + Kontakt): ~65px (py-2.5 = 10px + contenido ~55px)
-  // - Barra de búsqueda: ~60px (44px altura input/botón + py-2 = 16px padding total)
-  // - Filtros de categorías: ~60px (altura variable, padding responsive)
-  // En otras páginas:
-  // - HeaderUser: ~85px (con safe area)
-  // - HeaderNav: ~60px (con flecha de navegación)
-  // En scan:
-  // - HeaderUser: ~85px (con safe area)
-  // - HeaderNav: ~60px (con flecha de navegación)
+  // Padding-top del main = altura total del contenedor de headers fijos
+  // HeaderUser: 80px + env(safe-area-inset-top) | StoreInfoHeader: ~65px | SearchBar: ~60px | Filtros: ~60px | HeaderNav: ~60px
   const fixedHeadersHeight = isScanPage && shouldShowHeaderNav
-    ? 'calc(85px + env(safe-area-inset-top) + 60px)'
+    ? 'calc(80px + env(safe-area-inset-top) + 60px)'
     : isMainProductsPage && store && store.isOpen !== false && storeContext.categoryFilters.length > 0
-    ? 'calc(85px + env(safe-area-inset-top) + 65px + 60px + 60px)'
+    ? 'calc(80px + env(safe-area-inset-top) + 65px + 60px + 60px)'
     : isMainProductsPage && store && store.isOpen !== false
-    ? 'calc(85px + env(safe-area-inset-top) + 65px + 60px)'
+    ? 'calc(80px + env(safe-area-inset-top) + 65px + 60px)'
     : isMainProductsPage && store
-    ? 'calc(85px + env(safe-area-inset-top) + 65px)'
+    ? 'calc(80px + env(safe-area-inset-top) + 65px)'
     : shouldShowHeaderNav
-    ? 'calc(85px + env(safe-area-inset-top) + 60px)'
-    : 'calc(85px + env(safe-area-inset-top))'
+    ? 'calc(80px + env(safe-area-inset-top) + 60px)'
+    : 'calc(80px + env(safe-area-inset-top))'
 
   return (
     <LoadingProductsModalProvider>
@@ -124,38 +114,29 @@ function StoreLayoutContent({ children }: StoreLayoutContentProps) {
       {showInitialLoading && <InitialLoadingScreen message="Wird geladen..." />}
       
       <div className={`flex flex-col h-mobile w-full ${containerBgClass} relative overflow-hidden`}>
-        {/* Header principal fijo con safe area - mostrar siempre excepto si tienda cerrada */}
+        {/* Contenedor unificado de todos los headers fijos — bg-background-cream cubre los espacios entre componentes */}
         {!isStoreClosed && (
-          <div className={`fixed top-0 left-0 right-0 z-[100] ${headerBgClass} safe-area-top`}>
+          <div className="fixed top-0 left-0 right-0 z-[100] bg-background-cream flex flex-col">
             <HeaderUser isDarkMode={false} />
-          </div>
-        )}
-
-        {/* Header de información de la tienda (título + Kontakt) - Solo en página principal */}
-        {!isStoreClosed && !shouldHideNavigation && store && isMainProductsPage && (
-          <StoreInfoHeader isFixed={true} />
-        )}
-
-        {/* Headers fijos de búsqueda y filtros - Solo en página principal y si la tienda está abierta */}
-        {!isStoreClosed && !shouldHideNavigation && store && store.isOpen !== false && isMainProductsPage && (
-          <StoreFixedHeader
-            searchQuery={storeContext.searchQuery}
-            onSearch={storeContext.onSearch}
-            selectedFilters={storeContext.selectedFilters}
-            onFilterChange={storeContext.onFilterChange}
-            onScanQR={storeContext.onScanQR}
-            categoryFilters={storeContext.categoryFilters}
-            isFixed={true}
-          />
-        )}
-
-        {/* HeaderNav fijo - Solo en páginas que no son la principal (cart, payment, promotion, search, scan) */}
-        {!isStoreClosed && !shouldHideNavigation && shouldShowHeaderNav && headerNavTitle && (
-          <div 
-            className="fixed left-0 right-0 z-40 bg-white"
-            style={{ top: 'calc(85px + env(safe-area-inset-top))' }}
-          >
-            <HeaderNav title={headerNavTitle} isFixed={false} />
+            {!shouldHideNavigation && store && isMainProductsPage && (
+              <>
+                <StoreInfoHeader isFixed={false} />
+                {store.isOpen !== false && (
+                  <StoreFixedHeader
+                    searchQuery={storeContext.searchQuery}
+                    onSearch={storeContext.onSearch}
+                    selectedFilters={storeContext.selectedFilters}
+                    onFilterChange={storeContext.onFilterChange}
+                    onScanQR={storeContext.onScanQR}
+                    categoryFilters={storeContext.categoryFilters}
+                    isFixed={false}
+                  />
+                )}
+              </>
+            )}
+            {!shouldHideNavigation && shouldShowHeaderNav && headerNavTitle && (
+              <HeaderNav title={headerNavTitle} isFixed={false} noSafeArea={true} />
+            )}
           </div>
         )}
 
