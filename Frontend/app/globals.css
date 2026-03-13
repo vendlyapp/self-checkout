@@ -230,6 +230,13 @@
     -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);
   }
+
+  /* Cursor pointer en elementos clicables para mejor UX */
+  button:not(:disabled),
+  a[href],
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
 }
 
 /* Utilidades Mobile-First */
@@ -286,6 +293,13 @@
   @media (min-width: 768px) {
     .mobile-content-padding {
       padding-bottom: 0;
+    }
+  }
+
+  /* Padding-top del main solo en móvil (evita hydration mismatch: valor por pathname, anulado en desktop) */
+  @media (min-width: 768px) {
+    .main-pt-mobile-only {
+      padding-top: 0 !important;
     }
   }
 
@@ -2312,6 +2326,21 @@
 
 .animate-stagger-fade-in {
   animation: stagger-fade-in 300ms cubic-bezier(0.0, 0.0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+/* Charge page: single fast fade-in for entire block (no stagger) */
+@keyframes charge-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.charge-desktop-content {
+  animation: charge-fade-in 180ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
   opacity: 0;
 }
 

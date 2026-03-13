@@ -97,7 +97,7 @@ export default function MobileForm(props: SharedFormProps) {
                 <CheckCircle className="w-10 h-10 text-white" strokeWidth={3} />
               </div>
               <h3 className="text-2xl font-bold text-white mb-2">
-                ¡Éxito!
+                Erfolg!
               </h3>
             </div>
 
@@ -105,19 +105,19 @@ export default function MobileForm(props: SharedFormProps) {
             <div className="p-6">
               <p className="text-gray-700 mb-4 text-center text-base">
                 {props.isEditMode ? (
-                  <>El producto <span className="font-semibold text-gray-900">&quot;{createdProduct?.name}&quot;</span> ha sido actualizado exitosamente</>
+                  <>Das Produkt <span className="font-semibold text-gray-900">&quot;{createdProduct?.name}&quot;</span> wurde erfolgreich aktualisiert</>
                 ) : (
-                  <>Su producto <span className="font-semibold text-gray-900">&quot;{createdProduct?.name}&quot;</span> ha sido creado exitosamente</>
+                  <>Ihr Produkt <span className="font-semibold text-gray-900">&quot;{createdProduct?.name}&quot;</span> wurde erfolgreich erstellt</>
                 )}
               </p>
               <p className="text-gray-500 text-xs text-center mb-4">
-                Redirigiendo automáticamente en 4 segundos...
+                Weiterleitung in 4 Sekunden...
               </p>
 
               {/* Tarjeta de información */}
               <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 mb-6 border border-gray-200">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-600">ID del Producto:</span>
+                  <span className="text-sm font-medium text-gray-600">Produkt-ID:</span>
                   <span className="text-sm text-gray-900 font-mono font-semibold bg-white/70 px-3 py-1 rounded-lg">
                     {createdProduct?.id}
                   </span>
@@ -131,7 +131,7 @@ export default function MobileForm(props: SharedFormProps) {
                 style={{ pointerEvents: 'auto' }}
               >
                 <CheckCircle className="w-5 h-5" />
-                {props.isEditMode ? 'Volver a la Lista' : 'Ir al Catálogo'}
+                {props.isEditMode ? 'Zur Liste' : 'Zum Katalog'}
               </button>
             </div>
           </div>
@@ -701,24 +701,24 @@ function ProductAdditionalInfoMobile({ product }: { product: {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <QrCode className="w-5 h-5 text-gray-600" />
-              <h3 className="text-lg font-semibold text-gray-900">Código QR</h3>
+              <h3 className="text-lg font-semibold text-gray-900">QR-Code</h3>
             </div>
             <button
               onClick={handleDownloadQR}
               className="flex items-center gap-2 px-3 py-1.5 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors text-sm font-medium"
             >
               <Download className="w-4 h-4" />
-              Descargar
+              Herunterladen
             </button>
           </div>
           <div className="flex flex-col items-center bg-gray-50 rounded-xl p-4">
             <img 
               src={product.qrCode} 
-              alt={`QR Code para ${product.name}`}
+              alt={`QR-Code für ${product.name}`}
               className="w-48 h-48 rounded-lg shadow-sm"
             />
             <p className="text-xs text-gray-500 mt-3 text-center">
-              Escanea este código para ver el producto
+              Scannen Sie diesen Code, um das Produkt anzuzeigen
             </p>
           </div>
         </div>
@@ -730,32 +730,31 @@ function ProductAdditionalInfoMobile({ product }: { product: {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <ScanLine className="w-5 h-5 text-gray-600" />
-              <h3 className="text-lg font-semibold text-gray-900">Código de Barras</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Strichcode</h3>
             </div>
             <button
               onClick={handleDownloadBarcode}
               className="flex items-center gap-2 px-3 py-1.5 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors text-sm font-medium"
             >
               <Download className="w-4 h-4" />
-              Descargar
+              Herunterladen
             </button>
           </div>
           <div className="flex flex-col items-center bg-gray-50 rounded-xl p-4">
             <img 
               src={product.barcodeImage} 
-              alt={`Código de barras para ${product.name}`}
+              alt={`Barcode für ${product.name}`}
               className="w-full max-w-md h-auto rounded-lg shadow-sm bg-white p-4"
             />
             <p className="text-xs text-gray-500 mt-3 text-center">
-              Escanea este código de barras para identificar el producto
+              Scannen Sie diesen Barcode, um das Produkt zu identifizieren
             </p>
           </div>
         </div>
       )}
 
-      {/* Información adicional */}
       <div className="bg-white rounded-2xl p-5 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Información del Producto</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Produktinformationen</h3>
         <div className="space-y-3">
           {product.sku && (
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
@@ -765,19 +764,19 @@ function ProductAdditionalInfoMobile({ product }: { product: {
           )}
           {product.barcode && (
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-sm font-medium text-gray-600">Código de Barras</span>
+              <span className="text-sm font-medium text-gray-600">Strichcode</span>
               <span className="text-gray-900 font-mono text-sm">{product.barcode}</span>
             </div>
           )}
           {product.createdAt && (
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-sm font-medium text-gray-600">Creado el</span>
+              <span className="text-sm font-medium text-gray-600">Erstellt am</span>
               <span className="text-gray-900 font-medium text-sm">{formatDate(product.createdAt)}</span>
             </div>
           )}
           {product.updatedAt && (
             <div className="flex justify-between items-center py-2">
-              <span className="text-sm font-medium text-gray-600">Última actualización</span>
+              <span className="text-sm font-medium text-gray-600">Zuletzt aktualisiert</span>
               <span className="text-gray-900 font-medium text-sm">{formatDate(product.updatedAt)}</span>
             </div>
           )}

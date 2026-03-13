@@ -1,6 +1,7 @@
 "use client";
 
 import { SearchInput } from "@/components/ui/search-input";
+import { TOP_FILTER_SEARCH_BAR_PX, TOP_FILTER_SLIDER_BAR_PX } from "@/lib/constants/layoutHeights";
 import { SlidersHorizontal } from "lucide-react";
 import { FilterSlider, FilterOption } from "@/components/Sliders/SliderFIlter";
 
@@ -27,18 +28,20 @@ export default function Filter_Busqueda({
 }: FilterBusquedaProps) {
   return (
     <>
-      {/* Barra de búsqueda y filtros - FIJOS */}
-      <div className={`${isFixed ? 'fixed top-[130px]' : ''} left-0 right-0 p-4 flex flex-col-2 gap-4 items-center justify-center bg-background-cream border-b border-gray-100 ${isFixed ? 'z-40' : ''} 
-                      animate-slide-down gpu-accelerated`}>
-        <div className="animate-stagger-1">
+      {/* Barra de búsqueda y filtros - FIJOS (posición alineada con layoutHeights) */}
+      <div
+        className={`${isFixed ? "fixed" : ""} left-0 right-0 p-4 flex flex-row gap-3 items-center bg-background-cream ${isFixed ? "z-40" : ""} animate-slide-down gpu-accelerated`}
+        style={isFixed ? { top: `${TOP_FILTER_SEARCH_BAR_PX}px` } : undefined}
+      >
+        <div className="animate-stagger-1 flex-1 min-w-0">
           <SearchInput
             placeholder="Produkte durchsuchen…"
-            className="w-[260.5px] h-[54px] transition-interactive gpu-accelerated"
+            className="w-full h-[54px] transition-interactive gpu-accelerated"
             value={searchQuery}
             onChange={onSearch}
           />
         </div>
-        <div className="animate-stagger-2">
+        <div className="animate-stagger-2 flex-shrink-0">
           <button
             onClick={onOpenFilterModal}
             className="relative bg-white cursor-pointer text-black px-4 py-4 flex items-center font-semibold gap-2 rounded-lg 
@@ -60,10 +63,11 @@ export default function Filter_Busqueda({
         </div>
       </div>
 
-      {/* Filtros de categorías - FIJOS */}
-      <div className={`${isFixed ? 'fixed top-[215px]' : ''} left-0 right-0 bg-background-cream border-b border-gray-100 ${isFixed ? 'z-40' : ''} 
-                      animate-slide-down gpu-accelerated`}
-           style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
+      {/* Filtros de categorías - FIJOS (posición alineada con layoutHeights) */}
+      <div
+        className={`${isFixed ? "fixed" : ""} left-0 right-0 bg-background-cream ${isFixed ? "z-40" : ""} animate-slide-down gpu-accelerated`}
+        style={isFixed ? { top: `${TOP_FILTER_SLIDER_BAR_PX}px`, animationDelay: "0.1s", animationFillMode: "both" } : { animationDelay: "0.1s", animationFillMode: "both" }}
+      >
         <FilterSlider
           filters={productsListFilters}
           selectedFilters={selectedFilters}

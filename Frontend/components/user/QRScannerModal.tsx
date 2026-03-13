@@ -45,7 +45,7 @@ export const QRScannerModal = ({ isOpen, onClose }: QRScannerModalProps) => {
       const result = await response.json()
 
       if (!result.success) {
-        setError('Tienda no encontrada')
+        setError('Shop nicht gefunden')
         setLoading(false)
         return
       }
@@ -56,12 +56,12 @@ export const QRScannerModal = ({ isOpen, onClose }: QRScannerModalProps) => {
       setCurrentStore(result.data.slug)
       
       // Redirigir a la tienda
-      toast.success(`Bienvenido a ${result.data.name}`)
+      toast.success(`Willkommen bei ${result.data.name}`)
       router.push(`/store/${result.data.slug}`)
       onClose()
     } catch (err) {
       console.error('Error:', err)
-      setError('Error al buscar la tienda')
+      setError('Fehler beim Suchen des Shops')
     } finally {
       setLoading(false)
     }

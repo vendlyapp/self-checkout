@@ -56,7 +56,7 @@ const settings = [
 
 const SystemSettingsList = () => (
   <div className="w-full">
-    <div className="block lg:hidden bg-card rounded-2xl shadow-sm border border-border overflow-hidden p-3">
+    <div className="block lg:hidden bg-card rounded-2xl shadow-sm border border-border overflow-hidden p-4">
       <ul className="divide-y divide-border">
         {settings.map((item) => (
           <li key={item.title}>

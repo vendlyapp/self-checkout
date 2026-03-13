@@ -22,8 +22,8 @@ export const useProductStats = () => {
           throw new Error('CANCELLED');
         }
         
-        // Handle "Backend no disponible" specifically
-        if (response.error === 'Backend no disponible') {
+        // Handle "Backend unavailable" specifically
+        if (response.error === 'Backend unavailable') {
           return emptyStats;
         }
         
@@ -34,12 +34,12 @@ export const useProductStats = () => {
             errorMessage.includes('NetworkError') ||
             errorMessage.includes('ERR_CONNECTION_REFUSED') ||
             errorMessage.includes('ERR_NETWORK') ||
-            errorMessage.includes('Backend no disponible') ||
+            errorMessage.includes('Backend unavailable') ||
             errorMessage.includes('Network request failed')
           ) {
             return emptyStats;
           }
-          throw new Error(response.error || 'Error al obtener estadísticas de productos');
+          throw new Error(response.error || 'Fehler beim Laden der Produktstatistiken');
         }
         return response.data;
       } catch (error) {
@@ -52,7 +52,7 @@ export const useProductStats = () => {
             error.message.includes('NetworkError') ||
             error.message.includes('ERR_CONNECTION_REFUSED') ||
             error.message.includes('ERR_NETWORK') ||
-            error.message.includes('Backend no disponible') ||
+            error.message.includes('Backend unavailable') ||
             error.message.includes('Network request failed') ||
             (error.name === 'TypeError' && (
               error.message === 'Failed to fetch' ||
@@ -67,7 +67,7 @@ export const useProductStats = () => {
           if (
             errorMessage.includes('Failed to fetch') ||
             errorMessage.includes('NetworkError') ||
-            errorMessage.includes('Backend no disponible')
+            errorMessage.includes('Backend unavailable')
           ) {
             return emptyStats;
           }
@@ -82,7 +82,7 @@ export const useProductStats = () => {
         return false;
       }
       if (error instanceof Error && (
-        error.message.includes('Backend no disponible') ||
+        error.message.includes('Backend unavailable') ||
         error.message.includes('Failed to fetch') ||
         error.message.includes('NetworkError') ||
         error.message.includes('ERR_CONNECTION_REFUSED') ||

@@ -31,7 +31,7 @@ export const useStoreProducts = ({ slug, enabled = true }: UseStoreProductsOptio
       const result = await response.json();
       
       if (!result.success || !result.data) {
-        throw new Error(result.error || 'Error al cargar productos');
+        throw new Error(result.error || 'Fehler beim Laden der Produkte');
       }
 
       // Normalizar productos

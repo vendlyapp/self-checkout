@@ -151,11 +151,11 @@ export const validateApiResponse = <T>(response: unknown): T => {
     }
     
     if (apiResponse.data === undefined) {
-      throw new Error('Datos no encontrados en la respuesta');
+      throw new Error('No data found in response');
     }
     
     return apiResponse.data;
   }
   
-  throw new Error('Respuesta de API inválida');
+  throw new Error('Ungültige API-Antwort');
 };

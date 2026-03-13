@@ -6,53 +6,87 @@ import {
   Product,
 } from "../dashboard/products_list/data/mockProducts";
 import { useEffect, useState } from "react";
+import { clsx } from "clsx";
+import { TOP_HEADER_NAV_PX } from "@/lib/constants/layoutHeights";
+
+export type HeaderNavPadding = "default" | "comfortable" | "compact";
 
 interface HeaderNavProps {
   title?: string;
   showAddButton?: boolean;
   closeDestination?: string;
   isFixed?: boolean;
-  promotionCount?: number; // Número real de promociones
-  variant?: 'default' | 'subtle'; // Variante para diseño más sutil
+  promotionCount?: number;
+  variant?: "default" | "subtle";
   rightAction?: {
     icon: LucideIcon;
     onClick: () => void;
     label: string;
-  }; // Acción adicional a la derecha (antes del botón de cerrar)
+  };
+  /** Padding estándar: default (px-4 py-3), comfortable (px-5 py-4), compact (px-3 py-2) */
+  padding?: HeaderNavPadding;
+  /** Clase adicional en el contenedor raíz (útil cuando el padre controla fixed/sticky) */
+  className?: string;
+  /** Clase adicional en el contenedor del contenido centrado */
+  contentClassName?: string;
 }
+
+const PADDING_CLASSES: Record<HeaderNavPadding, string> = {
+  default: "px-4 py-3",
+  comfortable: "px-5 py-4",
+  compact: "px-3 py-2",
+};
 
 export default function HeaderNav({
   title = "Warenkorb",
   showAddButton = false,
   closeDestination = "/dashboard",
   isFixed = false,
-  promotionCount, // Número real de promociones pasado como prop
-  variant = 'default', // Variante por defecto
-  rightAction, // Acción adicional a la derecha
+  promotionCount,
+  variant = "default",
+  rightAction,
+  padding = "default",
+  className,
+  contentClassName,
 }: HeaderNavProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { cartItems, clearCart } = useCartStore();
-  const isCartPage = pathname === "/charge/cart" || pathname === "/user/cart" || pathname?.includes('/cart');
-  const isPromotionPage = pathname?.includes('/promotion');
+  const isCartPage = pathname === "/charge/cart" || pathname === "/user/cart" || pathname?.includes("/cart");
+  const isPromotionPage = pathname?.includes("/promotion");
   const [products, setProducts] = useState<Product[]>([]);
   useEffect(() => {
-    // Solo usar mock si no se pasa promotionCount
     if (promotionCount === undefined) {
       const promotionalProducts = getPromotionalProducts();
       setProducts(promotionalProducts);
     }
   }, [promotionCount]);
   const hasItems = cartItems.length > 0;
-  
-  // Usar promotionCount si está disponible, sino usar products.length del mock
   const displayCount = promotionCount !== undefined ? promotionCount : products.length;
+  const isSubtle = variant === "subtle";
 
-  const isSubtle = variant === 'subtle'
-  
+  const paddingClass = PADDING_CLASSES[padding];
+  const safeTop = isSubtle ? "pt-[calc(0.5rem+env(safe-area-inset-top))]" : "pt-[calc(0.75rem+env(safe-area-inset-top))]";
+
   return (
-    <div className={`${isFixed ? 'fixed top-[80px]' : ''} flex justify-between items-center ${isSubtle ? 'p-3' : 'p-3'} ${isSubtle ? 'bg-transparent' : 'bg-white'} left-0 right-0 z-40 safe-area-top ${isSubtle ? 'pt-[calc(0.5rem+env(safe-area-inset-top))]' : 'pt-[calc(0.75rem+env(safe-area-inset-top))]'}`}>
-      <div className={`flex items-center gap-2 justify-between w-full ${isSubtle ? 'pt-[5px]' : 'pt-[6px]'} ${isSubtle ? 'px-2' : 'px-3'} touch-target`}>
+    <div
+      className={clsx(
+        "flex items-center justify-center w-full min-h-[52px]",
+        isFixed && "fixed left-0 right-0 z-40",
+        !isSubtle && "bg-white",
+        safeTop,
+        paddingClass,
+        "safe-area-top",
+        className
+      )}
+      style={isFixed ? { top: `${TOP_HEADER_NAV_PX}px` } : undefined}
+    >
+      <div
+        className={clsx(
+          "flex items-center justify-between w-full min-w-0 max-w-[430px] gap-3 touch-target pt-4",
+          contentClassName
+        )}
+      >
         <button
           className={`flex items-center gap-2 cursor-pointer ${isSubtle ? 'hover:bg-white/50 active:bg-white/70 rounded-full p-2 -ml-2 transition-ios' : ''}`}
           onClick={() => router.back()}
@@ -65,7 +99,8 @@ export default function HeaderNav({
         <div className="flex items-center gap-2">
           {isCartPage && hasItems && (
             <button
-              className="text-red-600 font-semibold text-[14px] px-2 py-1 rounded hover:bg-red-50"
+              type="button"
+              className="cursor-pointer text-red-600 font-semibold text-sm px-3 py-2 min-h-[44px] rounded-lg hover:bg-red-50 transition-colors"
               onClick={clearCart}
               aria-label="Leeren"
               tabIndex={0}
@@ -74,13 +109,14 @@ export default function HeaderNav({
             </button>
           )}
           {isPromotionPage && (
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-2">
               <Zap className="w-4 h-4 text-black" />
-              <span className="text-[14px] font-semibold">
+              <span className="text-sm font-semibold">
                 {displayCount}
               </span>
               <button
-                className="text-black text-[14px] px-2 py-1 rounded hover:bg-red-50"
+                type="button"
+                className="cursor-pointer text-black text-sm px-3 py-2 min-h-[44px] rounded-lg hover:bg-gray-100 transition-colors"
                 onClick={() => {
                   // Redirigir a promotion de la tienda actual si estamos en una ruta de tienda
                   if (pathname?.includes('/store/')) {
@@ -99,7 +135,8 @@ export default function HeaderNav({
           )}
           {rightAction && (
             <button
-              className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
+              type="button"
+              className="cursor-pointer flex items-center justify-center w-10 h-10 min-w-10 min-h-10 rounded-full hover:bg-gray-100 transition-colors"
               onClick={rightAction.onClick}
               aria-label={rightAction.label}
               tabIndex={0}
@@ -109,7 +146,8 @@ export default function HeaderNav({
           )}
           {!isCartPage && !showAddButton && !isPromotionPage && !isSubtle && (
             <button
-              className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100"
+              type="button"
+              className="cursor-pointer flex items-center justify-center w-10 h-10 min-w-10 min-h-10 rounded-full hover:bg-gray-100 transition-colors"
               onClick={() => router.push(closeDestination)}
               aria-label="Schliessen"
               tabIndex={0}

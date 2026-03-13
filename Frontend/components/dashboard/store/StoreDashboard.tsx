@@ -42,20 +42,20 @@ const StoreDashboard = () => (
         <StoreHeaderCard />
 
         <div className="w-full min-w-0">
-          <SearchInput placeholder="Einstellungen durchsuchen..." esHome={false} className="w-full h-12 min-h-12" />
+          <SearchInput placeholder="Einstellungen durchsuchen..." esHome={false} className="w-full h-[54px] min-h-[54px]" />
         </div>
 
-        <Link href="/store/settings" className="block">
+        <Link href="/store/settings" className="block cursor-pointer">
           <div className="bg-card rounded-2xl p-4 shadow-sm border border-border hover:shadow-md transition-ios">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Store className="w-6 h-6 text-primary" />
+              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Store className="w-7 h-7 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-base font-semibold text-foreground mb-0.5">Mein Geschäft</h3>
-                <p className="text-xs text-muted-foreground leading-snug">Personalisieren Sie die Informationen Ihres Geschäfts</p>
+                <h3 className="text-lg font-semibold text-foreground mb-0.5">Mein Geschäft</h3>
+                <p className="text-sm text-muted-foreground leading-snug">Personalisieren Sie die Informationen Ihres Geschäfts</p>
               </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" aria-hidden />
+              <ChevronRight className="w-6 h-6 text-muted-foreground flex-shrink-0" aria-hidden />
             </div>
           </div>
         </Link>
@@ -64,7 +64,7 @@ const StoreDashboard = () => (
         <PlanCard />
 
         <div>
-          <h2 className="text-sm font-semibold text-foreground mb-3">Dienste</h2>
+          <h2 className="text-base font-semibold text-foreground mb-3">Dienste</h2>
           <div className="grid grid-cols-2 gap-3">
             {services.map((service) => (
               <ServiceCard key={service.title} {...service} />
@@ -80,7 +80,7 @@ const StoreDashboard = () => (
         {/* Contact Card */}
         <ContactCard />
 
-        <p className="text-xs text-muted-foreground text-center pt-4">
+        <p className="text-sm text-muted-foreground text-center pt-4">
           Version 1.02.2 • Self-Checkout • 29.6.2025
         </p>
       </div>

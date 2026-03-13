@@ -852,7 +852,7 @@ export const createProduct = async (productData: Omit<Product, 'id' | 'createdAt
     const response = await ProductService.createProduct(productData);
     
     if (!response.success || !response.data) {
-      throw new Error(response.error || 'Error al crear producto');
+      throw new Error(response.error || 'Fehler beim Erstellen des Produkts');
     }
 
     return normalizeProductData(response.data);
@@ -867,7 +867,7 @@ export const updateProduct = async (id: string, productData: Partial<Product>): 
     const response = await ProductService.updateProduct(id, productData);
     
     if (!response.success || !response.data) {
-      throw new Error(response.error || 'Error al actualizar producto');
+      throw new Error(response.error || 'Fehler beim Aktualisieren des Produkts');
     }
 
     return normalizeProductData(response.data);
@@ -882,7 +882,7 @@ export const deleteProduct = async (id: string): Promise<void> => {
     const response = await ProductService.deleteProduct(id);
     
     if (!response.success) {
-      throw new Error(response.error || 'Error al eliminar producto');
+      throw new Error(response.error || 'Fehler beim Löschen des Produkts');
     }
 
   } catch (error) {
@@ -896,7 +896,7 @@ export const updateProductStock = async (id: string, quantity: number): Promise<
     const response = await ProductService.updateStock(id, quantity);
     
     if (!response.success || !response.data) {
-      throw new Error(response.error || 'Error al actualizar stock');
+      throw new Error(response.error || 'Fehler beim Aktualisieren des Bestands');
     }
 
     return normalizeProductData(response.data);

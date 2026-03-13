@@ -172,7 +172,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
       );
       
       // Debug: verificar detección de promoción
-      console.log('[EditForm] Detección de promoción:', {
+      console.log('[EditForm] Promotion detection:', {
         isPromotional: product.isPromotional,
         isOnSale: product.isOnSale,
         originalPrice: product.originalPrice,
@@ -463,7 +463,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
           v.name.trim() !== '' && v.price.trim() !== '' && !isNaN(parseFloat(v.price)) && parseFloat(v.price) > 0
         );
         if (validVariants.length === 0) {
-          newErrors.productPrice = "Al menos una variante debe tener nombre y precio válidos";
+          newErrors.productPrice = "Mindestens eine Variante muss einen gültigen Namen und Preis haben";
         }
       }
       
@@ -483,7 +483,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
       
       // Debug: mostrar estado de validación
       if (Object.keys(newErrors).length > 0) {
-        console.log('[EditForm] Errores de validación detectados:', {
+        console.log('[EditForm] Validation errors:', {
           errors: newErrors,
           hasPromotion,
           promotionPrice,
@@ -495,7 +495,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
       // Si hay errores, actualizar el estado y retornar
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors);
-        console.warn('[EditForm] Errores de validación:', newErrors);
+        console.warn('[EditForm] Validation errors:', newErrors);
         return;
       }
       
@@ -575,7 +575,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
           updateData: {
             ...updateData,
             // No mostrar imágenes completas en el log
-            images: updateData.images ? `[${updateData.images.length} imágenes]` : undefined,
+            images: updateData.images ? `[${updateData.images.length} images]` : undefined,
             image: updateData.image ? '[imagen]' : undefined
           }
         });
@@ -661,8 +661,8 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
             try {
               const variantPrice = parseFloat(variant.price);
               if (isNaN(variantPrice) || variantPrice <= 0) {
-                console.warn(`Variante "${variant.name}" tiene precio inválido, se omite`);
-                variantErrors.push(`Variante "${variant.name}": Precio inválido`);
+                console.warn(`Variant "${variant.name}" has invalid price, skipping`);
+                variantErrors.push(`Variante "${variant.name}": Ungültiger Preis`);
                 continue;
               }
 
@@ -749,7 +749,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
 
           // Eliminar variantes que ya no están en la lista
           if (variantsToDelete.length > 0) {
-            console.log('[EditForm] Eliminando variantes que ya no están en la lista:', variantsToDelete.map(v => {
+            console.log('[EditForm] Removing variants no longer in list:', variantsToDelete.map(v => {
               const normalized = normalizeProductData(v);
               return normalized.name;
             }));
@@ -847,14 +847,14 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
               <Loader size="lg" color="white" />
             </div>
             <h3 className="text-2xl font-bold text-white mb-2">
-              Guardando cambios
+              Änderungen werden gespeichert
             </h3>
           </div>
 
           {/* Contenido del modal */}
           <div className="p-6">
             <p className="text-gray-700 mb-4 text-center text-base">
-              Espere un momento mientras se guardan sus cambios...
+              Bitte warten Sie, während Ihre Änderungen gespeichert werden...
             </p>
             {/* Barra de progreso opcional */}
             {saveProgress > 0 && (

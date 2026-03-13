@@ -14,7 +14,7 @@ export const useCreateProduct = () => {
     mutationFn: async (data: CreateProductRequest) => {
       const response = await ProductService.createProduct(data);
       if (!response.success || !response.data) {
-        throw new Error(response.error || 'Error al crear producto');
+        throw new Error(response.error || 'Fehler beim Erstellen des Produkts');
       }
       return response.data as Product;
     },
@@ -36,7 +36,7 @@ export const useUpdateProduct = () => {
     mutationFn: async ({ id, data }: { id: string; data: UpdateProductRequest }) => {
       const response = await ProductService.updateProduct(id, data);
       if (!response.success || !response.data) {
-        throw new Error(response.error || 'Error al actualizar producto');
+        throw new Error(response.error || 'Fehler beim Aktualisieren des Produkts');
       }
       return response.data as Product;
     },
@@ -59,7 +59,7 @@ export const useDeleteProduct = () => {
     mutationFn: async (id: string) => {
       const response = await ProductService.deleteProduct(id);
       if (!response.success) {
-        throw new Error(response.error || 'Error al eliminar producto');
+        throw new Error(response.error || 'Fehler beim Löschen des Produkts');
       }
       return id;
     },
@@ -82,7 +82,7 @@ export const useUpdateProductStock = () => {
     mutationFn: async ({ id, quantity }: { id: string; quantity: number }) => {
       const response = await ProductService.updateStock(id, quantity);
       if (!response.success || !response.data) {
-        throw new Error(response.error || 'Error al actualizar stock');
+        throw new Error(response.error || 'Fehler beim Aktualisieren des Bestands');
       }
       return response.data as Product;
     },

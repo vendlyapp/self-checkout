@@ -21,7 +21,7 @@ interface Notification {
   read: boolean;
 }
 
-// Mock notifications - en producción vendrían de una API
+// Mock notifications (replace with API in production)
 const mockNotifications: Notification[] = [
   {
     id: '1',
@@ -45,7 +45,7 @@ interface ResponsiveHeaderProps {
   isMobile?: boolean;
   isTablet?: boolean;
   isDesktop?: boolean;
-  /** Cuando el sidebar izquierdo está visible (tablet/desktop), ocultar barra superior para no duplicar logo */
+  /** When left sidebar is visible (tablet/desktop), hide top bar to avoid duplicate logo */
   sidebarVisible?: boolean;
 }
 
@@ -65,33 +65,26 @@ export default function ResponsiveHeader({
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [pressedButton, setPressedButton] = useState<string | null>(null);
 
-  // Obtener estado de la tienda
   const storeStatus = getStoreStatus();
-
-  // Calcular notificaciones no leídas
   const unreadCount = useMemo(
     () => mockNotifications.filter(n => !n.read).length,
     []
   );
 
-  // Manejar presión de botón con vibración háptica
   const handleButtonPress = useCallback((buttonId: string) => {
     setPressedButton(buttonId);
     setTimeout(() => setPressedButton(null), 150);
   }, []);
 
-  // Manejar feedback en eventos válidos
   const handleValidInteraction = useCallback((e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
     lightFeedback(e.currentTarget);
   }, []);
 
-  // Toggle notificaciones
   const handleNotificationToggle = useCallback(() => {
     setShowNotifications(prev => !prev);
     handleButtonPress('notifications');
   }, [handleButtonPress]);
 
-  // Cerrar notificaciones al hacer click fuera
   const handleClickOutside = useCallback(() => {
     if (showNotifications) {
       setShowNotifications(false);
@@ -104,10 +97,7 @@ export default function ResponsiveHeader({
 
   return (
     <>
-      {/* Modal de logout elegante */}
       <LogoutModal isOpen={isLoggingOut} />
-      
-      {/* Overlay para cerrar dropdowns */}
       {(showNotifications || showUserMenu) && (
         <div
           className="fixed inset-0 z-20"
@@ -176,30 +166,20 @@ export default function ResponsiveHeader({
                   setIsLoggingOut(true);
                   
                   try {
-                    // Limpiar toda la sesión usando la utilidad centralizada
                     await clearAllSessionData();
-                    
-                    // También cerrar sesión en el contexto
                     try {
                       await signOut();
                     } catch (contextError) {
-                      console.warn('Error en contexto de logout (puede ignorarse):', contextError);
+                      console.warn('SignOut context error (ignored):', contextError);
                     }
-                    
                     toast.success('Erfolgreich abgemeldet');
-                    
-                    // Redirigir a la ruta raíz
                     setTimeout(() => {
                       router.push('/');
-                      setTimeout(() => {
-                        window.location.href = '/';
-                      }, 100);
+                      setTimeout(() => { window.location.href = '/'; }, 100);
                     }, 300);
                   } catch (error) {
-                    console.error('Error al cerrar sesión:', error);
+                    console.error('Logout failed:', error);
                     toast.error('Fehler beim Abmelden');
-                    
-                    // Forzar limpieza y redirección
                     try {
                       await clearAllSessionData();
                     } catch {
@@ -208,10 +188,7 @@ export default function ResponsiveHeader({
                         sessionStorage.clear();
                       }
                     }
-                    
-                    setTimeout(() => {
-                      window.location.href = '/';
-                    }, 300);
+                    setTimeout(() => { window.location.href = '/'; }, 300);
                   } finally {
                     setIsLoggingOut(false);
                   }
@@ -229,7 +206,6 @@ export default function ResponsiveHeader({
             </div>
           </div>
         ) : (
-          // Header para tablet: alineado y sin texto cortado
           <div className="flex items-center justify-between gap-3 px-4 sm:px-5 h-full w-full min-w-0 overflow-hidden">
             <div className="flex items-center gap-3 min-w-0 flex-1">
               {showMenuButton && (
@@ -311,30 +287,20 @@ export default function ResponsiveHeader({
                   setIsLoggingOut(true);
                   
                   try {
-                    // Limpiar toda la sesión usando la utilidad centralizada
                     await clearAllSessionData();
-                    
-                    // También cerrar sesión en el contexto
                     try {
                       await signOut();
                     } catch (contextError) {
-                      console.warn('Error en contexto de logout (puede ignorarse):', contextError);
+                      console.warn('SignOut context error (ignored):', contextError);
                     }
-                    
                     toast.success('Erfolgreich abgemeldet');
-                    
-                    // Redirigir a la ruta raíz
                     setTimeout(() => {
                       router.push('/');
-                      setTimeout(() => {
-                        window.location.href = '/';
-                      }, 100);
+                      setTimeout(() => { window.location.href = '/'; }, 100);
                     }, 300);
                   } catch (error) {
-                    console.error('Error al cerrar sesión:', error);
+                    console.error('Logout failed:', error);
                     toast.error('Fehler beim Abmelden');
-                    
-                    // Forzar limpieza y redirección
                     try {
                       await clearAllSessionData();
                     } catch {
@@ -343,10 +309,7 @@ export default function ResponsiveHeader({
                         sessionStorage.clear();
                       }
                     }
-                    
-                    setTimeout(() => {
-                      window.location.href = '/';
-                    }, 300);
+                    setTimeout(() => { window.location.href = '/'; }, 300);
                   } finally {
                     setIsLoggingOut(false);
                   }

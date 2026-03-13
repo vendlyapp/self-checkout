@@ -16,7 +16,7 @@ export interface PaymentMethod {
   sortOrder: number;
   config: Record<string, unknown> | null;
   disabledBySuperAdmin?: boolean; // Si es true, el super admin hat este método eingeschränkt
-  disabledGlobally?: boolean; // Si es true, el método está deshabilitado globalmente (no disponible para ninguna tienda)
+  disabledGlobally?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -66,7 +66,7 @@ export const usePaymentMethods = (options: UsePaymentMethodsOptions) => {
         const result = await response.json();
 
         if (!result.success) {
-          throw new Error(result.error || 'Error al cargar métodos de pago');
+          throw new Error(result.error || 'Fehler beim Laden der Zahlungsmethoden');
         }
 
         return result.data as PaymentMethod[];

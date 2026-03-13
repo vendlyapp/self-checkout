@@ -149,7 +149,7 @@ const SnanerDash = () => {
         { facingMode: "environment" }, // Cámara trasera
         config,
         (decodedText) => {
-          // Código escaneado exitosamente
+          // Successfully scanned
           if (!isCleaningUpRef.current) {
             handleScannedCode(decodedText);
           }
@@ -160,7 +160,7 @@ const SnanerDash = () => {
         }
       );
     } catch (error: unknown) {
-      console.error("Error al iniciar el escáner:", error);
+      console.error("Scanner start failed:", error);
       setIsScanning(false);
       
       let errorMsg = "Zugriff auf die Kamera nicht möglich. Bitte überprüfen Sie die Berechtigungen.";
@@ -199,7 +199,7 @@ const SnanerDash = () => {
           }
         }, 100);
       } catch (error) {
-        console.error("Error al detener el escáner:", error);
+        console.error("Scanner stop failed:", error);
         // Limpiar el contenedor incluso si hay error
         if (scanContainerRef.current) {
           scanContainerRef.current.innerHTML = "";
@@ -260,11 +260,11 @@ const SnanerDash = () => {
 
       await processProductData(result.data);
     } catch (error) {
-      console.error("Error al procesar el código QR:", error);
+      console.error("QR code processing failed:", error);
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Error al procesar el código QR. Intenta nuevamente."
+          : "Beim Verarbeiten des QR-Codes ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."
       );
       setShowErrorModal(true);
     }
@@ -335,13 +335,13 @@ const SnanerDash = () => {
 
     // Verificar si el producto está disponible
     if (!product.isActive || product.stock <= 0) {
-      throw new Error("Producto no disponible");
+      throw new Error("Produkt nicht verfügbar");
     }
 
     // Obtener información de la tienda del producto
     const storeInfo = productData.store;
     if (!storeInfo || !storeInfo.slug) {
-      throw new Error("Tienda no encontrada para este producto");
+      throw new Error("Shop für dieses Produkt nicht gefunden");
     }
 
     // Guardar la tienda en el store global
@@ -483,7 +483,7 @@ const SnanerDash = () => {
             <button
               onClick={handleCloseModal}
               className="hidden sm:flex absolute top-4 right-4 w-8 h-8 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 active:scale-95 transition-ios z-10"
-              aria-label="Cerrar modal"
+              aria-label="Modal schliessen"
             >
               <X className="w-4 h-4 text-gray-600" />
             </button>
@@ -621,9 +621,9 @@ const SnanerDash = () => {
                 className="bg-[#25D076] text-white px-6 py-4 rounded-full font-semibold hover:bg-[#25D076]/90 
                          w-full touch-target tap-highlight-transparent"
                 style={{ minHeight: '48px' }}
-                aria-label="Permitir acceso a la cámara"
+                aria-label="Kamera-Zugriff erlauben"
               >
-                Permitir acceso a la cámara
+                Kamera-Zugriff erlauben
               </button>
               <button
                 onClick={handleCloseCameraPermissionModal}
@@ -631,9 +631,9 @@ const SnanerDash = () => {
                          hover:bg-gray-50 w-full 
                          touch-target tap-highlight-transparent"
                 style={{ minHeight: '48px' }}
-                aria-label="Cancelar"
+                aria-label="Abbrechen"
               >
-                Cancelar
+                Abbrechen
               </button>
             </div>
           </div>

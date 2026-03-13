@@ -267,7 +267,7 @@ export default function FooterNav() {
                       "absolute -top-1.5 -right-2.5 min-w-5 h-5 px-1 rounded-full text-white text-[10px] leading-5 font-bold text-center",
                       item.isActive ? "bg-red-500" : "bg-red-500/70"
                     )}
-                    aria-label={`Artículos en carrito: ${cartItemCount}`}
+                    aria-label={`Artikel im Warenkorb: ${cartItemCount}`}
                     aria-live="polite"
                   >
                     {cartItemCount > 99 ? "99+" : cartItemCount}

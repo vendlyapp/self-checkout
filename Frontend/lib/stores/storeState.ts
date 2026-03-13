@@ -42,7 +42,7 @@ const updateStoreStatusInBackend = async (isOpen: boolean) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Error al actualizar el estado de la tienda');
+      throw new Error(errorData.error || 'Fehler beim Aktualisieren des Geschäftsstatus');
     }
 
     const data = await response.json();
@@ -89,7 +89,7 @@ export const useStoreState = create<StoreState>()(
 
             // Si es 404, el usuario probablemente no tiene una tienda asociada
             if (response.status === 404) {
-              console.warn('No se encontró una tienda asociada al usuario');
+              console.warn('No store found for user');
               // No establecer error para 404, solo mantener el estado actual
               set({ error: null, isLoading: false });
               return;
@@ -133,31 +133,30 @@ export const useStoreState = create<StoreState>()(
               isLoading: false,
             });
           } else {
-            console.warn('Datos de tienda inválidos, manteniendo estado actual');
+            console.warn('Invalid store data, keeping current state');
             set({ error: null, isLoading: false });
           }
         } catch (error) {
-          console.error('Error al obtener estado de la tienda:', error);
-          const errorMessage = error instanceof Error 
-            ? error.message 
-            : 'Error al obtener el estado de la tienda';
-          
-          // Si es un error de conexión o backend no disponible, no mostrar error crítico
+          console.error('Store state fetch failed:', error);
+          const errorMessage = error instanceof Error
+            ? error.message
+            : 'Store state fetch failed';
+
+          // Connection/backend unreachable: do not show critical error
           if (
             error instanceof TypeError ||
             errorMessage.includes('Failed to fetch') ||
             errorMessage.includes('NetworkError') ||
             errorMessage.includes('ERR_CONNECTION_REFUSED') ||
             errorMessage.includes('ERR_NETWORK') ||
-            errorMessage.includes('Backend no disponible')
+            errorMessage.includes('Backend unavailable')
           ) {
-            console.warn('Backend no disponible, manteniendo estado actual');
+            console.warn('Backend unavailable, keeping current state');
             set({ error: null, isLoading: false });
             return;
           }
           
-          // Para otros errores, solo registrar sin bloquear la UI
-          console.warn('Error al obtener estado de la tienda:', errorMessage);
+          console.warn('Store state error:', errorMessage);
           set({ error: null, isLoading: false });
         }
       },

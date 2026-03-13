@@ -78,7 +78,7 @@ const SuperAdminHeader: React.FC = () => {
       }, 300);
       
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+      console.error('Logout failed:', error);
       toast.error('Fehler beim Abmelden. Weiterleitung...');
       
       // Forzar limpieza básica en caso de error

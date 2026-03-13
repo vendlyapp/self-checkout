@@ -51,7 +51,7 @@ const RecentSalesSection = ({ sales }: RecentSalesSectionProps) => {
         ))}
       </div>
 
-      {/* Botón "Ver más" - solo si hay más de MAX_VISIBLE_SALES */}
+      {/* Show more button when there are more than MAX_VISIBLE_SALES */}
       {hasMoreSales && (
         <div className="mt-4 pt-4 border-t border-gray-100">
           <button

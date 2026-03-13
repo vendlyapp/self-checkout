@@ -24,7 +24,7 @@ export const useProducts = (options?: UseProductsOptions) => {
         if (response.error === 'Request cancelled') {
           throw new Error('CANCELLED');
         }
-        throw new Error(response.error || 'Error al obtener productos');
+        throw new Error(response.error || 'Fehler beim Laden der Produkte');
       }
       return response.data as Product[];
     },

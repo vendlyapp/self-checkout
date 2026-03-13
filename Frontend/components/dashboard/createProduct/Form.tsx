@@ -325,7 +325,7 @@ export default function Form({ isDesktop = false }: FormProps) {
           const firstVariant = validVariants[0];
           const firstVariantPrice = parseFloat(firstVariant.price);
           if (isNaN(firstVariantPrice) || firstVariantPrice <= 0) {
-            throw new Error('La primera variante debe tener un precio válido y mayor a 0');
+            throw new Error('Die erste Variante muss einen gültigen Preis grösser als 0 haben');
           }
 
           // Crear producto principal con los datos de la primera variante
@@ -349,7 +349,7 @@ export default function Form({ isDesktop = false }: FormProps) {
             const variant = validVariants[i];
             const variantPrice = parseFloat(variant.price);
             if (isNaN(variantPrice) || variantPrice <= 0) {
-              console.warn(`Variante "${variant.name}" tiene precio inválido, se omite`);
+              console.warn(`Variant "${variant.name}" has invalid price, skipping`);
               continue;
             }
 
@@ -401,15 +401,15 @@ export default function Form({ isDesktop = false }: FormProps) {
       console.error('Error creating product:', error);
       
       // Mostrar error más específico al usuario
-      let errorMessage = 'Error al crear el producto';
+      let errorMessage = 'Fehler beim Erstellen des Produkts';
       
       if (error instanceof Error) {
         if (error.message.includes('500')) {
-          errorMessage = 'Error del servidor. Intenta nuevamente o contacta al administrador.';
+          errorMessage = 'Serverfehler. Bitte versuchen Sie es erneut oder kontaktieren Sie den Administrator.';
         } else if (error.message.includes('timeout')) {
-          errorMessage = 'Tiempo de espera agotado. Verifica tu conexión e intenta nuevamente.';
+          errorMessage = 'Zeitüberschreitung. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.';
         } else if (error.message.includes('400')) {
-          errorMessage = 'Datos inválidos. Verifica que todos los campos estén correctos.';
+          errorMessage = 'Ungültige Daten. Bitte überprüfen Sie, ob alle Felder korrekt ausgefüllt sind.';
         } else {
           errorMessage = error.message;
         }
@@ -459,14 +459,13 @@ export default function Form({ isDesktop = false }: FormProps) {
               <Loader size="lg" color="white" />
             </div>
             <h3 className="text-2xl font-bold text-white mb-2">
-              Creando productos
+              Produkte werden erstellt
             </h3>
           </div>
 
-          {/* Contenido del modal */}
           <div className="p-6">
             <p className="text-gray-700 mb-4 text-center text-base">
-              Espere un momento mientras se crean sus productos...
+              Bitte warten Sie, während Ihre Produkte erstellt werden...
             </p>
           </div>
         </div>
@@ -493,7 +492,7 @@ export default function Form({ isDesktop = false }: FormProps) {
               <CheckCircle className="w-10 h-10 text-white" strokeWidth={3} />
             </div>
             <h3 className="text-2xl font-bold text-white mb-2">
-              ¡Éxito!
+              Erfolg!
             </h3>
           </div>
 
@@ -502,15 +501,15 @@ export default function Form({ isDesktop = false }: FormProps) {
             <p className="text-gray-700 mb-6 text-center text-base">
               {createdProductsCount > 1 ? (
                 <>
-                  Se han creado <span className="font-semibold text-gray-900">{createdProductsCount} productos</span> exitosamente
+                  <span className="font-semibold text-gray-900">{createdProductsCount} Produkte</span> wurden erfolgreich erstellt
                   <br />
                   <span className="text-sm text-gray-600 mt-2 block">
-                    Producto principal: &quot;{createdProduct?.name}&quot;
+                    Hauptprodukt: &quot;{createdProduct?.name}&quot;
                   </span>
                 </>
               ) : (
                 <>
-                  Su producto <span className="font-semibold text-gray-900">&quot;{createdProduct?.name}&quot;</span> ha sido creado exitosamente
+                  Ihr Produkt <span className="font-semibold text-gray-900">&quot;{createdProduct?.name}&quot;</span> wurde erfolgreich erstellt
                 </>
               )}
             </p>
@@ -519,14 +518,14 @@ export default function Form({ isDesktop = false }: FormProps) {
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 mb-6 border border-gray-200 space-y-2">
               {createdProductsCount > 1 && (
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-600">Productos creados:</span>
+                  <span className="text-sm font-medium text-gray-600">Erstellte Produkte:</span>
                   <span className="text-sm text-gray-900 font-semibold bg-white/70 px-3 py-1 rounded-lg">
                     {createdProductsCount}
                   </span>
                 </div>
               )}
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-600">ID del Producto:</span>
+                <span className="text-sm font-medium text-gray-600">Produkt-ID:</span>
                 <span className="text-sm text-gray-900 font-mono font-semibold bg-white/70 px-3 py-1 rounded-lg">
                   {createdProduct?.id}
                 </span>
@@ -539,7 +538,7 @@ export default function Form({ isDesktop = false }: FormProps) {
               className="w-full bg-gradient-to-r from-[#25D076] to-[#20BA68] text-white py-4 px-6 rounded-2xl font-semibold hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-ios text-base flex items-center justify-center gap-2"
             >
               <CheckCircle className="w-5 h-5" />
-              Ir al Catálogo
+              Zum Katalog
             </button>
           </div>
         </div>

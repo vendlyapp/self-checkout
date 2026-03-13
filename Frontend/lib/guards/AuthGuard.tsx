@@ -16,36 +16,26 @@ export const AuthGuard = ({ children, allowedRoles }: AuthGuardProps) => {
   const pathname = usePathname();
   const [forceRender, setForceRender] = useState(false);
 
-  // Timeout de seguridad: después de 10 segundos, forzar render incluso si loading es true
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (loading) {
-        console.warn('[AuthGuard] Timeout de seguridad: forzando render después de 10 segundos');
+        console.warn('[AuthGuard] Safety timeout: forcing render after 10s');
         setForceRender(true);
       }
-    }, 10000); // 10 segundos máximo
+    }, 10000);
 
     return () => clearTimeout(timeoutId);
   }, [loading]);
 
   useEffect(() => {
-    // Si forceRender es true, permitir renderizar
-    if (forceRender) {
-      return;
-    }
-
+    if (forceRender) return;
     if (loading) return;
 
-    // Si no está autenticado, redirigir a login
     if (!isAuthenticated) {
       router.push('/login?redirect=' + encodeURIComponent(pathname));
       return;
     }
 
-    // Si hay roles permitidos, verificar que el usuario tenga uno
-    // Solo verificar roles si el perfil está disponible
-    // Si el perfil no está disponible pero el usuario está autenticado,
-    // permitir acceso (el perfil se cargará en segundo plano)
     if (allowedRoles && profile) {
       if (!allowedRoles.includes(profile.role)) {
         // Redirigir según el rol del usuario

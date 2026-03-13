@@ -51,10 +51,10 @@ export const useCreateDiscountCode = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['discountCodes'] });
       queryClient.invalidateQueries({ queryKey: ['discountCodeStats'] });
-      toast.success('Código de descuento creado exitosamente');
+      toast.success('Rabattcode erfolgreich erstellt');
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Error al crear el código de descuento');
+      toast.error(error.message || 'Fehler beim Erstellen des Rabattcodes');
     },
   });
 };
@@ -69,10 +69,10 @@ export const useUpdateDiscountCode = () => {
       queryClient.invalidateQueries({ queryKey: ['discountCodes'] });
       queryClient.invalidateQueries({ queryKey: ['discountCode', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['discountCodeStats'] });
-      toast.success('Código de descuento actualizado exitosamente');
+      toast.success('Rabattcode erfolgreich aktualisiert');
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Error al actualizar el código de descuento');
+      toast.error(error.message || 'Fehler beim Aktualisieren des Rabattcodes');
     },
   });
 };
@@ -86,10 +86,10 @@ export const useArchiveDiscountCode = () => {
       queryClient.invalidateQueries({ queryKey: ['discountCodes'] });
       queryClient.invalidateQueries({ queryKey: ['archivedDiscountCodes'] });
       queryClient.invalidateQueries({ queryKey: ['discountCodeStats'] });
-      toast.success('Código de descuento archivado exitosamente');
+      toast.success('Rabattcode erfolgreich archiviert');
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Error al archivar el código de descuento');
+      toast.error(error.message || 'Fehler beim Archivieren des Rabattcodes');
     },
   });
 };
@@ -115,7 +115,7 @@ export const useValidateDiscountCode = () => {
   return useMutation({
     mutationFn: (code: string) => discountCodeService.validateCode(code),
     onError: (error: Error) => {
-      toast.error(error.message || 'Código de descuento inválido');
+      toast.error(error.message || 'Ungültiger Rabattcode');
     },
   });
 };

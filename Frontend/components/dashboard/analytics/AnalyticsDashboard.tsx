@@ -105,8 +105,9 @@ const AnalyticsDashboard: React.FC = () => {
           </div>
           <p className="text-muted-foreground mb-4">{error}</p>
           <button
+            type="button"
             onClick={refreshData}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-fast"
+            className="cursor-pointer px-4 py-3 min-h-[44px] bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-fast font-medium"
           >
             Erneut versuchen
           </button>
@@ -132,7 +133,7 @@ const AnalyticsDashboard: React.FC = () => {
               value={searchQuery}
               onChange={setSearchQuery}
               onSearch={handleSearch}
-              className="w-full h-12 min-h-12"
+              className="w-full h-[54px] min-h-[54px]"
               esHome={false}
             />
           </div>

@@ -145,7 +145,7 @@ export default function FooterNav() {
                   handleValidInteraction(e);
                 }}
                 onClick={handleValidInteraction}
-                aria-label="Agregar nuevo producto"
+                aria-label="Neues Produkt hinzufügen"
               >
                 <Icon
                   className={clsx(

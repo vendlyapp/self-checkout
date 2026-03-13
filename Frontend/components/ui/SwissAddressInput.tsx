@@ -44,7 +44,7 @@ export const parseSwissAddress = (value: string): SwissAddressValue => {
     plz = plzOrtMatch[1]
     ort = plzOrtMatch[2].trim()
   } else {
-    // Formato "Ort PLZ" desde caché (ej. "Bogotacali 6632")
+    // Format "Ort PLZ" from cache (e.g. "Bogotacali 6632")
     const ortPlzMatch = plzOrtPart.match(/^(.+?)\s+(\d{4,5})$/)
     if (ortPlzMatch) {
       ort = ortPlzMatch[1].trim()

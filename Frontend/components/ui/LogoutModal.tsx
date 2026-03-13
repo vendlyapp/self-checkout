@@ -60,10 +60,10 @@ const LogoutModal: React.FC<LogoutModalProps> = ({ isOpen }) => {
         {/* Texto */}
         <div className="space-y-3">
           <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-            Cerrando sesión...
+            Abmelden...
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400 font-light">
-            Limpiando datos y finalizando tu sesión de forma segura
+            Daten werden gelöscht und Ihre Sitzung wird sicher beendet
           </p>
         </div>
         

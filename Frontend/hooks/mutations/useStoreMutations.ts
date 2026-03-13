@@ -22,7 +22,7 @@ export const useUpdateStore = () => {
       const { data: { session } } = await supabase.auth.getSession()
 
       if (!session?.access_token) {
-        throw new Error('No estás autenticado')
+        throw new Error('Sie sind nicht angemeldet')
       }
 
       const url = buildApiUrl('/api/store/my-store')
@@ -48,7 +48,7 @@ export const useUpdateStore = () => {
         const result = await response.json()
 
         if (!result.success) {
-          throw new Error(result.error || 'Error al actualizar tienda')
+          throw new Error(result.error || 'Fehler beim Aktualisieren des Geschäfts')
         }
 
         return result.data
@@ -62,10 +62,10 @@ export const useUpdateStore = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myStore'] })
-      toast.success('Tienda actualizada exitosamente')
+      toast.success('Geschäft erfolgreich aktualisiert')
     },
     onError: (error) => {
-      toast.error(error.message || 'Error al actualizar tienda')
+      toast.error(error.message || 'Fehler beim Aktualisieren des Geschäfts')
     },
   })
 }
@@ -79,7 +79,7 @@ export const useRegenerateQR = () => {
       const { data: { session } } = await supabase.auth.getSession()
 
       if (!session?.access_token) {
-        throw new Error('No estás autenticado')
+        throw new Error('Sie sind nicht angemeldet')
       }
 
       const url = buildApiUrl('/api/store/my-store/regenerate-qr')
@@ -104,7 +104,7 @@ export const useRegenerateQR = () => {
         const result = await response.json()
 
         if (!result.success) {
-          throw new Error(result.error || 'Error al regenerar QR')
+          throw new Error(result.error || 'Fehler beim Neugenerieren des QR-Codes')
         }
 
         return result.data

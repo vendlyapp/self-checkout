@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import EditForm from '@/components/dashboard/editProduct/EditForm';
-import HeaderNav from '@/components/navigation/HeaderNav';
 import { Loader } from '@/components/ui/Loader';
 
 interface PageProps {
@@ -12,11 +11,8 @@ interface PageProps {
 function ViewProductContent({ productId }: { productId: string }) {
   return (
     <div className="animate-page-enter gpu-accelerated">
-      {/* Mobile Layout */}
+      {/* Mobile Layout (HeaderNav está en layout) */}
       <div className="block lg:hidden">
-        <div className="animate-slide-in-right">
-          <HeaderNav title="Produktdetails" />
-        </div>
         <div className="animate-slide-up-fade">
           <EditForm productId={productId} isDesktop={false} />
         </div>

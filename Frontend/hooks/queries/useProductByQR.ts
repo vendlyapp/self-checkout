@@ -11,7 +11,7 @@ export const useProductByQR = (qrCode: string | null, enabled: boolean = true) =
       if (!qrCode) throw new Error('QR Code is required');
       const response = await ProductService.getProductByQR(qrCode, { signal });
       if (!response.success || !response.data) {
-        throw new Error(response.error || 'Error al obtener producto por QR');
+        throw new Error(response.error || 'Fehler beim Laden des Produkts per QR');
       }
       return response.data as Product;
     },

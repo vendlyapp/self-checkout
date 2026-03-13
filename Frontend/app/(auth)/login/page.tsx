@@ -14,28 +14,20 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get('returnUrl') || '/dashboard';
-  // Estado de autenticación local
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Verificar si ya está autenticado y limpiar cache si es necesario
-  // Solo limpiar sesión si el usuario viene explícitamente a la página de login
-  // No limpiar si solo está refrescando la página mientras está autenticado
   useEffect(() => {
     const checkSession = async () => {
       try {
-        // Limpiar cache del router si viene de sesión expirada
         const searchParams = new URLSearchParams(window.location.search);
         if (searchParams.get('sessionExpired') === 'true') {
-          // Limpiar router cache
           router.refresh();
         }
 
         const { data: { session } } = await supabase.auth.getSession();
-        
-        // Si hay una sesión válida, redirigir al dashboard en lugar de limpiar
+
         if (session && session.expires_at && session.expires_at * 1000 > Date.now()) {
-          // Sesión válida, redirigir según el rol
           const userRole = localStorage.getItem('userRole') || 'ADMIN';
           if (userRole === 'SUPER_ADMIN') {
             router.push('/super-admin/dashboard');
@@ -44,10 +36,8 @@ function LoginForm() {
           }
           return;
         }
-        
-        // Solo limpiar sesión si está expirada o no es válida
+
         if (session && session.expires_at && session.expires_at * 1000 <= Date.now()) {
-          // Sesión expirada, limpiar completamente
           const { clearAllSessionData } = await import('@/lib/utils/sessionUtils');
           await clearAllSessionData();
         }
@@ -71,7 +61,6 @@ function LoginForm() {
   const [checkingRole, setCheckingRole] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
 
-  // Redirigir si ya está logueado
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
       const userRole = localStorage.getItem('userRole') || 'ADMIN';
@@ -83,17 +72,14 @@ function LoginForm() {
     }
   }, [isAuthenticated, authLoading, router, returnUrl]);
 
-  // Mostrar loading mientras verifica autenticación
   if (authLoading) {
     return <Loader variant="fullscreen" message="Wird geladen..." />;
   }
 
-  // No mostrar nada si ya está autenticado (evitar flash)
   if (isAuthenticated && !checkingRole) {
     return null;
   }
 
-  // Mostrar loader mientras se verifica el rol
   if (checkingRole) {
     return (
       <Loader 
@@ -142,7 +128,7 @@ function LoginForm() {
             detectedRole = profileData.data?.user?.role || profileData.data?.role || 'ADMIN';
             console.log('✅ Rol obtenido desde API:', detectedRole);
           } else {
-            console.warn('⚠️ No se pudo obtener el perfil, usando metadata');
+            console.warn('Could not get profile, using metadata');
             detectedRole = data.user.user_metadata?.role || 'ADMIN';
           }
         } catch (err) {
@@ -155,7 +141,6 @@ function LoginForm() {
         // Esperar al menos 1 segundo para mostrar el loader
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Guardar en localStorage
         localStorage.setItem('userRole', detectedRole);
         console.log('💾 Rol guardado en localStorage:', detectedRole);
         
@@ -187,7 +172,7 @@ function LoginForm() {
       {/* Botón de volver atrás - Fijo en la parte superior */}
       <button
         onClick={() => router.push('/')}
-        className="fixed top-4 left-4 z-50 w-12 h-12 flex items-center justify-center 
+        className="fixed top-4 left-4 z-50 w-12 h-12 flex items-center justify-center cursor-pointer
                  bg-white rounded-full shadow-lg hover:bg-gray-50 active:scale-95 
                  transition-ios touch-target tap-highlight-transparent"
         style={{
@@ -276,7 +261,7 @@ function LoginForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 
+                  className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 
                            transition-colors touch-target tap-highlight-transparent"
                   aria-label={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
                   tabIndex={0}
@@ -294,7 +279,7 @@ function LoginForm() {
             <div className="text-right">
               <Link
                 href="/forgot-password"
-                className="text-xs sm:text-sm text-brand-500 hover:text-brand-600 font-medium transition-colors"
+                className="text-xs sm:text-sm cursor-pointer text-brand-500 hover:text-brand-600 font-medium transition-colors"
               >
                 Passwort vergessen?
               </Link>
@@ -304,7 +289,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading || !email || !password}
-              className="w-full bg-brand-500 hover:bg-brand-600 text-white rounded-xl sm:rounded-2xl px-5 sm:px-6 py-3 sm:py-3.5 md:py-4 
+              className="w-full cursor-pointer bg-brand-500 hover:bg-brand-600 text-white rounded-xl sm:rounded-2xl px-5 sm:px-6 py-3 sm:py-3.5 md:py-4 
                        font-semibold text-sm sm:text-base md:text-lg flex items-center justify-center gap-2 sm:gap-3 
                        transition-ios shadow-lg shadow-brand-500/30 hover:shadow-xl
                        disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-500
@@ -345,7 +330,7 @@ function LoginForm() {
               Noch kein Konto?{' '}
               <Link
                 href="/register"
-                className="text-brand-500 hover:text-brand-600 font-semibold transition-colors"
+                className="cursor-pointer text-brand-500 hover:text-brand-600 font-semibold transition-colors"
               >
                 Jetzt registrieren
               </Link>

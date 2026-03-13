@@ -31,7 +31,7 @@ export const useCategoryStats = () => {
       const result = await response.json();
       
       if (!result.success || !result.data) {
-        throw new Error(result.error || 'Error al obtener estadísticas de categorías');
+        throw new Error(result.error || 'Fehler beim Laden der Kategoriestatistiken');
       }
 
       return result.data as CategoryStats;

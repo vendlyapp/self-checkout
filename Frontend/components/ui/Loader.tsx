@@ -83,7 +83,7 @@ const colorClasses: Record<LoaderColor, {
  * 
  * @example
  * // Pantalla completa con mensaje
- * <Loader variant="fullscreen" message="Cargando..." />
+ * <Loader variant="fullscreen" message="Wird geladen..." />
  */
 export const Loader: React.FC<LoaderProps> = ({
   size = 'md',

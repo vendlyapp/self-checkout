@@ -31,13 +31,13 @@ export default function ProductQRPage() {
         const response = await fetch(url)
 
         if (!response.ok) {
-          throw new Error('Producto no encontrado')
+          throw new Error('Produkt nicht gefunden')
         }
 
         const result = await response.json()
 
         if (!result.success || !result.data) {
-          throw new Error('Producto no encontrado')
+          throw new Error('Produkt nicht gefunden')
         }
 
         // Convertir el producto al formato correcto
@@ -74,13 +74,13 @@ export default function ProductQRPage() {
 
         // Verificar si el producto está disponible
         if (!productObj.isActive || productObj.stock <= 0) {
-          throw new Error('Producto no disponible')
+          throw new Error('Produkt nicht verfügbar')
         }
 
         // Obtener información de la tienda del producto
         const storeInfo = productData.store
         if (!storeInfo || !storeInfo.slug) {
-          throw new Error('Tienda no encontrada para este producto')
+          throw new Error('Shop für dieses Produkt nicht gefunden')
         }
 
         // Guardar la tienda en el store global
@@ -103,11 +103,11 @@ export default function ProductQRPage() {
           router.push(`/store/${storeInfo.slug}`)
         }, 1500)
       } catch (err) {
-        console.error('Error al procesar el producto:', err)
+        console.error('Product processing failed:', err)
         setError(
           err instanceof Error
             ? err.message
-            : 'Error al procesar el producto. Intenta nuevamente.'
+            : 'Produkt konnte nicht verarbeitet werden. Bitte versuchen Sie es erneut.'
         )
         setLoading(false)
       }
@@ -124,7 +124,7 @@ export default function ProductQRPage() {
       <div className="min-h-screen bg-[#F9F6F4] flex items-center justify-center p-4 animate-fade-in">
         <div className="text-center animate-scale-in">
           <Loader size="lg" className="mx-auto mb-4" />
-          <p className="text-gray-700 font-medium transition-ios">Cargando producto...</p>
+          <p className="text-gray-700 font-medium transition-ios">Produkt wird geladen...</p>
         </div>
       </div>
     )
@@ -138,13 +138,13 @@ export default function ProductQRPage() {
           <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-spring-bounce">
             <XCircle className="w-8 h-8 text-white" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2 transition-ios">Error</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-2 transition-ios">Fehler</h3>
           <p className="text-gray-600 mb-6 transition-ios">{error}</p>
           <button
             onClick={() => router.push('/')}
             className="bg-[#25D076] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#25D076]/90 w-full transition-ios active:scale-95 touch-target"
           >
-            Volver al inicio
+            Zur Startseite
           </button>
         </div>
       </div>
@@ -159,12 +159,12 @@ export default function ProductQRPage() {
           <div className="w-16 h-16 bg-[#25D076] rounded-full flex items-center justify-center mx-auto mb-4 animate-spring-bounce">
             <CheckCircle className="w-8 h-8 text-white" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2 transition-ios">¡Éxito!</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-2 transition-ios">Erfolg!</h3>
           <p className="text-gray-600 mb-2 transition-ios">
-            {product.name} fue agregado al carrito
+            {product.name} wurde in den Warenkorb gelegt
           </p>
           <p className="text-sm text-gray-500 mb-4 transition-ios">
-            Redirigiendo a la tienda...
+            Weiterleitung zum Shop...
           </p>
         </div>
       </div>

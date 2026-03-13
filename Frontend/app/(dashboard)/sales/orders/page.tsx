@@ -231,7 +231,7 @@ function SalesOrdersPageContent() {
         />
         <div className="w-full h-full overflow-auto gpu-accelerated">
           <div className="flex flex-col h-full">
-            <div className="flex-1 overflow-y-auto pt-[175px]">
+            <div className="flex-1 overflow-y-auto pt-4">
               {filteredOrders.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 px-4">
                   <ShoppingCart className="w-16 h-16 text-gray-300 mb-4" aria-hidden />

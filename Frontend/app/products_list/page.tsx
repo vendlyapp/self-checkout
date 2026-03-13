@@ -22,7 +22,7 @@ export default function ProductsList() {
       <div className="block lg:hidden">
         <Suspense fallback={
           <div className="min-h-screen flex items-center justify-center bg-background-cream animate-fade-in-scale">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mt-12"></div>
           </div>
         }>
           <div className="animate-slide-up-fade">

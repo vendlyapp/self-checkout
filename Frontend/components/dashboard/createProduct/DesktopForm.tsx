@@ -96,7 +96,7 @@ export default function DesktopForm(props: SharedFormProps) {
                 <CheckCircle className="w-12 h-12 text-white" strokeWidth={3} />
               </div>
               <h3 className="text-3xl font-bold text-white mb-2">
-                ¡Éxito!
+                Erfolg!
               </h3>
             </div>
 
@@ -104,19 +104,19 @@ export default function DesktopForm(props: SharedFormProps) {
             <div className="p-8">
               <p className="text-gray-700 mb-8 text-center text-lg">
                 {props.isEditMode ? (
-                  <>El producto <span className="font-semibold text-gray-900">&quot;{createdProduct?.name}&quot;</span> ha sido actualizado exitosamente</>
+                  <>Das Produkt <span className="font-semibold text-gray-900">&quot;{createdProduct?.name}&quot;</span> wurde erfolgreich aktualisiert</>
                 ) : (
-                  <>Su producto <span className="font-semibold text-gray-900">&quot;{createdProduct?.name}&quot;</span> ha sido creado exitosamente</>
+                  <>Ihr Produkt <span className="font-semibold text-gray-900">&quot;{createdProduct?.name}&quot;</span> wurde erfolgreich erstellt</>
                 )}
               </p>
               <p className="text-gray-500 text-sm text-center mb-6">
-                Redirigiendo automáticamente en 4 segundos...
+                Weiterleitung in 4 Sekunden...
               </p>
 
               {/* Tarjeta de información */}
               <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 mb-8 border border-gray-200">
                 <div className="flex items-center justify-between">
-                  <span className="text-base font-medium text-gray-600">ID del Producto:</span>
+                  <span className="text-base font-medium text-gray-600">Produkt-ID:</span>
                   <span className="text-base text-gray-900 font-mono font-semibold bg-white/70 px-4 py-2 rounded-lg">
                     {createdProduct?.id}
                   </span>
@@ -130,7 +130,7 @@ export default function DesktopForm(props: SharedFormProps) {
                 style={{ pointerEvents: 'auto' }}
               >
                 <CheckCircle className="w-6 h-6" />
-                {props.isEditMode ? 'Volver a la Lista' : 'Ir al Catálogo'}
+                {props.isEditMode ? 'Zur Liste' : 'Zum Katalog'}
               </button>
             </div>
           </div>
@@ -703,7 +703,7 @@ function ProductAdditionalInfo({ product }: { product: {
               className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors font-medium shadow-sm"
             >
               <Download className="w-4 h-4" />
-              Descargar
+              Herunterladen
             </button>
           </div>
           <div className="flex justify-center bg-gray-50 rounded-xl p-4 md:p-5 lg:p-6">
@@ -734,7 +734,7 @@ function ProductAdditionalInfo({ product }: { product: {
               className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors font-medium shadow-sm"
             >
               <Download className="w-4 h-4" />
-              Descargar
+              Herunterladen
             </button>
           </div>
           <div className="flex justify-center bg-gray-50 rounded-xl p-4 md:p-5 lg:p-6">
@@ -752,9 +752,8 @@ function ProductAdditionalInfo({ product }: { product: {
         </div>
       )}
 
-      {/* Información adicional */}
       <div className="bg-white rounded-xl p-4 md:p-5 lg:p-6 shadow-sm border border-gray-200">
-        <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-3 lg:mb-4">Información del Producto</h3>
+        <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-3 lg:mb-4">Produktinformationen</h3>
         <div className="space-y-3">
           {product.sku && (
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
@@ -770,13 +769,13 @@ function ProductAdditionalInfo({ product }: { product: {
           )}
           {product.createdAt && (
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-sm font-medium text-gray-600">Creado el</span>
+              <span className="text-sm font-medium text-gray-600">Erstellt am</span>
               <span className="text-gray-900 font-medium text-sm">{formatDate(product.createdAt)}</span>
             </div>
           )}
           {product.updatedAt && (
             <div className="flex justify-between items-center py-2">
-              <span className="text-sm font-medium text-gray-600">Última actualización</span>
+              <span className="text-sm font-medium text-gray-600">Zuletzt aktualisiert</span>
               <span className="text-gray-900 font-medium text-sm">{formatDate(product.updatedAt)}</span>
             </div>
           )}

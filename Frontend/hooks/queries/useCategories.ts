@@ -13,7 +13,7 @@ export const useCategories = () => {
     queryFn: async ({ signal }) => {
       const response = await CategoryService.getCategories({ signal });
       if (!response.success) {
-        throw new Error(response.error || 'Error al obtener categorías');
+        throw new Error(response.error || 'Fehler beim Laden der Kategorien');
       }
       return (response.data || []) as Category[];
     },

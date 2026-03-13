@@ -43,7 +43,7 @@ const formatDateRange = (start: Date, end: Date): string => {
   return `${fmt(start)} – ${fmt(end)}`;
 };
 
-// Fecha local YYYY-MM-DD (evita que el gráfico muestre "un día adelantado" por UTC)
+// Local date YYYY-MM-DD (avoids chart showing one day ahead due to UTC)
 const toLocalDateString = (d: Date): string => {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');

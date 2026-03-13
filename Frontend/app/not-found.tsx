@@ -87,7 +87,7 @@ export default function NotFound() {
           </div>
         </div>
 
-        {/* Código de error */}
+        {/* Error state */}
         <div className="mt-8">
           <p className="text-xs text-gray-400 font-mono">
             ERROR_CODE: 404_NOT_FOUND

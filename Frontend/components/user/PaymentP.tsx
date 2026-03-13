@@ -186,7 +186,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     icon: selectedMethodData.icon,
     color: selectedMethodData.methodData?.bgColor || getColorFromBgColor(selectedMethodData.bgColor),
   } : {
-    name: "Método de pago",
+    name: "Zahlungsmethode",
     icon: CreditCard,
     color: "#6E7996",
   };
@@ -665,7 +665,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   className="w-full bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 font-semibold rounded-2xl py-4 text-base transition-colors border-2 border-gray-200 active:scale-[0.97] active:border-gray-300 touch-target"
                   style={{ minHeight: '56px' }}
                 >
-                  Zurück zur Tienda
+                  Zurück zum Shop
                 </button>
               </div>
 

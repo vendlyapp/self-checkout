@@ -1,19 +1,15 @@
 'use client';
 
 import React from 'react';
-import HeaderNav from '@/components/navigation/HeaderNav';
 import Form from '@/components/dashboard/createProduct/Form';
 
 export default function AddProduct() {
 
   return (
     <div className="w-full min-w-0 animate-page-enter gpu-accelerated">
-      {/* Móvil: header + formulario */}
+      {/* Móvil: formulario (HeaderNav está en layout) */}
       <div className="block md:hidden">
         <div className="h-full w-full overflow-hidden min-w-0">
-          <div className="animate-slide-in-right">
-            <HeaderNav title="Produkt erstellen" />
-          </div>
           <div className="animate-slide-up-fade">
             <Form isDesktop={false} />
           </div>

@@ -83,33 +83,34 @@ export default function Charge() {
 
       {/* Desktop Layout */}
       <div className="hidden lg:block min-h-screen">
-        <div className="max-w-[1600px] mx-auto px-8 py-8 space-y-8">
-          {/* Header Section */}
-          <div className="flex items-center justify-between gap-6">
+        <div className="max-w-[1600px] mx-auto px-8 py-8 space-y-8 charge-desktop-content">
+          {/* Header: title + full-width search */}
+          <div className="space-y-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Verkauf starten</h1>
               <p className="text-gray-500 mt-2 text-base">Wählen Sie Produkte für den Verkauf aus</p>
             </div>
-            <div className="w-full max-w-md">
+            <div className="w-full">
               <input
                 type="text"
                 placeholder="Produkte durchsuchen..."
                 value={searchQuery}
                 onChange={(e) => onSearch(e.target.value)}
-                className="w-full px-5 py-3.5 bg-white border-2 border-gray-200 rounded-2xl 
-                         focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent 
+                className="w-full px-5 py-3.5 bg-white border-2 border-gray-200 rounded-2xl
+                         focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
                          text-base placeholder:text-gray-400
-                         shadow-sm hover:border-gray-300 hover:shadow-md"
+                         shadow-sm hover:border-gray-300 hover:shadow-md transition-ios-fast"
+                aria-label="Produkte durchsuchen"
               />
             </div>
           </div>
 
-          {/* Filters Section */}
-          <div className="space-y-4">
+          {/* Filters */}
+          <div className="space-y-4 charge-filters-section">
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-semibold text-gray-700">Kategorien</h2>
               {selectedFilters.length > 0 && (
-                <span className="px-3 py-1 bg-brand-500 text-white text-xs font-medium rounded-full">
+                <span className="px-3 py-1 bg-brand-500 text-white text-xs font-medium rounded-full transition-ios-fast">
                   {selectedFilters.length}
                 </span>
               )}
@@ -123,17 +124,16 @@ export default function Charge() {
                       ? selectedFilters.filter(f => f !== filter.id)
                       : [...selectedFilters, filter.id]
                   )}
-                  className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl 
-                           transition-ios font-medium text-sm
-                           ${
-                    selectedFilters.includes(filter.id)
+                  className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-medium text-sm
+                    transition-ios-fast focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-[0.98]
+                    ${selectedFilters.includes(filter.id)
                       ? 'bg-brand-500 text-white shadow-md shadow-brand-500/30'
-                      : 'bg-white text-gray-700 hover:bg-white hover:shadow-md border border-gray-200 active:scale-95'
-                  }`}
+                      : 'bg-white text-gray-700 hover:bg-white hover:shadow-md border border-gray-200'
+                    }`}
                 >
                   <span className="text-lg">{filter.icon}</span>
                   <span>{filter.label}</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold transition-ios-fast ${
                     selectedFilters.includes(filter.id)
                       ? 'bg-white/25 text-white'
                       : 'bg-gray-100 text-gray-600'

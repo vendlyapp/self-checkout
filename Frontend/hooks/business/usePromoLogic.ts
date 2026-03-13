@@ -68,12 +68,12 @@ export const usePromoLogic = (): PromoLogicReturn => {
       
       // Verificar que el código no haya alcanzado el límite de usos
       if (validated.current_redemptions >= validated.max_redemptions) {
-        throw new Error('Este código de descuento ha alcanzado su límite de usos');
+        throw new Error('Dieser Rabattcode hat sein Nutzungslimit erreicht.');
       }
       
       // Verificar que el código esté activo
       if (!validated.is_active || validated.status !== 'active') {
-        throw new Error('Este código de descuento no está activo');
+        throw new Error('Dieser Rabattcode ist nicht aktiv.');
       }
       
       const subtotal = getSubtotal();
@@ -98,17 +98,14 @@ export const usePromoLogic = (): PromoLogicReturn => {
       applyPromoCode(codeToValidate, discount, promoInfo);
       setPromoError("");
     } catch (error) {
-      // Mensaje de error amigable
-      const errorMessage = error instanceof Error 
-        ? error.message 
+      const errorMessage = error instanceof Error
+        ? error.message
         : "Der Code existiert nicht oder ist ungültig.";
-      
-      // Traducir algunos errores comunes
-      if (errorMessage.includes('no encontrado') || errorMessage.includes('inválido')) {
+      if (errorMessage.includes('no encontrado') || errorMessage.includes('inválido') || errorMessage.includes('Ungültiger')) {
         setPromoError("Der Code existiert nicht oder ist ungültig.");
       } else if (errorMessage.includes('no está activo') || errorMessage.includes('expirado') || errorMessage.includes('nicht aktiv')) {
         setPromoError("Der Code ist nicht aktiv oder abgelaufen.");
-      } else if (errorMessage.includes('límite de usos') || errorMessage.includes('alcanzado su límite')) {
+      } else if (errorMessage.includes('límite de usos') || errorMessage.includes('alcanzado su límite') || errorMessage.includes('Nutzungslimit erreicht')) {
         setPromoError("Dieser Code hat sein Nutzungslimit erreicht.");
       } else {
         setPromoError(errorMessage);

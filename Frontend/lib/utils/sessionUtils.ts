@@ -1,13 +1,10 @@
 /**
- * Utilidades para gestión de sesión
- * Limpia completamente localStorage, sessionStorage, cookies y cache
+ * Session utilities: clear localStorage, sessionStorage, cookies, and caches on logout.
  */
 
 import { supabase } from '@/lib/supabase/client';
 
-/**
- * Limpia todas las cookies relacionadas con Supabase
- */
+/** Clears all Supabase-related cookies. */
 const clearSupabaseCookies = (): void => {
   if (typeof document === 'undefined') return;
 
@@ -20,11 +17,8 @@ const clearSupabaseCookies = (): void => {
       trimmedName.startsWith('supabase.') ||
       trimmedName.startsWith('vendly-')
     ) {
-      // Limpiar para path raíz
       document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-      // Limpiar para el dominio actual
       document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
-      // Limpiar para subdominios
       const domainParts = window.location.hostname.split('.');
       if (domainParts.length > 1) {
         const rootDomain = '.' + domainParts.slice(-2).join('.');
@@ -34,14 +28,11 @@ const clearSupabaseCookies = (): void => {
   });
 };
 
-/**
- * Limpia el cache del navegador de forma exhaustiva
- */
+/** Clears browser caches: Service Workers, Cache API, IndexedDB, Next.js keys. */
 const clearBrowserCache = async (): Promise<void> => {
   if (typeof window === 'undefined') return;
 
   try {
-    // 1. Limpiar Service Workers y desregistrarlos
     if ('serviceWorker' in navigator) {
       try {
         const registrations = await navigator.serviceWorker.getRegistrations();
@@ -49,11 +40,9 @@ const clearBrowserCache = async (): Promise<void> => {
           registrations.map((registration) => registration.unregister())
         );
       } catch (error) {
-        console.warn('Error al desregistrar Service Workers:', error);
+        console.warn('Failed to unregister Service Workers:', error);
       }
     }
-
-    // 2. Limpiar Cache API (todos los caches)
     if ('caches' in window) {
       try {
         const cacheNames = await caches.keys();
@@ -62,17 +51,15 @@ const clearBrowserCache = async (): Promise<void> => {
             try {
               return caches.delete(name);
             } catch (error) {
-              console.warn(`Error al eliminar cache ${name}:`, error);
+              console.warn(`Failed to delete cache ${name}:`, error);
               return Promise.resolve(false);
             }
           })
         );
       } catch (error) {
-        console.warn('Error al limpiar Cache API:', error);
+        console.warn('Failed to clear Cache API:', error);
       }
     }
-
-    // 3. Limpiar IndexedDB completamente
     if ('indexedDB' in window) {
       try {
         const databases = await indexedDB.databases();
@@ -82,9 +69,8 @@ const clearBrowserCache = async (): Promise<void> => {
               return new Promise<void>((resolve) => {
                 const deleteReq = indexedDB.deleteDatabase(db.name!);
                 deleteReq.onsuccess = () => resolve();
-                deleteReq.onerror = () => resolve(); // Continuar aunque falle
-                deleteReq.onblocked = () => resolve(); // Continuar aunque esté bloqueado
-                // Timeout de seguridad
+                deleteReq.onerror = () => resolve();
+                deleteReq.onblocked = () => resolve();
                 setTimeout(() => resolve(), 1000);
               });
             }
@@ -92,33 +78,27 @@ const clearBrowserCache = async (): Promise<void> => {
           })
         );
       } catch (error) {
-        console.warn('Error al limpiar IndexedDB:', error);
+        console.warn('Failed to clear IndexedDB:', error);
       }
     }
 
-    // 4. Limpiar Web Storage (localStorage y sessionStorage ya se limpian por separado)
-    // Pero asegurémonos de limpiar también las keys de Next.js
     if (typeof window !== 'undefined') {
       try {
-        // Limpiar keys relacionadas con Next.js
         const nextKeys = Object.keys(localStorage).filter((key) =>
           key.startsWith('next-') || key.startsWith('__next')
         );
         nextKeys.forEach((key) => localStorage.removeItem(key));
-
         const nextSessionKeys = Object.keys(sessionStorage).filter((key) =>
           key.startsWith('next-') || key.startsWith('__next')
         );
         nextSessionKeys.forEach((key) => sessionStorage.removeItem(key));
       } catch (error) {
-        console.warn('Error al limpiar keys de Next.js:', error);
+        console.warn('Failed to clear Next.js keys:', error);
       }
     }
 
-    // 5. Limpiar cache de fetch del navegador (si está disponible)
     if ('fetch' in window && 'cache' in Request.prototype) {
       try {
-        // Forzar no-cache en futuras peticiones
         const originalFetch = window.fetch;
         window.fetch = function (...args) {
           const [url, options = {}] = args;
@@ -131,44 +111,36 @@ const clearBrowserCache = async (): Promise<void> => {
               Pragma: 'no-cache',
               Expires: '0',
             },
-          };
-          return originalFetch(url, newOptions);
         };
-        // Restaurar después de un momento
+        return originalFetch(url, newOptions);
+      };
         setTimeout(() => {
           window.fetch = originalFetch;
         }, 1000);
       } catch (error) {
-        console.warn('Error al configurar fetch no-cache:', error);
+        console.warn('Failed to set fetch no-cache:', error);
       }
     }
   } catch (error) {
-    console.warn('Error general al limpiar cache del navegador:', error);
-    // No lanzar error, continuar con la limpieza
+    console.warn('Browser cache clear failed (continuing):', error);
   }
 };
 
-/**
- * Limpia todos los stores de Zustand
- */
+/** Clears all Zustand stores (cart, store state, scanned store, super admin, products analytics). */
 const clearZustandStores = async (): Promise<void> => {
   if (typeof window === 'undefined') return;
 
   try {
-    // Limpiar cartStore
     try {
       const { useCartStore } = await import('@/lib/stores/cartStore');
       useCartStore.getState().clearCart();
-      // Intentar usar persist.clearStorage si está disponible
       const store = useCartStore as { persist?: { clearStorage?: () => void } };
       if (store.persist?.clearStorage) {
         store.persist.clearStorage();
       }
     } catch (error) {
-      console.warn('Error al limpiar cartStore:', error);
+      console.warn('Failed to clear cartStore:', error);
     }
-
-    // Limpiar storeState
     try {
       const { useStoreState } = await import('@/lib/stores/storeState');
       const store = useStoreState as { persist?: { clearStorage?: () => void } };
@@ -176,10 +148,8 @@ const clearZustandStores = async (): Promise<void> => {
         store.persist.clearStorage();
       }
     } catch (error) {
-      console.warn('Error al limpiar storeState:', error);
+      console.warn('Failed to clear storeState:', error);
     }
-
-    // Limpiar scannedStoreStore
     try {
       const { useScannedStoreStore } = await import('@/lib/stores/scannedStoreStore');
       useScannedStoreStore.getState().clearStore();
@@ -188,10 +158,8 @@ const clearZustandStores = async (): Promise<void> => {
         store.persist.clearStorage();
       }
     } catch (error) {
-      console.warn('Error al limpiar scannedStoreStore:', error);
+      console.warn('Failed to clear scannedStoreStore:', error);
     }
-
-    // Limpiar superAdminStore
     try {
       const { useSuperAdminStore } = await import('@/lib/stores/superAdminStore');
       useSuperAdminStore.getState().clearCache();
@@ -200,10 +168,8 @@ const clearZustandStores = async (): Promise<void> => {
         store.persist.clearStorage();
       }
     } catch (error) {
-      console.warn('Error al limpiar superAdminStore:', error);
+      console.warn('Failed to clear superAdminStore:', error);
     }
-
-    // Limpiar productsAnalyticsStore
     try {
       const { useProductsAnalyticsStore } = await import('@/lib/stores/productsAnalyticsStore');
       useProductsAnalyticsStore.getState().clearData();
@@ -212,25 +178,19 @@ const clearZustandStores = async (): Promise<void> => {
         store.persist.clearStorage();
       }
     } catch (error) {
-      console.warn('Error al limpiar productsAnalyticsStore:', error);
+      console.warn('Failed to clear productsAnalyticsStore:', error);
     }
   } catch (error) {
-    console.warn('Error general al limpiar stores de Zustand:', error);
+    console.warn('Failed to clear Zustand stores:', error);
   }
 };
 
-/**
- * Limpia el cache de React Query
- */
+/** Clears React Query cache (works when called from a component with QueryClientProvider). */
 const clearReactQueryCache = async (): Promise<void> => {
   if (typeof window === 'undefined') return;
 
   try {
-    // Intentar obtener el queryClient del contexto si está disponible
-    // Nota: Esto solo funcionará si se llama desde un componente con acceso al QueryClientProvider
     await import('@tanstack/react-query');
-    
-    // Si hay un queryClient global o en window, limpiarlo
     if (typeof window !== 'undefined') {
       const windowWithQueryClient = window as { __REACT_QUERY_CLIENT__?: { clear: () => void } };
       if (windowWithQueryClient.__REACT_QUERY_CLIENT__) {
@@ -238,13 +198,11 @@ const clearReactQueryCache = async (): Promise<void> => {
       }
     }
   } catch (error) {
-    console.warn('Error al limpiar cache de React Query:', error);
+    console.warn('Failed to clear React Query cache:', error);
   }
 };
 
-/**
- * Limpia todas las cookies relacionadas con autenticación (Supabase, Google OAuth, etc.)
- */
+/** Clears all auth-related cookies (Supabase, Google OAuth). */
 const clearAllAuthCookies = (): void => {
   if (typeof document === 'undefined') return;
 
@@ -252,8 +210,6 @@ const clearAllAuthCookies = (): void => {
   cookies.forEach((cookie) => {
     const [name] = cookie.split('=');
     const trimmedName = name.trim();
-    
-    // Limpiar cookies de Supabase
     if (
       trimmedName.startsWith('sb-') ||
       trimmedName.startsWith('supabase.') ||
@@ -261,16 +217,12 @@ const clearAllAuthCookies = (): void => {
     ) {
       document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
       document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
-      
-      // Limpiar para subdominios
       const domainParts = window.location.hostname.split('.');
       if (domainParts.length > 1) {
         const rootDomain = '.' + domainParts.slice(-2).join('.');
         document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${rootDomain};`;
       }
     }
-    
-    // Limpiar cookies de Google OAuth
     if (
       trimmedName.includes('google') ||
       trimmedName.includes('oauth') ||
@@ -288,23 +240,21 @@ const clearAllAuthCookies = (): void => {
 };
 
 /**
- * Limpia todos los datos de autenticación y sesión
- * Esta función limpia completamente todo: Supabase, stores, React Query, localStorage, sessionStorage, cookies e IndexedDB
+ * Clears all auth/session data: Supabase, Zustand stores, React Query, localStorage,
+ * sessionStorage, cookies, IndexedDB. Optionally notifies backend of logout.
  */
 export const clearAllSessionData = async (queryClient?: { clear: () => void }): Promise<void> => {
   try {
-    // 0. Obtener token antes de limpiar (para notificar al backend)
     let token: string | null = null;
     if (typeof window !== 'undefined') {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         token = session?.access_token || null;
       } catch (error) {
-        console.warn('Error al obtener token para logout:', error);
+        console.warn('Failed to get token for logout:', error);
       }
     }
 
-    // 1. Notificar al backend del logout (opcional, no bloquea si falla)
     if (token && typeof window !== 'undefined') {
       try {
         const { buildApiUrl, getAuthHeaders } = await import('@/lib/config/api');
@@ -315,42 +265,31 @@ export const clearAllSessionData = async (queryClient?: { clear: () => void }): 
           headers,
           cache: 'no-store' as RequestCache,
         }).catch((error) => {
-          // Ignorar errores de red, el logout del cliente es suficiente
-          console.warn('Error al notificar logout al backend (puede ignorarse):', error);
+          console.warn('Backend logout notification failed (ignored):', error);
         });
       } catch (error) {
-        // Ignorar errores, continuar con la limpieza local
-        console.warn('Error al notificar logout al backend:', error);
+        console.warn('Backend logout notification failed:', error);
       }
     }
 
-    // 2. Limpiar React Query cache (si se proporciona queryClient)
     if (queryClient) {
       try {
         queryClient.clear();
       } catch (error) {
-        console.warn('Error al limpiar React Query cache:', error);
+        console.warn('Failed to clear React Query cache:', error);
       }
     }
-    // También intentar limpiar de forma global
     await clearReactQueryCache();
-
-    // 3. Limpiar stores de Zustand
     await clearZustandStores();
 
-    // 4. Cerrar sesión en Supabase
     try {
       await supabase.auth.signOut();
     } catch (error) {
-      console.warn('Error al cerrar sesión en Supabase:', error);
+      console.warn('Supabase signOut failed:', error);
     }
 
-    // 5. Limpiar localStorage (excepto tema si se quiere mantener)
     if (typeof window !== 'undefined') {
-      // Guardar tema antes de limpiar (opcional, si quieres mantenerlo)
       const theme = localStorage.getItem('theme');
-      
-      // Limpiar todas las keys de Zustand del localStorage
       localStorage.removeItem('cart-storage-multi-store');
       localStorage.removeItem('store-state');
       localStorage.removeItem('scanned-store-storage');
@@ -364,31 +303,20 @@ export const clearAllSessionData = async (queryClient?: { clear: () => void }): 
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('lastActivityTime');
-      
-      // Limpiar todo el localStorage
       localStorage.clear();
-      
-      // Restaurar tema si existe (opcional)
       if (theme) {
         localStorage.setItem('theme', theme);
       }
     }
 
-    // 6. Limpiar sessionStorage
     if (typeof window !== 'undefined') {
       sessionStorage.clear();
     }
-
-    // 7. Limpiar todas las cookies (Supabase, Google OAuth, etc.)
     clearAllAuthCookies();
-
-    // 8. Limpiar cache del navegador (Service Workers, IndexedDB, Cache API, etc.)
     await clearBrowserCache();
 
-    // 9. Limpiar router cache de Next.js y variables globales
     if (typeof window !== 'undefined') {
       try {
-        // Limpiar router cache de Next.js (si está disponible)
         const windowWithNext = window as { next?: { router?: { refresh?: () => void } } };
         if (windowWithNext.next?.router) {
           const router = windowWithNext.next.router;
@@ -396,8 +324,6 @@ export const clearAllSessionData = async (queryClient?: { clear: () => void }): 
             router.refresh();
           }
         }
-
-        // Limpiar variables globales relacionadas con autenticación y cache
         const windowWithGlobals = window as {
           __AUTH_STATE__?: unknown;
           __USER_DATA__?: unknown;
@@ -410,22 +336,19 @@ export const clearAllSessionData = async (queryClient?: { clear: () => void }): 
         delete windowWithGlobals.__SESSION_CACHE__;
         delete windowWithGlobals.__NEXT_DATA_CACHE__;
         delete windowWithGlobals.__REACT_QUERY_STATE__;
-
-        // Limpiar cache de Next.js en el objeto performance (si existe)
         if ('performance' in window && 'clearResourceTimings' in window.performance) {
           try {
             window.performance.clearResourceTimings();
           } catch {
-            // Ignorar errores
+            /* no-op */
           }
         }
       } catch (error) {
-        console.warn('Error al limpiar router cache y variables globales:', error);
+        console.warn('Failed to clear router cache and globals:', error);
       }
     }
   } catch (error) {
-    console.error('Error al limpiar datos de sesión:', error);
-    // Forzar limpieza básica en caso de error
+    console.error('Session clear failed:', error);
     if (typeof window !== 'undefined') {
       localStorage.clear();
       sessionStorage.clear();
@@ -434,88 +357,58 @@ export const clearAllSessionData = async (queryClient?: { clear: () => void }): 
   }
 };
 
-/**
- * Limpia datos específicos de autenticación sin afectar otras configuraciones
- */
+/** Clears only auth data (Supabase, auth keys); leaves other app state intact. */
 export const clearAuthData = async (): Promise<void> => {
   try {
-    // Cerrar sesión en Supabase
     await supabase.auth.signOut();
-
     if (typeof window !== 'undefined') {
-      // Limpiar solo datos de autenticación
       localStorage.removeItem('userRole');
       localStorage.removeItem('userName');
       localStorage.removeItem('userEmail');
       localStorage.removeItem('vendly-auth-token');
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
-      
-      // Limpiar sessionStorage
       sessionStorage.clear();
     }
-
-    // Limpiar cookies
     clearSupabaseCookies();
   } catch (error) {
-    console.error('Error al limpiar datos de autenticación:', error);
+    console.error('Auth data clear failed:', error);
   }
 };
 
-/**
- * Obtiene el timestamp de la última actividad
- */
 export const getLastActivityTime = (): number | null => {
   if (typeof window === 'undefined') return null;
   const timestamp = localStorage.getItem('lastActivityTime');
   return timestamp ? parseInt(timestamp, 10) : null;
 };
 
-/**
- * Actualiza el timestamp de la última actividad
- */
 export const updateLastActivityTime = (): void => {
   if (typeof window === 'undefined') return;
   localStorage.setItem('lastActivityTime', Date.now().toString());
 };
 
-/**
- * Verifica si la sesión ha expirado (15 minutos de inactividad)
- */
+/** Returns true if session is expired (15 min inactivity). */
 export const isSessionExpired = (): boolean => {
   const lastActivity = getLastActivityTime();
   if (!lastActivity) return false;
-
-  const SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutos en milisegundos
+  const SESSION_TIMEOUT_MS = 15 * 60 * 1000;
   const now = Date.now();
   const timeSinceLastActivity = now - lastActivity;
-
-  return timeSinceLastActivity >= SESSION_TIMEOUT;
+  return timeSinceLastActivity >= SESSION_TIMEOUT_MS;
 };
 
-/**
- * Fuerza una recarga de la página sin cache
- */
+/** Forces a full reload without cache (uses location.replace). */
 export const forceReloadWithoutCache = (url?: string): void => {
   if (typeof window === 'undefined') return;
-  
   const targetUrl = url || window.location.pathname;
   const separator = targetUrl.includes('?') ? '&' : '?';
-  const timestamp = Date.now();
-  const finalUrl = `${targetUrl}${separator}_nocache=${timestamp}`;
-  
-  // Usar location.replace para evitar que quede en el historial
-  window.location.replace(finalUrl);
+  window.location.replace(`${targetUrl}${separator}_nocache=${Date.now()}`);
 };
 
-/**
- * Limpia el cache de Next.js y fuerza recarga
- */
+/** Clears Next.js router cache and forces reload. */
 export const clearNextJsCacheAndReload = async (): Promise<void> => {
   if (typeof window === 'undefined') return;
-
   try {
-    // Limpiar cache del router
     const windowWithNext = window as { next?: { router?: { refresh?: () => void } } };
     if (windowWithNext.next?.router) {
       const router = windowWithNext.next.router;
@@ -524,16 +417,12 @@ export const clearNextJsCacheAndReload = async (): Promise<void> => {
       }
     }
 
-    // Limpiar variables de Next.js
     const windowWithNextData = window as { __NEXT_DATA__?: unknown; __NEXT_DATA_CACHE__?: unknown };
     delete windowWithNextData.__NEXT_DATA__;
     delete windowWithNextData.__NEXT_DATA_CACHE__;
-
-    // Forzar recarga sin cache
     forceReloadWithoutCache();
   } catch (error) {
-    console.warn('Error al limpiar cache de Next.js:', error);
-    // Forzar recarga de todas formas
+    console.warn('Next.js cache clear failed, forcing reload:', error);
     forceReloadWithoutCache();
   }
 };

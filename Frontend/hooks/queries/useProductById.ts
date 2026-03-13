@@ -11,7 +11,7 @@ export const useProductById = (id: string | null, enabled: boolean = true) => {
       if (!id) throw new Error('Product ID is required');
       const response = await ProductService.getProductById(id, { signal });
       if (!response.success || !response.data) {
-        throw new Error(response.error || 'Error al obtener producto');
+        throw new Error(response.error || 'Fehler beim Laden des Produkts');
       }
       return response.data as Product;
     },

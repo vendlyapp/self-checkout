@@ -151,7 +151,7 @@ export default function ResponsiveFooterNav() {
                   handleValidInteraction(e);
                 }}
                 onClick={handleValidInteraction}
-                aria-label="Agregar nuevo producto"
+                aria-label="Neues Produkt hinzufügen"
               >
                 <Icon
                   className={clsx(

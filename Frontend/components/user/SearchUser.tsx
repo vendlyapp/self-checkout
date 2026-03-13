@@ -227,7 +227,7 @@ export default function SearchUser() {
               <button
                 onClick={handleClearSearch}
                 className="p-2 rounded-full hover:bg-gray-100 touch-target tap-highlight-transparent"
-                aria-label="Búsqueda löschen"
+                aria-label="Suche löschen"
                 style={{ minHeight: "44px", minWidth: "44px" }}
               >
                 <X className="w-5 h-5 text-gray-500" />

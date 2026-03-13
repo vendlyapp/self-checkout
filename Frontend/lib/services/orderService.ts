@@ -148,23 +148,23 @@ const makeRequest = async <T>(
     
     // Solo loggear errores de conexión si no son cancelaciones
     if (error instanceof Error) {
-      // Verificar si es un error de conexión (backend no disponible)
+      // Connection/backend unreachable
       if (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION_REFUSED') || error.message.includes('NetworkError')) {
         // No loggear en producción para evitar spam en consola
         if (process.env.NODE_ENV === 'development') {
-          console.warn('Backend no disponible. Asegúrate de que el servidor esté corriendo en el puerto 5000.');
+          console.warn('Backend unavailable. Ensure the server is running on port 5000.');
         }
         return {
           success: false,
-          error: 'Backend no disponible',
+          error: 'Backend unavailable',
         };
       }
-      console.error('Error en la llamada al backend:', error);
+      console.error('Backend call failed:', error);
     }
     
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Error desconocido',
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 };

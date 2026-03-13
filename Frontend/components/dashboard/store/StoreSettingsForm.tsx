@@ -606,7 +606,7 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
                       onChange={(e) => setSlug(e.target.value)}
                       placeholder={store.slug || 'z.B. mein-geschäft'}
                       className="w-full px-4 py-3.5 text-base text-gray-900 placeholder:text-gray-400 bg-transparent border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent font-mono"
-                      aria-label="URL der Tienda anpassen"
+                      aria-label="Shop-URL anpassen"
                     />
                     <p className="text-xs text-gray-500 mt-2 flex items-center gap-1.5">
                       <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />

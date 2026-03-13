@@ -165,7 +165,8 @@ export default function CategoriesListComponent({
           <p className="text-red-600">Fehler beim Laden der Kategorien</p>
           <button
             onClick={() => router.refresh()}
-            className="mt-4 px-4 py-2 bg-brand-500 text-white rounded-lg"
+            type="button"
+            className="mt-4 cursor-pointer px-4 py-3 min-h-[44px] bg-brand-500 text-white rounded-lg font-medium hover:bg-brand-600 transition-colors"
           >
             Erneut versuchen
           </button>
@@ -269,7 +270,7 @@ export default function CategoriesListComponent({
                 <button
                   type="button"
                   onClick={handleCreate}
-                  className="mt-6 inline-flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-3 text-sm font-semibold text-white hover:bg-brand-600 shadow-lg shadow-brand-500/25"
+                  className="mt-6 cursor-pointer inline-flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-3 min-h-[44px] text-sm font-semibold text-white hover:bg-brand-600 shadow-lg shadow-brand-500/25 transition-colors"
                 >
                   <Plus className="h-5 w-5" />
                   Kategorie erstellen

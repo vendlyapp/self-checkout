@@ -98,7 +98,7 @@ export default function RegisterPage() {
       <button
         type="button"
         onClick={() => router.push('/')}
-        className="fixed top-4 left-4 z-50 w-12 h-12 flex items-center justify-center
+        className="fixed top-4 left-4 z-50 w-12 h-12 flex items-center justify-center cursor-pointer
                  bg-white rounded-full shadow-lg hover:bg-gray-50 active:scale-95
                  transition-ios touch-target tap-highlight-transparent"
         style={{
@@ -111,40 +111,40 @@ export default function RegisterPage() {
         <ArrowLeft className="w-6 h-6 text-gray-700" strokeWidth={2.5} />
       </button>
 
-      <div className="w-full max-w-md px-4 pt-12 sm:pt-0">
-        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-5 relative overflow-hidden max-h-[90vh] overflow-y-auto">
+      <div className="w-full max-w-md px-4">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 md:p-8 relative overflow-hidden">
           {/* Decoración sutil */}
           <div className="absolute top-0 right-0 w-20 h-20 bg-brand-100/50 rounded-full -translate-y-8 translate-x-8 pointer-events-none" aria-hidden />
 
-          {/* Header compacto */}
-          <div className="text-center mb-4 relative">
-            <div className="inline-flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 bg-brand-500 rounded-xl mb-2 shadow-lg shadow-brand-500/20">
-              <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-white" strokeWidth={2.5} />
+          {/* Header - mismo tamaño que login */}
+          <div className="text-center mb-5 sm:mb-6 md:mb-8 relative">
+            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-brand-500 rounded-xl sm:rounded-2xl mb-3 sm:mb-4">
+              <UserPlus className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" strokeWidth={2.5} />
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-0.5">
+            <h1 className="text-2xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1.5 sm:mb-2">
               Konto erstellen
             </h1>
-            <p className="text-xs sm:text-sm text-gray-500">
+            <p className="text-sm sm:text-base text-gray-500">
               {getRegisterSubtitle()}
             </p>
           </div>
 
           {error && (
-            <div className="mb-3 bg-red-50 border border-red-200 rounded-lg p-2.5 flex items-start gap-2 relative">
-              <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-red-700 font-medium flex-1">{error}</p>
+            <div className="mb-4 sm:mb-5 md:mb-6 bg-red-50 border border-red-200 rounded-lg sm:rounded-xl p-3 sm:p-4 flex items-start gap-2 sm:gap-3">
+              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <p className="text-xs sm:text-sm text-red-700 font-medium flex-1">{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="relative">
+          <form onSubmit={handleSubmit} className="relative space-y-4 sm:space-y-5">
             {/* Fila 1: Name + E-Mail (2 cols en sm+) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label htmlFor="name" className="block text-xs font-semibold text-gray-700 mb-1">
+                <label htmlFor="name" className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
                   Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <User className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                   <input
                     id="name"
                     name="name"
@@ -154,18 +154,18 @@ export default function RegisterPage() {
                     placeholder="Max Mustermann"
                     required
                     disabled={loading}
-                    className="w-full pl-9 pr-3 py-2 border-2 border-gray-200 rounded-lg text-sm
-                             focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+                    className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 md:py-3.5 border-2 border-gray-200 rounded-lg sm:rounded-xl text-sm sm:text-base
+                             focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-ios
                              disabled:bg-gray-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
               <div>
-                <label htmlFor="email" className="block text-xs font-semibold text-gray-700 mb-1">
+                <label htmlFor="email" className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
                   E-Mail
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Mail className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                   <input
                     id="email"
                     name="email"
@@ -175,8 +175,8 @@ export default function RegisterPage() {
                     placeholder="max@muster.ch"
                     required
                     disabled={loading}
-                    className="w-full pl-9 pr-3 py-2 border-2 border-gray-200 rounded-lg text-sm
-                             focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+                    className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 md:py-3.5 border-2 border-gray-200 rounded-lg sm:rounded-xl text-sm sm:text-base
+                             focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-ios
                              disabled:bg-gray-50 disabled:cursor-not-allowed"
                   />
                 </div>
@@ -184,13 +184,13 @@ export default function RegisterPage() {
             </div>
 
             {/* Fila 2: Passwort + Bestätigen (2 cols en sm+) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label htmlFor="password" className="block text-xs font-semibold text-gray-700 mb-1">
+                <label htmlFor="password" className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
                   Passwort
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                   <input
                     id="password"
                     name="password"
@@ -201,19 +201,19 @@ export default function RegisterPage() {
                     required
                     minLength={6}
                     disabled={loading}
-                    className="w-full pl-9 pr-3 py-2 border-2 border-gray-200 rounded-lg text-sm
-                             focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+                    className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 md:py-3.5 border-2 border-gray-200 rounded-lg sm:rounded-xl text-sm sm:text-base
+                             focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-ios
                              disabled:bg-gray-50 disabled:cursor-not-allowed"
                   />
                 </div>
-                <p className="mt-0.5 text-[10px] text-gray-500">Min. 6 Zeichen</p>
+                <p className="mt-1 text-xs text-gray-500">Min. 6 Zeichen</p>
               </div>
               <div>
-                <label htmlFor="confirmPassword" className="block text-xs font-semibold text-gray-700 mb-1">
+                <label htmlFor="confirmPassword" className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
                   Passwort bestätigen
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                   <input
                     id="confirmPassword"
                     name="confirmPassword"
@@ -224,8 +224,8 @@ export default function RegisterPage() {
                     required
                     minLength={6}
                     disabled={loading}
-                    className="w-full pl-9 pr-3 py-2 border-2 border-gray-200 rounded-lg text-sm
-                             focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+                    className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 md:py-3.5 border-2 border-gray-200 rounded-lg sm:rounded-xl text-sm sm:text-base
+                             focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-ios
                              disabled:bg-gray-50 disabled:cursor-not-allowed"
                   />
                 </div>
@@ -235,51 +235,51 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading || !formData.email || !formData.password || !formData.name}
-              className="w-full bg-brand-500 hover:bg-brand-600 text-white rounded-xl px-4 py-3
-                       font-semibold text-sm flex items-center justify-center gap-2
-                       transition-ios shadow-lg shadow-brand-500/25 hover:shadow-xl
-                       disabled:opacity-50 disabled:cursor-not-allowed
+              className="w-full cursor-pointer bg-brand-500 hover:bg-brand-600 text-white rounded-xl sm:rounded-2xl px-5 sm:px-6 py-3 sm:py-3.5 md:py-4
+                       font-semibold text-sm sm:text-base md:text-lg flex items-center justify-center gap-2 sm:gap-3
+                       transition-ios shadow-lg shadow-brand-500/30 hover:shadow-xl
+                       disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-500
                        focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2
-                       touch-target"
+                       touch-target tap-highlight-transparent"
               style={{ minHeight: '44px' }}
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Wird erstellt...
+                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                  <span className="text-sm sm:text-base">Wird erstellt...</span>
                 </>
               ) : (
                 <>
-                  <UserPlus className="w-4 h-4" strokeWidth={2.5} />
-                  Konto erstellen
+                  <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.5} />
+                  <span>Konto erstellen</span>
                 </>
               )}
             </button>
           </form>
 
-          {/* Beneficios: una sola línea compacta */}
-          <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] sm:text-xs text-gray-500">
+          {/* Beneficios - misma línea de tamaño que login footer */}
+          <div className="mt-5 sm:mt-6 md:mt-8 pt-4 sm:pt-6 border-t border-gray-100 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-500">
             <span className="inline-flex items-center gap-1">
-              <Package className="w-3.5 h-3.5 text-brand-500" />
+              <Package className="w-4 h-4 text-brand-500" />
               Produkte
             </span>
             <span className="inline-flex items-center gap-1">
-              <Link2 className="w-3.5 h-3.5 text-brand-500" />
+              <Link2 className="w-4 h-4 text-brand-500" />
               Shop-Link
             </span>
             <span className="inline-flex items-center gap-1">
-              <BarChart3 className="w-3.5 h-3.5 text-brand-500" />
+              <BarChart3 className="w-4 h-4 text-brand-500" />
               Analysen
             </span>
           </div>
 
-          {/* Login link inline con footer */}
-          <div className="mt-4 text-center">
-            <p className="text-xs text-gray-500">
+          {/* Login link - mismo estilo que login */}
+          <div className="mt-5 sm:mt-6 md:mt-8 text-center">
+            <p className="text-xs sm:text-sm text-gray-600">
               Bereits registriert?{' '}
               <Link
                 href="/login"
-                className="text-brand-500 hover:text-brand-600 font-semibold"
+                className="cursor-pointer text-brand-500 hover:text-brand-600 font-semibold transition-colors"
               >
                 Anmelden
               </Link>
@@ -287,7 +287,7 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <p className="mt-3 text-center text-[11px] sm:text-xs text-gray-500">
+        <p className="mt-4 text-center text-xs sm:text-sm text-gray-500">
           Für Geschäfte und Einzelhändler
         </p>
       </div>

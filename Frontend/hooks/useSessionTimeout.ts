@@ -1,17 +1,14 @@
 /**
- * Hook para manejar el timeout de sesión automático
- * Cierra la sesión después de 10 minutos
- * 
- * @deprecated Este hook está siendo reemplazado por useSessionTimeout de hooks/auth/useSessionTimeout.ts
- * Por favor usa el nuevo hook que limpia el cache de React Query automáticamente
+ * Handles automatic session timeout (logs out after 10 min inactivity).
+ * @deprecated Use hooks/auth/useSessionTimeout.ts which also clears React Query cache.
  */
 
 import { useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { clearAllSessionData, updateLastActivityTime, isSessionExpired, getLastActivityTime } from '@/lib/utils/sessionUtils';
 
-const SESSION_TIMEOUT = 10 * 60 * 1000; // 10 minutos en milisegundos
-const CHECK_INTERVAL = 60 * 1000; // Verificar cada minuto
+const SESSION_TIMEOUT_MS = 10 * 60 * 1000;
+const CHECK_INTERVAL_MS = 60 * 1000;
 
 interface UseSessionTimeoutOptions {
   onSessionExpired?: () => void;
@@ -26,46 +23,23 @@ export const useSessionTimeout = (options: UseSessionTimeoutOptions = {}) => {
 
   const handleSessionExpired = useCallback(async () => {
     try {
-      // Limpiar toda la sesión
       await clearAllSessionData();
-
-      // Ejecutar callback personalizado si existe
-      if (onSessionExpired) {
-        onSessionExpired();
-      }
-
-      // Redirigir al login
+      if (onSessionExpired) onSessionExpired();
       router.push('/login');
-      
-      // Forzar recarga para limpiar cualquier estado residual
-      setTimeout(() => {
-        window.location.href = '/login';
-      }, 100);
+      setTimeout(() => { window.location.href = '/login'; }, 100);
     } catch (error) {
-      console.error('Error al manejar sesión expirada:', error);
-      // Forzar redirección de todas formas
+      console.error('Session expiry handler failed:', error);
       window.location.href = '/login';
     }
   }, [router, onSessionExpired]);
 
   const resetTimeout = useCallback(() => {
-    // Limpiar timeout anterior
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
-    // Actualizar timestamp de actividad
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
     updateLastActivityTime();
-
     if (!enabled) return;
-
-    // Establecer nuevo timeout
-    timeoutRef.current = setTimeout(() => {
-      handleSessionExpired();
-    }, SESSION_TIMEOUT);
+    timeoutRef.current = setTimeout(handleSessionExpired, SESSION_TIMEOUT_MS);
   }, [handleSessionExpired, enabled]);
 
-  // Verificar si la sesión ya expiró al montar
   useEffect(() => {
     if (!enabled) return;
 
@@ -74,7 +48,6 @@ export const useSessionTimeout = (options: UseSessionTimeoutOptions = {}) => {
       return;
     }
 
-    // Inicializar timestamp si no existe
     const lastActivity = getLastActivityTime();
     if (!lastActivity) {
       updateLastActivityTime();
@@ -88,7 +61,7 @@ export const useSessionTimeout = (options: UseSessionTimeoutOptions = {}) => {
       if (isSessionExpired()) {
         handleSessionExpired();
       }
-    }, CHECK_INTERVAL);
+    }, CHECK_INTERVAL_MS);
 
     // Eventos de actividad del usuario
     const activityEvents = [

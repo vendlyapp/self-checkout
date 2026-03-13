@@ -23,17 +23,14 @@ export const ProtectedRoute = ({
   useEffect(() => {
     if (!loading) {
       if (requireAuth && !isAuthenticated) {
-        // Guardar la URL actual para redirigir después del login
         const returnUrl = pathname !== '/login' ? pathname : '/dashboard'
         router.push(`${redirectTo}?returnUrl=${encodeURIComponent(returnUrl)}`)
       } else if (!requireAuth && isAuthenticated) {
-        // Si no requiere auth pero el usuario está autenticado, redirigir al dashboard
         router.push('/dashboard')
       }
     }
   }, [isAuthenticated, loading, requireAuth, router, pathname, redirectTo])
 
-  // Mostrar loading mientras verifica
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 flex items-center justify-center">
@@ -45,12 +42,9 @@ export const ProtectedRoute = ({
     )
   }
 
-  // Si requiere auth y no está autenticado, no mostrar nada (está redirigiendo)
   if (requireAuth && !isAuthenticated) {
     return null
   }
-
-  // Si no requiere auth pero está autenticado, no mostrar nada (está redirigiendo)
   if (!requireAuth && isAuthenticated) {
     return null
   }

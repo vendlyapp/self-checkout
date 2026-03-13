@@ -100,20 +100,17 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
     setMounted(true);
   }, []);
 
-  // Quitar foco del sidebar al cambiar de ruta para que no quede "hover/activo" en el ítem anterior (ej. Verkauf starten)
   useEffect(() => {
     const el = document.activeElement as HTMLElement | null;
     if (el?.closest?.('aside')) el.blur();
   }, [pathname]);
 
-  // Memoizar función para verificar item activo (nav principal)
   const isItemActive = useCallback((item: NavItem) => {
     if (item.href === '/dashboard' && pathname === '/dashboard') return true;
     if (item.href !== '/dashboard' && pathname?.startsWith(item.href)) return true;
     return false;
   }, [pathname]);
 
-  // Ítems del flujo charge solo activos cuando la ruta actual es realmente /charge o subruta (evita que quede seleccionado al ir a /dashboard, /products, etc.)
   const isChargeItemActive = useCallback((item: NavItem) => {
     if (!pathname || !pathname.startsWith('/charge')) return false;
     return pathname === item.href || pathname.startsWith(item.href + '/');
@@ -369,30 +366,20 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
               setIsLoggingOut(true);
               
               try {
-                // Limpiar toda la sesión usando la utilidad centralizada
                 await clearAllSessionData();
-                
-                // También cerrar sesión en el contexto
                 try {
                   await signOut();
                 } catch (contextError) {
-                  console.warn('Error en contexto de logout (puede ignorarse):', contextError);
+                  console.warn('SignOut context error (ignored):', contextError);
                 }
-                
                 toast.success('Erfolgreich abgemeldet');
-                
-                // Redirigir a la ruta raíz
                 setTimeout(() => {
                   router.push('/');
-                  setTimeout(() => {
-                    window.location.href = '/';
-                  }, 100);
+                  setTimeout(() => { window.location.href = '/'; }, 100);
                 }, 300);
               } catch (error) {
-                console.error('Error al cerrar sesión:', error);
+                console.error('Logout failed:', error);
                 toast.error('Fehler beim Abmelden');
-                
-                // Forzar limpieza y redirección
                 try {
                   await clearAllSessionData();
                 } catch {
@@ -401,10 +388,7 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
                     sessionStorage.clear();
                   }
                 }
-                
-                setTimeout(() => {
-                  window.location.href = '/';
-                }, 300);
+                setTimeout(() => { window.location.href = '/'; }, 300);
               } finally {
                 setIsLoggingOut(false);
               }

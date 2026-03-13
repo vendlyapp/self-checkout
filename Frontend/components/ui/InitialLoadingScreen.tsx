@@ -12,7 +12,7 @@ interface InitialLoadingScreenProps {
  * Mantiene compatibilidad hacia atrás mientras usa el nuevo sistema unificado
  */
 const InitialLoadingScreen: React.FC<InitialLoadingScreenProps> = ({ 
-  message = "Cargando..." 
+  message = "Wird geladen..." 
 }) => {
   return <Loader variant="fullscreen" message={message} />;
 };

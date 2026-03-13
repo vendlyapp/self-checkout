@@ -39,8 +39,13 @@ import { useInvoice } from '@/hooks/queries/useInvoice';
 import { useOrder } from '@/hooks/queries/useOrder';
 import { useChargeContext } from '@/app/charge/contexts';
 import { useProductsList } from '@/components/dashboard/products_list/ProductsListContext';
-import LoadingProductsModal from '@/components/dashboard/home/LoadingProductsModal';
-import { useLoadingProductsModal } from '@/lib/contexts/LoadingProductsModalContext';
+import LoadingProductsModal from "@/components/dashboard/home/LoadingProductsModal";
+import { useLoadingProductsModal } from "@/lib/contexts/LoadingProductsModalContext";
+import {
+  TOP_HEADER_NAV_PX,
+  MAIN_PT_HEADER_NAV_ONLY_PX,
+  MAIN_PT_WITH_FILTER_BARS_PX,
+} from "@/lib/constants/layoutHeights";
 
 // Extender Window interface para propiedades personalizadas
 declare global {
@@ -76,7 +81,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   // Determinar si estamos EXACTAMENTE en /products_list (página principal)
   const isProductsListMainPage = pathname === '/products_list';
-  
+  const isProductsListAddProductPage = pathname === '/products_list/add_product';
+  const isProductsListViewProductRoute = pathname?.startsWith('/products_list/view/');
+
   // Determinar si estamos en la ruta de categorías
   const isCategoriesRoute = pathname?.startsWith('/categories');
   
@@ -454,13 +461,25 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </>
         )}
 
+        {/* Header add_product / view producto - fijo fuera del scroll (posición alineada con layoutHeights) */}
+        {((isProductsListAddProductPage && isMobile) || (isProductsListViewProductRoute && (isMobile || isTablet))) && (
+          <div className="fixed left-0 right-0 z-50 bg-white border-b border-gray-200" style={{ top: `${TOP_HEADER_NAV_PX}px` }}>
+            <HeaderNav
+              title={isProductsListAddProductPage ? 'Produkt erstellen' : 'Produktdetails'}
+              isFixed={false}
+              padding="comfortable"
+            />
+          </div>
+        )}
+
         {/* Header de products_list con filtros - Solo en móvil y EXACTAMENTE en /products_list */}
         {isMobile && isProductsListMainPage && productsListContext && (
           <>
             <HeaderNav 
               title="Produkte" 
               showAddButton={true} 
-              isFixed={true} 
+              isFixed={true}
+              padding="default"
             />
             <Filter_Busqueda
               searchQuery={productsListContext.searchQuery}
@@ -512,25 +531,41 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <OrderFiltersWrapper />
         )}
 
-        {/* Contenido principal */}
-        <main
-          ref={scrollContainerRef}
-          className={clsx(
-            "flex-1 overflow-y-auto overflow-x-hidden",
-            isMobile ? "ios-scroll-fix" : "scroll-smooth",
-            shouldShowCartSummary && "pb-24", // Padding para el CartSummary fixed
-            isMobile && isInvoiceDetailRoute && "pb-24 pt-[calc(70px+env(safe-area-inset-top))]", // Padding para ResponsiveHeader (~85px) + HeaderNav fixed (~70px) y InvoiceActionsFooter fixed
-            isMobile && isOrderDetailRoute && "pt-[calc(70px+env(safe-area-inset-top))]", // Padding para ResponsiveHeader (~85px) + HeaderNav fixed (~70px)
-            shouldShowStoreSalesHeaderNav && "pt-[calc(70px+env(safe-area-inset-top))]" // Padding para ResponsiveHeader (~85px) + HeaderNav fixed (~70px)
-          )}
-        >
-          <div className={clsx(
-            "w-full min-h-full",
-            isMobile ? "max-w-[430px] mx-auto bg-background-cream mobile-content-padding" : "bg-background-cream px-4 md:px-6 lg:px-8"
-          )}>
-            {children}
-          </div>
-        </main>
+        {/* Contenido principal - padding-top desde layoutHeights (solo pathname para evitar hydration mismatch) */}
+        {(() => {
+          const needsFilterBarsPt = isChargeMainPage || isProductsListMainPage || isOrdersListMainPage;
+          const needsHeaderNavOnlyPt =
+            isInvoiceDetailRoute ||
+            isOrderDetailRoute ||
+            isProductsListAddProductPage ||
+            isProductsListViewProductRoute ||
+            headerNavTitleForStoreSales !== null;
+          const mainPtPx = needsFilterBarsPt ? MAIN_PT_WITH_FILTER_BARS_PX : needsHeaderNavOnlyPt ? MAIN_PT_HEADER_NAV_ONLY_PX : null;
+          return (
+            <main
+              ref={scrollContainerRef}
+              className={clsx(
+                "flex-1 overflow-y-auto overflow-x-hidden",
+                isMobile ? "ios-scroll-fix" : "scroll-smooth",
+                shouldShowCartSummary && "pb-24",
+                isMobile && isInvoiceDetailRoute && "pb-24",
+                mainPtPx != null && "main-pt-mobile-only"
+              )}
+              style={
+                mainPtPx != null
+                  ? { paddingTop: `calc(${mainPtPx}px + env(safe-area-inset-top))` }
+                  : undefined
+              }
+            >
+              <div className={clsx(
+                "w-full min-h-full",
+                isMobile ? "max-w-[430px] mx-auto bg-background-cream mobile-content-padding" : "bg-background-cream px-4 md:px-6 lg:px-8"
+              )}>
+                {children}
+              </div>
+            </main>
+          );
+        })()}
 
         {/* Footer móvil - Solo en móvil y NO en rutas de charge, products_list, categories, discounts, payment-methods o invoice */}
         {isMobile && !isProductsListRoute && !isChargeRoute && !isCategoriesRoute && !isAddCategoryPage && !isStoreSubRoute && (

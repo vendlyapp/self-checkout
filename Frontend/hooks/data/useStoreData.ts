@@ -31,7 +31,7 @@ export const useStoreData = (
 
   const loadStore = async () => {
     if (!slug) {
-      setError('No se proporcionó un slug de tienda');
+      setError('Es wurde kein Shop-Slug angegeben');
       return;
     }
 

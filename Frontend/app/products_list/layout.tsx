@@ -1,5 +1,5 @@
 "use client";
-// app/products_list/layout.tsx
+// app/products_list/layout.tsx — HeaderNav add_product/view se renderiza en AdminLayout (fijo, fuera del scroll)
 import { ReactNode } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useResponsive } from "@/hooks";

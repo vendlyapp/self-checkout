@@ -26,7 +26,7 @@ export const useOrderStats = (date?: string, ownerId?: string) => {
         // Si el backend no está disponible, retornar datos vacíos en lugar de lanzar error
         // Esto permite que la aplicación continúe funcionando
         // IMPORTANTE: Verificar esto ANTES de verificar success/data
-        if (response.error === 'Backend no disponible') {
+        if (response.error === 'Backend unavailable') {
           return emptyStats;
         }
         
@@ -39,14 +39,14 @@ export const useOrderStats = (date?: string, ownerId?: string) => {
             errorMessage.includes('NetworkError') ||
             errorMessage.includes('ERR_CONNECTION_REFUSED') ||
             errorMessage.includes('ERR_NETWORK') ||
-            errorMessage.includes('Backend no disponible') ||
+            errorMessage.includes('Backend unavailable') ||
             errorMessage.includes('Network request failed')
           ) {
             return emptyStats;
           }
           
           // Para otros errores, lanzar el error normalmente
-          throw new Error(response.error || 'Error al obtener estadísticas de órdenes');
+          throw new Error(response.error || 'Fehler beim Laden der Bestellstatistiken');
         }
         
         return response.data;
@@ -65,7 +65,7 @@ export const useOrderStats = (date?: string, ownerId?: string) => {
             error.message.includes('NetworkError') ||
             error.message.includes('ERR_CONNECTION_REFUSED') ||
             error.message.includes('ERR_NETWORK') ||
-            error.message.includes('Backend no disponible') ||
+            error.message.includes('Backend unavailable') ||
             error.message.includes('Network request failed') ||
             // Los errores de fetch suelen ser TypeError cuando no hay conexión
             (error.name === 'TypeError' && (
@@ -82,7 +82,7 @@ export const useOrderStats = (date?: string, ownerId?: string) => {
           if (
             errorMessage.includes('Failed to fetch') ||
             errorMessage.includes('NetworkError') ||
-            errorMessage.includes('Backend no disponible')
+            errorMessage.includes('Backend unavailable')
           ) {
             return emptyStats;
           }
@@ -102,7 +102,7 @@ export const useOrderStats = (date?: string, ownerId?: string) => {
       
       // No reintentar si el backend no está disponible o hay errores de conexión
       if (error instanceof Error && (
-        error.message.includes('Backend no disponible') ||
+        error.message.includes('Backend unavailable') ||
         error.message.includes('Failed to fetch') ||
         error.message.includes('NetworkError') ||
         error.message.includes('ERR_CONNECTION_REFUSED') ||

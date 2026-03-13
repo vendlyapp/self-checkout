@@ -55,7 +55,7 @@ const getAuthHeaders = async () => {
       ...(token && { Authorization: `Bearer ${token}` }),
     };
   } catch (error) {
-    console.error('Error al obtener token de autenticación:', error);
+    console.error('Failed to get auth token:', error);
     return {
       'Content-Type': 'application/json',
     };
@@ -76,7 +76,7 @@ export const discountCodeService = {
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || `Error al obtener códigos de descuento: ${response.status}`);
+        throw new Error(error.error || `Fehler beim Laden der Rabattcodes: ${response.status}`);
       }
 
       const result = await response.json();
@@ -99,7 +99,7 @@ export const discountCodeService = {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || 'Error al obtener el código de descuento');
+      throw new Error(error.error || 'Fehler beim Laden des Rabattcodes');
     }
 
     const result = await response.json();
@@ -138,20 +138,20 @@ export const discountCodeService = {
       });
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Error al validar código' }));
-        throw new Error(error.error || 'Código de descuento inválido');
+        const error = await response.json().catch(() => ({ error: 'Fehler beim Validieren des Codes' }));
+        throw new Error(error.error || 'Ungültiger Rabattcode');
       }
 
       const result = await response.json();
       if (!result.success || !result.data) {
-        throw new Error(result.error || 'Código de descuento inválido');
+        throw new Error(result.error || 'Ungültiger Rabattcode');
       }
       return result.data;
     } catch (error) {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error('Error desconocido al validar código de descuento');
+      throw new Error('Unbekannter Fehler beim Validieren des Rabattcodes');
     }
   },
 
@@ -168,7 +168,7 @@ export const discountCodeService = {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || 'Error al crear el código de descuento');
+      throw new Error(error.error || 'Fehler beim Erstellen des Rabattcodes');
     }
 
     const result = await response.json();
@@ -188,7 +188,7 @@ export const discountCodeService = {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || 'Error al actualizar el código de descuento');
+      throw new Error(error.error || 'Fehler beim Aktualisieren des Rabattcodes');
     }
 
     const result = await response.json();
@@ -207,7 +207,7 @@ export const discountCodeService = {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || 'Error al archivar el código de descuento');
+      throw new Error(error.error || 'Fehler beim Archivieren des Rabattcodes');
     }
 
     const result = await response.json();
@@ -226,7 +226,7 @@ export const discountCodeService = {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || 'Error al eliminar el código de descuento');
+      throw new Error(error.error || 'Fehler beim Löschen des Rabattcodes');
     }
   },
 
@@ -243,7 +243,7 @@ export const discountCodeService = {
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || `Error al obtener códigos archivados: ${response.status}`);
+        throw new Error(error.error || `Fehler beim Laden der archivierten Codes: ${response.status}`);
       }
 
       const result = await response.json();
@@ -266,7 +266,7 @@ export const discountCodeService = {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || 'Error al obtener estadísticas');
+      throw new Error(error.error || 'Fehler beim Laden der Statistiken');
     }
 
     const result = await response.json();

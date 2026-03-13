@@ -149,14 +149,14 @@ export const useDashboard = (): UseDashboardReturn => {
   // Estados combinados
   const loading = statsLoading || ordersLoading;
   
-  // No mostrar error si es "Backend no disponible" - los datos vacíos son suficientes
+  // Do not show error when backend is unavailable; empty data is acceptable
   // Solo mostrar errores que no sean de conexión
   const error = (statsError || ordersError) 
     ? (() => {
         const errorMessage = statsError?.message || ordersError?.message || '';
-        // Si el error es de backend no disponible, no mostrar error (datos vacíos son suficientes)
+        // Backend unavailable: treat as empty data, do not show error
         if (
-          errorMessage.includes('Backend no disponible') ||
+          errorMessage.includes('Backend unavailable') ||
           errorMessage.includes('Failed to fetch') ||
           errorMessage.includes('NetworkError') ||
           errorMessage.includes('ERR_CONNECTION_REFUSED') ||

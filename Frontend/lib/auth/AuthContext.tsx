@@ -99,7 +99,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
 
       if (data?.user && typeof window !== 'undefined') {
-        // Guardar role en localStorage si existe en metadata
         const role = data.user.user_metadata?.role || 'ADMIN';
         localStorage.setItem('userRole', role);
       }
@@ -112,20 +111,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signOut = async () => {
     try {
-      // Limpiar estados locales primero
       setUser(null);
       setSession(null);
-      
-      // Usar la función de limpieza completa
-      // Nota: No podemos pasar queryClient aquí porque es un hook, pero clearAllSessionData
-      // intentará limpiar React Query de forma global
       const { clearAllSessionData } = await import('@/lib/utils/sessionUtils');
       await clearAllSessionData();
-      
       return { error: null };
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
-      // Forzar limpieza básica en caso de error
+      console.error('SignOut failed:', error);
       try {
         await supabase.auth.signOut();
         setUser(null);
@@ -135,7 +127,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           sessionStorage.clear();
         }
       } catch (e) {
-        console.error('Error en limpieza de emergencia:', e);
+        console.error('Fallback cleanup failed:', e);
       }
       return { error: error as AuthError };
     }

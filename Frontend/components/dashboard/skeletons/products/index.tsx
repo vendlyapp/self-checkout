@@ -180,7 +180,7 @@ export const ProductsErrorState: React.FC<{
   <div className="p-4 space-y-4 bg-background min-h-screen">
     <div className="mb-2">
       <h1 className="text-2xl font-bold text-foreground">Produkte</h1>
-      <p className="text-sm text-red-500">Error: {error}</p>
+      <p className="text-sm text-red-500">Fehler: {error}</p>
     </div>
     
     <div className="flex flex-col items-center justify-center py-12 text-center">

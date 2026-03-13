@@ -375,7 +375,7 @@ export default function EditProductModal({ product, isOpen, onClose, onSuccess }
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <Loader size="md" className="mx-auto" />
-          <p className="mt-4 text-gray-600 text-center">Cargando producto...</p>
+          <p className="mt-4 text-gray-600 text-center">Produkt wird geladen...</p>
         </div>
       </div>,
       document.body
@@ -387,7 +387,7 @@ export default function EditProductModal({ product, isOpen, onClose, onSuccess }
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <Loader size="md" className="mx-auto" />
-          <p className="mt-4 text-gray-600 text-center">Cargando producto...</p>
+          <p className="mt-4 text-gray-600 text-center">Produkt wird geladen...</p>
         </div>
       </div>,
       document.body
@@ -403,7 +403,7 @@ export default function EditProductModal({ product, isOpen, onClose, onSuccess }
             onClick={onClose}
             className="w-full px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700"
           >
-            Cerrar
+            Schliessen
           </button>
         </div>
       </div>,
@@ -472,12 +472,12 @@ export default function EditProductModal({ product, isOpen, onClose, onSuccess }
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white sticky top-0 z-10">
             <h2 className="text-2xl font-bold text-gray-900">
-              Editar Producto
+              Produkt bearbeiten
             </h2>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              aria-label="Cerrar"
+              aria-label="Schliessen"
             >
               <X className="w-6 h-6 text-gray-600" />
             </button>

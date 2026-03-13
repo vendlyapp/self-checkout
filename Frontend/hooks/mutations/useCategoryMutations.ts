@@ -14,7 +14,7 @@ export const useCreateCategory = () => {
     mutationFn: async (data: CreateCategoryRequest) => {
       const response = await CategoryService.createCategory(data);
       if (!response.success || !response.data) {
-        throw new Error(response.error || 'Error al crear categoría');
+        throw new Error(response.error || 'Fehler beim Erstellen der Kategorie');
       }
       return response.data as Category;
     },
@@ -37,7 +37,7 @@ export const useUpdateCategory = () => {
     mutationFn: async ({ id, data }: { id: string; data: UpdateCategoryRequest }) => {
       const response = await CategoryService.updateCategory(id, data);
       if (!response.success || !response.data) {
-        throw new Error(response.error || 'Error al actualizar categoría');
+        throw new Error(response.error || 'Fehler beim Aktualisieren der Kategorie');
       }
       return response.data as Category;
     },
@@ -69,7 +69,7 @@ export const useDeleteCategory = () => {
       const moveProductsToCategoryId = typeof params === 'string' ? undefined : params.moveProductsToCategoryId;
       const response = await CategoryService.deleteCategory(id, { moveProductsToCategoryId });
       if (!response.success) {
-        throw new Error(response.error || 'Error al eliminar categoría');
+        throw new Error(response.error || 'Fehler beim Löschen der Kategorie');
       }
       return id;
     },

@@ -54,7 +54,7 @@ export const useMyStore = () => {
       const result = await response.json()
 
       if (!result.success) {
-        throw new Error(result.error || 'Error al cargar tienda')
+        throw new Error(result.error || 'Fehler beim Laden des Geschäfts')
       }
 
       return result.data as StoreData
