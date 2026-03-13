@@ -85,7 +85,7 @@ export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProp
           className="w-[85%] mx-auto bg-[#25D076] text-white py-4 mb-2 px-6 rounded-full font-semibold text-lg 
                    flex items-center justify-center gap-2 touch-target 
                    tap-highlight-transparent ios-scroll-fix"
-          onClick={() => router.push(slug ? `/store/${slug}/payment` : "/user/payment")}
+          onClick={() => router.push(slug ? `/store/${slug}/payment` : "/")}
           style={{ minHeight: "48px" }}
           aria-label="Zur Bezahlung gehen"
         >
@@ -100,7 +100,7 @@ export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProp
   return (
     <CartSummary
       items={validCartItems}
-      onContinue={() => router.push(slug ? `/store/${slug}/cart` : '/user/cart')}
+      onContinue={() => router.push(slug ? `/store/${slug}/cart` : '/')}
     />
   );
 }

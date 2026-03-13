@@ -48,17 +48,7 @@ export default function SearchUser() {
     });
   }, []);
 
-  // Redirigir a /store/[slug]/search si hay tienda
-  useEffect(() => {
-    if (store?.slug && typeof window !== 'undefined') {
-      const currentPath = window.location.pathname;
-      if (currentPath === '/user/search') {
-        router.replace(`/store/${store.slug}/search`);
-      }
-    }
-  }, [store?.slug, router]);
-
-  // Cargar productos de la tienda
+// Cargar productos de la tienda
   useEffect(() => {
     const loadProducts = async () => {
       if (!store?.slug) {

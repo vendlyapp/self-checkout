@@ -108,16 +108,22 @@ const authMiddleware = async (req, res, next) => {
     // ── Cache miss: resolve user from DB ─────────────────────────────────────
     let userRole = 'ADMIN';
     let userName = data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'Usuario';
+    let resolvedStoreId = null;
 
     try {
+      // Single query: user + store in one round-trip (LEFT JOIN covers no-store case)
       const userResult = await query(
-        'SELECT name, role FROM "User" WHERE id = $1',
+        `SELECT u.name, u.role, s.id AS "storeId"
+         FROM "User" u
+         LEFT JOIN "Store" s ON s."ownerId" = u.id
+         WHERE u.id = $1`,
         [data.user.id]
       );
 
       if (userResult.rows.length > 0) {
         userName = userResult.rows[0].name;
         userRole = userResult.rows[0].role;
+        resolvedStoreId = userResult.rows[0].storeId || null;
       } else {
         const metadataRole = data.user.user_metadata?.role || 'ADMIN';
         if (!userName || userName.trim() === '') {
@@ -187,7 +193,10 @@ const authMiddleware = async (req, res, next) => {
       emailConfirmed: data.user.email_confirmed_at ? true : false
     };
 
-    if (userRole === 'ADMIN') {
+    if (resolvedStoreId) {
+      userPayload.storeId = resolvedStoreId;
+    } else if (userRole === 'ADMIN') {
+      // Fallback: new user whose store was just created in this same request
       try {
         const storeResult = await query(
           'SELECT id FROM "Store" WHERE "ownerId" = $1 LIMIT 1',
@@ -284,16 +293,22 @@ const optionalAuth = async (req, res, next) => {
     // ── Cache miss: resolve user from DB ────────────────────────────────────
     let userRole = 'ADMIN';
     let userName = data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email.split('@')[0] || 'Usuario';
+    let resolvedStoreId = null;
 
     try {
+      // Single query: user + store in one round-trip (LEFT JOIN covers no-store case)
       const userResult = await query(
-        'SELECT name, role FROM "User" WHERE id = $1',
+        `SELECT u.name, u.role, s.id AS "storeId"
+         FROM "User" u
+         LEFT JOIN "Store" s ON s."ownerId" = u.id
+         WHERE u.id = $1`,
         [data.user.id]
       );
 
       if (userResult.rows.length > 0) {
         userName = userResult.rows[0].name;
         userRole = userResult.rows[0].role;
+        resolvedStoreId = userResult.rows[0].storeId || null;
       } else {
         const metadataRole = data.user.user_metadata?.role || 'ADMIN';
         if (!userName || userName.trim() === '') {
@@ -336,7 +351,10 @@ const optionalAuth = async (req, res, next) => {
       emailConfirmed: !!data.user.email_confirmed_at,
     };
 
-    if (userRole === 'ADMIN') {
+    if (resolvedStoreId) {
+      userPayload.storeId = resolvedStoreId;
+    } else if (userRole === 'ADMIN') {
+      // Fallback: new user whose store was just created in this same request
       try {
         const storeResult = await query(
           'SELECT id FROM "Store" WHERE "ownerId" = $1 LIMIT 1',

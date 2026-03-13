@@ -307,73 +307,46 @@ class OrderService {
     let whereClause = '';
     const params = [];
     let paramCount = 0;
-    let ownerId = null;
 
-    // Si se proporciona storeId, obtener el ownerId de la tienda
+    // Si se proporciona storeId, filtrar órdenes por productos de esa tienda.
+    // El JOIN con Store resuelve el ownerId directamente — sin query preliminar.
     if (storeId) {
-      const storeService = require('./StoreService');
-      const store = await storeService.getById(storeId);
-      if (!store) {
-        // Si la tienda no existe, retornar lista vacía
-        return {
-          success: true,
-          data: [],
-          count: 0,
-          total: 0
-        };
+      const queryParams = [storeId];
+      if (status) {
+        queryParams.push(status);
       }
-      if (store.ownerId) {
-        ownerId = store.ownerId;
-      } else {
-        // Si la tienda no tiene ownerId, retornar lista vacía
-        return {
-          success: true,
-          data: [],
-          count: 0,
-          total: 0
-        };
-      }
-    }
+      queryParams.push(limit, offset);
 
-    // Si tenemos ownerId, filtrar órdenes por productos de ese owner
-    if (ownerId) {
-      // Filtrar órdenes que tengan al menos un producto del owner
       const selectQuery = `
         SELECT DISTINCT o.*, u.name as "userName", u.email as "userEmail"
         FROM "Order" o
         INNER JOIN "OrderItem" oi ON o.id = oi."orderId"
         INNER JOIN "Product" p ON oi."productId" = p.id
+        INNER JOIN "Store" s ON s."ownerId" = p."ownerId" AND s.id = $1
         LEFT JOIN "User" u ON o."userId" = u.id
-        WHERE p."ownerId" = $1
-        ${status ? `AND o.status = $2` : ''}
+        ${status ? `WHERE o.status = $2` : ''}
         ORDER BY o."createdAt" DESC
         LIMIT $${status ? 3 : 2} OFFSET $${status ? 4 : 3}
       `;
-      
-      const queryParams = [ownerId];
-      if (status) {
-        queryParams.push(status);
-      }
-      queryParams.push(limit, offset);
 
       const result = await query(selectQuery, queryParams);
       const orders = result.rows;
 
       await this._fetchItemsForOrders(orders);
 
-      // Contar total de órdenes para este owner
+      // Contar total de órdenes para esta tienda
+      const countParams = [storeId];
+      if (status) {
+        countParams.push(status);
+      }
       const countQuery = `
         SELECT COUNT(DISTINCT o.id) as total
         FROM "Order" o
         INNER JOIN "OrderItem" oi ON o.id = oi."orderId"
         INNER JOIN "Product" p ON oi."productId" = p.id
-        WHERE p."ownerId" = $1
-        ${status ? `AND o.status = $2` : ''}
+        INNER JOIN "Store" s ON s."ownerId" = p."ownerId" AND s.id = $1
+        ${status ? `WHERE o.status = $2` : ''}
       `;
-      const countParams = [ownerId];
-      if (status) {
-        countParams.push(status);
-      }
       const countResult = await query(countQuery, countParams);
       const total = parseInt(countResult.rows[0].total);
 
@@ -382,17 +355,6 @@ class OrderService {
         data: orders,
         count: orders.length,
         total: total
-      };
-    }
-
-    // Si se proporcionó storeId pero no se obtuvo ownerId, retornar lista vacía
-    // (esto no debería pasar porque ya se validó arriba, pero por seguridad)
-    if (storeId) {
-      return {
-        success: true,
-        data: [],
-        count: 0,
-        total: 0
       };
     }
 

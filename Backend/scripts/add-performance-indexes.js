@@ -119,6 +119,30 @@ const indexes = [
     sql: 'CREATE INDEX IF NOT EXISTS idx_activesession_role ON "ActiveSession" ("role")',
     description: 'ActiveSession.role — agrupación de sesiones activas por rol',
   },
+
+  // ─── Composite indexes ────────────────────────────────────────────────────
+  // Cubren los filtros multi-columna más frecuentes, evitando que Postgres
+  // combine dos índices simples (bitmap AND) cuando puede usar uno solo.
+  {
+    name: 'idx_paymentmethod_storeid_isactive',
+    sql: 'CREATE INDEX IF NOT EXISTS idx_paymentmethod_storeid_isactive ON "PaymentMethod" ("storeId", "isActive")',
+    description: 'PaymentMethod.(storeId, isActive) — fetch de métodos activos por tienda',
+  },
+  {
+    name: 'idx_discountcode_code_isactive',
+    sql: 'CREATE INDEX IF NOT EXISTS idx_discountcode_code_isactive ON "DiscountCode" (code, is_active)',
+    description: 'DiscountCode.(code, is_active) — validación de cupón (hot path del checkout)',
+  },
+  {
+    name: 'idx_invoice_storeid_createdat',
+    sql: 'CREATE INDEX IF NOT EXISTS idx_invoice_storeid_createdat ON "Invoice" ("storeId", "createdAt" DESC)',
+    description: 'Invoice.(storeId, createdAt DESC) — listado de facturas por tienda ordenado por fecha',
+  },
+  {
+    name: 'idx_order_userid_createdat',
+    sql: 'CREATE INDEX IF NOT EXISTS idx_order_userid_createdat ON "Order" ("userId", "createdAt" DESC)',
+    description: 'Order.(userId, createdAt DESC) — historial de órdenes por usuario ordenado por fecha',
+  },
 ];
 
 async function addPerformanceIndexes() {

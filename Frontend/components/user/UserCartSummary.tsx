@@ -34,7 +34,7 @@ export default function UserCartSummary({ variant }: UserCartSummaryProps) {
         </span>
         <button
           className="bg-white text-[#6E7996] font-bold px-2 rounded-lg text-sm shadow-sm tap-highlight-transparent flex-shrink-0 h-[32px] flex items-center justify-center"
-          onClick={() => router.push(slug ? `/store/${slug}/payment` : '/user/payment')}
+          onClick={() => router.push(slug ? `/store/${slug}/payment` : '/')}
           aria-label="Zur Bezahlung gehen"
         >
           <span>Bezahlen</span>
@@ -47,7 +47,7 @@ export default function UserCartSummary({ variant }: UserCartSummaryProps) {
   return (
     <CartSummary
       items={validCartItems}
-      onContinue={() => router.push(slug ? `/store/${slug}/cart` : '/user/cart')}
+      onContinue={() => router.push(slug ? `/store/${slug}/cart` : '/')}
     />
   );
 }

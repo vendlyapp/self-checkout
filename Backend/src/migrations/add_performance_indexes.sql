@@ -39,3 +39,23 @@ CREATE INDEX IF NOT EXISTS idx_productcategory_storeid ON "ProductCategory" ("st
 -- ActiveSession (time-window queries for analytics heartbeat)
 CREATE INDEX IF NOT EXISTS idx_activesession_lastseen ON "ActiveSession" ("lastSeen");
 CREATE INDEX IF NOT EXISTS idx_activesession_role     ON "ActiveSession" ("role");
+
+-- ============================================================
+-- Composite indexes — cover the most common multi-column filters
+-- ============================================================
+
+-- PaymentMethod: almost every fetch is WHERE storeId = $1 AND isActive = true
+CREATE INDEX IF NOT EXISTS idx_paymentmethod_storeid_isactive
+  ON "PaymentMethod" ("storeId", "isActive");
+
+-- DiscountCode: validation query always filters code + active together
+CREATE INDEX IF NOT EXISTS idx_discountcode_code_isactive
+  ON "DiscountCode" (code, is_active);
+
+-- Invoice: store invoice list is always ordered by date
+CREATE INDEX IF NOT EXISTS idx_invoice_storeid_createdat
+  ON "Invoice" ("storeId", "createdAt" DESC);
+
+-- Order: user order history sorted by date (replaces two single-column scans)
+CREATE INDEX IF NOT EXISTS idx_order_userid_createdat
+  ON "Order" ("userId", "createdAt" DESC);

@@ -64,7 +64,7 @@ export default function HeaderNav({
   const router = useRouter();
   const pathname = usePathname();
   const { cartItems, clearCart } = useCartStore();
-  const isCartPage = pathname === "/charge/cart" || pathname === "/user/cart" || pathname?.includes("/cart");
+  const isCartPage = pathname === "/charge/cart" || pathname?.includes("/cart");
   const isPromotionPage = pathname?.includes("/promotion");
   const [products, setProducts] = useState<Product[]>([]);
   useEffect(() => {

@@ -1208,7 +1208,7 @@ export default function PaymentP() {
       if (storeSlug) {
         router.push(`/store/${storeSlug}`);
       } else {
-        router.push("/user");
+        router.push("/");
       }
     }, 300); // Pequeña pausa para transición suave
   };

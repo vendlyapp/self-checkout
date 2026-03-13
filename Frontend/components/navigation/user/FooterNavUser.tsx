@@ -64,14 +64,13 @@ export default function FooterNav() {
   const { cartItems } = useCartStore();
 
   // Siempre usar /store/[slug] como base route
-  // Si no hay slug, usar /user como fallback
   const isStoreRoute = pathname?.startsWith('/store/');
   const slug = params?.slug as string | undefined;
   const { store } = useScannedStoreStore();
-  
+
   // Usar slug de params si está disponible, sino usar store.slug del store
   const currentSlug = slug || store?.slug;
-  const baseRoute = currentSlug ? `/store/${currentSlug}` : '/user';
+  const baseRoute = currentSlug ? `/store/${currentSlug}` : '/';
   
   const navItems = useMemo(() => getNavItems(baseRoute), [baseRoute]);
 
@@ -141,8 +140,8 @@ export default function FooterNav() {
   }, [cartItems]);
 
   // Determinar qué componente de carrito mostrar basado en la ruta
-  const isCartRoute = pathname === "/user/cart" || pathname?.includes('/cart');
-  const isPaymentRoute = pathname === "/user/payment" || pathname?.includes('/payment');
+  const isCartRoute = pathname?.includes('/cart');
+  const isPaymentRoute = pathname?.includes('/payment');
 
   // Ocultar FooterNav en la pantalla de carrito
   if (pathname === "/charge/cart") {
@@ -156,7 +155,7 @@ export default function FooterNav() {
 
   return (
     <div className="bg-white rounded-t-3xl">
-      {/* Resumen de carrito arriba solo cuando estoy en /user/cart Y hay items en el carrito - fuera del nav para separación visual */}
+      {/* Resumen de carrito arriba solo cuando estoy en el carrito Y hay items en el carrito - fuera del nav para separación visual */}
       {isCartRoute && hasValidCartItems && (
         <div className="w-full max-w-[480px] mx-auto bg-white rounded-t-3xl pb-2">
           <UserCartSummaryCart variant="inline" />
@@ -287,7 +286,7 @@ export default function FooterNav() {
         })}
         </div>
 
-          {/* Resumen de carrito abajo solo cuando NO estoy en /user/cart Y NO estoy en /user/payment - con contenedor limitado */}
+          {/* Resumen de carrito abajo solo cuando NO estoy en el carrito Y NO estoy en el pago - con contenedor limitado */}
           {!isCartRoute && !isPaymentRoute && (
             <div className="w-full max-w-[480px] mx-auto flex flex-col gap-2 px-4 pb-2">
               <UserCartSummary variant="inline" />

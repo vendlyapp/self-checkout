@@ -9,31 +9,38 @@ export default function AuthCallback() {
   const router = useRouter()
 
   useEffect(() => {
-    const handleCallback = async () => {
-      try {
-        // Supabase maneja automáticamente el callback
-        // Solo necesitamos verificar la sesión
-        const { data: { session }, error } = await supabase.auth.getSession()
-
-        if (error) {
-          console.error('Error en callback:', error)
-          router.push('/login?error=auth_failed')
-          return
-        }
-
-        if (session) {
-          // Login exitoso, redirigir al dashboard
-          router.push('/dashboard')
-        } else {
-          router.push('/login')
-        }
-      } catch (error) {
-        console.error('Error procesando callback:', error)
-        router.push('/login?error=unexpected')
+    // Escuchar el evento SIGNED_IN en vez de llamar getSession() de inmediato.
+    // Con PKCE flow, Supabase necesita intercambiar el ?code= por tokens antes
+    // de que getSession() devuelva algo — onAuthStateChange espera ese momento exacto.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        router.push('/dashboard')
+      } else if (event === 'SIGNED_OUT') {
+        router.push('/login')
       }
-    }
+    })
 
-    handleCallback()
+    // Fallback: si ya había una sesión activa antes de montar el componente
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Error en callback:', error)
+        router.push('/login?error=auth_failed')
+        return
+      }
+      if (session) {
+        router.push('/dashboard')
+      }
+    })
+
+    // Timeout de seguridad: si en 10s no hubo evento, algo falló
+    const timeout = setTimeout(() => {
+      router.push('/login?error=auth_failed')
+    }, 10_000)
+
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeout)
+    }
   }, [router])
 
   return (
