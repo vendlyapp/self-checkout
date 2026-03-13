@@ -25,6 +25,7 @@ export function PWAInstallBanner() {
   const { isAuthenticated } = useAuth();
   const [showBanner, setShowBanner] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [mode, setMode] = useState<"none" | "prompt" | "ios">("none");
   const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null);
 
   const isStoreRoute = typeof pathname === "string" && pathname.startsWith("/store/");
@@ -32,11 +33,25 @@ export function PWAInstallBanner() {
 
   useEffect(() => {
     if (!shouldOfferPWA || isStandalone()) return;
-    if (typeof window !== "undefined" && localStorage.getItem(STORAGE_KEY)) return;
+    if (typeof window === "undefined") return;
+    if (localStorage.getItem(STORAGE_KEY)) return;
+
+    const ua = window.navigator.userAgent || "";
+    const isIos = /iPhone|iPad|iPod/i.test(ua);
+    const isSafari = /Safari/i.test(ua) && !/Chrome/i.test(ua) && !/CriOS/i.test(ua) && !/FxiOS/i.test(ua);
+
+    // iOS Safari no soporta beforeinstallprompt: mostramos instrucciones manuales
+    if (isIos && isSafari) {
+      setMode("ios");
+      setShowBanner(true);
+      requestAnimationFrame(() => setIsVisible(true));
+      return;
+    }
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       deferredPrompt.current = e as BeforeInstallPromptEvent;
+      setMode("prompt");
       setShowBanner(true);
       requestAnimationFrame(() => setIsVisible(true));
     };
@@ -67,49 +82,65 @@ export function PWAInstallBanner() {
 
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 z-[100] safe-area-bottom transition-transform duration-300 ${
-        isVisible ? "translate-y-0" : "translate-y-full"
-      }`}
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
       role="dialog"
-      aria-label="App installieren"
+      aria-modal="true"
+      aria-labelledby="pwa-install-title"
+      aria-describedby="pwa-install-desc"
     >
-      <div className="bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        <div className="max-w-[430px] mx-auto flex items-start gap-3">
-          <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center">
-            <Download className="w-5 h-5 text-brand-600" aria-hidden />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-foreground text-[15px]">App installieren</p>
-            <p className="text-muted-foreground text-sm mt-0.5">
-              {isStoreRoute
-                ? "Installieren Sie die App, um schnell zu scannen und zu bestellen."
-                : "Für die beste Erfahrung installieren Sie die App auf Ihrem Gerät."}
+      {/* Backdrop */}
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        onClick={handleDismiss}
+        aria-label="Schliessen"
+      />
+      {/* Modal */}
+      <div
+        className={`relative w-full max-w-[340px] bg-white rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 ${
+          isVisible ? "scale-100 opacity-100" : "scale-95 opacity-0"
+        }`}
+      >
+        <div className="p-6 pt-8">
+          <button
+            type="button"
+            onClick={handleDismiss}
+            className="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors touch-target"
+            aria-label="Schliessen"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <div className="flex flex-col items-center text-center">
+            <div className="w-14 h-14 rounded-2xl bg-brand-500/10 flex items-center justify-center mb-4">
+              <Download className="w-7 h-7 text-brand-600" aria-hidden />
+            </div>
+            <h2 id="pwa-install-title" className="text-lg font-semibold text-foreground mb-1">
+              App installieren
+            </h2>
+            <p id="pwa-install-desc" className="text-sm text-muted-foreground mb-6">
+              {mode === "ios"
+                ? "Auf iPhone: Tippen Sie auf das Teilen-Symbol und wählen Sie „Zum Home-Bildschirm“, um die App zu installieren."
+                : isStoreRoute
+                  ? "Installieren Sie die App, um schnell zu scannen und zu bestellen."
+                  : "Für die beste Erfahrung installieren Sie die App auf Ihrem Gerät."}
             </p>
-            <div className="flex items-center gap-2 mt-3">
+            <div className="flex flex-col gap-3 w-full">
               <button
                 type="button"
-                onClick={handleInstall}
-                className="px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-medium rounded-xl text-sm transition-colors active:scale-[0.98]"
+                onClick={mode === "ios" ? handleDismiss : handleInstall}
+                className="w-full py-3.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-colors active:scale-[0.98] touch-target"
               >
-                Installieren
+                {mode === "ios" ? "Verstanden" : "Installieren"}
               </button>
               <button
                 type="button"
                 onClick={handleDismiss}
-                className="px-4 py-2.5 text-gray-600 hover:bg-gray-100 font-medium rounded-xl text-sm transition-colors"
+                className="w-full py-3 text-gray-600 hover:bg-gray-100 font-medium rounded-xl transition-colors touch-target"
               >
                 Später
               </button>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={handleDismiss}
-            className="flex-shrink-0 p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
-            aria-label="Schliessen"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
       </div>
     </div>

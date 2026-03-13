@@ -1,49 +1,99 @@
-# Vendly Checkout - Setup
+# Setup — Cómo correr el proyecto
 
-## Backend
+## Requisitos
+
+- Node.js >= 18
+- npm o yarn
+- Cuenta en Supabase (base de datos + auth)
+- Git
+
+---
+
+## 1. Backend
 
 ```bash
 cd Backend
 npm install
-node scripts/run_multi_tenant_migration.js
-npm run dev
 ```
 
-**Variables de entorno (.env):**
-- SUPABASE_URL
-- SUPABASE_ANON_KEY
-- SUPABASE_SERVICE_ROLE_KEY
-- DATABASE_URL
-- FRONTEND_URL
-- PORT
+### Variables de entorno — `/Backend/.env`
 
-## Frontend
+```env
+# Supabase
+SUPABASE_URL=https://xxxx.supabase.co
+SUPABASE_ANON_KEY=eyJhbG...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbG...
+
+# Base de datos directa
+DATABASE_URL=postgresql://user:password@host:5432/database
+
+# Servidor
+PORT=5000
+NODE_ENV=development
+
+# Frontend (para CORS)
+FRONTEND_URL=http://localhost:3000
+
+# Super Admin (para seed inicial)
+SUPER_ADMIN_EMAIL=admin@vendly.co
+SUPER_ADMIN_PASSWORD=SuperAdmin123!
+```
+
+### Iniciar backend
+
+```bash
+npm run dev      # desarrollo (nodemon)
+npm start        # producción
+```
+
+El backend corre en `http://localhost:5000`.
+Swagger disponible en `http://localhost:5000/api-docs`.
+
+---
+
+## 2. Frontend
 
 ```bash
 cd Frontend
 npm install
-npm run dev
 ```
 
-**Variables de entorno (.env.local):**
-- NEXT_PUBLIC_SUPABASE_URL
-- NEXT_PUBLIC_SUPABASE_ANON_KEY
-- NEXT_PUBLIC_GOOGLE_CLIENT_ID
+### Variables de entorno — `/Frontend/.env.local`
 
-## Google OAuth
+```env
+# Supabase (cliente)
+NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbG...
 
-1. Google Cloud Console → Crear proyecto
-2. OAuth 2.0 Client ID → Web application
-3. Authorized redirect URIs:
-   - `http://localhost:3000/auth/callback`
-   - `https://[PROJECT].supabase.co/auth/v1/callback`
-4. Copiar Client ID → Supabase Dashboard
-5. Habilitar Google provider en Supabase
+# Backend API
+NEXT_PUBLIC_API_URL=http://localhost:5000
+```
 
-## Sistema Multi-Tenant
+### Iniciar frontend
 
-- Cada admin → 1 tienda automática
-- Cada tienda → QR único
-- Productos filtrados por ownerId
-- Carritos independientes por tienda
+```bash
+npm run dev      # desarrollo
+npm run build    # compilar producción
+npm start        # servir compilado
+```
 
+El frontend corre en `http://localhost:3000`.
+
+---
+
+## 3. Base de datos
+
+El esquema de base de datos está en Supabase. Para inicializar:
+
+```bash
+cd Backend
+node scripts/setup_database.js     # crea tablas
+node scripts/seed_realistic_products.js  # datos de prueba (opcional)
+```
+
+---
+
+## Deploy
+
+- **Backend:** Fly.io — configuración en `Backend/fly.toml` e instrucciones en `Backend/DEPLOY.md`
+- **Frontend:** Vercel o cualquier plataforma que soporte Next.js
