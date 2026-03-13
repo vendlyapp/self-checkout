@@ -6,6 +6,7 @@ import { UserProvider } from "@/lib/contexts/UserContext";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import { QueryProvider } from "@/lib/providers/QueryProvider";
 import { SessionTimeoutManager } from "@/components/auth/SessionTimeoutManager";
+import { PWAInstallBanner } from "@/components/pwa/PWAInstallBanner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -51,6 +52,7 @@ export default function RootLayout({
           <AuthProvider>
             <UserProvider>
               <SessionTimeoutManager />
+              <PWAInstallBanner />
               {/* Container principal responsive - fondo verde visible en safe areas de iPhone */}
               <div className="h-responsive w-full relative bg-[#25D076] overflow-hidden">
                 {/* Contenedor interno responsive - fondo claro para el contenido con padding para safe areas */}

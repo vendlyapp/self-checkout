@@ -133,20 +133,6 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
     };
   }, [hasChanges]);
 
-  // Exponer handleSave en window para que el footer "Änderungen speichern" lo invoque (hideSubmitButton oculta el botón del form)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const w = window as unknown as { saveProduct?: () => Promise<void> };
-      w.saveProduct = handleSave;
-    }
-    return () => {
-      if (typeof window !== 'undefined') {
-        const w = window as unknown as { saveProduct?: () => Promise<void> };
-        if (w.saveProduct === handleSave) w.saveProduct = undefined;
-      }
-    };
-  }, [handleSave]);
-
   // Cargar datos del producto cuando esté disponible
   useEffect(() => {
     if (existingProduct && backendCategories.length > 0) {
@@ -836,6 +822,20 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
     variants,
     allProducts,
   ]);
+
+  // Exponer handleSave en window para que el footer "Änderungen speichern" lo invoque (hideSubmitButton oculta el botón del form)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const w = window as unknown as { saveProduct?: () => Promise<void> };
+      w.saveProduct = handleSave;
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        const w = window as unknown as { saveProduct?: () => Promise<void> };
+        if (w.saveProduct === handleSave) w.saveProduct = undefined;
+      }
+    };
+  }, [handleSave]);
 
   const handleModalClose = useCallback(() => {
     setShowSuccessModal(false);
