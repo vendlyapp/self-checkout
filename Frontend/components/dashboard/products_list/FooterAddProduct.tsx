@@ -69,10 +69,11 @@ const FooterAddProduct: React.FC<FooterAddProductProps> = ({
   }, [isAddProductPage]);
 
   // Determinar si el botón debe estar deshabilitado
-  // En modo edición: siempre habilitado (el botón del formulario maneja la lógica de cambios)
+  // En modo edición: deshabilitar si no hay cambios (hasChanges === false)
   // En modo creación: deshabilitar si el formulario no es válido
-  const isDisabled = isLoading || 
-    (isAddProductPage && hasChanges === undefined && !formValid); // Modo creación: deshabilitar si el formulario no es válido
+  const isDisabled = isLoading ||
+    (hasChanges === false) ||
+    (isAddProductPage && hasChanges === undefined && !formValid);
 
   // Determinar el icono según el contexto
   const getIcon = () => {

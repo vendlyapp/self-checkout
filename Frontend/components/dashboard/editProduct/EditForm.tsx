@@ -117,7 +117,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
     existingProduct,
   ]);
   
-  // Exponer hasChanges al window para que AdminLayout pueda acceder
+  // Exponer hasChanges al window para que AdminLayout/FooterAddProduct deshabiliten el botón
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const windowWithFormState = window as { __productFormHasChanges?: boolean; __productFormIsEditMode?: boolean };
@@ -132,6 +132,20 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
       }
     };
   }, [hasChanges]);
+
+  // Exponer handleSave en window para que el footer "Änderungen speichern" lo invoque (hideSubmitButton oculta el botón del form)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const w = window as unknown as { saveProduct?: () => Promise<void> };
+      w.saveProduct = handleSave;
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        const w = window as unknown as { saveProduct?: () => Promise<void> };
+        if (w.saveProduct === handleSave) w.saveProduct = undefined;
+      }
+    };
+  }, [handleSave]);
 
   // Cargar datos del producto cuando esté disponible
   useEffect(() => {

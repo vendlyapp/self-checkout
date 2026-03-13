@@ -275,18 +275,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     // En desktop y tablet no hay toggle - la sidebar siempre está visible
   };
 
-  // Manejar el botón de agregar producto
+  // Manejar el botón de agregar producto / guardar cambios
   const handleAddProduct = () => {
     if (isEditMode) {
-      // Si estamos en modo edición, buscar y hacer clic en el botón de guardar del formulario
-      // Buscar cualquier botón que contenga "speichern" o "Änderungen"
-      const buttons = document.querySelectorAll("button");
-      const saveBtn = Array.from(buttons).find((btn) => {
-        const text = btn.textContent?.toLowerCase() || "";
-        return (text.includes("speichern") || text.includes("änderungen")) && !btn.disabled;
-      });
-      if (saveBtn) {
-        (saveBtn as HTMLButtonElement).click();
+      if (typeof window !== "undefined") {
+        const w = window as unknown as { saveProduct?: () => void | Promise<void> };
+        if (w.saveProduct) w.saveProduct();
       }
     } else if (pathname === "/products_list/add_product") {
       // Si estamos en la página de agregar producto, ejecutar la función de guardado
