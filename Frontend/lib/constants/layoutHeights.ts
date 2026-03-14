@@ -31,6 +31,9 @@ export const FILTER_SLIDER_BAR_HEIGHT_PX = 60;
 /** Padding-top del main cuando solo hay HeaderNav (add_product, view, invoice, order, store/sales) */
 export const MAIN_PT_HEADER_NAV_ONLY_PX = TOP_HEADER_NAV_PX + HEADER_NAV_BAR_HEIGHT_PX;
 
+/** Padding-top del main en secciones /store (discounts, settings, notifications, etc.) — menor que MAIN_PT_HEADER_NAV_ONLY_PX */
+export const MAIN_PT_STORE_SECTION_PX = 80;
+
 /** Espacio entre la segunda barra de filtros y el inicio del contenido — menor = lista más arriba */
 export const MAIN_GAP_BELOW_FILTER_BARS_PX = -50;
 

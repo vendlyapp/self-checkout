@@ -43,10 +43,12 @@ import { useChargeContext } from '@/app/charge/contexts';
 import { useProductsList } from '@/components/dashboard/products_list/ProductsListContext';
 import LoadingProductsModal from "@/components/dashboard/home/LoadingProductsModal";
 import { useLoadingProductsModal } from "@/lib/contexts/LoadingProductsModalContext";
+import { useStoreSettingsHeader } from "@/lib/contexts/StoreSettingsHeaderContext";
 import {
   TOP_HEADER_NAV_PX,
   HEADER_NAV_BAR_HEIGHT_PX,
   MAIN_PT_HEADER_NAV_ONLY_PX,
+  MAIN_PT_STORE_SECTION_PX,
   MAIN_PT_WITH_FILTER_BARS_PX,
   BESTSELLER_TOP_OFFSET_PX,
 } from "@/lib/constants/layoutHeights";
@@ -70,6 +72,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const storeSettingsHeader = useStoreSettingsHeader();
 
   // Determinar si estamos en la ruta de productos
   const isProductsListRoute = pathname?.startsWith('/products_list');
@@ -169,7 +172,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   // Función para obtener el título del HeaderNav según la ruta
   const getHeaderNavTitleForStoreSales = (): string | null => {
     if (isPaymentMethodsRoute) return 'Zahlungsarten verwalten';
-    if (isSettingsRoute) return 'Mein Geschäft';
+    if (isSettingsRoute) return 'Einstellungen';
     if (isDiscountsRoute) return 'Rabatte & Codes';
     if (isQrBarcodesRoute) return 'QR- & Barcodes';
     if (isMyQRRoute) return 'Mein QR-Code';
@@ -472,7 +475,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <HeaderNav 
             title={headerNavTitleForStoreSales || ''} 
             closeDestination={getHeaderNavCloseDestination()}
-            isFixed={true} 
+            isFixed={true}
+            rightContent={isSettingsRoute ? storeSettingsHeader?.rightContent ?? undefined : undefined}
           />
         )}
 
@@ -490,12 +494,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             isProductsListAddProductPage ||
             isProductsListViewProductRoute ||
             headerNavTitleForStoreSales !== null;
+          const isStoreSectionRoute = pathname?.startsWith('/store/') && headerNavTitleForStoreSales !== null;
           // Bestseller tiene su propio FilterSlider sticky — solo necesita el alto del HeaderNav (60px),
           // no el MAIN_PT_HEADER_NAV_ONLY_PX completo (140px) que incluye el alto del ResponsiveHeader ya en flujo.
           const mainPtPx = needsFilterBarsPt
             ? MAIN_PT_WITH_FILTER_BARS_PX
             : isBestsellerRoute
             ? BESTSELLER_TOP_OFFSET_PX
+            : isStoreSectionRoute
+            ? MAIN_PT_STORE_SECTION_PX
             : needsHeaderNavOnlyPt
             ? MAIN_PT_HEADER_NAV_ONLY_PX
             : null;

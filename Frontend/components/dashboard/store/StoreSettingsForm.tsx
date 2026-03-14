@@ -9,6 +9,7 @@ import { SwissAddressInput } from '@/components/ui/SwissAddressInput'
 import { useResponsive } from '@/hooks'
 import type { StoreData } from '@/hooks/queries/useMyStore'
 import { devError } from '@/lib/utils/logger'
+import { useStoreSettingsHeader } from '@/lib/contexts/StoreSettingsHeaderContext'
 
 interface StoreSettingsFormProps {
   onUpdate?: (store: StoreData) => void
@@ -28,6 +29,13 @@ interface FormFieldProps {
   editing: boolean
 }
 
+/** Sección agrupada estilo iOS */
+const SectionTitle = ({ children }: { children: React.ReactNode }) => (
+  <h2 className="px-1 text-[13px] font-semibold uppercase tracking-wide text-gray-500 mb-2">
+    {children}
+  </h2>
+)
+
 const FormField = ({
   icon: Icon,
   label,
@@ -43,37 +51,36 @@ const FormField = ({
   const InputComponent = multiline ? 'textarea' : 'input'
   const hasValue = value.trim().length > 0
   return (
-    <div className="bg-white rounded-2xl overflow-hidden border border-gray-200/60 shadow-sm">
-      <div className="px-4 py-3 border-b border-gray-100/50">
-        <label className="flex items-center gap-2.5 text-sm font-semibold text-gray-700">
-          <Icon className="w-4 h-4 text-brand-500" />
-          <span>{label}</span>
-          {required && <span className="text-red-500 text-xs ml-1">*</span>}
-        </label>
+    <div className="flex items-center gap-3 py-3.5 px-4 min-h-[52px] border-b border-gray-100 last:border-0">
+      <Icon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+      <div className="flex-1 min-w-0">
+        <label className="block text-[13px] font-medium text-gray-500 mb-0.5">{label}</label>
+        {editing ? (
+          <InputComponent
+            type={type}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            required={required}
+            rows={multiline ? rows : undefined}
+            className="w-full text-[17px] text-gray-900 placeholder:text-gray-400 bg-transparent focus:outline-none py-0.5 -ml-1 min-h-[2.25rem]"
+          />
+        ) : (
+          <div className="min-h-[2.25rem] flex items-center py-0.5 -ml-1">
+            <p className={`text-[17px] ${hasValue ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
+              {value || '—'}
+            </p>
+          </div>
+        )}
       </div>
-      {editing ? (
-        <InputComponent
-          type={type}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          required={required}
-          rows={multiline ? rows : undefined}
-          className="w-full px-4 py-3.5 text-base text-gray-900 placeholder:text-gray-400 bg-transparent focus:outline-none"
-        />
-      ) : (
-        <div className="px-4 py-3.5 min-h-[3rem] flex items-center">
-          <p className={`text-base ${hasValue ? 'text-gray-900 font-medium' : 'text-gray-400 italic'}`}>
-            {value || 'Nicht angegeben'}
-          </p>
-        </div>
-      )}
+      {required && <span className="text-red-500 text-xs flex-shrink-0">*</span>}
     </div>
   )
 }
 
 export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) {
   const { isMobile } = useResponsive()
+  const setHeaderRightContent = useStoreSettingsHeader()?.setRightContent
   const [store, setStore] = useState<StoreData | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -295,6 +302,43 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
     setEditing(false)
   }
 
+  // Inyectar botones en el HeaderNav (móvil) — mismo estilo que el header
+  useEffect(() => {
+    if (!setHeaderRightContent || !isMobile || !store) return
+    if (!editing) {
+      setHeaderRightContent(
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="min-h-[44px] px-3 py-2 rounded-xl bg-brand-500 text-white text-[15px] font-semibold active:scale-[0.98] touch-manipulation"
+        >
+          Bearbeiten
+        </button>
+      )
+    } else {
+      setHeaderRightContent(
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="min-h-[44px] px-3 py-2 rounded-xl border border-gray-200 text-gray-700 text-[15px] font-semibold active:scale-[0.98] touch-manipulation bg-white"
+          >
+            Abbrechen
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving || !name.trim()}
+            className="min-h-[44px] px-3 py-2 rounded-xl bg-brand-500 text-white text-[15px] font-semibold disabled:opacity-50 active:scale-[0.98] touch-manipulation"
+          >
+            {saving ? <Loader size="sm" /> : 'Speichern'}
+          </button>
+        </div>
+      )
+    }
+    return () => { setHeaderRightContent(null) }
+  }, [isMobile, store, editing, saving, name, setHeaderRightContent])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -320,68 +364,56 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
   }
 
   return (
-    <div className="w-full space-y-4">
-      {/* Header integrado estilo iOS */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className={`font-bold text-gray-900 tracking-tight ${isMobile ? 'text-2xl' : 'text-3xl'}`}>
-            Geschäftseinstellungen
+    <div className="w-full space-y-8">
+      {/* Título: en móvil el header nav ya dice "Einstellungen", aquí solo subtítulo */}
+      <div className={isMobile ? 'mb-1' : 'mb-2'}>
+        {!isMobile && (
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+            Einstellungen
           </h1>
-          <p className={`text-gray-500 mt-1 ${isMobile ? 'text-sm' : 'text-base'}`}>
-            Personalisieren Sie die Informationen Ihres Geschäfts
-          </p>
-        </div>
-        
-        {!editing ? (
-          <button
-            onClick={() => setEditing(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-brand-500 text-white rounded-xl hover:bg-brand-600 active:scale-95 transition-all duration-200 font-semibold text-sm shadow-lg shadow-brand-500/25"
-          >
-            <Edit3 className="w-4 h-4" />
-            <span className="hidden sm:inline">Bearbeiten</span>
-          </button>
-        ) : (
-          <div className="flex gap-2">
-            <button
-              onClick={handleCancel}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 active:scale-95 transition-all duration-200 font-semibold text-sm"
-            >
-              <X className="w-4 h-4" />
-              <span className="hidden sm:inline">Abbrechen</span>
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving || !name.trim()}
-              className="flex items-center gap-2 px-4 py-2.5 bg-brand-500 text-white rounded-xl hover:bg-brand-600 active:scale-95 transition-all duration-200 font-semibold text-sm shadow-lg shadow-brand-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving ? (
-                <>
-                  <Loader size="sm" />
-                  <span className="hidden sm:inline">Speichern...</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span className="hidden sm:inline">Speichern</span>
-                </>
-              )}
-            </button>
-          </div>
         )}
+        <p className={`text-gray-500 ${isMobile ? 'text-[15px]' : 'mt-1 text-base'}`}>
+          Geschäftsinformationen anpassen
+        </p>
       </div>
 
-      {/* Logo Section */}
-      <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-100/50">
-          <div className="flex items-center gap-2.5">
-            <ImageIcon className="w-4 h-4 text-brand-500" />
-            <span className="text-sm font-semibold text-gray-700">Geschäftslogo</span>
-          </div>
-          <p className="text-xs text-gray-500 mt-1.5 ml-6">
-            Empfohlene Abmessungen: <span className="font-semibold text-brand-600">320x180px</span> (16:9)
-          </p>
+      {/* Barra de acciones: en desktop arriba a la derecha, en mobile sticky abajo */}
+      {!isMobile && (
+        <div className="flex justify-end gap-2 -mt-4">
+          {!editing ? (
+            <button
+              onClick={() => setEditing(true)}
+              className="flex items-center gap-2 min-h-[44px] px-5 py-2.5 bg-brand-500 text-white rounded-xl hover:bg-brand-600 active:scale-[0.98] font-semibold text-[15px] shadow-lg shadow-brand-500/20"
+            >
+              <Edit3 className="w-4 h-4" />
+              Bearbeiten
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={handleCancel}
+                className="flex items-center gap-2 min-h-[44px] px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold text-[15px]"
+              >
+                <X className="w-4 h-4" />
+                Abbrechen
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving || !name.trim()}
+                className="flex items-center gap-2 min-h-[44px] px-5 py-2.5 bg-brand-500 text-white rounded-xl hover:bg-brand-600 disabled:opacity-50 font-semibold text-[15px] shadow-lg shadow-brand-500/20"
+              >
+                {saving ? <Loader size="sm" /> : <CheckCircle2 className="w-4 h-4" />}
+                {saving ? 'Speichern…' : 'Speichern'}
+              </button>
+            </>
+          )}
         </div>
-        
+      )}
+
+      {/* Sección: Logo */}
+      <div>
+        <SectionTitle>Geschäft</SectionTitle>
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="p-4">
           {editing ? (
             <div className="space-y-4">
@@ -446,192 +478,170 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
                 className="hidden"
               />
               
-              <div className="pt-3 border-t border-gray-100">
-                <p className="text-xs text-gray-600 mb-2 font-medium">Oder Bild-URL eingeben:</p>
-                <input
-                  type="url"
-                  value={useDefaultLogo ? '' : logo}
-                  onChange={(e) => {
-                    setLogo(e.target.value)
-                    setLogoPreview(e.target.value)
-                    setUseDefaultLogo(false)
-                  }}
-                  placeholder="https://example.com/logo.png"
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm"
-                  disabled={useDefaultLogo}
-                />
-              </div>
+              <p className="text-[12px] text-gray-500 mt-3">Empfohlen: 320×180 px (16:9).</p>
             </div>
           ) : (
-            <div className="flex items-center gap-4">
-              {store.logo ? (
-                <div className="w-28 h-18 sm:w-36 sm:h-22 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
-                  <img
-                    src={store.logo}
-                    alt="Store logo"
-                    className="max-w-full max-h-full object-contain p-2"
-                  />
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                {store.logo ? (
+                  <div className="w-40 h-24 sm:w-48 sm:h-28 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <img
+                      src={store.logo}
+                      alt="Store logo"
+                      className="max-w-full max-h-full object-contain p-2"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-40 h-24 sm:w-48 sm:h-28 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center flex-shrink-0">
+                    <Store className="w-10 h-10 text-gray-400" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-medium text-gray-500 mb-0.5">Geschäftslogo</p>
+                  <p className="text-[17px] text-gray-900 font-medium">
+                    {store.logo ? 'Benutzerdefiniertes Logo' : 'Standard-Icon'}
+                  </p>
                 </div>
-              ) : (
-                <div className="w-28 h-18 sm:w-36 sm:h-22 bg-gray-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Store className="w-10 h-10 text-gray-400" />
-                </div>
-              )}
-              <div>
-                <p className="text-base font-semibold text-gray-900">
-                  {store.logo ? 'Benutzerdefiniertes Logo' : 'Standard-Icon'}
-                </p>
-                <p className="text-sm text-gray-500 mt-0.5">
-                  {store.logo ? 'Ihr Logo ist konfiguriert' : 'Kein benutzerdefiniertes Logo'}
-                </p>
               </div>
             </div>
           )}
         </div>
+        </div>
       </div>
 
-      {/* Form Fields */}
-      <div className="space-y-3">
-        <FormField
-          icon={Store}
-          label="Geschäftsname"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="z.B. Heinigers Hofladen"
-          required
-          editing={editing}
-        />
-
-        <div className="bg-white rounded-2xl overflow-hidden border border-gray-200/60 shadow-sm">
-          <div className="px-4 py-3 border-b border-gray-100/50">
-            <label className="flex items-center gap-2.5 text-sm font-semibold text-gray-700">
-              <MapPin className="w-4 h-4 text-brand-500" />
-              <span>Adresse</span>
-            </label>
-          </div>
-          <div className="px-4 py-3.5">
-            {editing ? (
-              <SwissAddressInput
-                value={address}
-                onChange={setAddress}
-                placeholderStrasse="Strasse"
-                placeholderNr="Nr."
-                placeholderPlz="PLZ"
-                placeholderOrt="Ort"
-              />
-            ) : (
-              <p className={`text-base ${address.trim() ? 'text-gray-900 font-medium' : 'text-gray-400 italic'}`}>
-                {address || 'Nicht angegeben'}
-              </p>
-            )}
+      {/* Sección: Angaben (Name + Adresse) */}
+      <div>
+        <SectionTitle>Angaben</SectionTitle>
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <FormField
+            icon={Store}
+            label="Geschäftsname"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="z.B. Heinigers Hofladen"
+            required
+            editing={editing}
+          />
+          <div className="flex items-start gap-3 py-3.5 px-4 border-b border-gray-100 last:border-0 min-h-[52px]">
+            <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <label className="block text-[13px] font-medium text-gray-500 mb-0.5">Adresse</label>
+              {editing ? (
+                <SwissAddressInput
+                  value={address}
+                  onChange={setAddress}
+                  placeholderStrasse="Strasse"
+                  placeholderNr="Nr."
+                  placeholderPlz="PLZ"
+                  placeholderOrt="Ort"
+                />
+              ) : (
+                <div className="min-h-[2.25rem] flex items-center py-0.5">
+                  <p className={`text-[17px] ${address.trim() ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
+                    {address || '—'}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Sección: Kontakt */}
+      <div>
+        <SectionTitle>Kontakt</SectionTitle>
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           <FormField
             icon={Phone}
             label="Telefon"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder="z.B. +41 44 123 45 67"
+            placeholder="+41 44 123 45 67"
             type="tel"
             editing={editing}
           />
-
           <FormField
             icon={Mail}
-            label="Email"
+            label="E-Mail"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="z.B. info@mein-geschäft.ch"
+            placeholder="info@beispiel.ch"
             type="email"
             editing={editing}
           />
         </div>
-
-        <FormField
-          icon={FileText}
-          label="MwSt-Nummer"
-          value={vatNumber}
-          onChange={(e) => setVatNumber(e.target.value)}
-          placeholder="z.B. CHE-123.456.789 MWST"
-          editing={editing}
-        />
-
-        {/* Descripción */}
-        <div className="bg-white rounded-2xl overflow-hidden border border-gray-200/60 shadow-sm">
-          <div className="px-4 py-3 border-b border-gray-100/50">
-            <label className="flex items-center gap-2.5 text-sm font-semibold text-gray-700">
-              <FileText className="w-4 h-4 text-brand-500" />
-              <span>Beschreibung</span>
-            </label>
-          </div>
-          {editing ? (
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Beschreiben Sie Ihr Geschäft..."
-              rows={4}
-              className="w-full px-4 py-3.5 text-base text-gray-900 placeholder:text-gray-400 bg-transparent focus:outline-none resize-none"
-            />
-          ) : (
-            <div className="px-4 py-3.5 min-h-[5rem] flex items-start">
-              <p className={`text-base whitespace-pre-wrap ${description.trim() ? 'text-gray-900 font-medium' : 'text-gray-400 italic'}`}>
-                {description || 'Nicht angegeben'}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Store URL (slug): editable only on first setup */}
-        {(() => {
-          const isFirstTimeSetup = store.settingsCompletedAt == null || store.settingsCompletedAt === ''
-          const displaySlug = (editing && isFirstTimeSetup ? slug : store.slug) || ''
-          return (
-            <div className="bg-white rounded-2xl overflow-hidden border border-gray-200/60 shadow-sm">
-              <div className="px-4 py-3 border-b border-gray-100/50">
-                <label className="flex items-center gap-2.5 text-sm font-semibold text-gray-700">
-                  <Store className="w-4 h-4 text-brand-500" />
-                  <span>URL Ihrer Tienda</span>
-                  {!isFirstTimeSetup && (
-                    <span className="text-xs text-gray-400 font-normal ml-auto">(Nur-Lesen)</span>
-                  )}
-                </label>
-              </div>
-              <div className="px-4 py-3.5">
-                {editing && isFirstTimeSetup ? (
-                  <>
-                    <input
-                      type="text"
-                      value={slug}
-                      onChange={(e) => setSlug(e.target.value)}
-                      placeholder={store.slug || 'z.B. mein-geschäft'}
-                      className="w-full px-4 py-3.5 text-base text-gray-900 placeholder:text-gray-400 bg-transparent border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent font-mono"
-                      aria-label="Shop-URL anpassen"
-                    />
-                    <p className="text-xs text-gray-500 mt-2 flex items-center gap-1.5">
-                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                      Nur bei der ersten Einrichtung änderbar. Leer lassen für die automatische URL.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-sm text-gray-800 font-mono break-all bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
-                      {displaySlug}
-                    </p>
-                    {!isFirstTimeSetup && (
-                      <p className="text-xs text-gray-500 mt-2 flex items-center gap-1.5">
-                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                        Um die URL zu ändern, kontaktieren Sie den Super-Admin.
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          )
-        })()}
       </div>
+
+      {/* Sección: Sonstiges */}
+      <div>
+        <SectionTitle>Sonstiges</SectionTitle>
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <FormField
+            icon={FileText}
+            label="MwSt-Nummer"
+            value={vatNumber}
+            onChange={(e) => setVatNumber(e.target.value)}
+            placeholder="CHE-123.456.789 MWST"
+            editing={editing}
+          />
+          <div className="flex items-start gap-3 py-3.5 px-4 border-b border-gray-100">
+            <FileText className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <label className="block text-[13px] font-medium text-gray-500 mb-0.5">Beschreibung</label>
+              {editing ? (
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Kurze Beschreibung Ihres Geschäfts…"
+                  rows={3}
+                  className="w-full text-[17px] text-gray-900 placeholder:text-gray-400 bg-transparent focus:outline-none resize-none py-0.5 -ml-1 min-h-[4.5rem]"
+                />
+              ) : (
+                <div className="min-h-[4.5rem] py-0.5 -ml-1 flex items-start">
+                  <p className={`text-[17px] whitespace-pre-wrap ${description.trim() ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
+                    {description || '—'}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+          {(() => {
+            const isFirstTimeSetup = store.settingsCompletedAt == null || store.settingsCompletedAt === ''
+            const displaySlug = (editing && isFirstTimeSetup ? slug : store.slug) || ''
+            return (
+              <div className="flex items-center gap-3 py-3.5 px-4 min-h-[52px]">
+                <Store className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <label className="block text-[13px] font-medium text-gray-500 mb-0.5">
+                    Shop-URL {!isFirstTimeSetup && '(nur lesen)'}
+                  </label>
+                  {editing && isFirstTimeSetup ? (
+                    <>
+                      <input
+                        type="text"
+                        value={slug}
+                        onChange={(e) => setSlug(e.target.value)}
+                        placeholder={store.slug || 'mein-geschäft'}
+                        className="w-full text-[17px] text-gray-900 placeholder:text-gray-400 bg-transparent focus:outline-none font-mono py-0.5 -ml-1 min-h-[2.25rem]"
+                        aria-label="Shop-URL"
+                      />
+                      <p className="text-[12px] text-gray-500 mt-1.5 flex items-center gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                        Nur bei der ersten Einrichtung änderbar.
+                      </p>
+                    </>
+                  ) : (
+                    <div className="min-h-[2.25rem] flex items-center py-0.5 -ml-1">
+                      <p className="text-[17px] font-mono text-gray-900 break-all">{displaySlug}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })()}
+        </div>
+      </div>
+
     </div>
   )
 }

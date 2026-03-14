@@ -55,6 +55,7 @@ export interface Product {
   notes?: string // Notas adicionales
   parentId?: string // ID del producto padre (para variantes)
   variants?: Product[] // Variantes del producto (si es producto padre)
+  unit?: string // Unidad de venta (ej. "kg", "Stück") para variantes
 }
 
 // Tipo para actualizar productos (similar a Product pero todos los campos opcionales)

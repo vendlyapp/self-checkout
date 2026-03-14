@@ -38,47 +38,56 @@ export default function DiscountsPage() {
     })
   }
 
+  const createButton = (
+    <button
+      onClick={handleCreateDiscount}
+      className="w-full bg-primary text-primary-foreground rounded-xl py-4 px-6 font-semibold flex items-center justify-center gap-2 shadow-md hover:bg-primary/90 transition-ios active:scale-[0.98]"
+      aria-label="Neuen Rabattcode erstellen"
+    >
+      <Plus className="w-5 h-5" />
+      <span>Neuen Rabattcode erstellen</span>
+    </button>
+  )
+
+  const createButtonDesktop = (
+    <button
+      onClick={handleCreateDiscount}
+      className="w-full max-w-md bg-primary text-primary-foreground rounded-xl py-3 md:py-3 lg:py-4 px-5 md:px-6 font-semibold flex items-center justify-center gap-2 shadow-md hover:bg-primary/90 transition-ios active:scale-[0.98] text-sm md:text-sm lg:text-base"
+      aria-label="Neuen Rabattcode erstellen"
+    >
+      <Plus className="w-5 h-5" />
+      <span>Neuen Rabattcode erstellen</span>
+    </button>
+  )
+
   return (
-    <div className="w-full min-w-0 h-full overflow-auto gpu-accelerated">
-      {/* Móvil: botón full width + lista */}
+    <div className="w-full min-w-0 flex flex-col h-full min-h-0 gpu-accelerated">
       {isMobile && (
-        <div className="flex flex-col h-full min-w-0">
-          <div className="flex-1 overflow-y-auto p-4 space-y-6">
-            <button
-              onClick={handleCreateDiscount}
-              className="w-full bg-primary text-primary-foreground rounded-xl py-4 px-6 font-semibold flex items-center justify-center gap-2 shadow-md hover:bg-primary/90 transition-ios active:scale-[0.98]"
-              aria-label="Neuen Rabattcode erstellen"
-            >
-              <Plus className="w-5 h-5" />
-              <span>Neuen Rabattcode erstellen</span>
-            </button>
-            <DiscountsList />
-          </div>
+        <div className="flex-1 min-h-0 min-w-0 flex flex-col">
+          <DiscountsList
+            stickyPrefix={createButton}
+            scrollAreaClassName="safe-area-bottom pb-28"
+          />
         </div>
       )}
 
-      {/* Tablet + Desktop: header, botón y lista con buen espaciado */}
       {!isMobile && (
-        <div className="p-4 md:px-6 md:pt-10 md:pb-6 lg:p-8 space-y-5 md:space-y-6 lg:space-y-8 max-w-6xl mx-auto min-w-0">
-          <div className="min-w-0">
-            <h1 className="text-xl md:text-xl lg:text-2xl font-bold text-foreground tracking-tight">
-              Rabatte & Codes
-            </h1>
-            <p className="text-muted-foreground mt-1 text-sm md:text-sm lg:text-base">
-              Verwalten Sie Ihre Rabattcodes und Angebote
-            </p>
-          </div>
-
-          <button
-            onClick={handleCreateDiscount}
-            className="w-full max-w-md bg-primary text-primary-foreground rounded-xl py-3 md:py-3 lg:py-4 px-5 md:px-6 font-semibold flex items-center justify-center gap-2 shadow-md hover:bg-primary/90 transition-ios active:scale-[0.98] text-sm md:text-sm lg:text-base"
-            aria-label="Neuen Rabattcode erstellen"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Neuen Rabattcode erstellen</span>
-          </button>
-
-          <DiscountsList />
+        <div className="flex-1 min-h-0 min-w-0 flex flex-col max-w-6xl mx-auto w-full px-4 md:px-6 lg:p-8">
+          <DiscountsList
+            stickyPrefix={
+              <>
+                <div className="min-w-0 mb-2">
+                  <h1 className="text-xl md:text-xl lg:text-2xl font-bold text-foreground tracking-tight">
+                    Rabatte & Codes
+                  </h1>
+                  <p className="text-muted-foreground mt-1 text-sm md:text-sm lg:text-base">
+                    Verwalten Sie Ihre Rabattcodes und Angebote
+                  </p>
+                </div>
+                {createButtonDesktop}
+              </>
+            }
+          />
         </div>
       )}
 

@@ -15,24 +15,6 @@ import { devError, devWarn } from '@/lib/utils/logger';
 import LogoutModal from '@/components/ui/LogoutModal';
 import { useNotifications } from '@/hooks/queries/useNotifications';
 
-function formatNotificationTime(createdAt: string): string {
-  try {
-    const date = new Date(createdAt);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-    if (diffMins < 1) return 'Gerade eben';
-    if (diffMins < 60) return `Vor ${diffMins} Minute${diffMins === 1 ? '' : 'n'}`;
-    if (diffHours < 24) return `Vor ${diffHours} Stunde${diffHours === 1 ? '' : 'n'}`;
-    if (diffDays < 7) return `Vor ${diffDays} Tag${diffDays === 1 ? '' : 'en'}`;
-    return date.toLocaleDateString('de-CH', { day: 'numeric', month: 'short', year: 'numeric' });
-  } catch {
-    return createdAt;
-  }
-}
-
 interface ResponsiveHeaderProps {
   onMenuToggle?: () => void;
   showMenuButton?: boolean;
@@ -54,19 +36,12 @@ export default function ResponsiveHeader({
   const router = useRouter();
   const { getStoreStatus } = useStoreState();
   const { signOut } = useAuth();
-  const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [pressedButton, setPressedButton] = useState<string | null>(null);
 
   const storeStatus = getStoreStatus();
-  const {
-    notifications,
-    unreadCount,
-    hasStore,
-    markAsRead,
-    markAsReadPending,
-  } = useNotifications({ limit: 20 });
+  const { unreadCount } = useNotifications({ limit: 20 });
 
   const handleButtonPress = useCallback((buttonId: string) => {
     setPressedButton(buttonId);
@@ -77,25 +52,17 @@ export default function ResponsiveHeader({
     lightFeedback(e.currentTarget);
   }, []);
 
-  const handleNotificationToggle = useCallback(() => {
-    setShowNotifications(prev => !prev);
-    handleButtonPress('notifications');
-  }, [handleButtonPress]);
-
   const handleClickOutside = useCallback(() => {
-    if (showNotifications) {
-      setShowNotifications(false);
-    }
     if (showUserMenu) {
       setShowUserMenu(false);
     }
-  }, [showNotifications, showUserMenu]);
+  }, [showUserMenu]);
 
 
   return (
     <>
       <LogoutModal isOpen={isLoggingOut} />
-      {(showNotifications || showUserMenu) && (
+      {showUserMenu && (
         <div
           className="fixed inset-0 z-20"
           onClick={handleClickOutside}
@@ -126,28 +93,26 @@ export default function ResponsiveHeader({
             <div className="header-actions">
              
 
-              {/* Notifications Button */}
-              <button
+              {/* Notifications: ir a página de notificaciones */}
+              <Link
+                href="/store/notifications"
                 className={clsx(
-                  "header-action-button rounded-full relative touch-target",
+                  "header-action-button rounded-full relative touch-target flex items-center justify-center",
                   pressedButton === 'notifications' && "button-pressed"
                 )}
-                onClick={(e) => {
-                  handleNotificationToggle();
-                  handleValidInteraction(e);
-                }}
                 onTouchStart={() => handleButtonPress('notifications')}
                 onMouseDown={(e) => {
                   handleButtonPress('notifications');
                   handleValidInteraction(e);
                 }}
-                aria-label={`Benachrichtigungen ${unreadCount > 0 ? `(${unreadCount} ungelesen)` : ''}`}
+                onClick={handleValidInteraction}
+                aria-label={unreadCount > 0 ? `Benachrichtigungen (${unreadCount} ungelesen)` : 'Benachrichtigungen'}
               >
                 <Bell className="header-icon" />
                 {unreadCount > 0 && (
                   <span className="notification-badge" aria-hidden="true" />
                 )}
-              </button>
+              </Link>
 
               {/* Logout Button */}
               <button
@@ -248,27 +213,25 @@ export default function ResponsiveHeader({
                 <span className="truncate max-w-[100px]">{storeStatus.statusText}</span>
               </div>
 
-              <button
+              <Link
+                href="/store/notifications"
                 className={clsx(
                   "p-2 rounded-lg hover:bg-gray-100 transition-colors relative flex-shrink-0",
                   pressedButton === 'notifications' && "scale-95"
                 )}
-                onClick={(e) => {
-                  handleNotificationToggle();
-                  handleValidInteraction(e);
-                }}
                 onTouchStart={() => handleButtonPress('notifications')}
                 onMouseDown={(e) => {
                   handleButtonPress('notifications');
                   handleValidInteraction(e);
                 }}
-                aria-label={`Benachrichtigungen ${unreadCount > 0 ? `(${unreadCount} ungelesen)` : ''}`}
+                onClick={handleValidInteraction}
+                aria-label={unreadCount > 0 ? `Benachrichtigungen (${unreadCount} ungelesen)` : 'Benachrichtigungen'}
               >
                 <Bell className="w-5 h-5 text-gray-600" />
                 {unreadCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full" aria-hidden />
                 )}
-              </button>
+              </Link>
 
               <button
                 className={clsx(
@@ -325,88 +288,6 @@ export default function ResponsiveHeader({
           </div>
         )}
 
-        {/* Notifications Dropdown */}
-        {showNotifications && (
-          <div className={clsx(
-            "absolute top-full right-4 z-30 bg-white rounded-xl shadow-lg border border-gray-100",
-            isMobile ? "w-80" : "w-96"
-          )}>
-            <div className="p-4 border-b border-gray-100">
-              <h3 className="text-sm font-semibold text-gray-900">
-                Benachrichtigungen
-              </h3>
-              {unreadCount > 0 && (
-                <span className="text-xs text-gray-500">
-                  {unreadCount} ungelesen
-                </span>
-              )}
-            </div>
-
-            <div className="max-h-80 overflow-y-auto">
-              {hasStore && notifications.map((notification) => (
-                <button
-                  key={notification.id}
-                  type="button"
-                  className={clsx(
-                    "w-full text-left p-4 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0",
-                    !notification.read && "bg-brand-50/50"
-                  )}
-                  onClick={async () => {
-                    if (!notification.read) {
-                      try {
-                        await markAsRead(notification.id);
-                      } catch {
-                        // ignore
-                      }
-                    }
-                    setShowNotifications(false);
-                    const orderId = notification.payload?.orderId;
-                    if (orderId) {
-                      router.push(`/sales/orders/${orderId}`);
-                    }
-                  }}
-                  disabled={markAsReadPending}
-                >
-                  <div className="flex items-start gap-3">
-                    {!notification.read && (
-                      <span className="w-2 h-2 bg-brand-500 rounded-full mt-1.5 flex-shrink-0" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900">
-                        {notification.title}
-                      </p>
-                      <p className="text-xs text-gray-600 mt-0.5">
-                        {notification.message}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {formatNotificationTime(notification.createdAt)}
-                      </p>
-                    </div>
-                  </div>
-                </button>
-              ))}
-
-              {(!hasStore || notifications.length === 0) && (
-                <div className="p-8 text-center">
-                  <p className="text-sm text-gray-500">
-                    Keine neuen Benachrichtigungen
-                  </p>
-                </div>
-              )}
-            </div>
-            {hasStore && (
-              <div className="p-3 border-t border-gray-100">
-                <Link
-                  href="/store/notifications"
-                  onClick={() => setShowNotifications(false)}
-                  className="block text-center text-sm font-medium text-brand-600 hover:text-brand-700"
-                >
-                  Alle anzeigen
-                </Link>
-              </div>
-            )}
-          </div>
-        )}
       </header>
     </>
   );

@@ -1,8 +1,7 @@
 'use client'
 
 import { useResponsive } from '@/hooks'
-import { Bell, CheckCheck, Loader } from 'lucide-react'
-import Link from 'next/link'
+import { Bell, CheckCheck, Loader, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useNotifications } from '@/hooks/queries/useNotifications'
 
@@ -15,9 +14,9 @@ function formatNotificationTime(createdAt: string): string {
     const diffHours = Math.floor(diffMs / 3600000)
     const diffDays = Math.floor(diffMs / 86400000)
     if (diffMins < 1) return 'Gerade eben'
-    if (diffMins < 60) return `Vor ${diffMins} Minute${diffMins === 1 ? '' : 'n'}`
-    if (diffHours < 24) return `Vor ${diffHours} Stunde${diffHours === 1 ? '' : 'n'}`
-    if (diffDays < 7) return `Vor ${diffDays} Tag${diffDays === 1 ? '' : 'en'}`
+    if (diffMins < 60) return `Vor ${diffMins} Min.`
+    if (diffHours < 24) return `Vor ${diffHours} Std.`
+    if (diffDays < 7) return `Vor ${diffDays} T.`
     return date.toLocaleDateString('de-CH', {
       day: 'numeric',
       month: 'short',
@@ -58,131 +57,205 @@ export default function NotificationsPage() {
     }
   }
 
-  const content = (
-    <>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        {unreadCount > 0 && (
-          <button
-            type="button"
-            onClick={() => markAllAsRead()}
-            disabled={markAllAsReadPending}
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-100 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-200 disabled:opacity-50"
-          >
-            {markAllAsReadPending ? (
-              <Loader className="w-4 h-4 animate-spin" />
-            ) : (
-              <CheckCheck className="w-4 h-4" />
-            )}
-            Alle als gelesen markieren
-          </button>
-        )}
-      </div>
-
-      {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader className="w-8 h-8 animate-spin text-brand-600" />
-        </div>
-      )}
-
-      {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-center">
-          <p className="text-sm text-red-700">
-            Fehler beim Laden.{' '}
-            <button
-              type="button"
-              onClick={() => refetch()}
-              className="font-medium underline"
-            >
-              Erneut versuchen
-            </button>
-          </p>
-        </div>
-      )}
-
-      {!isLoading && !error && (!hasStore || notifications.length === 0) && (
-        <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-gray-100">
-            <Bell className="h-8 w-8 text-gray-400" />
-          </div>
-          <p className="text-gray-600">Keine Benachrichtigungen</p>
-          <p className="mt-1 text-sm text-gray-500">
-            Hier erscheinen neue Bestellungen und wichtige Hinweise.
-          </p>
-        </div>
-      )}
-
-      {!isLoading && !error && hasStore && notifications.length > 0 && (
-        <ul className="space-y-2">
-          {notifications.map((notification) => (
-            <li key={notification.id}>
-              <button
-                type="button"
-                onClick={() => handleNotificationClick(notification)}
-                className={`w-full rounded-xl border p-4 text-left transition-colors ${
-                  notification.read
-                    ? 'border-gray-200 bg-white hover:bg-gray-50'
-                    : 'border-brand-200 bg-brand-50/50 hover:bg-brand-50'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  {!notification.read && (
-                    <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-brand-500" />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-900">
-                      {notification.title}
-                    </p>
-                    <p className="mt-0.5 text-xs text-gray-600">
-                      {notification.message}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-400">
-                      {formatNotificationTime(notification.createdAt)}
-                    </p>
-                    {notification.payload?.orderId && (
-                      <p className="mt-2 text-xs font-medium text-brand-600">
-                        Bestellung anzeigen →
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </>
-  )
-
   return (
-    <div className="w-full h-full gpu-accelerated animate-fade-in">
-      {isMobile && (
-        <div className="w-full min-h-screen bg-[#F2EDE8] safe-area-bottom">
-          <div className="mx-auto max-w-full px-4 py-6 pb-32">
-            <div className="mb-6">
-              <h1 className="mb-1.5 text-2xl font-bold tracking-tight text-gray-900">
-                Benachrichtigungen
-              </h1>
-              <p className="text-sm leading-relaxed text-gray-500">
-                System-Alerts und neue Bestellungen
-              </p>
-            </div>
-            {content}
+    <div className="w-full min-h-0 gpu-accelerated animate-fade-in">
+      {isMobile ? (
+        <div className="bg-background-cream safe-area-bottom pb-28">
+          <div className="px-4 pt-4 pb-4 space-y-6">
+            {/* Acción principal: marcar todas como leídas */}
+            {unreadCount > 0 && (
+              <div className="rounded-2xl overflow-hidden bg-white shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => markAllAsRead()}
+                  disabled={markAllAsReadPending}
+                  className="flex w-full min-h-[52px] items-center justify-between gap-3 px-4 py-3.5 active:bg-gray-50/80 touch-manipulation disabled:opacity-50"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-500/15">
+                      {markAllAsReadPending ? (
+                        <Loader className="w-5 h-5 animate-spin text-brand-600" />
+                      ) : (
+                        <CheckCheck className="w-5 h-5 text-brand-600" />
+                      )}
+                    </span>
+                    <span className="text-[17px] font-semibold text-gray-900">
+                      Alle als gelesen markieren
+                    </span>
+                  </span>
+                </button>
+              </div>
+            )}
+
+            {isLoading && (
+              <div className="flex flex-col items-center justify-center py-16">
+                <Loader className="w-10 h-10 animate-spin text-brand-500" />
+                <p className="mt-4 text-[15px] font-medium text-gray-500">Wird geladen…</p>
+              </div>
+            )}
+
+            {error && (
+              <div className="rounded-2xl bg-white p-5 shadow-sm">
+                <p className="text-[15px] text-red-600">
+                  Fehler beim Laden.{' '}
+                  <button
+                    type="button"
+                    onClick={() => refetch()}
+                    className="font-semibold text-brand-600 underline"
+                  >
+                    Erneut versuchen
+                  </button>
+                </p>
+              </div>
+            )}
+
+            {!isLoading && !error && (!hasStore || notifications.length === 0) && (
+              <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+                  <Bell className="h-8 w-8 text-gray-400" />
+                </div>
+                <p className="mt-4 text-[17px] font-semibold text-gray-900">Keine Benachrichtigungen</p>
+                <p className="mt-1 text-[15px] text-gray-500">
+                  Hier erscheinen neue Bestellungen und Hinweise.
+                </p>
+              </div>
+            )}
+
+            {!isLoading && !error && hasStore && notifications.length > 0 && (
+              <div className="rounded-2xl overflow-hidden bg-white shadow-sm">
+                <ul className="divide-y divide-gray-100">
+                  {notifications.map((notification) => (
+                    <li key={notification.id}>
+                      <button
+                        type="button"
+                        onClick={() => handleNotificationClick(notification)}
+                        className={`flex w-full items-start gap-3 px-4 py-4 text-left active:bg-gray-50/80 touch-manipulation min-h-[72px] ${
+                          !notification.read ? 'bg-brand-50/40' : ''
+                        }`}
+                      >
+                        {!notification.read && (
+                          <span className="mt-2 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-brand-500" />
+                        )}
+                        <div className="flex-1 min-w-0 text-left">
+                          <p className="text-[17px] font-semibold text-gray-900 leading-snug">
+                            {notification.title}
+                          </p>
+                          <p className="mt-0.5 text-[15px] text-gray-600 line-clamp-2">
+                            {notification.message}
+                          </p>
+                          <p className="mt-1.5 text-[13px] text-gray-400">
+                            {formatNotificationTime(notification.createdAt)}
+                          </p>
+                          {notification.payload?.orderId && (
+                            <p className="mt-2 text-[15px] font-medium text-brand-600 flex items-center gap-1">
+                              Bestellung anzeigen
+                              <ChevronRight className="h-4 w-4" />
+                            </p>
+                          )}
+                        </div>
+                        {notification.payload?.orderId && (
+                          <ChevronRight className="h-5 w-5 text-gray-300 flex-shrink-0 mt-1" />
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
-      )}
+      ) : (
+        /* Desktop: mismo contenido, contenedor centrado */
+        <div className="bg-background-cream py-8">
+          <div className="mx-auto max-w-2xl px-4 md:px-6">
+            {unreadCount > 0 && (
+              <div className="mb-6 rounded-2xl overflow-hidden bg-white shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => markAllAsRead()}
+                  disabled={markAllAsReadPending}
+                  className="flex w-full min-h-[52px] items-center justify-between gap-3 px-5 py-3.5 hover:bg-gray-50/80 transition-colors disabled:opacity-50"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-500/15">
+                      {markAllAsReadPending ? (
+                        <Loader className="w-5 h-5 animate-spin text-brand-600" />
+                      ) : (
+                        <CheckCheck className="w-5 h-5 text-brand-600" />
+                      )}
+                    </span>
+                    <span className="text-base font-semibold text-gray-900">
+                      Alle als gelesen markieren
+                    </span>
+                  </span>
+                </button>
+              </div>
+            )}
 
-      {!isMobile && (
-        <div className="w-full min-h-screen bg-[#F2EDE8] py-8">
-          <div className="mx-auto max-w-4xl px-6">
-            <div className="mb-8">
-              <h1 className="mb-2 text-3xl font-bold tracking-tight text-gray-900">
-                Benachrichtigungen
-              </h1>
-              <p className="text-base leading-relaxed text-gray-500">
-                System-Alerts und neue Bestellungen
-              </p>
-            </div>
-            {content}
+            {isLoading && (
+              <div className="flex flex-col items-center justify-center py-20">
+                <Loader className="w-10 h-10 animate-spin text-brand-500" />
+                <p className="mt-4 text-gray-500">Wird geladen…</p>
+              </div>
+            )}
+
+            {error && (
+              <div className="rounded-2xl bg-white p-5 shadow-sm">
+                <p className="text-red-600">
+                  Fehler beim Laden.{' '}
+                  <button type="button" onClick={() => refetch()} className="font-semibold text-brand-600 underline">
+                    Erneut versuchen
+                  </button>
+                </p>
+              </div>
+            )}
+
+            {!isLoading && !error && (!hasStore || notifications.length === 0) && (
+              <div className="rounded-2xl bg-white p-10 text-center shadow-sm">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+                  <Bell className="h-8 w-8 text-gray-400" />
+                </div>
+                <p className="mt-4 text-lg font-semibold text-gray-900">Keine Benachrichtigungen</p>
+                <p className="mt-1 text-gray-500">Hier erscheinen neue Bestellungen und Hinweise.</p>
+              </div>
+            )}
+
+            {!isLoading && !error && hasStore && notifications.length > 0 && (
+              <div className="rounded-2xl overflow-hidden bg-white shadow-sm">
+                <ul className="divide-y divide-gray-100">
+                  {notifications.map((notification) => (
+                    <li key={notification.id}>
+                      <button
+                        type="button"
+                        onClick={() => handleNotificationClick(notification)}
+                        className={`flex w-full items-start gap-3 px-5 py-4 text-left hover:bg-gray-50/80 transition-colors min-h-[72px] ${
+                          !notification.read ? 'bg-brand-50/40' : ''
+                        }`}
+                      >
+                        {!notification.read && (
+                          <span className="mt-2 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-brand-500" />
+                        )}
+                        <div className="flex-1 min-w-0 text-left">
+                          <p className="font-semibold text-gray-900">{notification.title}</p>
+                          <p className="mt-0.5 text-sm text-gray-600 line-clamp-2">{notification.message}</p>
+                          <p className="mt-1.5 text-xs text-gray-400">
+                            {formatNotificationTime(notification.createdAt)}
+                          </p>
+                          {notification.payload?.orderId && (
+                            <p className="mt-2 text-sm font-medium text-brand-600 flex items-center gap-1">
+                              Bestellung anzeigen <ChevronRight className="h-4 w-4" />
+                            </p>
+                          )}
+                        </div>
+                        {notification.payload?.orderId && (
+                          <ChevronRight className="h-5 w-5 text-gray-300 flex-shrink-0 mt-1" />
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       )}

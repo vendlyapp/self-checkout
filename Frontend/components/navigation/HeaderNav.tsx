@@ -23,6 +23,8 @@ interface HeaderNavProps {
     onClick: () => void;
     label: string;
   };
+  /** Contenido custom a la derecha (ej. botones Bearbeiten/Speichern en Einstellungen) */
+  rightContent?: React.ReactNode;
   /** Padding estándar: default (px-4 py-3), comfortable (px-5 py-4), compact (px-3 py-2) */
   padding?: HeaderNavPadding;
 
@@ -56,6 +58,7 @@ export default function HeaderNav({
   promotionCount,
   variant = "default",
   rightAction,
+  rightContent,
   padding = "default",
   className,
   contentClassName,
@@ -111,8 +114,9 @@ export default function HeaderNav({
           <ArrowLeftIcon className={`${isSubtle ? 'w-5 h-5' : 'w-5 h-5'} ${isSubtle ? 'text-gray-800' : ''}`} />
           {!isSubtle && <span className="text-[16px] font-semibold">{title}</span>}
         </button>
-        <div className="flex items-center gap-2">
-          {isCartPage && hasItems && (
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {rightContent != null && rightContent}
+          {isCartPage && hasItems && rightContent == null && (
             <button
               type="button"
               className="cursor-pointer text-red-600 font-semibold text-sm px-3 py-2 min-h-[44px] rounded-lg hover:bg-red-50 transition-colors"
@@ -123,7 +127,7 @@ export default function HeaderNav({
               Leeren
             </button>
           )}
-          {isPromotionPage && (
+          {rightContent == null && isPromotionPage && (
             <div className="flex items-center gap-2">
               <Zap className="w-4 h-4 text-black" />
               <span className="text-sm font-semibold">
@@ -148,7 +152,7 @@ export default function HeaderNav({
               </button>
             </div>
           )}
-          {rightAction && (
+          {rightContent == null && rightAction && (
             <button
               type="button"
               className="cursor-pointer flex items-center justify-center w-10 h-10 min-w-10 min-h-10 rounded-full hover:bg-gray-100 transition-colors"
@@ -159,7 +163,7 @@ export default function HeaderNav({
               <rightAction.icon className="w-5 h-5 text-[#25D076]" />
             </button>
           )}
-          {!isCartPage && !showAddButton && !isPromotionPage && !isSubtle && (
+          {rightContent == null && !isCartPage && !showAddButton && !isPromotionPage && !isSubtle && !rightAction && (
             <button
               type="button"
               className="cursor-pointer flex items-center justify-center w-10 h-10 min-w-10 min-h-10 rounded-full hover:bg-gray-100 transition-colors"
@@ -170,7 +174,7 @@ export default function HeaderNav({
               <X className="w-5 h-5 text-gray-600" />
             </button>
           )}
-          {showAddButton && (
+          {rightContent == null && showAddButton && (
             <button
               className="flex items-center gap-2 cursor-pointer bg-brand-600 rounded-full p-2"
               onClick={() => router.push("/products_list/add_product")}

@@ -12,9 +12,8 @@ import { toast } from 'sonner'
 import { CreditCard, Store } from 'lucide-react'
 
 const FIRST_TIME_BANNER = {
-  title: 'Willkommen! Konfigurieren Sie Ihre Geschäft zum ersten Mal',
-  description:
-    'Bitte füllen Sie die folgenden Angaben aus und speichern Sie. Anschliessend können Sie optional Ihre Zahlungsarten einrichten. Bargeld (Barzahlung) ist standardmässig aktiv.',
+  title: 'Willkommen',
+  description: 'Füllen Sie die Angaben aus und speichern Sie. Bargeld ist standardmässig aktiv; Zahlungsarten können Sie danach einrichten.',
 }
 
 export default function StoreSettingsPage() {
@@ -70,11 +69,11 @@ export default function StoreSettingsPage() {
 
   return (
     <div className="w-full h-full gpu-accelerated">
-      {/* Mensaje primera vez (alemán) */}
+      {/* Banner primera vez — compacto y claro */}
       {isFirstTimeSetup && (
-        <div className="mx-auto mt-4 max-w-4xl px-4 md:px-6 md:mt-8 lg:mt-10">
+        <div className="mx-auto max-w-2xl px-4 pt-4 md:px-6 md:pt-6">
           <div
-            className="rounded-2xl border border-brand-200 bg-brand-50/80 p-4 shadow-sm"
+            className="rounded-2xl border border-brand-200/80 bg-white p-4 shadow-sm"
             role="status"
             aria-live="polite"
           >
@@ -82,41 +81,43 @@ export default function StoreSettingsPage() {
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white">
                 <Store className="h-5 w-5" />
               </div>
-              <div>
-                <h2 className="font-semibold text-brand-900">{FIRST_TIME_BANNER.title}</h2>
-                <p className="mt-1 text-sm text-brand-800">{FIRST_TIME_BANNER.description}</p>
+              <div className="min-w-0">
+                <h2 className="text-[17px] font-semibold text-gray-900">{FIRST_TIME_BANNER.title}</h2>
+                <p className="mt-1 text-[15px] text-gray-600 leading-snug">
+                  {FIRST_TIME_BANNER.description}
+                </p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Mobile Layout */}
+      {/* Mobile: mismo fondo que el resto del dashboard (crema) */}
       {isMobile && (
-        <div className="w-full min-h-screen bg-[#F2EDE8] safe-area-bottom">
-          <div className="px-4 py-4 pb-32">
+        <div className="min-h-screen bg-background-cream safe-area-bottom">
+          <div className="px-4 py-4">
             <StoreSettingsForm onUpdate={handleStoreUpdate} />
           </div>
         </div>
       )}
 
-      {/* Tablet + Desktop Layout */}
+      {/* Desktop */}
       {!isMobile && (
-        <div className="w-full min-h-screen bg-[#F2EDE8] pt-8 md:pt-10 pb-6 lg:py-10">
-          <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8">
+        <div className="min-h-screen bg-background-cream py-8">
+          <div className="mx-auto max-w-2xl px-4 md:px-6">
             <StoreSettingsForm onUpdate={handleStoreUpdate} />
           </div>
         </div>
       )}
 
-      {/* Modal: ¿Configurar método de pago? — Consistente con diseño del sistema */}
+      {/* Modal Zahlungsart */}
       <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
         <DialogContent
           showCloseButton={true}
           className="max-w-[calc(100%-2rem)] w-full sm:max-w-md rounded-2xl border border-gray-200 bg-white p-0 shadow-xl gap-0 overflow-hidden"
         >
           <div className="flex flex-col">
-            <div className="flex items-center gap-3 border-b border-gray-200 px-6 py-5 pr-12">
+            <div className="flex items-center gap-3 border-b border-gray-100 px-6 py-5 pr-12">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-100">
                 <CreditCard className="h-6 w-6 text-brand-600" />
               </div>
@@ -125,9 +126,7 @@ export default function StoreSettingsPage() {
                   Zahlungsart konfigurieren?
                 </DialogTitle>
                 <DialogDescription className="mt-1 text-sm text-gray-500">
-                  Möchten Sie jetzt eine Zahlungsart konfigurieren? Barzahlung (Bargeld) ist bereits
-                  aktiv. Sie können jederzeit unter Einstellungen → Zahlungsarten weitere Methoden
-                  hinzufügen.
+                  Barzahlung ist bereits aktiv. Jetzt eine weitere Methode hinzufügen oder später unter Einstellungen → Zahlungsarten.
                 </DialogDescription>
               </div>
             </div>
@@ -136,16 +135,16 @@ export default function StoreSettingsPage() {
                 type="button"
                 onClick={handleConfigurePaymentNo}
                 disabled={completingOnboarding}
-                className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 active:scale-[0.98] disabled:opacity-50 transition-ios"
+                className="min-h-[48px] rounded-xl border border-gray-200 bg-white px-4 py-3 text-[15px] font-semibold text-gray-700 hover:bg-gray-50 active:scale-[0.98] disabled:opacity-50"
               >
                 {completingOnboarding ? 'Bitte warten…' : 'Später'}
               </button>
               <button
                 type="button"
                 onClick={handleConfigurePaymentYes}
-                className="inline-flex items-center justify-center rounded-xl bg-brand-500 px-4 py-3 text-sm font-semibold text-white hover:bg-brand-600 active:scale-[0.98] shadow-lg shadow-brand-500/25 transition-ios"
+                className="min-h-[48px] rounded-xl bg-brand-500 px-4 py-3 text-[15px] font-semibold text-white hover:bg-brand-600 active:scale-[0.98] shadow-lg shadow-brand-500/20"
               >
-                Ja, jetzt konfigurieren
+                Jetzt konfigurieren
               </button>
             </div>
           </div>
