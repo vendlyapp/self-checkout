@@ -9,6 +9,8 @@ import ResponsiveHeader from '@/components/navigation/ResponsiveHeader';
 import ResponsiveFooterNav from '@/components/navigation/ResponsiveFooterNav';
 import { useResponsive, useScrollReset } from '@/hooks';
 import { useCartStore } from '@/lib/stores/cartStore';
+import { useProductFormStore } from '@/lib/stores/productFormStore';
+import { useCategoryFormStore } from '@/lib/stores/categoryFormStore';
 import FooterAddProduct from '@/components/dashboard/products_list/FooterAddProduct';
 import FooterAddCategory from '@/components/dashboard/categories/FooterAddCategory';
 import CartSummary from '@/components/dashboard/charge/CartSummary';
@@ -43,18 +45,11 @@ import LoadingProductsModal from "@/components/dashboard/home/LoadingProductsMod
 import { useLoadingProductsModal } from "@/lib/contexts/LoadingProductsModalContext";
 import {
   TOP_HEADER_NAV_PX,
+  HEADER_NAV_BAR_HEIGHT_PX,
   MAIN_PT_HEADER_NAV_ONLY_PX,
   MAIN_PT_WITH_FILTER_BARS_PX,
+  BESTSELLER_TOP_OFFSET_PX,
 } from "@/lib/constants/layoutHeights";
-
-// Extender Window interface para propiedades personalizadas
-declare global {
-  interface Window {
-    __categoryFormIsValid?: boolean;
-    __categoryFormIsSubmitting?: boolean;
-    __categoryFormHasChanges?: boolean;
-  }
-}
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -119,6 +114,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   
   // Determinar si estamos en la ruta de verkaufe (ventas completas)
   const isVerkaufeRoute = pathname?.startsWith('/sales/verkaufe');
+
+  // Determinar si estamos en la página de metas (Ziele)
+  const isGoalsRoute = pathname?.startsWith('/sales/goals');
+
+  // Determinar si estamos en la página de bestseller
+  const isBestsellerRoute = pathname?.startsWith('/sales/bestseller');
   
   // Determinar si estamos en el detalle de una orden (tiene ID)
   const isOrderDetailRoute = pathname?.match(/\/sales\/orders\/[^\/]+/);
@@ -163,12 +164,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const isBackupsRoute = pathname?.startsWith('/store/backups');
   const isNotificationsRoute = pathname?.startsWith('/store/notifications');
   const isHelpRoute = pathname?.startsWith('/store/help');
+  const isQrBarcodesRoute = pathname?.startsWith('/store/qr-barcodes');
   
   // Función para obtener el título del HeaderNav según la ruta
   const getHeaderNavTitleForStoreSales = (): string | null => {
     if (isPaymentMethodsRoute) return 'Zahlungsarten verwalten';
     if (isSettingsRoute) return 'Mein Geschäft';
     if (isDiscountsRoute) return 'Rabatte & Codes';
+    if (isQrBarcodesRoute) return 'QR- & Barcodes';
     if (isMyQRRoute) return 'Mein QR-Code';
     if (isCustomersRoute) return 'Kunden verwalten';
     if (isProfileRoute) return 'Mein Profil';
@@ -181,13 +184,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     }
     if (isVerkaufeListRoute) return 'Verkäufe';
     if (isOrdersListRoute) return 'Bestellungen';
+    if (isGoalsRoute) return 'Ziele konfigurieren';
+    if (isBestsellerRoute) return 'Bestseller';
     return null;
   };
   
   // Función para obtener el closeDestination según la ruta
   const getHeaderNavCloseDestination = (): string => {
     if (isPaymentMethodsRoute || isSettingsRoute || isDiscountsRoute || 
-        isCustomersRoute || isProfileRoute || isPrinterRoute || 
+        isQrBarcodesRoute || isCustomersRoute || isProfileRoute || isPrinterRoute || 
         isBackupsRoute || isNotificationsRoute || isHelpRoute ||
         (isInvoicesListRoute && pathname?.startsWith('/store/invoice'))) {
       return '/store';
@@ -198,7 +203,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     if (isInvoicesListRoute && pathname?.startsWith('/sales/invoices')) {
       return '/sales';
     }
-    if (isVerkaufeListRoute || isOrdersListRoute) {
+    if (isVerkaufeListRoute || isOrdersListRoute || isGoalsRoute || isBestsellerRoute) {
       return '/sales';
     }
     return '/dashboard';
@@ -209,31 +214,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   
   // Rutas que ocultan el navbar/sidebar (discounts muestra sidebar como /categories)
   const isStoreSubRoute = isPaymentMethodsRoute || isInvoiceRoute ||
-                          isSettingsRoute || isCustomersRoute || isProfileRoute ||
+                          isSettingsRoute || isQrBarcodesRoute || isCustomersRoute || isProfileRoute ||
                           isPrinterRoute || isBackupsRoute || isNotificationsRoute || isHelpRoute;
   
   // Determinar si estamos en modo edición (edit o view)
   const isEditMode = pathname?.includes('/products_list/edit/') || pathname?.includes('/products_list/view/');
   
-  // Detectar si hay cambios en el formulario de edición
-  const [hasFormChanges, setHasFormChanges] = useState(false);
-  
-  useEffect(() => {
-    if (isEditMode) {
-      const checkChanges = () => {
-        const hasChanges = (window as { __productFormHasChanges?: boolean }).__productFormHasChanges || false;
-        setHasFormChanges(hasChanges);
-      };
-      
-      // Verificar cambios periódicamente
-      const interval = setInterval(checkChanges, 500);
-      checkChanges(); // Verificar inmediatamente
-      
-      return () => clearInterval(interval);
-    } else {
-      setHasFormChanges(false);
-    }
-  }, [isEditMode, pathname]);
+  const hasFormChanges = useProductFormStore((s) => s.hasChanges);
+  const triggerProductSave = useProductFormStore((s) => s.triggerSave);
 
   // Determinar si estamos en la ruta de charge
   const isChargeRoute = pathname?.startsWith('/charge');
@@ -275,23 +263,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     // En desktop y tablet no hay toggle - la sidebar siempre está visible
   };
 
-  // Manejar el botón de agregar producto / guardar cambios
   const handleAddProduct = () => {
-    if (isEditMode) {
-      if (typeof window !== "undefined") {
-        const w = window as unknown as { saveProduct?: () => void | Promise<void> };
-        if (w.saveProduct) w.saveProduct();
-      }
-    } else if (pathname === "/products_list/add_product") {
-      // Si estamos en la página de agregar producto, ejecutar la función de guardado
-      if (typeof window !== "undefined") {
-        const windowWithSaveProduct = window as unknown as { saveProduct?: () => void };
-        if (windowWithSaveProduct.saveProduct) {
-          windowWithSaveProduct.saveProduct();
-        }
-      }
+    if (isEditMode || pathname === "/products_list/add_product") {
+      triggerProductSave();
     } else {
-      // Si estamos en la lista, navegamos a agregar producto
       window.location.href = "/products_list/add_product";
     }
   };
@@ -315,27 +290,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     }
   };
 
-  // Detectar si el formulario de categoría es válido y si hay cambios
-  const [isCategoryFormValid, setIsCategoryFormValid] = useState(false);
-  const [hasCategoryChanges, setHasCategoryChanges] = useState(false);
-  
-  useEffect(() => {
-    if (isAddCategoryPage) {
-      const checkFormValidity = () => {
-        if (typeof window !== 'undefined') {
-          setIsCategoryFormValid(window.__categoryFormIsValid || false);
-          setHasCategoryChanges(window.__categoryFormHasChanges || false);
-        }
-      };
-
-      checkFormValidity();
-      const interval = setInterval(checkFormValidity, 500);
-      return () => clearInterval(interval);
-    } else {
-      setIsCategoryFormValid(false);
-      setHasCategoryChanges(false);
-    }
-  }, [isAddCategoryPage, pathname]);
+  const isCategoryFormValid = useCategoryFormStore((s) => s.isFormValid);
+  const hasCategoryChanges = useCategoryFormStore((s) => s.hasChanges);
+  const isCategoryFormSubmitting = useCategoryFormStore((s) => s.isSubmitting);
 
   // Navegación inteligente para charge basada en la ruta actual
   const handleChargeContinue = () => {
@@ -533,7 +490,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             isProductsListAddProductPage ||
             isProductsListViewProductRoute ||
             headerNavTitleForStoreSales !== null;
-          const mainPtPx = needsFilterBarsPt ? MAIN_PT_WITH_FILTER_BARS_PX : needsHeaderNavOnlyPt ? MAIN_PT_HEADER_NAV_ONLY_PX : null;
+          // Bestseller tiene su propio FilterSlider sticky — solo necesita el alto del HeaderNav (60px),
+          // no el MAIN_PT_HEADER_NAV_ONLY_PX completo (140px) que incluye el alto del ResponsiveHeader ya en flujo.
+          const mainPtPx = needsFilterBarsPt
+            ? MAIN_PT_WITH_FILTER_BARS_PX
+            : isBestsellerRoute
+            ? BESTSELLER_TOP_OFFSET_PX
+            : needsHeaderNavOnlyPt
+            ? MAIN_PT_HEADER_NAV_ONLY_PX
+            : null;
           return (
             <main
               ref={scrollContainerRef}
@@ -551,8 +516,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               }
             >
               <div className={clsx(
-                "w-full min-h-full",
-                isMobile ? "max-w-[430px] mx-auto bg-background-cream mobile-content-padding" : "bg-background-cream px-4 md:px-6 lg:px-8"
+                "w-full",
+                isMobile && "max-w-[430px] mx-auto bg-background-cream",
+                isMobile && !isGoalsRoute && !isBestsellerRoute && "min-h-full mobile-content-padding",
+                isMobile && (isGoalsRoute || isBestsellerRoute) && "pb-[120px]",
+                !isMobile && "bg-background-cream px-4 md:px-6 lg:px-8"
               )}>
                 {children}
               </div>
@@ -595,7 +563,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {isMobile && isAddCategoryPage && (
           <FooterAddCategory
             onAddCategory={handleSaveCategory}
-            isLoading={typeof window !== 'undefined' ? (window.__categoryFormIsSubmitting || false) : false}
+            isLoading={isCategoryFormSubmitting}
             buttonText={
               isEditingCategory 
                 ? "Änderungen speichern"

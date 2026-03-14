@@ -10,6 +10,7 @@ import { Loader } from '@/components/ui/Loader';
 import { AdminPageHeader } from '@/components/admin/common';
 import { buildApiUrl, getAuthHeaders } from '@/lib/config/api';
 import { toast } from 'sonner';
+import { devError } from '@/lib/utils/logger';
 
 interface GlobalPaymentMethodConfig {
   code: string;
@@ -75,7 +76,7 @@ export default function SuperAdminConfigPage() {
         });
       }
     } catch (error) {
-      console.error('Error fetching global configs:', error);
+      devError('Error fetching global configs:', error);
       setError(error instanceof Error ? error.message : 'Fehler beim Laden der Konfigurationen');
     } finally {
       setLoading(false);
@@ -140,7 +141,7 @@ export default function SuperAdminConfigPage() {
         throw new Error(result.error || 'Fehler beim Aktualisieren der Konfiguration');
       }
     } catch (error) {
-      console.error('Error updating global config:', error);
+      devError('Error updating global config:', error);
       toast.error(error instanceof Error ? error.message : 'Fehler beim Aktualisieren der Konfiguration');
     } finally {
       setUpdating(null);

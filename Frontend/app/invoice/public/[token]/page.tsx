@@ -8,6 +8,7 @@ import { Loader2, AlertCircle, Download, Printer, Share2, Store } from 'lucide-r
 import { toast } from 'sonner';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
 import { getDefaultStoreName } from '@/lib/config/brand';
+import { devError } from '@/lib/utils/logger';
 
 export default function PublicInvoicePage() {
   const params = useParams();
@@ -137,7 +138,7 @@ export default function PublicInvoicePage() {
         if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = originalResponsiveHeaderDisplay;
       }, 1000);
     } catch (error) {
-      console.error('Error printing:', error);
+      devError('Error printing:', error);
       toast.error('Fehler beim Drucken');
     }
   };

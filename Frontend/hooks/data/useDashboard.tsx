@@ -1,9 +1,13 @@
 import { useState, useCallback, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Users, Flame, FileText, Tag, Calculator, ShoppingCart } from 'lucide-react';
 import type { SearchResult, DashboardData, UseDashboardReturn } from '@/types';
 import { useOrderStats, useRecentOrders } from '@/hooks/queries';
 import { useMyStore } from '@/hooks/queries/useMyStore';
+import { useTopProducts } from '@/hooks/queries/useTopProducts';
 import { getLocalDateString, formatOrderDateTime } from '@/lib/utils';
+import { getPaymentMethodDisplay } from '@/lib/invoice-utils';
+import { devError } from '@/lib/utils/logger';
 
 /**
  * Hook principal para gestión del dashboard
@@ -54,6 +58,7 @@ const mockDashboardData: DashboardData = {
 };
 
 export const useDashboard = (): UseDashboardReturn => {
+  const queryClient = useQueryClient();
   const [isStoreOpen, setIsStoreOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -81,25 +86,20 @@ export const useDashboard = (): UseDashboardReturn => {
     error: ordersError 
   } = useRecentOrders(10);
 
+  // Top productos (Bestseller) de la tienda
+  const { data: topProducts } = useTopProducts({ limit: 1, metric: 'units' });
+
   // Calcular datos del dashboard desde las queries
   const data = useMemo<DashboardData | null>(() => {
     if (!orderStats && !recentOrders) {
       return null;
     }
 
-    const goalAmount = 2000; // Meta diaria fija (puede venir de configuración)
+    const goalAmount = store?.goalDaily != null ? Number(store.goalDaily) : 2000;
     const currentAmount = orderStats?.totalRevenue || 0;
     const percentage = goalAmount > 0 
       ? Math.min(100, Math.round((currentAmount / goalAmount) * 100))
       : 0;
-
-    // Helper: capitalizar primera letra de cada palabra (ej. "bargeld" → "Bargeld")
-    const capitalizeWords = (s: string): string =>
-      s
-        .trim()
-        .split(/\s+/)
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-        .join(' ');
 
     // Procesar órdenes recientes (fecha/hora real de la orden, zona local de-CH)
     const recentSales: DashboardData['recentSales'] = recentOrders?.map((order) => {
@@ -132,10 +132,19 @@ export const useDashboard = (): UseDashboardReturn => {
         receipt: `Beleg #${String(order.id).slice(-4).toUpperCase()}`,
         time: dateTimeLabel,
         amount,
-        paymentMethod: capitalizeWords(order.paymentMethod || 'Karte'),
+        paymentMethod: getPaymentMethodDisplay(order.paymentMethod || 'Karte') || (order.paymentMethod ? order.paymentMethod.charAt(0).toUpperCase() + order.paymentMethod.slice(1).toLowerCase() : 'Karte'),
         status: (order.status || 'completed') as 'pending' | 'completed' | 'cancelled',
       };
     }) || [];
+
+    const bestseller = topProducts?.[0]
+      ? {
+          productId: topProducts[0].productId,
+          productName: topProducts[0].productName,
+          unitsSold: topProducts[0].unitsSold,
+          revenue: topProducts[0].revenue,
+        }
+      : null;
 
     return {
       currentAmount,
@@ -143,8 +152,9 @@ export const useDashboard = (): UseDashboardReturn => {
       percentage,
       quickAccessItems: mockDashboardData.quickAccessItems,
       recentSales, // No usar mocks, mostrar solo ventas reales
+      bestseller,
     };
-  }, [orderStats, recentOrders]);
+  }, [orderStats, recentOrders, topProducts, store]);
 
   // Estados combinados
   const loading = statsLoading || ordersLoading;
@@ -168,12 +178,15 @@ export const useDashboard = (): UseDashboardReturn => {
       })()
     : null;
 
-  // Función para refrescar datos (invalidar cache de React Query)
+  // Función para refrescar datos (invalidar cache de React Query para recargar dashboard)
   const refreshData = useCallback(async () => {
-    // React Query maneja el refresh automáticamente
-    // Si necesitamos forzar refresh, podemos usar queryClient.invalidateQueries
-    // Por ahora, el cache se actualiza automáticamente según staleTime
-  }, []);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['orderStats'] }),
+      queryClient.invalidateQueries({ queryKey: ['recentOrders'] }),
+      queryClient.invalidateQueries({ queryKey: ['myStore'] }),
+      queryClient.invalidateQueries({ queryKey: ['topProducts'] }),
+    ]);
+  }, [queryClient]);
 
   // Búsqueda simulada
   const handleSearch = useCallback(async (query: string) => {
@@ -204,7 +217,7 @@ export const useDashboard = (): UseDashboardReturn => {
 
       setSearchResults(mockResults);
     } catch (err) {
-      console.error('Fehler bei der Suche:', err);
+      devError('Fehler bei der Suche:', err);
       // El error se maneja silenciosamente para búsquedas
     } finally {
       setIsSearching(false);

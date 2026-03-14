@@ -8,6 +8,7 @@ import { Loader } from '@/components/ui/Loader'
 import { SwissAddressInput } from '@/components/ui/SwissAddressInput'
 import { useResponsive } from '@/hooks'
 import type { StoreData } from '@/hooks/queries/useMyStore'
+import { devError } from '@/lib/utils/logger'
 
 interface StoreSettingsFormProps {
   onUpdate?: (store: StoreData) => void
@@ -134,7 +135,7 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
         toast.error(result.error || 'Fehler beim Laden des Geschäfts')
       }
     } catch (error) {
-      console.error('Error al cargar tienda:', error)
+      devError('Error al cargar tienda:', error)
       toast.error('Fehler beim Laden des Geschäfts')
     } finally {
       setLoading(false)
@@ -267,7 +268,7 @@ export default function StoreSettingsForm({ onUpdate }: StoreSettingsFormProps) 
         toast.error(result.error || 'Fehler beim Aktualisieren')
       }
     } catch (error) {
-      console.error('Error al actualizar tienda:', error)
+      devError('Error al actualizar tienda:', error)
       toast.error('Fehler beim Aktualisieren des Geschäfts')
     } finally {
       setSaving(false)

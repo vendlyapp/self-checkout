@@ -8,6 +8,7 @@ import { AlertCircle, ShoppingCart, FileText, Calendar, User, Package, XCircle, 
 import { toast } from 'sonner';
 import { Loader } from '@/components/ui/Loader';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
+import { getAvailablePaymentMethod } from '@/lib/constants/paymentMethods';
 import Link from 'next/link';
 import { useCancelOrder } from '@/hooks/mutations/useOrderMutations';
 import { useEffect, useState } from 'react';
@@ -35,6 +36,18 @@ export default function SalesOrderDetailPage() {
 
   const loading = orderLoading || orderFetching;
   const error = orderError instanceof Error ? orderError.message : orderError ? String(orderError) : null;
+
+  /** Muestra el método de pago con formato correcto (ej. qr-rechnung → QR-Rechnung) */
+  const formatPaymentMethodDisplay = (code: string) => {
+    const known = getAvailablePaymentMethod(code);
+    if (known?.displayName) return known.displayName;
+    return code
+      .split('-')
+      .map((part) =>
+        part.length <= 3 ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+      )
+      .join('-');
+  };
 
   const formatDate = (dateString: string) => {
     try {
@@ -247,7 +260,7 @@ export default function SalesOrderDetailPage() {
                         </div>
                         <div className="flex-1">
                           <div className="text-xs text-gray-600 mb-0.5">Zahlungsmethode</div>
-                          <div className="text-sm font-medium text-gray-900">{order.paymentMethod}</div>
+                          <div className="text-sm font-medium text-gray-900">{formatPaymentMethodDisplay(order.paymentMethod)}</div>
                         </div>
                       </div>
                     )}
@@ -449,7 +462,7 @@ export default function SalesOrderDetailPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-xs text-gray-600 mb-0.5">Zahlungsmethode</div>
-                      <div className="text-xs lg:text-sm font-semibold text-gray-900 truncate">{order.paymentMethod}</div>
+                      <div className="text-xs lg:text-sm font-semibold text-gray-900 truncate">{formatPaymentMethodDisplay(order.paymentMethod)}</div>
                     </div>
                   </div>
                 )}

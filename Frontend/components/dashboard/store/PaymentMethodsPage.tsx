@@ -242,8 +242,7 @@ const PaymentMethodsPage = () => {
 
       // Refetch para obtener los datos actualizados
       await refetch()
-    } catch (error) {
-      console.error('Fehler beim Aktualisieren der Zahlungsmethode:', error)
+    } catch {
     } finally {
       setUpdatingMethodName(null)
     }
@@ -317,8 +316,7 @@ const PaymentMethodsPage = () => {
 
       await refetch()
       handleCloseConfigureModal()
-    } catch (error) {
-      console.error('Fehler beim Speichern der Konfiguration:', error)
+    } catch {
     }
   }
 
@@ -671,8 +669,7 @@ const PaymentMethodsPage = () => {
             <div className="animate-fade-in-scale border-t border-[#ECE2D7]">
               <button
                 onClick={() => {
-                  // Navegar a página de configuraciones generales o abrir modal
-                  console.log('Weitere Einstellungen')
+                  // Placeholder: navigate to general settings or open modal
                 }}
                 className="w-full p-4 hover:bg-gray-50 transition-all touch-target active:scale-[0.98] text-left"
               >

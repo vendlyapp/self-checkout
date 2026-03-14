@@ -127,8 +127,6 @@ async function makeRequest<T>(
       throw error;
     }
     
-    // Solo loggear errores reales
-    console.error('Analytics API request failed:', error);
     throw error;
   }
 }

@@ -7,6 +7,7 @@ import { Html5Qrcode, Html5QrcodeScanType } from "html5-qrcode";
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useScannedStoreStore, type StoreInfo } from "@/lib/stores/scannedStoreStore";
 import { buildApiUrl } from "@/lib/config/api";
+import { devError } from "@/lib/utils/logger";
 import { Product } from "@/components/dashboard/products_list/data/mockProducts";
 import Image from "next/image";
 
@@ -160,7 +161,7 @@ const SnanerDash = () => {
         }
       );
     } catch (error: unknown) {
-      console.error("Scanner start failed:", error);
+      devError("Scanner start failed:", error);
       setIsScanning(false);
       
       let errorMsg = "Zugriff auf die Kamera nicht möglich. Bitte überprüfen Sie die Berechtigungen.";
@@ -199,7 +200,7 @@ const SnanerDash = () => {
           }
         }, 100);
       } catch (error) {
-        console.error("Scanner stop failed:", error);
+        devError("Scanner stop failed:", error);
         // Limpiar el contenedor incluso si hay error
         if (scanContainerRef.current) {
           scanContainerRef.current.innerHTML = "";
@@ -260,7 +261,7 @@ const SnanerDash = () => {
 
       await processProductData(result.data);
     } catch (error) {
-      console.error("QR code processing failed:", error);
+      devError("QR code processing failed:", error);
       setErrorMessage(
         error instanceof Error
           ? error.message

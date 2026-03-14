@@ -63,7 +63,7 @@ const LogoutModal: React.FC<LogoutModalProps> = ({ isOpen }) => {
             Abmelden...
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400 font-light">
-            Daten werden gelöscht und Ihre Sitzung wird sicher beendet
+            Ihre Sitzung wurde beendet
           </p>
         </div>
         

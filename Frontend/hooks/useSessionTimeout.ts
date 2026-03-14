@@ -6,6 +6,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { clearAllSessionData, updateLastActivityTime, isSessionExpired, getLastActivityTime } from '@/lib/utils/sessionUtils';
+import { devError } from '@/lib/utils/logger';
 
 const SESSION_TIMEOUT_MS = 10 * 60 * 1000;
 const CHECK_INTERVAL_MS = 60 * 1000;
@@ -28,7 +29,7 @@ export const useSessionTimeout = (options: UseSessionTimeoutOptions = {}) => {
       router.push('/login');
       setTimeout(() => { window.location.href = '/login'; }, 100);
     } catch (error) {
-      console.error('Session expiry handler failed:', error);
+      devError('Session expiry handler failed:', error);
       window.location.href = '/login';
     }
   }, [router, onSessionExpired]);

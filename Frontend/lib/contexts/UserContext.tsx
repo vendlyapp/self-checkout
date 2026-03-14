@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
+import { devError, devWarn } from '@/lib/utils/logger';
 
 interface UserProfile {
   id: string;
@@ -91,13 +92,13 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       // Solo loggear errores que no sean de aborto o red
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          console.warn('Request timeout al obtener perfil de usuario');
+          devWarn('Request timeout al obtener perfil de usuario');
         } else if (error.message.includes('Failed to fetch')) {
-          console.warn('No se pudo conectar con el servidor para obtener el perfil');
+          devWarn('No se pudo conectar con el servidor para obtener el perfil');
           // No establecer perfil como null en caso de error de red
           // Mantener el perfil anterior si existe, o dejar null si es la primera carga
         } else {
-          console.error('Error fetching user profile:', error);
+          devError('Error fetching user profile:', error);
         }
       }
       // No establecer perfil como null en caso de error de red
@@ -116,7 +117,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     // Timeout de seguridad para evitar que se quede en loading indefinidamente
     const timeoutId = setTimeout(() => {
       if (loading) {
-        console.warn('[UserProvider] Timeout al inicializar, estableciendo loading a false');
+        devWarn('[UserProvider] Timeout al inicializar');
         setLoading(false);
       }
     }, 8000); // 8 segundos máximo (más tiempo porque también hace fetch del perfil)
@@ -134,7 +135,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
           ]);
         }
       } catch (error) {
-        console.error('Error initializing user:', error);
+        devError('Error initializing user:', error);
       } finally {
         clearTimeout(timeoutId);
         setLoading(false);
@@ -177,7 +178,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       const { clearAllSessionData } = await import('@/lib/utils/sessionUtils');
       await clearAllSessionData();
     } catch (error) {
-      console.error('Error signing out:', error);
+      devError('Error signing out:', error);
       // Limpiar de todas formas
       setUser(null);
       setProfile(null);
@@ -188,7 +189,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
           sessionStorage.clear();
         }
       } catch (e) {
-        console.error('Error en limpieza de emergencia:', e);
+        devError('Error en limpieza de emergencia:', e);
       }
     }
   };

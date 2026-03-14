@@ -6,6 +6,7 @@ import { Download, Share2, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
 import { getDefaultStoreName } from '@/lib/config/brand';
+import { devError } from '@/lib/utils/logger';
 
 export default function InvoiceActionsFooter() {
   const pathname = usePathname();
@@ -126,7 +127,7 @@ export default function InvoiceActionsFooter() {
         if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = originalResponsiveHeaderDisplay;
       }, 1000);
     } catch (error) {
-      console.error('Error printing:', error);
+      devError('Error printing:', error);
       toast.error('Fehler beim Drucken');
     }
   };

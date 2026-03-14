@@ -3,6 +3,7 @@ const discountCodeService = require('./DiscountCodeService');
 const invoiceService = require('./InvoiceService');
 const storeService = require('./StoreService');
 const customerService = require('./CustomerService');
+const notificationService = require('./NotificationService');
 
 class OrderService {
 
@@ -288,6 +289,22 @@ class OrderService {
       }
     }
 
+    // Notificación para el admin de la tienda (no fallar la orden si falla)
+    if (storeId) {
+      try {
+        const totalFormatted = `CHF ${Number(finalTotal).toFixed(2)}`;
+        await notificationService.create({
+          storeId,
+          type: 'new_order',
+          title: 'Neue Bestellung',
+          message: `Sie haben eine neue Bestellung erhalten (${totalFormatted}).`,
+          payload: { orderId: result.order.id, total: finalTotal, paymentMethod: paymentMethod || null },
+        });
+      } catch (notifError) {
+        console.error('❌ [OrderService.create] Error al crear notificación:', notifError.message);
+      }
+    }
+
     return {
       success: true,
       data: {
@@ -522,6 +539,20 @@ class OrderService {
       } catch (error) {
         console.error('Error al cancelar facturas asociadas:', error);
       }
+      // Notificación para el admin de la tienda
+      if (order.storeId) {
+        try {
+          await notificationService.create({
+            storeId: order.storeId,
+            type: 'order_cancelled',
+            title: 'Bestellung storniert',
+            message: `Eine Bestellung wurde storniert (#${String(id).slice(-8).toUpperCase()}).`,
+            payload: { orderId: id, status: 'cancelled' },
+          });
+        } catch (notifError) {
+          console.error('Error al crear notificación order_cancelled:', notifError.message);
+        }
+      }
     }
 
     return {
@@ -614,17 +645,23 @@ class OrderService {
   }
 
   async getStats(options = {}) {
-    const { date = null, ownerId = null } = options;
+    const { date = null, dateFrom = null, dateTo = null, ownerId = null } = options;
+
+    // Build date filter: single day (date) OR range (dateFrom + dateTo)
+    const useRange = dateFrom && dateTo;
 
     // Si tenemos ownerId, filtrar órdenes por productos de ese owner
     // Contamos todas las órdenes no canceladas (pending, processing, completed cuentan)
     if (ownerId) {
       const params = [ownerId];
-      // Fecha en zona horaria Europa/Zurich para que "hoy" del frontend coincida
-      const dateFilter = date
-        ? `AND (o."createdAt" AT TIME ZONE 'Europe/Zurich')::date = $2::date`
-        : '';
-      if (date) params.push(date);
+      let dateFilter = '';
+      if (useRange) {
+        params.push(dateFrom, dateTo);
+        dateFilter = `AND (o."createdAt" AT TIME ZONE 'Europe/Zurich')::date >= $2::date AND (o."createdAt" AT TIME ZONE 'Europe/Zurich')::date <= $3::date`;
+      } else if (date) {
+        params.push(date);
+        dateFilter = `AND (o."createdAt" AT TIME ZONE 'Europe/Zurich')::date = $2::date`;
+      }
 
       // Subquery: una fila por orden para que SUM(total) no duplique por OrderItems
       const statsQuery = `
@@ -666,7 +703,11 @@ class OrderService {
     const params = [];
     let paramCount = 0;
     let dateFilter = '';
-    if (date) {
+    if (useRange) {
+      paramCount += 2;
+      dateFilter = `AND ("createdAt" AT TIME ZONE 'Europe/Zurich')::date >= $1::date AND ("createdAt" AT TIME ZONE 'Europe/Zurich')::date <= $2::date`;
+      params.push(dateFrom, dateTo);
+    } else if (date) {
       paramCount++;
       dateFilter = `AND ("createdAt" AT TIME ZONE 'Europe/Zurich')::date = $${paramCount}::date`;
       params.push(date);

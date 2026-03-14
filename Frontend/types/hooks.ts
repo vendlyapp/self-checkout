@@ -86,6 +86,13 @@ export interface PromoCodeReturn {
 /**
  * Dashboard data interface
  */
+export interface BestsellerProduct {
+  productId: string;
+  productName: string;
+  unitsSold: number;
+  revenue: number;
+}
+
 export interface DashboardData {
   /** Monto actual de ventas */
   currentAmount: number;
@@ -97,6 +104,8 @@ export interface DashboardData {
   quickAccessItems: QuickAccessItem[];
   /** Ventas recientes */
   recentSales: Sale[];
+  /** Producto más vendido (Bestseller) de la tienda */
+  bestseller?: BestsellerProduct | null;
 }
 
 /**

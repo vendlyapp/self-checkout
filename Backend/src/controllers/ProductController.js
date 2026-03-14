@@ -33,7 +33,16 @@ class ProductController {
       }
 
       const options = { ownerId };
-      if (limit) options.limit = Math.min(parseInt(limit) || 100, 500);
+      const includeCodes = req.query.includeCodes === 'true' || req.query.includeCodes === '1';
+      if (includeCodes) {
+        options.includeCodes = true;
+        options.limit = Math.min(parseInt(limit) || 100, 100);
+      } else if (limit) {
+        options.limit = Math.min(parseInt(limit) || 100, 500);
+      }
+      if (req.query.includeInactive === 'true' || req.query.includeInactive === '1') {
+        options.includeInactive = true;
+      }
       
       const result = await productService.findAll(options);
       res.status(HTTP_STATUS.OK).json(result);

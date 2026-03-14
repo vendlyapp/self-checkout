@@ -49,6 +49,9 @@ const { checkoutLimiter } = require('../middleware/rateLimiter');
  */
 router.get('/stats', optionalAuth, orderController.getOrderStats);
 
+// Top productos de la tienda (Bestseller) — requiere auth y storeId
+router.get('/top-products', authMiddleware, orderController.getTopProducts);
+
 // Ruta para admin - todas las órdenes
 router.get('/', optionalAuth, orderController.getAllOrders);
 

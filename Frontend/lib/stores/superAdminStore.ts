@@ -10,6 +10,7 @@ import type {
   ActiveOverview,
   ActiveStoreEntry,
 } from '@/lib/services/analyticsService';
+import { devError } from '@/lib/utils/logger';
 
 interface SuperAdminState {
   // State
@@ -150,7 +151,7 @@ export const useSuperAdminStore = create<SuperAdminState>()(
             });
           }
         } catch (error) {
-          console.error('Error fetching stats:', error);
+          devError('Error fetching stats:', error);
             set({
               statsError: error instanceof Error ? error.message : 'Network error',
             statsLoading: false,
@@ -188,7 +189,7 @@ export const useSuperAdminStore = create<SuperAdminState>()(
             });
           }
         } catch (error) {
-          console.error('Error fetching stores:', error);
+          devError('Error fetching stores:', error);
           set({
             storesError: error instanceof Error ? error.message : 'Network error',
             storesLoading: false,
@@ -226,7 +227,7 @@ export const useSuperAdminStore = create<SuperAdminState>()(
             });
           }
         } catch (error) {
-          console.error('Error fetching users:', error);
+          devError('Error fetching users:', error);
           set({
             usersError: error instanceof Error ? error.message : 'Network error',
             usersLoading: false,
@@ -264,7 +265,7 @@ export const useSuperAdminStore = create<SuperAdminState>()(
             });
           }
         } catch (error) {
-          console.error('Error fetching products:', error);
+          devError('Error fetching products:', error);
           set({
             productsError: error instanceof Error ? error.message : 'Network error',
             productsLoading: false,
@@ -308,7 +309,7 @@ export const useSuperAdminStore = create<SuperAdminState>()(
             });
           }
         } catch (error) {
-          console.error('Error fetching sales over time:', error);
+          devError('Error fetching sales over time:', error);
           set({
             salesOverTimeError: error instanceof Error ? error.message : 'Network error',
             salesOverTimeLoading: false,
@@ -349,7 +350,7 @@ export const useSuperAdminStore = create<SuperAdminState>()(
             });
           }
         } catch (error) {
-          console.error('Error fetching store performance:', error);
+          devError('Error fetching store performance:', error);
           set({
             storePerformanceError: error instanceof Error ? error.message : 'Network error',
             storePerformanceLoading: false,
@@ -385,7 +386,7 @@ export const useSuperAdminStore = create<SuperAdminState>()(
             });
           }
         } catch (error) {
-          console.error('Error fetching top products:', error);
+          devError('Error fetching top products:', error);
           set({
             topProductsError: error instanceof Error ? error.message : 'Network error',
             topProductsLoading: false,
@@ -421,7 +422,7 @@ export const useSuperAdminStore = create<SuperAdminState>()(
             });
           }
         } catch (error) {
-          console.error('Error fetching active overview:', error);
+          devError('Error fetching active overview:', error);
           set({
             activeOverviewError: error instanceof Error ? error.message : 'Network error',
             activeOverviewLoading: false,
@@ -457,7 +458,7 @@ export const useSuperAdminStore = create<SuperAdminState>()(
             });
           }
         } catch (error) {
-          console.error('Error fetching active stores:', error);
+          devError('Error fetching active stores:', error);
           set({
             activeStoresError: error instanceof Error ? error.message : 'Network error',
             activeStoresLoading: false,
@@ -481,7 +482,7 @@ export const useSuperAdminStore = create<SuperAdminState>()(
             set({ statsLastFetch: null });
           }
         } catch (error) {
-          console.error('Error toggling store status:', error);
+          devError('Error toggling store status:', error);
           throw error;
         }
       },

@@ -9,6 +9,7 @@ import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
 import { Product, normalizeProductData } from "@/components/dashboard/products_list/data/mockProducts";
 import Image from "next/image";
 import { buildApiUrl } from "@/lib/config/api";
+import { devError } from "@/lib/utils/logger";
 
 export default function SearchUser() {
   const router = useRouter();
@@ -71,7 +72,7 @@ export default function SearchUser() {
           setAllProducts(groupedProducts);
         }
       } catch (error) {
-        console.error('Error loading products:', error);
+        devError('Error loading products:', error);
       }
     };
 

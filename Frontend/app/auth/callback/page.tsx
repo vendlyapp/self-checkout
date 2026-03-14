@@ -4,38 +4,62 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { Loader2 } from 'lucide-react'
+import { devError } from '@/lib/utils/logger'
 
 export default function AuthCallback() {
   const router = useRouter()
 
   useEffect(() => {
-    // Escuchar el evento SIGNED_IN en vez de llamar getSession() de inmediato.
-    // Con PKCE flow, Supabase necesita intercambiar el ?code= por tokens antes
-    // de que getSession() devuelva algo — onAuthStateChange espera ese momento exacto.
+    let redirected = false
+
+    const redirectToDashboard = () => {
+      if (!redirected) {
+        redirected = true
+        router.replace('/dashboard')
+      }
+    }
+
+    const redirectToLogin = (reason?: string) => {
+      if (!redirected) {
+        redirected = true
+        router.replace(`/login${reason ? `?error=${reason}` : ''}`)
+      }
+    }
+
+    // 1. Escuchar SIGNED_IN — funciona para PKCE y flujo implícito
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        router.push('/dashboard')
+        redirectToDashboard()
       } else if (event === 'SIGNED_OUT') {
-        router.push('/login')
+        redirectToLogin()
       }
     })
 
-    // Fallback: si ya había una sesión activa antes de montar el componente
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error('Error en callback:', error)
-        router.push('/login?error=auth_failed')
-        return
+    // 2. Fallback: esperar un tick y luego verificar sesión activa
+    //    (por si PKCE ya procesó el código antes de que montara el componente)
+    const checkSession = async () => {
+      try {
+        // Pequeño delay para que Supabase termine el code exchange
+        await new Promise(resolve => setTimeout(resolve, 500))
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (error) {
+          devError('[AuthCallback] Error:', error)
+          redirectToLogin('auth_failed')
+          return
+        }
+        if (session) {
+          redirectToDashboard()
+        }
+      } catch (e) {
+        devError('[AuthCallback] Exception:', e)
+        redirectToLogin('auth_failed')
       }
-      if (session) {
-        router.push('/dashboard')
-      }
-    })
+    }
 
-    // Timeout de seguridad: si en 10s no hubo evento, algo falló
-    const timeout = setTimeout(() => {
-      router.push('/login?error=auth_failed')
-    }, 10_000)
+    checkSession()
+
+    // 3. Timeout de seguridad — si en 15s no pasa nada, algo falló
+    const timeout = setTimeout(() => redirectToLogin('timeout'), 15_000)
 
     return () => {
       subscription.unsubscribe()
@@ -48,8 +72,8 @@ export default function AuthCallback() {
       <div className="text-center">
         <Loader2 className="w-12 h-12 text-brand-500 animate-spin mx-auto mb-4" />
         <p className="text-gray-600 font-medium">Authentifizierung wird verarbeitet...</p>
+        <p className="text-gray-400 text-sm mt-1">Bitte warten...</p>
       </div>
     </div>
   )
 }
-

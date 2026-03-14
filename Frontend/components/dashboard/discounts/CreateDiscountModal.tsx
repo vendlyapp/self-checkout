@@ -323,7 +323,7 @@ export default function CreateDiscountModal({
               </div>
             </div>
 
-            {/* Gültig von y Gültig bis - Dos columnas */}
+            {/* Gültig von y Gültig bis - Dos columnas (estilos mejorados para producción/Safari) */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="validFrom" className="block text-sm font-medium text-gray-700 mb-2">
@@ -336,7 +336,7 @@ export default function CreateDiscountModal({
                   onChange={(e) =>
                     setFormData({ ...formData, validFrom: e.target.value })
                   }
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-transparent transition-all"
+                  className="w-full min-h-[44px] px-4 py-3 text-base text-gray-900 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-transparent transition-all [color-scheme:light] appearance-none cursor-pointer"
                   required
                 />
               </div>
@@ -353,7 +353,7 @@ export default function CreateDiscountModal({
                     setFormData({ ...formData, validUntil: e.target.value || '' })
                   }
                   min={formData.validFrom}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-transparent transition-all"
+                  className="w-full min-h-[44px] px-4 py-3 text-base text-gray-900 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#25D076] focus:border-transparent transition-all [color-scheme:light] appearance-none cursor-pointer"
                 />
               </div>
             </div>

@@ -5,6 +5,8 @@
  * o falla debido a políticas del navegador.
  */
 
+import { devWarn } from '@/lib/utils/logger';
+
 export interface VisualFeedbackOptions {
   type?: 'light' | 'medium' | 'strong' | 'success' | 'error';
   element?: HTMLElement;
@@ -48,7 +50,7 @@ class VisualFeedbackManager {
       
       return true;
     } catch (error) {
-      console.warn('Visual feedback failed:', error);
+      devWarn('Visual feedback failed:', error);
       return false;
     }
   }
@@ -92,7 +94,7 @@ class VisualFeedbackManager {
       
       return true;
     } catch (error) {
-      console.warn('Screen flash failed:', error);
+      devWarn('Screen flash failed:', error);
       return false;
     }
   }

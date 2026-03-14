@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { QrCode, Download, Edit2, Save, Loader2, Copy, Share2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { SuperAdminService, type Store } from '@/lib/services/superAdminService';
+import { devError } from '@/lib/utils/logger';
 
 interface StoreQRManagementProps {
   storeId: string;
@@ -42,7 +43,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
         setStoreLogo(store?.logo || '');
       }
     } catch (error) {
-      console.error('Error loading store details:', error);
+      devError('Error loading store details:', error);
       // Fallback to passed store data
       setStoreData(store);
       setStoreName(store?.name || '');
@@ -72,7 +73,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
         toast.error(response.error || 'Fehler beim Aktualisieren des Geschäfts');
       }
     } catch (error) {
-      console.error('Error updating store:', error);
+      devError('Error updating store:', error);
       toast.error('Fehler beim Aktualisieren des Geschäfts');
     } finally {
       setSaving(false);
@@ -135,7 +136,7 @@ export default function StoreQRManagement({ storeId, store, onUpdate }: StoreQRM
         toast.error(response.error || 'Fehler beim Neugenerieren des QR-Codes');
       }
     } catch (error) {
-      console.error('Error regenerating QR:', error);
+      devError('Error regenerating QR:', error);
       toast.error('Fehler beim Neugenerieren des QR-Codes');
     } finally {
       setRegenerating(false);

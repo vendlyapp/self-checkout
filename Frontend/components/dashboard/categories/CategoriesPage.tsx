@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useDeleteCategory, useUpdateCategory } from "@/hooks/mutations";
 import { useCategories } from "@/hooks/queries/useCategories";
 import type { Category } from "@/lib/services/categoryService";
+import { devError } from "@/lib/utils/logger";
 import CategoryForm from "./CategoryForm";
 import DeleteCategoryModal from "./DeleteCategoryModal";
 import CategoryCard from "./CategoryCard";
@@ -77,7 +78,7 @@ export default function CategoriesPage() {
       );
       setDeletingCategory(null);
     } catch (error) {
-      console.error("Fehler beim Löschen der Kategorie:", error);
+      devError("Fehler beim Löschen der Kategorie:", error);
       alert(error instanceof Error ? error.message : "Fehler beim Löschen der Kategorie");
     }
   };
@@ -109,7 +110,7 @@ export default function CategoriesPage() {
         data: { isActive: true },
       });
     } catch (error) {
-      console.error("Fehler beim Aktivieren der Kategorie:", error);
+      devError("Fehler beim Aktivieren der Kategorie:", error);
       alert(error instanceof Error ? error.message : "Fehler beim Aktivieren der Kategorie");
     }
   };
@@ -123,7 +124,7 @@ export default function CategoriesPage() {
       });
       setTogglingCategory(null);
     } catch (error) {
-      console.error("Fehler beim Deaktivieren der Kategorie:", error);
+      devError("Fehler beim Deaktivieren der Kategorie:", error);
       alert(error instanceof Error ? error.message : "Fehler beim Deaktivieren der Kategorie");
     }
   };

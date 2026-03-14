@@ -3,46 +3,42 @@
 
 import { Bell, ChartNoAxesColumn } from 'lucide-react';
 import Link from 'next/link';
-import { useState, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { useState, useCallback } from 'react';
 import { clsx } from 'clsx';
 import Image from 'next/image';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
+import { useNotifications } from '@/hooks/queries/useNotifications';
 
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
+function formatNotificationTime(createdAt: string): string {
+  try {
+    const date = new Date(createdAt);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    if (diffMins < 1) return 'Gerade eben';
+    if (diffMins < 60) return `Vor ${diffMins} Minute${diffMins === 1 ? '' : 'n'}`;
+    if (diffHours < 24) return `Vor ${diffHours} Stunde${diffHours === 1 ? '' : 'n'}`;
+    if (diffDays < 7) return `Vor ${diffDays} Tag${diffDays === 1 ? '' : 'en'}`;
+    return date.toLocaleDateString('de-CH', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch {
+    return createdAt;
+  }
 }
 
-// Mock notifications - en producción vendrían de una API
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    title: 'Neue Bestellung',
-    message: 'Sie haben eine neue Bestellung erhalten',
-    time: 'Vor 5 Minuten',
-    read: false,
-  },
-  {
-    id: '2',
-    title: 'Produkt aktualisiert',
-    message: 'Das Produkt "Coffee Blend" wurde aktualisiert',
-    time: 'Vor 1 Stunde',
-    read: true,
-  },
-];
-
 export default function Header() {
+  const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
   const [pressedButton, setPressedButton] = useState<string | null>(null);
-
-  // Calcular notificaciones no leídas
-  const unreadCount = useMemo(
-    () => mockNotifications.filter(n => !n.read).length,
-    []
-  );
+  const {
+    notifications,
+    unreadCount,
+    hasStore,
+    markAsRead,
+    markAsReadPending,
+  } = useNotifications({ limit: 20 });
 
   // Manejar presión de botón con vibración háptica
   const handleButtonPress = useCallback((buttonId: string) => {
@@ -158,13 +154,29 @@ export default function Header() {
             </div>
 
             <div className="notification-list">
-              {mockNotifications.map((notification) => (
-                <div
+              {hasStore && notifications.map((notification) => (
+                <button
                   key={notification.id}
+                  type="button"
                   className={clsx(
-                    "notification-item",
+                    "notification-item w-full text-left",
                     !notification.read && "bg-brand-50/50"
                   )}
+                  onClick={async () => {
+                    if (!notification.read) {
+                      try {
+                        await markAsRead(notification.id);
+                      } catch {
+                        // ignore
+                      }
+                    }
+                    setShowNotifications(false);
+                    const orderId = notification.payload?.orderId;
+                    if (orderId) {
+                      router.push(`/sales/orders/${orderId}`);
+                    }
+                  }}
+                  disabled={markAsReadPending}
                 >
                   <div className="flex items-start gap-3">
                     {!notification.read && (
@@ -178,19 +190,31 @@ export default function Header() {
                         {notification.message}
                       </p>
                       <p className="text-xs text-gray-400 mt-1">
-                        {notification.time}
+                        {formatNotificationTime(notification.createdAt)}
                       </p>
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
 
-            {mockNotifications.length === 0 && (
+            {(!hasStore || notifications.length === 0) && (
               <div className="p-8 text-center">
                 <p className="text-sm text-gray-500">
                   Keine neuen Benachrichtigungen
                 </p>
+              </div>
+            )}
+
+            {hasStore && (
+              <div className="p-3 border-t border-gray-100">
+                <Link
+                  href="/store/notifications"
+                  onClick={() => setShowNotifications(false)}
+                  className="block text-center text-sm font-medium text-brand-600 hover:text-brand-700"
+                >
+                  Alle anzeigen
+                </Link>
               </div>
             )}
           </div>

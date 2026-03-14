@@ -32,6 +32,7 @@ import { InvoiceService } from "@/lib/services/invoiceService";
 import { toast } from "sonner";
 import { Loader } from "@/components/ui/Loader";
 import { SwissAddressInput } from "@/components/ui/SwissAddressInput";
+import { devError } from "@/lib/utils/logger";
 
 interface PaymentMethodDisplay {
   id: string;
@@ -493,7 +494,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                         await onCreateInvoice();
                         await new Promise((r) => setTimeout(r, 50));
                       } catch (error) {
-                        console.error('Error creating invoice:', error);
+                        devError('Error creating invoice:', error);
                       }
                     }
 
@@ -601,7 +602,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                         await onCreateInvoice(personalData);
                         await new Promise((r) => setTimeout(r, 50));
                       } catch (error) {
-                        console.error('Error al crear factura:', error);
+                        devError('Error al crear factura:', error);
                         toast.error('Fehler beim Erstellen der Rechnung');
                       }
                     }
@@ -747,7 +748,7 @@ export default function PaymentP() {
         };
       }
     } catch (error) {
-      console.error('Error loading customer data from localStorage:', error);
+      devError('Error loading customer data from localStorage:', error);
     }
     return { name: '', email: '', address: '', phone: '' };
   };
@@ -758,7 +759,7 @@ export default function PaymentP() {
     try {
       localStorage.setItem('vendly_customer_data', JSON.stringify(data));
     } catch (error) {
-      console.error('Error saving customer data to localStorage:', error);
+      devError('Error saving customer data to localStorage:', error);
     }
   };
 
@@ -1056,12 +1057,12 @@ export default function PaymentP() {
         }
       } else {
         // Si falla la creación de la factura, continuar de todas formas
-        console.error('Error al crear factura:', result.error);
+        devError('Error al crear factura:', result.error);
         toast.warning('Rechnung konnte nicht erstellt werden, aber die Bestellung wurde erfolgreich abgeschlossen');
       }
     } catch (error) {
       // Si hay error, continuar de todas formas
-      console.error('Error al crear factura:', error);
+      devError('Error al crear factura:', error);
       toast.warning('Rechnung konnte nicht erstellt werden, aber die Bestellung wurde erfolgreich abgeschlossen');
     }
 
@@ -1084,7 +1085,7 @@ export default function PaymentP() {
               return result.data.shareToken;
             }
           } catch (err) {
-            if (attempt === retries) console.error('Error fetching shareToken:', err);
+            if (attempt === retries) devError('Error fetching shareToken:', err);
           }
         }
         return null;
@@ -1111,7 +1112,7 @@ export default function PaymentP() {
 
   const handleCreateInvoice = async (customerData?: { name: string; email: string; address: string; phone: string }): Promise<void> => {
     if (!createdOrderId) {
-      console.error('No hay orderId para crear la factura');
+      devError('No hay orderId para crear la factura');
       return;
     }
 
@@ -1145,11 +1146,11 @@ export default function PaymentP() {
         }
         if (token) setCreatedInvoiceShareToken(token);
       } else {
-        console.error('Error al crear factura:', result.error);
+        devError('Error al crear factura:', result.error);
         throw new Error(result.error || 'Fehler beim Erstellen der Rechnung');
       }
     } catch (error) {
-      console.error('Error al crear factura:', error);
+      devError('Error al crear factura:', error);
       throw error;
     }
   };
@@ -1178,10 +1179,9 @@ export default function PaymentP() {
         if (result.data.shareToken) {
           setCreatedInvoiceShareToken(result.data.shareToken);
         }
-        console.log('✅ Invoice updated with customer data');
       }
     } catch (error) {
-      console.error('Error al actualizar factura:', error);
+      devError('Error al actualizar factura:', error);
       throw error;
     }
   };

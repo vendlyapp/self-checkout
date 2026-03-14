@@ -28,7 +28,7 @@ export default function UserCartSummary({ variant }: UserCartSummaryProps) {
     );
 
     return (
-      <div className="w-full max-w-[480px] mx-auto bg-brand-500 rounded-lg flex items-center justify-between px-4 overflow-hidden h-[50px]">
+      <div className="w-full bg-brand-500 rounded-2xl flex items-center justify-between  px-5 h-[54px]">
         <span className="text-white font-semibold text-sm truncate">
           {totalItems} Artikel &bull; <span className="font-bold">CHF {totalPrice.toFixed(2)}</span>
         </span>

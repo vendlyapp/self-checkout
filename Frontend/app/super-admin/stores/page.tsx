@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Store as StoreIcon, Search, Power, PowerOff, TrendingUp, RefreshCw, MapPin, Package, ShoppingCart, Mail, User, ExternalLink } from 'lucide-react';
 import { useSuperAdminStore } from '@/lib/stores/superAdminStore';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
+import { devError } from '@/lib/utils/logger';
 
 export default function SuperAdminStores() {
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function SuperAdminStores() {
     try {
       await toggleStoreStatus(storeId, !currentStatus);
     } catch (err) {
-      console.error('Fehler beim Ändern des Status:', err);
+      devError('Fehler beim Ändern des Status:', err);
       alert('Fehler beim Ändern des Geschäftsstatus');
     }
   };

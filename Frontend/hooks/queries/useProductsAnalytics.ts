@@ -6,6 +6,7 @@ import { API_CONFIG, buildApiUrl, getAuthHeaders } from '@/lib/config/api';
 import type { ProductsAnalyticsData, ProductData, CategoryData } from '@/components/dashboard/products/types';
 import { mockProductsAnalyticsData } from '@/components/dashboard/products/data';
 import { useProductsAnalyticsStore } from '@/lib/stores/productsAnalyticsStore';
+import { devError } from '@/lib/utils/logger';
 
 /**
  * Hook para obtener analytics de productos usando React Query
@@ -22,13 +23,6 @@ export const useProductsAnalytics = () => {
     queryFn: async ({ signal }) => {
       // Si hay datos en cache y no están viejos, retornarlos inmediatamente
       // pero aún así hacer la petición en background para actualizar
-      if (hasValidCache && cachedData) {
-        console.log('[useProductsAnalytics] Using cached data, fetching in background');
-        // Hacer la petición en background pero retornar cache inmediatamente
-        // React Query manejará la actualización
-      }
-
-      console.log('[useProductsAnalytics] Fetching fresh data from API');
       try {
         // Obtener token de Supabase
         const { supabase } = await import('@/lib/supabase/client');
@@ -170,22 +164,6 @@ export const useProductsAnalytics = () => {
           newCategories: newCategories || 0,
         };
 
-        // Log para debug
-        console.log('[useProductsAnalytics] Calculated data:', {
-          productData: {
-            total: productData.total,
-            hasTrendData: productData.trendData.length === 7,
-            newProducts: productData.newProducts,
-          },
-          categoriesData: {
-            total: categoriesData.total,
-            hasTrendData: categoriesData.trendData.length === 7,
-            newCategories: categoriesData.newCategories,
-          },
-          allProductsLength: allProducts.length,
-          allCategoriesLength: allCategories.length,
-        });
-
         // Asegurar que siempre retornamos una estructura válida con datos reales
         // productData y categoriesData ya están creados arriba, solo validar que existan
         const finalProductData: ProductData = productData && typeof productData === 'object' && 'total' in productData
@@ -214,14 +192,7 @@ export const useProductsAnalytics = () => {
         
         // Validación final - esto nunca debería pasar, pero por si acaso
         if (!result.products || !result.categories || typeof result.products.total === 'undefined' || typeof result.categories.total === 'undefined') {
-          console.error('Critical: Invalid data structure', {
-            hasProducts: !!result.products,
-            hasCategories: !!result.categories,
-            productsTotal: result.products?.total,
-            categoriesTotal: result.categories?.total,
-            productData,
-            categoriesData,
-          });
+          devError('useProductsAnalytics: Invalid data structure', result);
           // Forzar estructura válida con valores por defecto
           return {
             products: {
@@ -240,21 +211,12 @@ export const useProductsAnalytics = () => {
           };
         }
         
-        console.log('[useProductsAnalytics] Returning data:', {
-          productsTotal: result.products.total,
-          categoriesTotal: result.categories.total,
-          hasProducts: !!result.products,
-          hasCategories: !!result.categories,
-          productsType: typeof result.products,
-          categoriesType: typeof result.categories,
-        });
-        
         // Guardar en el store para reutilización
         setData(result);
         
         return result;
       } catch (error) {
-        console.error('Error fetching products analytics:', error);
+        devError('Error fetching products analytics:', error);
         // En caso de error, intentar obtener al menos los productos y categorías directamente
         try {
           const { supabase } = await import('@/lib/supabase/client');
@@ -283,13 +245,6 @@ export const useProductsAnalytics = () => {
           const fallbackNewProducts = products.filter((p: any) => p.isNew || (p.createdAt && new Date(p.createdAt) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))).length;
           const fallbackNewCategories = categories.filter((cat: any) => cat.createdAt && new Date(cat.createdAt) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length;
 
-          console.log('[useProductsAnalytics] Fallback data:', {
-            products: fallbackProducts,
-            categories: fallbackCategories,
-            newProducts: fallbackNewProducts,
-            newCategories: fallbackNewCategories,
-          });
-
           const fallbackResult: ProductsAnalyticsData = {
             products: {
               total: fallbackProducts,
@@ -315,7 +270,7 @@ export const useProductsAnalytics = () => {
           
           return fallbackResult;
         } catch (fallbackError) {
-          console.error('Error in fallback data fetch:', fallbackError);
+          devError('Error in fallback data fetch:', fallbackError);
           // Incluso si el fallback falla, retornar estructura válida con ceros
           const errorResult = {
             products: {

@@ -25,6 +25,7 @@ import {
 } from '@/lib/invoice-utils';
 import { Invoice as ServiceInvoice, InvoiceItem } from '@/lib/services/invoiceService';
 import { getDefaultStoreName } from '@/lib/config/brand';
+import { devError } from '@/lib/utils/logger';
 
 // =============================================================================
 // Swiss Invoice Template
@@ -144,11 +145,9 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
         : typeof taxRate === 'string' 
         ? parseFloat(taxRate) 
         : 0.026;
-      // Map rate to Swiss MwSt code; Normalsatz siempre 8.1% (0.081) en cálculos y display
-      if (rate === 0) return { rate: 0, code: 'D' }; // Befreit
-      if (rate >= 0.075 || rate === 0.08 || rate === 0.077 || rate === 0.081) return { rate: 0.081, code: 'A' }; // Normalsatz 8.1%
-      if (rate >= 0.035) return { rate, code: 'C' }; // Beherbergung 3.8%
-      return { rate, code: 'B' }; // Reduziert 2.6% o 3%
+      // Map rate to Swiss MwSt code; solo 2.6% (B) y 8.1% (A)
+      if (rate >= 0.075 || rate === 0.081) return { rate: 0.081, code: 'A' }; // Normalsatz 8.1%
+      return { rate: 0.026, code: 'B' }; // Reduziert 2.6%
     }
     
     // Default: use reduced Swiss VAT rate (2.6% Reduziert) for food products
@@ -543,7 +542,7 @@ export default function InvoiceTemplate({
         if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = originalResponsiveHeaderDisplay;
       }, 1000);
     } catch (error) {
-      console.error('Error printing:', error);
+      devError('Error printing:', error);
       toast.error('Fehler beim Drucken');
     }
   };
@@ -584,7 +583,7 @@ export default function InvoiceTemplate({
         if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = originalResponsiveHeaderDisplay;
       }, 1000);
     } catch (error) {
-      console.error('Error printing:', error);
+      devError('Error printing:', error);
       toast.error('Fehler beim Drucken');
     }
   };

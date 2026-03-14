@@ -8,6 +8,7 @@ import { buildApiUrl } from '@/lib/config/api'
 import { Product } from '@/components/dashboard/products_list/data/mockProducts'
 import { CheckCircle, XCircle } from 'lucide-react'
 import { Loader } from '@/components/ui/Loader'
+import { devError } from '@/lib/utils/logger'
 
 export default function ProductQRPage() {
   const params = useParams()
@@ -103,7 +104,7 @@ export default function ProductQRPage() {
           router.push(`/store/${storeInfo.slug}`)
         }, 1500)
       } catch (err) {
-        console.error('Product processing failed:', err)
+        devError('Product processing failed:', err)
         setError(
           err instanceof Error
             ? err.message

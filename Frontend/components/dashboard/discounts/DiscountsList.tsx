@@ -66,9 +66,8 @@ export default function DiscountsList() {
     })
   }
 
-  const handleCreate = (data: DiscountFormData) => {
-    // This will be handled by the parent component
-    console.log('Create from list:', data)
+  const handleCreate = (_data: DiscountFormData) => {
+    // Handled by parent component
   }
 
   const handleArchive = (code: DiscountCode) => {

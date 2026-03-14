@@ -13,6 +13,9 @@ export const TOP_HEADER_NAV_PX = RESPONSIVE_HEADER_HEIGHT_PX;
 /** Altura aproximada de la barra HeaderNav (padding + contenido) — pegado a la barra de filtros, sin hueco (charge, products_list, orders) */
 export const HEADER_NAV_BAR_HEIGHT_PX = 60;
 
+/** Offset para Bestseller: contenido un poco más arriba y sticky estable (evita jank en scroll) */
+export const BESTSELLER_TOP_OFFSET_PX = 32;
+
 /** Donde empieza la primera barra de filtros (búsqueda) debajo del HeaderNav */
 export const TOP_FILTER_SEARCH_BAR_PX = TOP_HEADER_NAV_PX + HEADER_NAV_BAR_HEIGHT_PX;
 

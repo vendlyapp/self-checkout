@@ -8,19 +8,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
 import type { Category, CreateCategoryRequest, UpdateCategoryRequest } from "@/lib/services/categoryService";
 import { getIcon, iconMap } from "../products_list/data/iconMap";
+import { devError } from "@/lib/utils/logger";
+import { useCategoryFormStore } from "@/lib/stores/categoryFormStore";
 
 interface CategoryFormPageProps {
   isDesktop?: boolean;
   category?: Category | null; // Para modo edición
-}
-
-// Extender Window interface para propiedades personalizadas
-declare global {
-  interface Window {
-    __categoryFormIsValid?: boolean;
-    __categoryFormIsSubmitting?: boolean;
-    __categoryFormHasChanges?: boolean;
-  }
 }
 
 const availableIcons = Object.keys(iconMap);
@@ -202,7 +195,7 @@ export default function CategoryFormPage({
         setShowSuccessModal(true);
       }
     } catch (error) {
-      console.error("Fehler beim Speichern der Kategorie:", error);
+      devError("Fehler beim Speichern der Kategorie:", error);
       alert(error instanceof Error ? error.message : "Fehler beim Speichern der Kategorie");
       setIsSubmitting(false);
     }
@@ -212,21 +205,16 @@ export default function CategoryFormPage({
   const nameLength = name.length;
   const isFormValid = name.trim().length >= 2 && name.trim().length <= MAX_NAME_LENGTH;
 
-  // Exponer función de submit y estado de validación para que AdminLayout pueda acceder
+  const setCategoryFormState = useCategoryFormStore((s) => s.setCategoryFormState);
+  const resetCategoryForm = useCategoryFormStore((s) => s.reset);
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.__categoryFormIsValid = category ? hasChanges && isFormValid : isFormValid;
-      window.__categoryFormIsSubmitting = isSubmitting;
-      window.__categoryFormHasChanges = category ? hasChanges : false;
-    }
-    return () => {
-      if (typeof window !== 'undefined') {
-        delete window.__categoryFormIsValid;
-        delete window.__categoryFormIsSubmitting;
-        delete window.__categoryFormHasChanges;
-      }
-    };
-  }, [isFormValid, isSubmitting, hasChanges, category]);
+    setCategoryFormState({
+      isFormValid: category ? hasChanges && isFormValid : isFormValid,
+      hasChanges: !!category && hasChanges,
+      isSubmitting: isSubmitting,
+    });
+    return () => resetCategoryForm();
+  }, [isFormValid, hasChanges, isSubmitting, category, setCategoryFormState, resetCategoryForm]);
 
   // Mobile Form
   if (!isDesktop) {

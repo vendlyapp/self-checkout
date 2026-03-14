@@ -34,8 +34,8 @@ function LoginForm() {
               : false;
 
           if (!isExpired) {
-            const userRole = localStorage.getItem('userRole') || 'ADMIN';
-            if (userRole === 'SUPER_ADMIN') {
+            const role = session.user?.user_metadata?.role || 'ADMIN';
+            if (role === 'SUPER_ADMIN') {
               router.push('/super-admin/dashboard');
             } else {
               router.push(returnUrl);
@@ -51,8 +51,7 @@ function LoginForm() {
         
         setIsAuthenticated(false);
         setAuthLoading(false);
-      } catch (error) {
-        console.error('Error checking session:', error);
+      } catch {
         setIsAuthenticated(false);
         setAuthLoading(false);
       }
@@ -68,16 +67,6 @@ function LoginForm() {
   const [checkingRole, setCheckingRole] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      const userRole = localStorage.getItem('userRole') || 'ADMIN';
-      if (userRole === 'SUPER_ADMIN') {
-        router.push('/super-admin/dashboard');
-      } else {
-        router.push(returnUrl);
-      }
-    }
-  }, [isAuthenticated, authLoading, router, returnUrl]);
 
   if (authLoading) {
     return <Loader variant="fullscreen" message="Wird geladen..." />;
@@ -133,40 +122,29 @@ function LoginForm() {
           if (response.ok) {
             const profileData = await response.json();
             detectedRole = profileData.data?.user?.role || profileData.data?.role || 'ADMIN';
-            console.log('✅ Rol obtenido desde API:', detectedRole);
           } else {
-            console.warn('Could not get profile, using metadata');
             detectedRole = data.user.user_metadata?.role || 'ADMIN';
           }
-        } catch (err) {
-          console.error('Error obteniendo perfilnelles:', err);
+        } catch {
           detectedRole = data.user.user_metadata?.role || 'ADMIN';
         }
         
         setUserRole(detectedRole);
-        
-        // Esperar al menos 1 segundo para mostrar el loader
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        localStorage.setItem('userRole', detectedRole);
-        console.log('💾 Rol guardado en localStorage:', detectedRole);
-        
-        // Redireccionar según el rol
+
+        await new Promise(resolve => setTimeout(resolve, 800));
+
         if (detectedRole === 'SUPER_ADMIN') {
-          console.log('🚀 Redirigiendo a SUPER_ADMIN dashboard');
           toast.success('Willkommen Super Admin!');
           router.push('/super-admin/dashboard');
         } else {
-          console.log('🚀 Redirigiendo a dashboard regular');
           toast.success('Willkommen zurück!');
-            router.push(returnUrl);
+          router.push(returnUrl);
         }
       } else {
         setError('Fehler beim Anmelden');
         toast.error('Fehler beim Anmelden');
       }
-    } catch (error) {
-      console.error('Error:', error);
+    } catch {
       setError('Unerwarteter Fehler beim Anmelden');
       toast.error('Unerwarteter Fehler');
     } finally {

@@ -16,6 +16,7 @@ import { useCategories } from '@/hooks/queries/useCategories';
 import { useProducts } from '@/hooks/queries/useProducts';
 import { normalizeProductData } from '@/components/dashboard/products_list/data/mockProducts';
 import type { UpdateProductRequest, Product, CreateProductRequest } from '@/lib/services/productService';
+import { devError } from '@/lib/utils/logger';
 
 interface EditProductModalProps {
   product: ProductType | null;
@@ -187,7 +188,7 @@ export default function EditProductModal({ product, isOpen, onClose, onSuccess }
       try {
         await deleteProductMutation.mutateAsync(variantToRemove.id);
       } catch (error) {
-        console.error('Error deleting variant:', error);
+        devError('Error deleting variant:', error);
       }
     }
   }, [variants, product, deleteProductMutation]);
@@ -333,7 +334,7 @@ export default function EditProductModal({ product, isOpen, onClose, onSuccess }
         onClose();
       }, 2000);
     } catch (error) {
-      console.error('Error updating product:', error);
+      devError('Error updating product:', error);
       setErrors({ productName: 'Error al actualizar el producto' });
     } finally {
       setIsSaving(false);

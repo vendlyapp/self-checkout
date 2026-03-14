@@ -15,6 +15,8 @@ import { useProducts } from "@/hooks/queries/useProducts";
 import { normalizeProductData } from "@/components/dashboard/products_list/data/mockProducts";
 import type { UpdateProductRequest, Product, CreateProductRequest } from "@/lib/services/productService";
 import { Loader } from "@/components/ui/Loader";
+import { useProductFormStore } from "@/lib/stores/productFormStore";
+import { devError, devWarn } from "@/lib/utils/logger";
 
 interface EditFormProps {
   productId: string;
@@ -33,8 +35,8 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
   // Obtener categorías reales del backend
   const { data: backendCategories = [], isLoading: categoriesLoading } = useCategories();
   
-  // Obtener todos los productos para buscar variantes
-  const { data: allProducts = [] } = useProducts({ isActive: true });
+  // Obtener todos los productos para buscar variantes (incluye inactivos, siempre refresca al montar)
+  const { data: allProducts = [], isLoading: productsLoading } = useProducts({ includeInactive: true, _refetchOnMount: true });
   
   // Form state - Campos básicos
   const [productName, setProductName] = useState("");
@@ -70,6 +72,8 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
   
   // Estado para almacenar los datos originales del producto
   const [originalProductData, setOriginalProductData] = useState<Product | null>(null);
+  const [originalVariants, setOriginalVariants] = useState<ProductVariant[]>([]);
+  const [originalVariantsLoaded, setOriginalVariantsLoaded] = useState(false);
   
   // Función para comparar datos actuales con originales
   const hasChanges = useMemo(() => {
@@ -84,6 +88,15 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
     // Comparar imágenes (comparar URLs/base64)
     const imagesChanged = JSON.stringify(currentImages) !== JSON.stringify(originalImages);
     
+    // Comparar variantes: cantidad o datos de nombre/precio cambiaron
+    const variantsChanged =
+      variants.length !== originalVariants.length ||
+      variants.some((v, i) => {
+        const orig = originalVariants[i];
+        if (!orig) return true;
+        return v.name !== orig.name || v.price !== orig.price || v.promotionPrice !== orig.promotionPrice;
+      });
+
     return (
       productName !== (originalProductData.name || "") ||
       productDescription !== (originalProductData.description || "") ||
@@ -101,7 +114,8 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
       isActive !== (originalProductData.isActive ?? true) ||
       hasPromotion !== !!(originalProductData.isPromotional || originalProductData.isOnSale) ||
       promotionPrice !== (originalProductData.promotionalPrice?.toString() || "") ||
-      imagesChanged
+      imagesChanged ||
+      variantsChanged
     );
   }, [
     productName,
@@ -115,23 +129,15 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
     productImages,
     originalProductData,
     existingProduct,
+    variants,
+    originalVariants,
   ]);
   
-  // Exponer hasChanges al window para que AdminLayout/FooterAddProduct deshabiliten el botón
+  const setProductFormHasChanges = useProductFormStore((s) => s.setHasChanges);
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const windowWithFormState = window as { __productFormHasChanges?: boolean; __productFormIsEditMode?: boolean };
-      windowWithFormState.__productFormHasChanges = hasChanges;
-      windowWithFormState.__productFormIsEditMode = true;
-    }
-    return () => {
-      if (typeof window !== 'undefined') {
-        const windowWithFormState = window as { __productFormHasChanges?: boolean; __productFormIsEditMode?: boolean };
-        windowWithFormState.__productFormHasChanges = false;
-        windowWithFormState.__productFormIsEditMode = false;
-      }
-    };
-  }, [hasChanges]);
+    setProductFormHasChanges(hasChanges);
+    return () => setProductFormHasChanges(false);
+  }, [hasChanges, setProductFormHasChanges]);
 
   // Cargar datos del producto cuando esté disponible
   useEffect(() => {
@@ -170,17 +176,6 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
         (product.originalPrice !== undefined && product.originalPrice !== null) ||
         (promoPrice !== undefined && promoPrice !== null)
       );
-      
-      // Debug: verificar detección de promoción
-      console.log('[EditForm] Promotion detection:', {
-        isPromotional: product.isPromotional,
-        isOnSale: product.isOnSale,
-        originalPrice: product.originalPrice,
-        promotionalPrice: promoPrice,
-        hasActivePromotion,
-        price: product.price,
-        productId: product.id
-      });
       
       // IMPORTANTE: Establecer hasPromotion ANTES de configurar los precios
       setHasPromotion(hasActivePromotion);
@@ -233,9 +228,11 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
           .map((variant: Product) => {
             const normalizedVariant = normalizeProductData(variant);
             // Extraer el nombre de la variante (remover el nombre del producto padre si está incluido)
-            let variantName = normalizedVariant.name;
+            // Solo quitar el prefijo si queda un sufijo no vacío, para no mostrar una variante sin nombre
+            let variantName = normalizedVariant.name || "";
             if (variantName && product.name && variantName.startsWith(product.name)) {
-              variantName = variantName.substring(product.name.length).trim();
+              const stripped = variantName.substring(product.name.length).trim();
+              if (stripped) variantName = stripped;
             }
             
             // Obtener precio base y precio promocional
@@ -290,34 +287,36 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
           setHasVariants(false);
           setVariants([]);
         }
+
+        // Guardar variantes originales para comparación (solo una vez)
+        if (!originalVariantsLoaded) {
+          setOriginalVariants(productVariants);
+          setOriginalVariantsLoaded(true);
+        }
       } else {
-        // Si aún no hay productos cargados, verificar si el producto actual tiene parentId
-        // Si tiene parentId, significa que es una variante, no un producto padre
-        const normalizedProduct = normalizeProductData(existingProduct as Product);
-        const isVariant = !!(normalizedProduct as Product & { parentId?: string }).parentId;
-        
-        if (!isVariant) {
-          // Es un producto padre, pero aún no sabemos si tiene variantes
-          // Dejar hasVariants en false por ahora
-          setHasVariants(false);
-          setVariants([]);
+        // Solo marcar "sin variantes" cuando la lista de productos ya terminó de cargar.
+        // Si productsLoading es true, no sobrescribir: cuando allProducts llegue, el efecto se re-ejecutará y cargará las variantes.
+        if (!productsLoading) {
+          const normalizedProduct = normalizeProductData(existingProduct as Product);
+          const isVariant = !!(normalizedProduct as Product & { parentId?: string }).parentId;
+          if (!isVariant) {
+            setHasVariants(false);
+            setVariants([]);
+          }
         }
       }
       
-      // Cargar taxRate del producto (decimal → porcentaje string para el select)
+      // Cargar taxRate del producto (decimal → porcentaje string para el select; solo 2.6 y 8.1)
       const tr = (product as Product & { taxRate?: number }).taxRate;
       if (tr !== undefined && tr !== null) {
         const rate = typeof tr === 'number' ? tr : parseFloat(String(tr));
-        if (rate === 0) setVatRate("0");
-        else if (rate >= 0.079) setVatRate("8.1");
-        else if (rate >= 0.035) setVatRate("3.8");
-        else if (rate >= 0.02) setVatRate("2.6");
+        if (rate >= 0.079) setVatRate("8.1");
         else setVatRate("2.6");
       } else {
         setVatRate("2.6");
       }
     }
-  }, [existingProduct, backendCategories, originalProductData, allProducts]);
+  }, [existingProduct, backendCategories, originalProductData, allProducts, originalVariantsLoaded, productsLoading]);
 
   // Función para manejar subida de imágenes
   const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -394,9 +393,8 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
       if (variantToRemove.id) {
         try {
           await deleteProductMutation.mutateAsync(variantToRemove.id);
-          console.log(`[EditForm] Variante "${variantToRemove.name}" aus der Datenbank gelöscht`);
         } catch (error) {
-          console.error(`[EditForm] Fehler beim Löschen der Variante "${variantToRemove.name}":`, error);
+          devError('[EditForm] Fehler beim Löschen der Variante:', variantToRemove.name, error);
           alert(`Fehler beim Löschen der Variante: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
           return; // No eliminar del estado si falla la eliminación en BD
         }
@@ -432,15 +430,6 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
     try {
       // Validar campos y obtener nuevos errores
       const newErrors: FormErrors = {};
-      
-      // Debug: verificar estado de promoción antes de validar
-      console.log('[EditForm] Validando antes de guardar:', {
-        hasPromotion,
-        promotionPrice,
-        productPrice,
-        hasVariants,
-        variantsCount: variants.length
-      });
       
       // Validar nombre
       if (!productName.trim()) {
@@ -481,21 +470,9 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
       }
       // Si hasPromotion es false o hay variantes, no validar promotionPrice - está bien que esté vacío
       
-      // Debug: mostrar estado de validación
-      if (Object.keys(newErrors).length > 0) {
-        console.log('[EditForm] Validation errors:', {
-          errors: newErrors,
-          hasPromotion,
-          promotionPrice,
-          productPrice,
-          hasVariants
-        });
-      }
-      
-      // Si hay errores, actualizar el estado y retornar
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors);
-        console.warn('[EditForm] Validation errors:', newErrors);
+        devWarn('[EditForm] Validation errors:', newErrors);
         return;
       }
       
@@ -560,32 +537,11 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
             })(),
           }),
         };
-        // Log para debugging
-        console.log('[EditForm] Guardando producto:', {
-          id: productId,
-          updateData,
-          productCategoryId,
-          hasVariants,
-          variants,
-        });
-
         // PRIMERO: Actualizar producto principal
-        console.log('[EditForm] Actualizando producto principal:', {
-          id: productId,
-          updateData: {
-            ...updateData,
-            // No mostrar imágenes completas en el log
-            images: updateData.images ? `[${updateData.images.length} images]` : undefined,
-            image: updateData.image ? '[imagen]' : undefined
-          }
-        });
-
         const updatedProduct = await updateProductMutation.mutateAsync({
           id: productId,
           data: updateData as UpdateProductRequest,
         });
-
-        console.log('[EditForm] Producto principal actualizado exitosamente:', updatedProduct);
 
         // SEGUNDO: Si hay variantes, actualizar/crear variantes (igual que en la creación)
         const variantErrors: string[] = [];
@@ -651,17 +607,12 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
             return (normalizedP as Product & { parentId?: string }).parentId === productId;
           });
 
-          console.log('[EditForm] Guardando variantes:', {
-            validVariantsCount: validVariants.length,
-            existingVariantsCount: existingVariants.length
-          });
-
           // Actualizar o crear variantes (igual que en Form.tsx)
           for (const variant of validVariants) {
             try {
               const variantPrice = parseFloat(variant.price);
               if (isNaN(variantPrice) || variantPrice <= 0) {
-                console.warn(`Variant "${variant.name}" has invalid price, skipping`);
+                devWarn('Variant has invalid price, skipping:', variant.name);
                 variantErrors.push(`Variante "${variant.name}": Ungültiger Preis`);
                 continue;
               }
@@ -705,22 +656,18 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
               const errorObj = variantError as { message?: string; error?: string; response?: { data?: { error?: string } } };
               const errorMsg = errorObj?.message || errorObj?.error || errorObj?.response?.data?.error || 'Unbekannter Fehler beim Speichern der Variante';
               variantErrors.push(`Variante "${variant.name}": ${errorMsg}`);
-              console.error(`[EditForm] Fehler beim Speichern der Variante "${variant.name}":`, variantError);
+              devError('[EditForm] Fehler beim Speichern der Variante:', variant.name, variantError);
             }
           }
 
           // Si hay errores en las variantes, mostrar al usuario
           if (variantErrors.length > 0) {
             const errorMessage = `Error al guardar algunas variantes:\n${variantErrors.join('\n')}`;
-            console.error('[EditForm] Errores al guardar variantes:', variantErrors);
+            devError('[EditForm] Errores al guardar variantes:', variantErrors);
             alert(errorMessage);
           }
 
           // Mostrar éxito si todas las variantes se guardaron correctamente
-          if (variantSuccesses.length > 0 && variantErrors.length === 0) {
-            console.log('[EditForm] Alle Varianten erfolgreich gespeichert');
-          }
-
           // TERCERO: Eliminar variantes que ya no están en la lista (para evitar duplicados)
           const variantsToDelete: Product[] = [];
           for (const existingVariant of existingVariants) {
@@ -749,18 +696,13 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
 
           // Eliminar variantes que ya no están en la lista
           if (variantsToDelete.length > 0) {
-            console.log('[EditForm] Removing variants no longer in list:', variantsToDelete.map(v => {
-              const normalized = normalizeProductData(v);
-              return normalized.name;
-            }));
             for (const variantToDelete of variantsToDelete) {
               try {
                 await deleteProductMutation.mutateAsync(variantToDelete.id);
-                console.log(`[EditForm] Variante "${variantToDelete.name}" erfolgreich gelöscht`);
               } catch (deleteError: unknown) {
                 const errorObj = deleteError as { message?: string; error?: string };
                 const errorMsg = errorObj?.message || errorObj?.error || 'Fehler beim Löschen der Variante';
-                console.error(`[EditForm] Fehler beim Löschen der Variante "${variantToDelete.name}":`, deleteError);
+                devError('[EditForm] Fehler beim Löschen der Variante:', variantToDelete.name, deleteError);
                 variantErrors.push(`Fehler beim Löschen der Variante: ${errorMsg}`);
               }
             }
@@ -771,6 +713,8 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
         // para que hasChanges se resetee correctamente
         const normalizedUpdated = normalizeProductData(updatedProduct as Product);
         setOriginalProductData(normalizedUpdated);
+        setOriginalVariants([...variants]);
+        setOriginalVariantsLoaded(true);
 
         setUpdatedProduct(updatedProduct);
         
@@ -788,7 +732,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
       } catch (apiError: unknown) {
         // Ocultar modal de carga en caso de error
         setIsSaving(false);
-        console.error('[EditForm] Error updating product:', apiError);
+        devError('[EditForm] Error updating product:', apiError);
         const errorObj = apiError as { message?: string; error?: string };
         const errorMessage = errorObj?.message || errorObj?.error || 'Fehler beim Aktualisieren des Produkts';
         alert(`Fehler: ${errorMessage}. Bitte versuchen Sie es erneut.`);
@@ -797,7 +741,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
     } catch (error: unknown) {
       // Ocultar modal de carga en caso de error
       setIsSaving(false);
-      console.error('[EditForm] Error en handleSave:', error);
+      devError('[EditForm] Error en handleSave:', error);
       const errorObj = error as { message?: string };
       const errorMessage = errorObj?.message || 'Fehler beim Aktualisieren des Produkts';
       alert(`Fehler: ${errorMessage}. Bitte versuchen Sie es erneut.`);
@@ -823,19 +767,10 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
     allProducts,
   ]);
 
-  // Exponer handleSave en window para que el footer "Änderungen speichern" lo invoque (hideSubmitButton oculta el botón del form)
+  const registerSave = useProductFormStore((s) => s.registerSave);
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const w = window as unknown as { saveProduct?: () => Promise<void> };
-      w.saveProduct = handleSave;
-    }
-    return () => {
-      if (typeof window !== 'undefined') {
-        const w = window as unknown as { saveProduct?: () => Promise<void> };
-        if (w.saveProduct === handleSave) w.saveProduct = undefined;
-      }
-    };
-  }, [handleSave]);
+    return registerSave(handleSave);
+  }, [handleSave, registerSave]);
 
   const handleModalClose = useCallback(() => {
     setShowSuccessModal(false);

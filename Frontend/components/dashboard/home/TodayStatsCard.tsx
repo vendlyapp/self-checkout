@@ -89,7 +89,7 @@ const TodayStatsCard = () => {
 
         <StatCard
           icon={<Users className="w-4 h-4" />}
-          label="Kunden"
+          label={totalCustomers === 1 ? "Kunde" : "Kunden"}
           amount={totalCustomers.toString()}
           count=""
           trend={totalCustomers > 0 ? "Heute" : "Keine Kunden"}

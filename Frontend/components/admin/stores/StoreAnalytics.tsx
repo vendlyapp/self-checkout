@@ -21,6 +21,7 @@ import {
 } from 'recharts';
 import { formatSwissPrice } from '@/lib/utils';
 import { SuperAdminService, type Store } from '@/lib/services/superAdminService';
+import { devError } from '@/lib/utils/logger';
 
 interface StoreAnalyticsProps {
   storeId: string;
@@ -152,7 +153,7 @@ export default function StoreAnalytics({ storeId, store }: StoreAnalyticsProps) 
         throw new Error(analyticsResponse.error || 'Fehler beim Laden der Analytics');
       }
     } catch (err) {
-      console.error('Error fetching analytics:', err);
+      devError('Error fetching analytics:', err);
       setError(err instanceof Error ? err.message : 'Fehler beim Laden der Analytics');
       // Don't use mock data - show error state instead
       setAnalytics(null);

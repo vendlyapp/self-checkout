@@ -17,9 +17,9 @@ export const getRegisterSubtitle = (): string =>
 /** Nombre por defecto para tienda/recibo cuando no hay storeName */
 export const getDefaultStoreName = (): string => APP_NAME || "Shop";
 
-/** Texto para búsqueda de email de confirmación */
+/** Texto para búsqueda de email de confirmación (sin referencias técnicas) */
 export const getCheckEmailFrom = (): string =>
-  APP_NAME ? `Suche nach der E-Mail von ${APP_NAME} oder Supabase` : "Suche nach der Bestätigungs-E-Mail";
+  APP_NAME ? `Suche nach der E-Mail von ${APP_NAME}` : "Suche nach der Bestätigungs-E-Mail";
 
 /** Texto del footer de copyright */
 export const getCopyrightText = (): string =>

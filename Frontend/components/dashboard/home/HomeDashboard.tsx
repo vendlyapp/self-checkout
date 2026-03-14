@@ -55,8 +55,7 @@ const HomeDashboard: React.FC = () => {
     return <DashboardSkeletonLoader />;
   }
 
-  // Datos con fallbacks seguros
-  const { currentAmount, goalAmount, percentage, recentSales } = data;
+  const { recentSales } = data;
 
   return (
     <div className="w-full min-h-screen">
@@ -86,12 +85,8 @@ const HomeDashboard: React.FC = () => {
           {/* ===== TODAY'S STATS ===== */}
           <TodayStatsCard />
 
-          {/* ===== DAILY GOAL ===== */}
-          <DailyGoalCard
-            currentAmount={currentAmount}
-            goalAmount={goalAmount}
-            percentage={percentage}
-          />
+          {/* ===== DAILY GOAL (Ziele: Tag / Woche / Monat) ===== */}
+          <DailyGoalCard />
 
           {/* ===== SLIDER ===== */}
           <Slider />
@@ -162,12 +157,8 @@ const HomeDashboard: React.FC = () => {
             <TodayStatsCard />
           </DashboardContainer>
 
-          {/* ===== TAGESZIEL: una columna, card con más aire interno ===== */}
-          <DailyGoalCard
-            currentAmount={currentAmount}
-            goalAmount={goalAmount}
-            percentage={percentage}
-          />
+          {/* ===== ZIELE: Tag / Woche / Monat con selector ===== */}
+          <DailyGoalCard />
 
           {/* ===== QUICK METRICS: una columna (widget con su propia card) ===== */}
           <QuickMetricsWidget />

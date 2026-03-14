@@ -10,6 +10,7 @@ import Image from 'next/image'
 import { CreditCard, AlertTriangle, Shield } from 'lucide-react'
 import { Loader } from '@/components/ui/Loader'
 import type { PaymentMethod as ApiPaymentMethod } from '@/hooks/queries/usePaymentMethods'
+import { devError } from '@/lib/utils/logger'
 
 interface StorePaymentMethodsProps {
   storeId: string
@@ -103,7 +104,7 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
       })
       await refetch()
     } catch (error) {
-      console.error('Fehler beim Aktualisieren der Zahlungsmethode:', error)
+      devError('Fehler beim Aktualisieren der Zahlungsmethode:', error)
     } finally {
       setUpdatingMethodName(null)
     }
@@ -124,7 +125,7 @@ const StorePaymentMethods = ({ storeId }: StorePaymentMethodsProps) => {
       })
       await refetch()
     } catch (error) {
-      console.error('Fehler beim Aktualisieren der Zahlungsmethode:', error)
+      devError('Fehler beim Aktualisieren der Zahlungsmethode:', error)
     } finally {
       setUpdatingMethodName(null)
     }

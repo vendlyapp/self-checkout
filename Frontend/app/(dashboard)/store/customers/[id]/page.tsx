@@ -12,6 +12,7 @@ import { formatCHF, formatDate } from '@/lib/invoice-utils'
 import { formatSwissPriceWithCHF } from '@/lib/utils'
 import Link from 'next/link'
 import { Loader } from '@/components/ui/Loader'
+import { devError } from '@/lib/utils/logger'
 
 export default function CustomerDetailPage() {
   const { isMobile } = useResponsive()
@@ -53,7 +54,7 @@ export default function CustomerDetailPage() {
         toast.error(invoicesResult.error || 'Fehler beim Laden der Rechnungen')
       }
     } catch (error) {
-      console.error('Error loading customer data:', error)
+      devError('Error loading customer data:', error)
       toast.error('Fehler beim Laden der Kundendaten')
     } finally {
       setIsLoading(false)

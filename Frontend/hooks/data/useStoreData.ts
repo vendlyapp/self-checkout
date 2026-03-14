@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useScannedStoreStore, type StoreInfo } from '@/lib/stores/scannedStoreStore';
 import { useCartStore } from '@/lib/stores/cartStore';
 import { buildApiUrl } from '@/lib/config/api';
+import { devError } from '@/lib/utils/logger';
 
 interface UseStoreDataOptions {
   slug?: string;
@@ -78,7 +79,7 @@ export const useStoreData = (
         setError(result.error || 'Error al cargar la tienda');
       }
     } catch (err) {
-      console.error('Error loading store:', err);
+      devError('Error loading store:', err);
       setError('Error al cargar la tienda');
     } finally {
       setIsLoading(false);

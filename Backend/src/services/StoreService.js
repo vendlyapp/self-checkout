@@ -241,7 +241,7 @@ class StoreService {
    */
   async update(ownerId, storeData) {
     try {
-      const { name, logo, isOpen, address, phone, email, description, slug: slugInput, vatNumber } = storeData;
+      const { name, logo, isOpen, address, phone, email, description, slug: slugInput, vatNumber, goalDaily, goalWeekly, goalMonthly } = storeData;
 
       const existing = await query('SELECT id, slug, "settingsCompletedAt" FROM "Store" WHERE "ownerId" = $1', [ownerId]);
       if (existing.rows.length === 0) {
@@ -300,6 +300,22 @@ class StoreService {
         paramCount++;
         updateFields.push(`"vatNumber" = $${paramCount}`);
         values.push(vatNumber && String(vatNumber).trim() ? String(vatNumber).trim() : null);
+      }
+
+      if (goalDaily !== undefined) {
+        paramCount++;
+        updateFields.push(`"goalDaily" = $${paramCount}`);
+        values.push(goalDaily == null || goalDaily === '' ? null : parseFloat(goalDaily));
+      }
+      if (goalWeekly !== undefined) {
+        paramCount++;
+        updateFields.push(`"goalWeekly" = $${paramCount}`);
+        values.push(goalWeekly == null || goalWeekly === '' ? null : parseFloat(goalWeekly));
+      }
+      if (goalMonthly !== undefined) {
+        paramCount++;
+        updateFields.push(`"goalMonthly" = $${paramCount}`);
+        values.push(goalMonthly == null || goalMonthly === '' ? null : parseFloat(goalMonthly));
       }
 
       if (isFirstTimeSetup && slugInput !== undefined && slugInput !== null) {

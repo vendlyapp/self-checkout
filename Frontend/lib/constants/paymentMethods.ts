@@ -44,8 +44,8 @@ export const AVAILABLE_PAYMENT_METHODS: AvailablePaymentMethod[] = [
   },
   {
     code: 'qr-rechnung',
-    name: 'QR Rechnung',
-    displayName: 'QR Rechnung',
+    name: 'QR-Rechnung',
+    displayName: 'QR-Rechnung',
     icon: '/qr.svg',
     description: 'QR Rechnung einrichten',
     configFields: [

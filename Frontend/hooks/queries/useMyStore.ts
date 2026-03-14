@@ -24,6 +24,12 @@ export interface StoreData {
   settingsCompletedAt?: string | null
   /** Cuando el admin completó el flujo de onboarding */
   onboardingCompletedAt?: string | null
+  /** Meta de ventas diaria en CHF (Tagesziel) */
+  goalDaily?: number | null
+  /** Meta de ventas semanal en CHF (Wochenziel) */
+  goalWeekly?: number | null
+  /** Meta de ventas mensual en CHF (Monatsziel) */
+  goalMonthly?: number | null
 }
 
 export const useMyStore = () => {

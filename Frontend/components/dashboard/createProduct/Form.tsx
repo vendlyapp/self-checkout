@@ -16,6 +16,7 @@ import { useCategories } from "@/hooks/queries/useCategories";
 import { useQueryClient } from "@tanstack/react-query";
 import type { CreateProductRequest } from "@/lib/services/productService";
 import { Loader } from "@/components/ui/Loader";
+import { useProductFormStore } from "@/lib/stores/productFormStore";
 
 export default function Form({ isDesktop = false }: FormProps) {
   const router = useRouter();
@@ -209,6 +210,11 @@ export default function Form({ isDesktop = false }: FormProps) {
         
         // Validar que todas las variantes completadas sean válidas
         if (!validateVariants(validVariants)) {
+          const hasEmptyName = validVariants.some(v => !v.name || !v.name.trim());
+          if (hasEmptyName) {
+            alert('Bitte geben Sie für jede Variante einen Variantennamen ein.');
+            return;
+          }
           const invalidVariants = validVariants
             .map((variant, index) => {
               const nameValid = variant.name && variant.name.trim() !== '';
@@ -278,7 +284,10 @@ export default function Form({ isDesktop = false }: FormProps) {
           
           // Validar que todas las variantes completadas sean válidas
           if (!validateVariants(validVariants)) {
-            throw new Error('Alle Varianten müssen einen gültigen Namen und Preis haben (Preis > 0)');
+            const hasEmptyName = validVariants.some(v => !v.name || !v.name.trim());
+            throw new Error(hasEmptyName
+              ? 'Bitte geben Sie für jede Variante einen Variantennamen ein.'
+              : 'Alle Varianten müssen einen gültigen Namen und Preis haben (Preis > 0).');
           }
           
           // Función auxiliar para crear objeto de producto con promoción
@@ -349,7 +358,6 @@ export default function Form({ isDesktop = false }: FormProps) {
             const variant = validVariants[i];
             const variantPrice = parseFloat(variant.price);
             if (isNaN(variantPrice) || variantPrice <= 0) {
-              console.warn(`Variant "${variant.name}" has invalid price, skipping`);
               continue;
             }
 
@@ -398,7 +406,6 @@ export default function Form({ isDesktop = false }: FormProps) {
     } catch (error) {
       // Asegurar que el modal de carga se oculte en caso de error
       setIsCreating(false);
-      console.error('Error creating product:', error);
       
       // Mostrar error más específico al usuario
       let errorMessage = 'Fehler beim Erstellen des Produkts';
@@ -499,17 +506,21 @@ export default function Form({ isDesktop = false }: FormProps) {
           {/* Contenido del modal */}
           <div className="p-6">
             <p className="text-gray-700 mb-6 text-center text-base">
-              {createdProductsCount > 1 ? (
+              {createdProductsCount === 1 ? (
+                <>
+                  <span className="font-semibold text-gray-900">1 Produkt</span> wurde erfolgreich erstellt
+                  <br />
+                  <span className="text-sm text-gray-600 mt-2 block">
+                    &quot;{createdProduct?.name}&quot;
+                  </span>
+                </>
+              ) : (
                 <>
                   <span className="font-semibold text-gray-900">{createdProductsCount} Produkte</span> wurden erfolgreich erstellt
                   <br />
                   <span className="text-sm text-gray-600 mt-2 block">
                     Hauptprodukt: &quot;{createdProduct?.name}&quot;
                   </span>
-                </>
-              ) : (
-                <>
-                  Ihr Produkt <span className="font-semibold text-gray-900">&quot;{createdProduct?.name}&quot;</span> wurde erfolgreich erstellt
                 </>
               )}
             </p>
@@ -548,12 +559,10 @@ export default function Form({ isDesktop = false }: FormProps) {
     return createPortal(modalContent, document.body);
   };
 
+  const registerSave = useProductFormStore((s) => s.registerSave);
   useEffect(() => {
-    interface WindowWithSaveProduct extends Window {
-      saveProduct?: () => Promise<void>;
-    }
-    (window as WindowWithSaveProduct).saveProduct = handleSave;
-  }, [handleSave]);
+    return registerSave(handleSave);
+  }, [handleSave, registerSave]);
 
   // Prevenir scroll del body cuando algún modal está abierto
   useEffect(() => {

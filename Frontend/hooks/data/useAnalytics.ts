@@ -406,8 +406,7 @@ const transformOrdersToShopActivity = (orders: RecentOrder[]): ShopActivity => {
   const totalActive = activeCustomers.length;
   const totalInactive = Math.max(0, uniqueUsers.size - totalActive);
 
-  // Calcular valor de carritos abiertos (por ahora 0, se puede mejorar con carritos activos)
-  const openCartsValue = 0;
+  const openCartsValue = 0; // overridden in AnalyticsDashboard by useActiveStats
   const progressPercentage = totalActive > 0 ? Math.round((totalActive / Math.max(1, uniqueUsers.size)) * 100) : 0;
 
   return {
@@ -465,9 +464,8 @@ export const useAnalytics = (): UseAnalyticsReturn => {
   // Obtener estadísticas de órdenes
   const { data: orderStats, isLoading: statsLoading, error: statsError } = useOrderStats(undefined, ownerId);
   
-  // Obtener órdenes recientes (ya filtradas por store automáticamente)
-  // Usar más órdenes para tener datos históricos según el período seleccionado
-  const { data: recentOrders = [], isLoading: ordersLoading, error: ordersError } = useRecentOrders(500);
+  // Órdenes recientes para gráficos (límite razonable; analytics completos deberían hacerse en backend)
+  const { data: recentOrders = [], isLoading: ordersLoading, error: ordersError } = useRecentOrders(100);
 
   // Contamos todas las órdenes que NO están canceladas (pending, processing, completed = venta/ganancia).
   // Solo las canceladas se excluyen y no cuentan en gráficos ni estadísticas.

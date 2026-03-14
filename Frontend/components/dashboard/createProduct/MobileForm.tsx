@@ -484,26 +484,34 @@ export default function MobileForm(props: SharedFormProps) {
                     key={index}
                     className="space-y-2 p-3 bg-background-cream rounded-lg border-2 border-white"
                   >
-                    <div className="flex items-center space-x-2 justify-between w-full">
-                      <input
-                        type="text"
-                        value={variant.name}
-                        onChange={(e) =>
-                          updateVariant(index, "name", e.target.value)
-                        }
-                        placeholder="Bsp: Gross (1Kg)"
-                        className="flex-1 p-2 w-full h-[46px] border border-gray-200 rounded-sm text-sm bg-white"
-                      />
-                      {variants.length > 1 && (
-                        <button
-                          onClick={async () => {
-                            await removeVariant(index);
-                          }}
-                          className="w-8 h-8 bg-[#FD3F37] text-white rounded-full flex items-center justify-center hover:bg-[#FD3F37]/80 transition-colors"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
-                      )}
+                    <div className="space-y-1">
+                      <label className="block text-[14px] text-black font-semibold">
+                        Variantenname <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex items-center space-x-2 justify-between w-full">
+                        <input
+                          type="text"
+                          value={variant.name}
+                          onChange={(e) =>
+                            updateVariant(index, "name", e.target.value)
+                          }
+                          placeholder="Bsp: Gross (1Kg)"
+                          required
+                          className={`flex-1 p-2 w-full h-[46px] border rounded-sm text-sm bg-white ${
+                            !variant.name.trim() ? 'border-red-300' : 'border-gray-200'
+                          }`}
+                        />
+                        {variants.length > 1 && (
+                          <button
+                            onClick={async () => {
+                              await removeVariant(index);
+                            }}
+                            className="w-8 h-8 bg-[#FD3F37] text-white rounded-full flex items-center justify-center hover:bg-[#FD3F37]/80 transition-colors"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">

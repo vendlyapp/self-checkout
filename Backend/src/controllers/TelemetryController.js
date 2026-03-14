@@ -4,7 +4,7 @@ const { HTTP_STATUS } = require('../types');
 class TelemetryController {
   async registerHeartbeat(req, res) {
     try {
-      const { storeId, sessionId, role: roleOverride } = req.body || {};
+      const { storeId, sessionId, role: roleOverride, cartValue } = req.body || {};
 
       const requestIp =
         req.headers['x-forwarded-for']?.split(',')?.[0]?.trim() ??
@@ -42,6 +42,7 @@ class TelemetryController {
         role,
         ipAddress: requestIp,
         userAgent,
+        cartValue: cartValue ?? 0,
       });
 
       res.status(HTTP_STATUS.OK).json({
@@ -49,6 +50,32 @@ class TelemetryController {
       });
     } catch (error) {
       res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  }
+
+  async getStoreActiveStats(req, res) {
+    try {
+      const ownerId = req.user?.userId;
+      if (!ownerId) {
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+          success: false,
+          error: 'Usuario no autenticado',
+        });
+      }
+
+      const intervalMinutes = Number(req.query.interval) || 5;
+      const stats = await analyticsService.getStoreActiveStats({ ownerId, intervalMinutes });
+
+      res.status(HTTP_STATUS.OK).json({
+        success: true,
+        data: stats,
+      });
+    } catch (error) {
+      console.error('❌ getStoreActiveStats error:', error.message, error.stack);
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         error: error.message,
       });

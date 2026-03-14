@@ -17,8 +17,6 @@ export const GoogleLoginButton = () => {
         ? `${window.location.origin}/auth/callback`
         : getAuthCallbackUrl();
       
-      console.log('🔐 Starting OAuth with callback:', callbackUrl);
-      
       await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -34,8 +32,7 @@ export const GoogleLoginButton = () => {
           skipBrowserRedirect: false,
         }
       })
-    } catch (error) {
-      console.error('Error al iniciar login con Google:', error)
+    } catch {
       setLoading(false)
     }
   }

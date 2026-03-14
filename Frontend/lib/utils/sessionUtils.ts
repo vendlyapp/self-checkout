@@ -3,6 +3,7 @@
  */
 
 import { supabase } from '@/lib/supabase/client';
+import { devError, devWarn } from '@/lib/utils/logger';
 
 /** Clears all Supabase-related cookies. */
 const clearSupabaseCookies = (): void => {
@@ -40,7 +41,7 @@ const clearBrowserCache = async (): Promise<void> => {
           registrations.map((registration) => registration.unregister())
         );
       } catch (error) {
-        console.warn('Failed to unregister Service Workers:', error);
+        devWarn('Failed to unregister Service Workers:', error);
       }
     }
     if ('caches' in window) {
@@ -51,13 +52,13 @@ const clearBrowserCache = async (): Promise<void> => {
             try {
               return caches.delete(name);
             } catch (error) {
-              console.warn(`Failed to delete cache ${name}:`, error);
+              devWarn(`Failed to delete cache ${name}:`, error);
               return Promise.resolve(false);
             }
           })
         );
       } catch (error) {
-        console.warn('Failed to clear Cache API:', error);
+        devWarn('Failed to clear Cache API:', error);
       }
     }
     if ('indexedDB' in window) {
@@ -78,7 +79,7 @@ const clearBrowserCache = async (): Promise<void> => {
           })
         );
       } catch (error) {
-        console.warn('Failed to clear IndexedDB:', error);
+        devWarn('Failed to clear IndexedDB:', error);
       }
     }
 
@@ -93,7 +94,7 @@ const clearBrowserCache = async (): Promise<void> => {
         );
         nextSessionKeys.forEach((key) => sessionStorage.removeItem(key));
       } catch (error) {
-        console.warn('Failed to clear Next.js keys:', error);
+        devWarn('Failed to clear Next.js keys:', error);
       }
     }
 
@@ -118,11 +119,11 @@ const clearBrowserCache = async (): Promise<void> => {
           window.fetch = originalFetch;
         }, 1000);
       } catch (error) {
-        console.warn('Failed to set fetch no-cache:', error);
+        devWarn('Failed to set fetch no-cache:', error);
       }
     }
   } catch (error) {
-    console.warn('Browser cache clear failed (continuing):', error);
+    devWarn('Browser cache clear failed (continuing):', error);
   }
 };
 
@@ -139,7 +140,7 @@ const clearZustandStores = async (): Promise<void> => {
         store.persist.clearStorage();
       }
     } catch (error) {
-      console.warn('Failed to clear cartStore:', error);
+      devWarn('Failed to clear cartStore:', error);
     }
     try {
       const { useStoreState } = await import('@/lib/stores/storeState');
@@ -148,7 +149,7 @@ const clearZustandStores = async (): Promise<void> => {
         store.persist.clearStorage();
       }
     } catch (error) {
-      console.warn('Failed to clear storeState:', error);
+      devWarn('Failed to clear storeState:', error);
     }
     try {
       const { useScannedStoreStore } = await import('@/lib/stores/scannedStoreStore');
@@ -158,7 +159,7 @@ const clearZustandStores = async (): Promise<void> => {
         store.persist.clearStorage();
       }
     } catch (error) {
-      console.warn('Failed to clear scannedStoreStore:', error);
+      devWarn('Failed to clear scannedStoreStore:', error);
     }
     try {
       const { useSuperAdminStore } = await import('@/lib/stores/superAdminStore');
@@ -168,7 +169,7 @@ const clearZustandStores = async (): Promise<void> => {
         store.persist.clearStorage();
       }
     } catch (error) {
-      console.warn('Failed to clear superAdminStore:', error);
+      devWarn('Failed to clear superAdminStore:', error);
     }
     try {
       const { useProductsAnalyticsStore } = await import('@/lib/stores/productsAnalyticsStore');
@@ -178,10 +179,10 @@ const clearZustandStores = async (): Promise<void> => {
         store.persist.clearStorage();
       }
     } catch (error) {
-      console.warn('Failed to clear productsAnalyticsStore:', error);
+      devWarn('Failed to clear productsAnalyticsStore:', error);
     }
   } catch (error) {
-    console.warn('Failed to clear Zustand stores:', error);
+    devWarn('Failed to clear Zustand stores:', error);
   }
 };
 
@@ -198,7 +199,7 @@ const clearReactQueryCache = async (): Promise<void> => {
       }
     }
   } catch (error) {
-    console.warn('Failed to clear React Query cache:', error);
+    devWarn('Failed to clear React Query cache:', error);
   }
 };
 
@@ -251,7 +252,7 @@ export const clearAllSessionData = async (queryClient?: { clear: () => void }): 
         const { data: { session } } = await supabase.auth.getSession();
         token = session?.access_token || null;
       } catch (error) {
-        console.warn('Failed to get token for logout:', error);
+        devWarn('Failed to get token for logout:', error);
       }
     }
 
@@ -265,10 +266,10 @@ export const clearAllSessionData = async (queryClient?: { clear: () => void }): 
           headers,
           cache: 'no-store' as RequestCache,
         }).catch((error) => {
-          console.warn('Backend logout notification failed (ignored):', error);
+          devWarn('Backend logout notification failed (ignored):', error);
         });
       } catch (error) {
-        console.warn('Backend logout notification failed:', error);
+        devWarn('Backend logout notification failed:', error);
       }
     }
 
@@ -276,7 +277,7 @@ export const clearAllSessionData = async (queryClient?: { clear: () => void }): 
       try {
         queryClient.clear();
       } catch (error) {
-        console.warn('Failed to clear React Query cache:', error);
+        devWarn('Failed to clear React Query cache:', error);
       }
     }
     await clearReactQueryCache();
@@ -285,7 +286,7 @@ export const clearAllSessionData = async (queryClient?: { clear: () => void }): 
     try {
       await supabase.auth.signOut();
     } catch (error) {
-      console.warn('Supabase signOut failed:', error);
+      devWarn('Supabase signOut failed:', error);
     }
 
     if (typeof window !== 'undefined') {
@@ -344,11 +345,11 @@ export const clearAllSessionData = async (queryClient?: { clear: () => void }): 
           }
         }
       } catch (error) {
-        console.warn('Failed to clear router cache and globals:', error);
+        devWarn('Failed to clear router cache and globals:', error);
       }
     }
   } catch (error) {
-    console.error('Session clear failed:', error);
+    devError('Session clear failed:', error);
     if (typeof window !== 'undefined') {
       localStorage.clear();
       sessionStorage.clear();
@@ -372,7 +373,7 @@ export const clearAuthData = async (): Promise<void> => {
     }
     clearSupabaseCookies();
   } catch (error) {
-    console.error('Auth data clear failed:', error);
+    devError('Auth data clear failed:', error);
   }
 };
 
@@ -422,7 +423,7 @@ export const clearNextJsCacheAndReload = async (): Promise<void> => {
     delete windowWithNextData.__NEXT_DATA_CACHE__;
     forceReloadWithoutCache();
   } catch (error) {
-    console.warn('Next.js cache clear failed, forcing reload:', error);
+    devWarn('Next.js cache clear failed, forcing reload:', error);
     forceReloadWithoutCache();
   }
 };

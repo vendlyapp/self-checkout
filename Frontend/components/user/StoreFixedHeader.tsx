@@ -33,7 +33,7 @@ export default function StoreFixedHeader({
         <div className="flex-1 min-w-0 mr-2 sm:mr-0">
           <SearchInput
             placeholder="Produkte suchen..."
-            className="w-full max-w-full sm:max-w-[260px] h-[48px] sm:h-[50px]"
+            className="w-full max-w-full sm:max-w-[260px] min-h-[52px] sm:min-h-[54px] h-[52px] sm:h-[54px]"
             value={searchQuery}
             onChange={onSearch}
           />

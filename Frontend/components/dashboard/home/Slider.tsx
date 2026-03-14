@@ -33,7 +33,7 @@ const sliderData = [
     text: "Bestseller",
     color: "bg-brand-500",
     description: "Top Produkte",
-    route: "/sales/verkaufe",
+    route: "/sales/bestseller",
   },
   {
     icon: Receipt,

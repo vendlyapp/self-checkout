@@ -3,11 +3,14 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
+import { devError, devWarn } from '@/lib/utils/logger';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  /** Role from JWT user_metadata only — do not use localStorage for access control */
+  userRole: string | null;
   signUp: (email: string, password: string, name: string, role?: string) => Promise<{ data: { user: User | null; session: Session | null } | null; error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ data: { user: User | null; session: Session | null } | null; error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
@@ -37,18 +40,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Safety timeout — if Supabase is unreachable, unblock the UI after 5s
     const timeoutId = setTimeout(() => {
       setLoading(false);
-      console.warn('[AuthProvider] Session check timed out — rendering login form');
+      devWarn('[AuthProvider] Session check timed out');
     }, 5000);
 
     // Fetch initial session once
     const initializeAuth = async () => {
       try {
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
-        if (error) console.error('[AuthProvider] Error fetching session:', error);
+        if (error) devError('[AuthProvider] Error fetching session:', error);
         setSession(initialSession);
         setUser(initialSession?.user ?? null);
       } catch (error) {
-        console.error('[AuthProvider] initializeAuth threw:', error);
+        devError('[AuthProvider] initializeAuth threw:', error);
       } finally {
         clearTimeout(timeoutId);
         setLoading(false);
@@ -59,10 +62,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     // Subscribe to auth state changes (sign-in, sign-out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // El redirect al login lo maneja useSessionTimeout, que tiene contexto
+        // de si fue inactividad o logout manual. AuthContext solo actualiza estado.
       }
     );
 
@@ -97,12 +103,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         email,
         password
       });
-
-      if (data?.user && typeof window !== 'undefined') {
-        const role = data.user.user_metadata?.role || 'ADMIN';
-        localStorage.setItem('userRole', role);
-      }
-
+      // Role is read from session.user.user_metadata.role (JWT) — never from localStorage for access control
       return { data, error };
     } catch (error) {
       return { data: null, error: error as AuthError };
@@ -117,7 +118,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       await clearAllSessionData();
       return { error: null };
     } catch (error) {
-      console.error('SignOut failed:', error);
+      devError('SignOut failed:', error);
       try {
         await supabase.auth.signOut();
         setUser(null);
@@ -127,16 +128,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           sessionStorage.clear();
         }
       } catch (e) {
-        console.error('Fallback cleanup failed:', e);
+        devError('Fallback cleanup failed:', e);
       }
       return { error: error as AuthError };
     }
   };
 
+  const userRole = session?.user?.user_metadata?.role ?? null;
+
   const value: AuthContextType = {
     user,
     session,
     loading,
+    userRole: typeof userRole === 'string' ? userRole : null,
     signUp,
     signIn,
     signOut,

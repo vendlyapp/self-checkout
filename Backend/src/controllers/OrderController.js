@@ -2,6 +2,7 @@ const { randomUUID } = require('crypto');
 const orderService = require('../services/OrderService');
 const storeService = require('../services/StoreService');
 const userService = require('../services/UserService');
+const analyticsService = require('../services/AnalyticsService');
 const { HTTP_STATUS } = require('../types');
 
 /**
@@ -359,6 +360,30 @@ class OrderController {
   }
 
   /**
+   * Top productos más vendidos de la tienda (para Bestseller en dashboard).
+   * @route GET /api/orders/top-products
+   */
+  async getTopProducts(req, res) {
+    try {
+      const storeId = req.user?.storeId;
+      if (!storeId) {
+        return res.status(HTTP_STATUS.OK).json({ success: true, data: [] });
+      }
+      const { limit = 5, metric = 'units' } = req.query;
+      const data = await analyticsService.getTopProductsByStore(storeId, {
+        limit: parseInt(limit) || 5,
+        metric: metric === 'revenue' ? 'revenue' : 'units',
+      });
+      res.status(HTTP_STATUS.OK).json({ success: true, data });
+    } catch (error) {
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  }
+
+  /**
    * Obtiene estadísticas de órdenes
    * Retorna totales de ventas, número de órdenes, etc.
    * @route GET /api/orders/stats
@@ -369,12 +394,17 @@ class OrderController {
    */
   async getOrderStats(req, res) {
     try {
-      const { date, ownerId } = req.query;
+      const { date, dateFrom, dateTo, ownerId } = req.query;
       const options = {};
       
       // Si se proporciona fecha, filtrar por día
       if (date) {
         options.date = date;
+      }
+      // Si se proporcionan dateFrom y dateTo, filtrar por rango
+      if (dateFrom && dateTo) {
+        options.dateFrom = dateFrom;
+        options.dateTo = dateTo;
       }
       
       // Si se proporciona ownerId, filtrar por usuario/tienda

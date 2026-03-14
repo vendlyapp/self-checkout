@@ -24,7 +24,7 @@ const services = [
     icon: <QrCode className="w-6 h-6" />,
     title: "QR- & Barcodes",
     subtitle: "verwalten",
-    href: "/my-qr",
+    href: "/store/qr-barcodes",
   },
   {
     icon: <CreditCard className="w-6 h-6" />,

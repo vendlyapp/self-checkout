@@ -22,6 +22,7 @@ const telemetryRoutes = require("./src/routes/telemetryRoutes");
 const discountCodeRoutes = require("./src/routes/discountCodeRoutes");
 const paymentMethodRoutes = require("./src/routes/paymentMethodRoutes");
 const customerRoutes = require("./src/routes/customerRoutes");
+const notificationRoutes = require("./src/routes/notificationRoutes");
 
 const app = express();
 
@@ -63,6 +64,7 @@ app.use("/api/super-admin", superAdminRoutes);
 app.use("/api/telemetry", telemetryRoutes);
 app.use("/api/discount-codes", discountCodeRoutes);
 app.use("/api/payment-methods", paymentMethodRoutes);
+app.use("/api/notifications", notificationRoutes);
 app.use("/api", customerRoutes);
 
 /**

@@ -17,6 +17,8 @@ export { useCategories } from './useCategories';
 
 // Order queries
 export { useOrderStats } from './useOrderStats';
+export { useGoalRevenues } from './useGoalRevenues';
+export type { GoalRevenues } from './useGoalRevenues';
 export { useRecentOrders } from './useRecentOrders';
 export { useOrders } from './useOrders';
 export type { UseOrdersOptions } from './useOrders';
@@ -24,6 +26,10 @@ export { useOrder } from './useOrder';
 
 // Store queries
 export { useMyStore } from './useMyStore';
+
+// Notification queries
+export { useNotifications } from './useNotifications';
+export type { UseNotificationsOptions } from './useNotifications';
 
 // Payment Method queries
 export { usePaymentMethods } from './usePaymentMethods';

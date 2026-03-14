@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { useUser } from "@/lib/contexts/UserContext";
 import { toast } from "sonner";
 import { clearAllSessionData } from "@/lib/utils/sessionUtils";
+import { devError, devWarn } from "@/lib/utils/logger";
 import LogoutModal from "@/components/ui/LogoutModal";
 
 const SuperAdminHeader: React.FC = () => {
@@ -63,7 +64,7 @@ const SuperAdminHeader: React.FC = () => {
         ]);
       } catch (contextError) {
         // Ignorar errores de contextos, ya que clearAllSessionData ya limpió todo
-        console.warn('Error en contextos de logout (puede ignorarse):', contextError);
+        devWarn('Error en contextos de logout (puede ignorarse):', contextError);
       }
       
       toast.success('Erfolgreich abgemeldet');
@@ -78,14 +79,14 @@ const SuperAdminHeader: React.FC = () => {
       }, 300);
       
     } catch (error) {
-      console.error('Logout failed:', error);
+      devError('Logout failed:', error);
       toast.error('Fehler beim Abmelden. Weiterleitung...');
       
       // Forzar limpieza básica en caso de error
       try {
         await clearAllSessionData();
       } catch (clearError) {
-        console.error('Error al forzar limpieza:', clearError);
+        devError('Error al forzar limpieza:', clearError);
         // Limpieza de emergencia
         if (typeof window !== 'undefined') {
           localStorage.clear();

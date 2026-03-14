@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { SidebarProvider, useSidebar } from '@/lib/contexts/SidebarContext';
 import { ThemeProvider } from '@/lib/contexts/ThemeContext';
@@ -9,6 +9,7 @@ import SuperAdminHeader from '@/components/admin/layout/SuperAdminHeader';
 import Backdrop from '@/components/admin/layout/Backdrop';
 import { useSessionTimeout } from '@/hooks/useSessionTimeout';
 import { Loader } from '@/components/ui/Loader';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 interface Props {
   children: React.ReactNode;
@@ -16,28 +17,25 @@ interface Props {
 
 export default function SuperAdminLayout({ children }: Props) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+  const { session, loading: authLoading, userRole } = useAuth();
 
-  // Sitzungs-Timeout von 30 Minuten konfigurieren
   useSessionTimeout({
     enabled: true,
-    onSessionExpired: () => {
-      console.log('Sitzung aufgrund von Inaktivität abgelaufen (30 Minuten)');
-    },
+    onSessionExpired: () => {},
   });
 
   useEffect(() => {
-    // Überprüfen, ob der Benutzer die Rolle SUPER_ADMIN hat
-    const role = localStorage.getItem('userRole');
-    if (role !== 'SUPER_ADMIN') {
+    if (authLoading) return;
+    if (!session) {
       router.push('/login');
       return;
     }
-    setIsLoading(false);
-  }, [router]);
+    if (userRole !== 'SUPER_ADMIN') {
+      router.push('/login');
+    }
+  }, [authLoading, session, userRole, router]);
 
-  // Loading anzeigen, während überprüft wird
-  if (isLoading) {
+  if (authLoading || !session || userRole !== 'SUPER_ADMIN') {
     return <Loader variant="fullscreen" message="Zugriff wird überprüft..." />;
   }
 

@@ -3,13 +3,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { CategoryService } from '@/lib/services/categoryService';
 import type { Category } from '@/lib/services/categoryService';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 /**
  * Hook para obtener todas las categorías
  */
 export const useCategories = () => {
+  const { session } = useAuth();
   return useQuery({
     queryKey: ['categories'],
+    enabled: !!session,
     queryFn: async ({ signal }) => {
       const response = await CategoryService.getCategories({ signal });
       if (!response.success) {
@@ -20,7 +23,7 @@ export const useCategories = () => {
     staleTime: 30 * 60 * 1000, // 30 minutos - categorías cambian muy raramente
     gcTime: 60 * 60 * 1000, // 1 hora en cache
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: true,
     refetchOnReconnect: false,
     retry: (failureCount, error) => {
       if (error instanceof Error && (error.message === 'CANCELLED' || error.name === 'AbortError')) {

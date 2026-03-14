@@ -12,6 +12,7 @@ import { useCartStore } from '@/lib/stores/cartStore';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { toast } from 'sonner';
 import { clearAllSessionData } from '@/lib/utils/sessionUtils';
+import { devError, devWarn } from '@/lib/utils/logger';
 import LogoutModal from '@/components/ui/LogoutModal';
 
 interface NavItem {
@@ -370,7 +371,7 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
                 try {
                   await signOut();
                 } catch (contextError) {
-                  console.warn('SignOut context error (ignored):', contextError);
+                  devWarn('SignOut context error (ignored):', contextError);
                 }
                 toast.success('Erfolgreich abgemeldet');
                 setTimeout(() => {
@@ -378,7 +379,7 @@ export default function Sidebar({ isCollapsed = false, isMobile = false }: Sideb
                   setTimeout(() => { window.location.href = '/'; }, 100);
                 }, 300);
               } catch (error) {
-                console.error('Logout failed:', error);
+                devError('Logout failed:', error);
                 toast.error('Fehler beim Abmelden');
                 try {
                   await clearAllSessionData();

@@ -192,10 +192,12 @@ class ProductService {
       categoryId = null,
       sortBy = 'name',
       order = 'ASC',
-      ownerId = null // NUEVO: Filtrar por dueño
+      ownerId = null, // NUEVO: Filtrar por dueño
+      includeInactive = false, // Si true, incluir productos inactivos (para lista del admin)
+      includeCodes = false // Si true, incluir qrCode y barcodeImage (SELECT *)
     } = options;
 
-    let whereClause = 'WHERE "isActive" = true';
+    let whereClause = includeInactive ? 'WHERE 1=1' : 'WHERE "isActive" = true';
     const params = [];
     let paramCount = 0;
 
@@ -229,8 +231,9 @@ class ProductService {
       'default': 'ORDER BY "name" ASC'
     };
     const orderByClause = orderByMap[sortBy] || orderByMap.default;
+    const selectCols = includeCodes ? '*' : PRODUCT_LIST_COLS;
     const selectQuery = `
-      SELECT ${PRODUCT_LIST_COLS} FROM "Product"
+      SELECT ${selectCols} FROM "Product"
       ${whereClause}
       ${orderByClause}
       LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}

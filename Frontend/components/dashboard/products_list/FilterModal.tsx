@@ -50,7 +50,7 @@ export default function FilterModal({
   const { data: categoriesData = [] } = useCategories();
   
   // Obtener productos para calcular contadores
-  const { data: productsData = [] } = useProducts({ isActive: true });
+  const { data: productsData = [] } = useProducts({ includeInactive: true });
 
   // Calcular categorías con contadores dinámicos
   const categories = useMemo(() => {
@@ -173,7 +173,7 @@ export default function FilterModal({
     <div className="fixed inset-0 z-[9999] flex items-end justify-center sm:items-center animate-fade-in-scale" style={{ pointerEvents: 'auto' }}>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-interactive animate-fade-in-scale"
+        className="fixed inset-0 bg-black/50 transition-interactive animate-fade-in-scale"
         onClick={onClose}
       />
 
@@ -300,7 +300,7 @@ export default function FilterModal({
               onClick={handleClear}
               className="flex-1 px-4 h-[50px] py-3 shadow-sm rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
             >
-              Filter löschen
+              Filter zurücksetzen
             </button>
             <button
               onClick={handleApply}

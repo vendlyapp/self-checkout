@@ -5,6 +5,8 @@
  * Solo funciona después de interacciones del usuario válidas (click, tap, touch).
  */
 
+import { devWarn } from '@/lib/utils/logger';
+
 interface HapticOptions {
   pattern?: number | number[];
   fallback?: () => void;
@@ -91,7 +93,7 @@ class HapticFeedbackManager {
         return false;
       }
     } catch (error) {
-      console.warn('Haptic feedback failed:', error);
+      devWarn('Haptic feedback failed:', error);
       if (fallback) fallback();
       return false;
     }
@@ -183,7 +185,7 @@ class HapticFeedbackManager {
         return false;
       }
     } catch (error) {
-      console.warn('Haptic feedback failed:', error);
+      devWarn('Haptic feedback failed:', error);
       if (options.fallback) options.fallback();
       return false;
     }

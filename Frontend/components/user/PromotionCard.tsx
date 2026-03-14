@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Plus, Package, Check } from "lucide-react";
 import { clsx } from "clsx";
 import React, { useState } from "react";
+import { devError } from "@/lib/utils/logger";
 
 export type PromotionCardProps = {
   title?: string;
@@ -77,7 +78,7 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
           setIsAdding(false);
         }, 1500);
       } catch (error) {
-        console.error('Error al agregar al carrito:', error);
+        devError('Error al agregar al carrito:', error);
         setIsAdding(false);
       }
     }

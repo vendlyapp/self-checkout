@@ -125,8 +125,6 @@ const makeRequest = async <T>(
           error: 'Request cancelled',
         };
       }
-      // Solo loggear timeouts reales (no cancelaciones)
-      console.warn('Connection timeout:', error.message);
       return {
         success: false,
         error: 'Connection timeout - please try again',
@@ -151,15 +149,11 @@ const makeRequest = async <T>(
       // Connection/backend unreachable
       if (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION_REFUSED') || error.message.includes('NetworkError')) {
         // No loggear en producción para evitar spam en consola
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('Backend unavailable. Ensure the server is running on port 5000.');
-        }
         return {
           success: false,
           error: 'Backend unavailable',
         };
       }
-      console.error('Backend call failed:', error);
     }
     
     return {
@@ -250,18 +244,34 @@ export const OrderService = {
 
   /**
    * Obtener estadísticas de órdenes
-   * @param date - Fecha en formato YYYY-MM-DD para filtrar por día (opcional)
-   * @param ownerId - ID del usuario/tienda para filtrar (opcional)
+   * @param options - date (single day), o dateFrom+dateTo (range), y opcionalmente ownerId. Legacy: (date, ownerId, requestOptions).
    * @param requestOptions - Opciones adicionales incluyendo signal de React Query
    */
-  getStats: async (date?: string, ownerId?: string, requestOptions?: { signal?: AbortSignal }): Promise<ApiResponse<OrderStats>> => {
+  getStats: async (
+    dateOrOptions?: string | { date?: string; dateFrom?: string; dateTo?: string; ownerId?: string },
+    ownerIdOrRequestOpts?: string | { signal?: AbortSignal },
+    requestOpts?: { signal?: AbortSignal }
+  ): Promise<ApiResponse<OrderStats>> => {
+    let opts: { date?: string; dateFrom?: string; dateTo?: string; ownerId?: string };
+    let reqOpts: { signal?: AbortSignal } | undefined;
+    if (typeof dateOrOptions === 'string') {
+      opts = { date: dateOrOptions, ownerId: typeof ownerIdOrRequestOpts === 'string' ? ownerIdOrRequestOpts : undefined };
+      reqOpts = requestOpts;
+    } else if (dateOrOptions && typeof dateOrOptions === 'object') {
+      opts = dateOrOptions;
+      reqOpts = typeof ownerIdOrRequestOpts === 'object' && ownerIdOrRequestOpts ? ownerIdOrRequestOpts : requestOpts;
+    } else {
+      opts = {};
+      reqOpts = typeof ownerIdOrRequestOpts === 'object' && ownerIdOrRequestOpts ? ownerIdOrRequestOpts : requestOpts;
+    }
     const params = new URLSearchParams();
-    if (date) params.append('date', date);
-    if (ownerId) params.append('ownerId', ownerId);
-    
+    if (opts.date) params.append('date', opts.date);
+    if (opts.dateFrom) params.append('dateFrom', opts.dateFrom);
+    if (opts.dateTo) params.append('dateTo', opts.dateTo);
+    if (opts.ownerId) params.append('ownerId', opts.ownerId);
     const queryString = params.toString();
     const endpoint = queryString ? `${API_CONFIG.ENDPOINTS.ORDER_STATS}?${queryString}` : API_CONFIG.ENDPOINTS.ORDER_STATS;
-    return makeRequest<OrderStats>(endpoint, requestOptions);
+    return makeRequest<OrderStats>(endpoint, reqOpts);
   },
 
   /**
@@ -320,6 +330,25 @@ export const OrderService = {
       ...requestOptions,
     });
   },
+
+  /**
+   * Top productos más vendidos de la tienda (Bestseller).
+   */
+  getTopProducts: async (params?: { limit?: number; metric?: 'units' | 'revenue' }, requestOptions?: { signal?: AbortSignal }): Promise<ApiResponse<TopProduct[]>> => {
+    const searchParams = new URLSearchParams();
+    if (params?.limit) searchParams.set('limit', String(params.limit));
+    if (params?.metric) searchParams.set('metric', params.metric);
+    const query = searchParams.toString();
+    const endpoint = `${API_CONFIG.ENDPOINTS.ORDERS}/top-products${query ? `?${query}` : ''}`;
+    return makeRequest<TopProduct[]>(endpoint, requestOptions);
+  },
 };
+
+export interface TopProduct {
+  productId: string;
+  productName: string;
+  revenue: number;
+  unitsSold: number;
+}
 
 

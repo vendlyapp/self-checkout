@@ -1,6 +1,7 @@
 import { ProductsAnalyticsData, ProductData, CategoryData } from '../types';
 import { API_CONFIG, buildApiUrl, handleApiError } from '@/lib/config/api';
 import { ProductService } from '@/lib/services/productService';
+import { devError, devWarn } from '@/lib/utils/logger';
 
 // Mock products data (fallback)
 export const mockProductData: ProductData = {
@@ -109,7 +110,7 @@ const makeRequest = async <T>(
         };
       }
       // Solo loggear timeouts reales (no cancelaciones)
-      console.warn('Connection timeout:', error.message);
+      devWarn('Connection timeout:', error.message);
       return {
         success: false,
         error: 'Connection timeout - please try again',
@@ -129,7 +130,7 @@ const makeRequest = async <T>(
     }
     
     // Solo loggear errores que no sean cancelaciones
-    console.error('Error en la llamada al backend:', error);
+    devError('Error en la llamada al backend:', error);
     
     return {
       success: false,
@@ -235,7 +236,7 @@ export const fetchProductsAnalytics = async (): Promise<ProductsAnalyticsData> =
       lastUpdated: new Date().toISOString(),
     };
   } catch (error) {
-    console.error('Error fetching products analytics:', error);
+    devError('Error fetching products analytics:', error);
     // Return mock data as fallback
   return {
     ...mockProductsAnalyticsData,
@@ -264,7 +265,7 @@ export const fetchProductData = async (): Promise<ProductData> => {
       };
     }
   } catch (error) {
-    console.error('Error fetching product data:', error);
+    devError('Error fetching product data:', error);
   }
   
   return mockProductData;
@@ -288,7 +289,7 @@ export const fetchCategoryData = async (): Promise<CategoryData> => {
       };
     }
   } catch (error) {
-    console.error('Error fetching category data:', error);
+    devError('Error fetching category data:', error);
   }
   
   return mockCategoryData;

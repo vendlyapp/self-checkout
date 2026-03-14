@@ -111,6 +111,8 @@ export interface UpdateProductRequest extends Partial<CreateProductRequest> {
 export interface ProductFilters {
   category?: string;
   isActive?: boolean;
+  includeInactive?: boolean;
+  includeCodes?: boolean;
   isPromotional?: boolean;
   search?: string;
   limit?: number;
@@ -269,7 +271,6 @@ const makeRequest = async <T>(
         };
       }
       // Solo loggear timeouts reales (no cancelaciones)
-      console.warn('Connection timeout:', error.message);
       return {
         success: false,
         error: 'Connection timeout - please try again',
@@ -289,7 +290,6 @@ const makeRequest = async <T>(
     }
     
     // Solo loggear errores que no sean cancelaciones
-    console.error('Error en la llamada al backend:', error);
     
     return {
       success: false,
@@ -310,6 +310,8 @@ export class ProductService {
     
     if (filters?.category) params.append('category', filters.category);
     if (filters?.isActive !== undefined) params.append('isActive', filters.isActive.toString());
+    if (filters?.includeInactive === true) params.append('includeInactive', 'true');
+    if (filters?.includeCodes === true) params.append('includeCodes', 'true');
     if (filters?.isPromotional !== undefined) params.append('isPromotional', filters.isPromotional.toString());
     if (filters?.search) params.append('search', filters.search);
     if (filters?.limit) params.append('limit', filters.limit.toString());

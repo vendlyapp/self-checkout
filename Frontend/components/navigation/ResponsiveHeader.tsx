@@ -1,9 +1,9 @@
 'use client';
 
-import { Bell, ChartNoAxesColumn, Menu, LogOut } from 'lucide-react';
+import { Bell, Menu, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { clsx } from 'clsx';
 import Image from 'next/image';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
@@ -11,33 +11,27 @@ import { useStoreState } from '@/lib/stores';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { toast } from 'sonner';
 import { clearAllSessionData } from '@/lib/utils/sessionUtils';
+import { devError, devWarn } from '@/lib/utils/logger';
 import LogoutModal from '@/components/ui/LogoutModal';
+import { useNotifications } from '@/hooks/queries/useNotifications';
 
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
+function formatNotificationTime(createdAt: string): string {
+  try {
+    const date = new Date(createdAt);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    if (diffMins < 1) return 'Gerade eben';
+    if (diffMins < 60) return `Vor ${diffMins} Minute${diffMins === 1 ? '' : 'n'}`;
+    if (diffHours < 24) return `Vor ${diffHours} Stunde${diffHours === 1 ? '' : 'n'}`;
+    if (diffDays < 7) return `Vor ${diffDays} Tag${diffDays === 1 ? '' : 'en'}`;
+    return date.toLocaleDateString('de-CH', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch {
+    return createdAt;
+  }
 }
-
-// Mock notifications (replace with API in production)
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    title: 'Neue Bestellung',
-    message: 'Sie haben eine neue Bestellung erhalten',
-    time: 'Vor 5 Minuten',
-    read: false,
-  },
-  {
-    id: '2',
-    title: 'Produkt aktualisiert',
-    message: 'Das Produkt "Coffee Blend" wurde aktualisiert',
-    time: 'Vor 1 Stunde',
-    read: true,
-  },
-];
 
 interface ResponsiveHeaderProps {
   onMenuToggle?: () => void;
@@ -66,10 +60,13 @@ export default function ResponsiveHeader({
   const [pressedButton, setPressedButton] = useState<string | null>(null);
 
   const storeStatus = getStoreStatus();
-  const unreadCount = useMemo(
-    () => mockNotifications.filter(n => !n.read).length,
-    []
-  );
+  const {
+    notifications,
+    unreadCount,
+    hasStore,
+    markAsRead,
+    markAsReadPending,
+  } = useNotifications({ limit: 20 });
 
   const handleButtonPress = useCallback((buttonId: string) => {
     setPressedButton(buttonId);
@@ -170,7 +167,7 @@ export default function ResponsiveHeader({
                     try {
                       await signOut();
                     } catch (contextError) {
-                      console.warn('SignOut context error (ignored):', contextError);
+                      devWarn('SignOut context error (ignored):', contextError);
                     }
                     toast.success('Erfolgreich abgemeldet');
                     setTimeout(() => {
@@ -178,7 +175,7 @@ export default function ResponsiveHeader({
                       setTimeout(() => { window.location.href = '/'; }, 100);
                     }, 300);
                   } catch (error) {
-                    console.error('Logout failed:', error);
+                    devError('Logout failed:', error);
                     toast.error('Fehler beim Abmelden');
                     try {
                       await clearAllSessionData();
@@ -291,7 +288,7 @@ export default function ResponsiveHeader({
                     try {
                       await signOut();
                     } catch (contextError) {
-                      console.warn('SignOut context error (ignored):', contextError);
+                      devWarn('SignOut context error (ignored):', contextError);
                     }
                     toast.success('Erfolgreich abgemeldet');
                     setTimeout(() => {
@@ -299,7 +296,7 @@ export default function ResponsiveHeader({
                       setTimeout(() => { window.location.href = '/'; }, 100);
                     }, 300);
                   } catch (error) {
-                    console.error('Logout failed:', error);
+                    devError('Logout failed:', error);
                     toast.error('Fehler beim Abmelden');
                     try {
                       await clearAllSessionData();
@@ -346,13 +343,29 @@ export default function ResponsiveHeader({
             </div>
 
             <div className="max-h-80 overflow-y-auto">
-              {mockNotifications.map((notification) => (
-                <div
+              {hasStore && notifications.map((notification) => (
+                <button
                   key={notification.id}
+                  type="button"
                   className={clsx(
-                    "p-4 hover:bg-gray-50 transition-colors",
+                    "w-full text-left p-4 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0",
                     !notification.read && "bg-brand-50/50"
                   )}
+                  onClick={async () => {
+                    if (!notification.read) {
+                      try {
+                        await markAsRead(notification.id);
+                      } catch {
+                        // ignore
+                      }
+                    }
+                    setShowNotifications(false);
+                    const orderId = notification.payload?.orderId;
+                    if (orderId) {
+                      router.push(`/sales/orders/${orderId}`);
+                    }
+                  }}
+                  disabled={markAsReadPending}
                 >
                   <div className="flex items-start gap-3">
                     {!notification.read && (
@@ -366,14 +379,14 @@ export default function ResponsiveHeader({
                         {notification.message}
                       </p>
                       <p className="text-xs text-gray-400 mt-1">
-                        {notification.time}
+                        {formatNotificationTime(notification.createdAt)}
                       </p>
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
 
-              {mockNotifications.length === 0 && (
+              {(!hasStore || notifications.length === 0) && (
                 <div className="p-8 text-center">
                   <p className="text-sm text-gray-500">
                     Keine neuen Benachrichtigungen
@@ -381,6 +394,17 @@ export default function ResponsiveHeader({
                 </div>
               )}
             </div>
+            {hasStore && (
+              <div className="p-3 border-t border-gray-100">
+                <Link
+                  href="/store/notifications"
+                  onClick={() => setShowNotifications(false)}
+                  className="block text-center text-sm font-medium text-brand-600 hover:text-brand-700"
+                >
+                  Alle anzeigen
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </header>

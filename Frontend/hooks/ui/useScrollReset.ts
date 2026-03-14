@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import type { ScrollResetReturn } from '@/types';
+import { devError } from '@/lib/utils/logger';
 
 /**
  * Hook para resetear scroll al cambiar de ruta
@@ -40,7 +41,7 @@ export const useScrollReset = (): ScrollResetReturn => {
           behavior: 'auto'
         });
       } catch (error) {
-        console.error('Scroll error:', error);
+        devError('Scroll error:', error);
         container.scrollTop = 0;
         container.scrollLeft = 0;
       }
@@ -107,7 +108,7 @@ export const useScrollToTop = (dependency?: string) => {
           behavior: 'auto'
         });
       } catch (error) {
-        console.error('Window scroll error:', error);
+        devError('Window scroll error:', error);
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
       }

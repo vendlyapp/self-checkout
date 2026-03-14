@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { getAuthHeaders, buildApiUrl } from '@/lib/config/api';
+import { devError, devWarn } from '@/lib/utils/logger';
 
 interface StoreState {
   isStoreOpen: boolean;
@@ -48,7 +49,7 @@ const updateStoreStatusInBackend = async (isOpen: boolean) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error al actualizar estado en backend:', error);
+    devError('Error al actualizar estado en backend:', error);
     throw error;
   }
 };
@@ -89,7 +90,7 @@ export const useStoreState = create<StoreState>()(
 
             // Si es 404, el usuario probablemente no tiene una tienda asociada
             if (response.status === 404) {
-              console.warn('No store found for user');
+              devWarn('No store found for user');
               // No establecer error para 404, solo mantener el estado actual
               set({ error: null, isLoading: false });
               return;
@@ -97,20 +98,20 @@ export const useStoreState = create<StoreState>()(
 
             // Si es 401, el usuario no está autenticado
             if (response.status === 401) {
-              console.warn('Usuario no autenticado');
+              devWarn('Usuario no autenticado');
               set({ error: null, isLoading: false });
               return;
             }
 
             // Si es 500, podría ser un error temporal del backend
             if (response.status === 500) {
-              console.warn('Error del servidor al obtener estado de la tienda, manteniendo estado actual');
+              devWarn('Error del servidor al obtener estado de la tienda, manteniendo estado actual');
               set({ error: null, isLoading: false });
               return;
             }
 
             // Para otros errores, solo registrar sin bloquear la UI
-            console.warn('Error al obtener estado de la tienda:', errorMessage);
+            devWarn('Error al obtener estado de la tienda:', errorMessage);
             set({ error: null, isLoading: false });
             return;
           }
@@ -133,11 +134,11 @@ export const useStoreState = create<StoreState>()(
               isLoading: false,
             });
           } else {
-            console.warn('Invalid store data, keeping current state');
+            devWarn('Invalid store data, keeping current state');
             set({ error: null, isLoading: false });
           }
         } catch (error) {
-          console.error('Store state fetch failed:', error);
+          devError('Store state fetch failed:', error);
           const errorMessage = error instanceof Error
             ? error.message
             : 'Store state fetch failed';
@@ -151,12 +152,12 @@ export const useStoreState = create<StoreState>()(
             errorMessage.includes('ERR_NETWORK') ||
             errorMessage.includes('Backend unavailable')
           ) {
-            console.warn('Backend unavailable, keeping current state');
+            devWarn('Backend unavailable, keeping current state');
             set({ error: null, isLoading: false });
             return;
           }
           
-          console.warn('Store state error:', errorMessage);
+          devWarn('Store state error:', errorMessage);
           set({ error: null, isLoading: false });
         }
       },

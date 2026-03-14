@@ -14,6 +14,7 @@ import StoreOrders from '@/components/admin/stores/StoreOrders';
 import StoreHistory from '@/components/admin/stores/StoreHistory';
 import StoreQRManagement from '@/components/admin/stores/StoreQRManagement';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
+import { devError } from '@/lib/utils/logger';
 
 export default function StoreDetailPage() {
   const router = useRouter();
@@ -46,8 +47,8 @@ export default function StoreDetailPage() {
           setStore(response.data);
           return;
         }
-      } catch (apiError) {
-        console.log('API-Aufruf fehlgeschlagen, verwende gecachte Daten:', apiError);
+      } catch {
+        // Fallback to cached store list below
       }
       
       const storeFromList = stores.find((s: Store) => s.id === storeId);
@@ -58,7 +59,7 @@ export default function StoreDetailPage() {
         setError('Geschäft konnte nicht geladen werden');
       }
     } catch (err) {
-      console.error('Fehler beim Abrufen der Geschäftsdetails:', err);
+      devError('Fehler beim Abrufen der Geschäftsdetails:', err);
       
       const storeFromList = stores.find((s: Store) => s.id === storeId);
       if (storeFromList && !store) {
@@ -79,7 +80,6 @@ export default function StoreDetailPage() {
       // Zuerst prüfen, ob wir das Geschäft bereits in der Liste haben
       const storeFromList = stores.find((s: Store) => s.id === storeId);
       if (storeFromList) {
-        console.log('Verwende Geschäft aus gecachter Liste');
         setStore(storeFromList);
         setLoading(false);
         // Trotzdem frische Daten im Hintergrund abrufen (ohne Loading anzuzeigen)

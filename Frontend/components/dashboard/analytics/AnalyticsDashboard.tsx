@@ -1,12 +1,15 @@
 import React, { useState, useCallback, useEffect } from "react";
 
 import { useAnalytics, useQuickAccess } from "@/hooks";
+import { useActiveStats } from "@/hooks/queries/useActiveStats";
 import ActiveCustomers from "./ActiveCustomers";
 import SalesChart from "./SalesChart";
 import QuickAccessGrid from "./QuickAccessGrid";
 import PaymentMethods from "./PaymentMethods";
 import CartGauge from "./CartGauge";
+import GoalsCard from "./GoalsCard";
 import { SearchInput } from "@/components/ui/search-input";
+import { devError } from "@/lib/utils/logger";
 import SearchResultsSection from "../home/SearchResultsSection";
 import { AnalyticsDashboardSkeletonLoader } from "../skeletons";
 
@@ -45,6 +48,22 @@ const AnalyticsDashboard: React.FC = () => {
     handleGoToCart,
   } = useQuickAccess();
 
+  const { data: activeStats } = useActiveStats();
+
+  const shopActivityData = data
+    ? {
+        ...data.shopActivity,
+        totalActive: activeStats?.activeCustomers ?? data.shopActivity.totalActive,
+        openCartsValue: activeStats?.openCartsValue ?? data.shopActivity.openCartsValue,
+      }
+    : {
+        activeCustomers: [],
+        totalActive: 0,
+        totalInactive: 0,
+        openCartsValue: 0,
+        progressPercentage: 0,
+      };
+
   // Simular búsqueda de analytics
   const searchAnalyticsData = useCallback(
     async (query: string): Promise<SearchResult[]> => {
@@ -79,7 +98,7 @@ const AnalyticsDashboard: React.FC = () => {
         const results = await searchAnalyticsData(query);
         setSearchResults(results);
       } catch (err) {
-        console.error("Error searching analytics:", err);
+        devError("Error searching analytics:", err);
         setSearchResults([]);
       } finally {
         setIsSearching(false);
@@ -153,15 +172,7 @@ const AnalyticsDashboard: React.FC = () => {
             {/* Shop Activity Section */}
             <section>
               <ActiveCustomers
-                data={
-                  data?.shopActivity || {
-                    activeCustomers: [],
-                    totalActive: 0,
-                    totalInactive: 0,
-                    openCartsValue: 0,
-                    progressPercentage: 0,
-                  }
-                }
+                data={shopActivityData}
                 loading={loading}
               />
             </section>
@@ -218,6 +229,11 @@ const AnalyticsDashboard: React.FC = () => {
                 loading={loading}
               />
             </section>
+
+            {/* Ziele Section */}
+            <section>
+              <GoalsCard />
+            </section>
           </div>
         </div>
       </div>
@@ -237,8 +253,7 @@ const AnalyticsDashboard: React.FC = () => {
                 value={searchQuery}
                 onChange={setSearchQuery}
                 onSearch={handleSearch}
-                className="w-full h-9 min-h-9 md:h-9 lg:h-11 lg:min-h-11"
-                inputClassName="text-xs md:text-xs lg:text-sm placeholder:text-xs md:placeholder:text-xs lg:placeholder:text-sm"
+                className="w-full h-[54px] min-h-[54px]"
                 esHome={false}
               />
             </div>
@@ -257,15 +272,7 @@ const AnalyticsDashboard: React.FC = () => {
           {/* Top Row: Active Customers & Sales Chart — 1 col hasta xl, 2 cols desde 1280px */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 md:gap-4 lg:gap-6 min-w-0">
             <ActiveCustomers
-              data={
-                data?.shopActivity || {
-                  activeCustomers: [],
-                  totalActive: 0,
-                  totalInactive: 0,
-                  openCartsValue: 0,
-                  progressPercentage: 0,
-                }
-              }
+              data={shopActivityData}
               loading={loading}
             />
             <SalesChart
@@ -314,6 +321,9 @@ const AnalyticsDashboard: React.FC = () => {
             onPeriodChange={setCartPeriod}
             loading={loading}
           />
+
+          {/* Ziele Card - below Cart Gauge */}
+          <GoalsCard />
         </div>
       </div>
     </div>

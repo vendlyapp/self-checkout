@@ -73,16 +73,14 @@ export default function ProductsListComponent({
     priceRange: { min: 0, max: 1000 },
   });
 
-  // Estado compartido para productos y modal
-  const [products, setProducts] = useState<Product[]>([]);
   const [localIsFilterModalOpen, setLocalIsFilterModalOpen] = useState(false);
   
   // Obtener categorías reales de la API
   const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
   
-  // Usar React Query para obtener productos con cache
+  // Usar React Query para obtener productos con cache (única fuente de verdad)
   const { data: productsData, isLoading: productsLoading } = useProducts({
-    isActive: true,
+    includeInactive: true,
   });
 
   // Función para agrupar productos padre-hijo
@@ -114,29 +112,26 @@ export default function ProductsListComponent({
     });
   }, []);
 
-  // Transformar categorías a formato de filtros con contadores dinámicos
-  // Solo usa categorías reales de la base de datos
+  // Una sola fuente de verdad: derivar groupedProducts desde productsData
+  const groupedProducts = useMemo(() => {
+    if (!productsData) return [];
+    const normalized = productsData.map(normalizeProductData);
+    return groupProductsWithVariants(normalized);
+  }, [productsData, groupProductsWithVariants]);
+
+  // Transformar categorías a formato de filtros con contadores dinámicos (usa groupedProducts)
   const productsListFilters = useMemo(() => {
-    if (!categoriesData || !productsData) {
-      // Si no hay categorías o productos, retornar solo la opción "all"
+    if (!categoriesData) {
       return [
-        {
-          id: 'all',
-          label: 'Alle',
-          icon: getIcon('ShoppingCart'),
-          count: 0,
-        }
+        { id: 'all', label: 'Alle', icon: getIcon('ShoppingCart'), count: groupedProducts.length },
       ];
     }
-    
-    const normalizedProducts = productsData.map(normalizeProductData);
-    const groupedProducts = groupProductsWithVariants(normalizedProducts);
     return transformCategoriesToFilters(categoriesData, groupedProducts);
-  }, [categoriesData, productsData, groupProductsWithVariants]);
+  }, [categoriesData, groupedProducts]);
   
   const [filters, setFilters] = useState(productsListFilters);
   
-  // Actualizar filtros cuando cambian
+  // Actualizar filtros cuando cambian las opciones disponibles
   useEffect(() => {
     setFilters(productsListFilters);
   }, [productsListFilters]);
@@ -217,7 +212,7 @@ export default function ProductsListComponent({
             break;
           case "inactive":
             filteredProducts = filteredProducts.filter(
-              (product) => product.isActive === false || product.stock === 0
+              (product) => product.isActive === false
             );
             break;
           case "onSale":
@@ -297,33 +292,20 @@ export default function ProductsListComponent({
 
   const activeFiltersCount = getActiveFiltersCount();
 
-  // La sincronización de selectedFilters con filterState.categories se maneja en ProductsListContext.handleFilterChange
-  // No necesitamos un useEffect adicional aquí ya que handleFilterChange ya actualiza filterState.categories
+  // Derivar lista filtrada desde groupedProducts (una sola fuente de verdad)
+  const filteredProducts = useMemo(
+    () => applyFiltersToProducts(groupedProducts, filterState, searchQuery),
+    [groupedProducts, filterState, searchQuery, applyFiltersToProducts]
+  );
 
-  // Procesar productos cuando se cargan o cambian los filtros/búsqueda
+  // Un único efecto para actualizar el contexto del dashboard (total, filtrados, hasActiveFilters)
   useEffect(() => {
-    if (productsData) {
-      // Normalizar productos
-      const normalizedProducts = productsData.map(normalizeProductData);
-      
-      // Agrupar productos con variantes (solo mostrar productos padre)
-      const groupedProducts = groupProductsWithVariants(normalizedProducts);
-      
-      // Aplicar filtros incluyendo búsqueda
-      const filteredProducts = applyFiltersToProducts(
-        groupedProducts,
-        filterState,
-        searchQuery
-      );
-      setProducts(filteredProducts);
-
-      if (isStandalone) {
-        setTotalProducts(groupedProducts.length);
-        setFilteredProducts(filteredProducts.length);
-        setHasActiveFilters(activeFiltersCount > 0);
-      }
+    if (isStandalone) {
+      setTotalProducts(groupedProducts.length);
+      setFilteredProducts(filteredProducts.length);
+      setHasActiveFilters(activeFiltersCount > 0);
     }
-  }, [productsData, filterState, searchQuery, isStandalone, setTotalProducts, setFilteredProducts, setHasActiveFilters, activeFiltersCount, applyFiltersToProducts, groupProductsWithVariants]);
+  }, [isStandalone, groupedProducts.length, filteredProducts.length, activeFiltersCount, setTotalProducts, setFilteredProducts, setHasActiveFilters]);
 
   // Sincronizar isLoading del contexto con React Query
   useEffect(() => {
@@ -350,54 +332,27 @@ export default function ProductsListComponent({
 
   const handleApplyFilters = useCallback((filters: FilterState) => {
     setFilterState(filters);
+    const newSelectedFilters =
+      filters.categories.length === 0 || filters.categories.includes("all")
+        ? ["all"]
+        : filters.categories;
+    setSelectedFilters(newSelectedFilters);
+    // filteredProducts y contexto se actualizan vía useMemo y el efecto único
+  }, [setFilterState, setSelectedFilters]);
 
-    // Usar los productos ya cargados de React Query (cache)
-    if (productsData) {
-      const normalizedProducts = productsData.map(normalizeProductData);
-      const groupedProducts = groupProductsWithVariants(normalizedProducts);
-      // Aplicar filtros incluyendo búsqueda actual
-      const filteredProducts = applyFiltersToProducts(groupedProducts, filters, searchQuery);
-      setProducts(filteredProducts);
-
-      // Sincronizar filtros de categorías con selectedFilters
-      const newSelectedFilters = filters.categories.filter(
-        (id) => id !== "all"
-      );
-      setSelectedFilters(newSelectedFilters);
-
-      if (isStandalone) {
-        setFilteredProducts(filteredProducts.length);
-        setHasActiveFilters(getActiveFiltersCount() > 0);
-      }
-    }
-  }, [productsData, applyFiltersToProducts, searchQuery, isStandalone, setFilteredProducts, setHasActiveFilters, setSelectedFilters, getActiveFiltersCount, setFilterState, groupProductsWithVariants]);
+  const defaultFilters: FilterState = useMemo(() => ({
+    sortBy: "name" as const,
+    categories: ["all"],
+    status: "all" as const,
+    priceRange: { min: 0, max: 1000 },
+  }), []);
 
   const handleClearFilters = useCallback(() => {
-    const defaultFilters: FilterState = {
-      sortBy: "name" as const,
-      categories: ["all"],
-      status: "all" as const,
-      priceRange: { min: 0, max: 1000 },
-    };
-
     setFilterState(defaultFilters);
-    setSelectedFilters([]);
+    setSelectedFilters(["all"]);
     setSearchQuery("");
-
-    // Los productos ya están en cache de React Query, solo aplicar filtros
-    if (productsData) {
-      const normalizedProducts = productsData.map(normalizeProductData);
-      const groupedProducts = groupProductsWithVariants(normalizedProducts);
-      // Aplicar filtros por defecto sin búsqueda
-      const filteredProducts = applyFiltersToProducts(groupedProducts, defaultFilters, "");
-      setProducts(filteredProducts);
-      
-      if (isStandalone) {
-        setFilteredProducts(filteredProducts.length);
-        setHasActiveFilters(false);
-      }
-    }
-  }, [productsData, applyFiltersToProducts, isStandalone, setFilteredProducts, setHasActiveFilters, setSelectedFilters, setFilterState, setSearchQuery, groupProductsWithVariants]);
+    // filteredProducts y contexto se actualizan vía useMemo y el efecto único
+  }, [defaultFilters, setFilterState, setSelectedFilters, setSearchQuery]);
 
   const handleProductClick = (product: Product) => {
     if (onProductClick) {
@@ -412,7 +367,7 @@ export default function ProductsListComponent({
   if (isStandalone) {
     return (
       <FixedHeaderContainer>
-        <div className={`p-4 pb-32 lg:p-0 lg:pb-8 ${className}`}>
+        <div className={`p-4 pb-32 lg:p-0 lg:pb-8 mt-6 ${className}`}>
           {isLoading ? (
             <div className="text-center py-12">
               <Loader size="lg" className="mx-auto" />
@@ -420,9 +375,9 @@ export default function ProductsListComponent({
                 Produkte werden geladen...
               </p>
             </div>
-          ) : products.length > 0 ? (
+          ) : filteredProducts.length > 0 ? (
             <div className="space-y-3 animate-fade-in-scale">
-              {products.map((product, index) => (
+              {filteredProducts.map((product, index) => (
                 <div
                   key={product.id}
                   className="animate-slide-up-fade gpu-accelerated"
@@ -489,9 +444,9 @@ export default function ProductsListComponent({
                 Produkte werden geladen...
               </p>
             </div>
-          ) : products.length > 0 ? (
+          ) : filteredProducts.length > 0 ? (
             <div className="space-y-3 animate-fade-in-scale">
-              {products.map((product, index) => (
+              {filteredProducts.map((product, index) => (
                 <div
                   key={product.id}
                   className="animate-slide-up-fade gpu-accelerated"

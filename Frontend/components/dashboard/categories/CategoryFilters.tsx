@@ -48,9 +48,7 @@ export default function CategoryFilters({
   }
 
   return (
-    <div className="fixed top-[135px] left-0 right-0 bg-background-cream border-b border-gray-100 z-40 
-                    animate-slide-down gpu-accelerated"
-         style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
+    <div className="sticky top-[138px] z-40 bg-background-cream border-b border-gray-100">
       <FilterSlider
         filters={filterOptions}
         selectedFilters={selectedStatus === 'all' ? [] : [selectedStatus]}

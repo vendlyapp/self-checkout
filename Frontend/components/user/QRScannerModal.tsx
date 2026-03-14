@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { X, QrCode, Camera, Loader2 } from 'lucide-react'
 import { useScannedStoreStore } from '@/lib/stores/scannedStoreStore'
 import { useCartStore } from '@/lib/stores/cartStore'
+import { devError } from '@/lib/utils/logger'
 import { toast } from 'sonner'
 import { buildApiUrl } from '@/lib/config/api'
 import { createPortal } from 'react-dom'
@@ -60,7 +61,7 @@ export const QRScannerModal = ({ isOpen, onClose }: QRScannerModalProps) => {
       router.push(`/store/${result.data.slug}`)
       onClose()
     } catch (err) {
-      console.error('Error:', err)
+      devError('Error:', err)
       setError('Fehler beim Suchen des Shops')
     } finally {
       setLoading(false)

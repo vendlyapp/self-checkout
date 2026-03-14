@@ -6,6 +6,7 @@ import type { Category } from '@/lib/services/categoryService'
 
 interface CategoryCardProps {
   category: Category
+  isDefault?: boolean
   onEdit: (category: Category) => void
   onToggleVisibility?: (category: Category) => void
   onDelete?: (category: Category) => void
@@ -13,6 +14,7 @@ interface CategoryCardProps {
 
 export default function CategoryCard({
   category,
+  isDefault = false,
   onEdit,
   onToggleVisibility,
   onDelete,
@@ -67,20 +69,32 @@ export default function CategoryCard({
 
         {/* Información de la categoría */}
         <div className="flex-1 min-w-0">
-          <h3 className={`text-[16px] font-semibold leading-tight mb-1 truncate
-                         ${isActive ? 'text-gray-900' : 'text-gray-500'}`}>
-            {category.name}
-          </h3>
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className={`text-[16px] font-semibold leading-tight truncate
+                           ${isActive ? 'text-gray-900' : 'text-gray-500'}`}>
+              {category.name}
+            </h3>
+            {isDefault && (
+              <span className="flex-shrink-0 text-[11px] bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full font-medium leading-tight">
+                Standard
+              </span>
+            )}
+          </div>
           
           <div className={`text-sm ${isActive ? 'text-gray-500' : 'text-gray-400'}`}>
             {category.count || 0} {category.count === 1 ? 'Produkt' : 'Produkte'}
           </div>
+          {category.createdAt && (
+            <div className={`text-xs mt-0.5 ${isActive ? 'text-gray-400' : 'text-gray-400'}`}>
+              Erstellt: {new Date(category.createdAt).toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+            </div>
+          )}
         </div>
 
         {/* Botones de acción */}
         <div className="flex items-center gap-2 flex-shrink-0">
           {/* Botón de visibilidad */}
-          {onToggleVisibility && (
+          {onToggleVisibility && !isDefault && (
             <button
               onClick={handleVisibilityClick}
               className="p-2 rounded-lg transition-colors
@@ -97,20 +111,22 @@ export default function CategoryCard({
             </button>
           )}
           
-          {/* Botón de editar */}
-          <button
-            onClick={handleEditClick}
-            className="p-2 rounded-lg transition-colors
-                     hover:bg-gray-100 active:scale-95
-                     focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
-            aria-label="Kategorie bearbeiten"
-            tabIndex={0}
-          >
-            <Edit className="w-5 h-5 text-gray-600" />
-          </button>
+          {/* Botón de editar: oculto para la categoría default */}
+          {!isDefault && (
+            <button
+              onClick={handleEditClick}
+              className="p-2 rounded-lg transition-colors
+                       hover:bg-gray-100 active:scale-95
+                       focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
+              aria-label="Kategorie bearbeiten"
+              tabIndex={0}
+            >
+              <Edit className="w-5 h-5 text-gray-600" />
+            </button>
+          )}
 
-          {/* Botón eliminar: solo visible cuando la categoría está inactiva */}
-          {!isActive && onDelete && (
+          {/* Botón eliminar: solo visible cuando la categoría está inactiva y no es la default */}
+          {!isActive && !isDefault && onDelete && (
             <button
               onClick={handleDeleteClick}
               className="p-2 rounded-lg transition-colors

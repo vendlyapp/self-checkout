@@ -1,7 +1,6 @@
 'use client'
 
 import { useRef, useCallback } from 'react'
-import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export interface FilterOption {
@@ -50,10 +49,6 @@ export function FilterSlider({
     }
   }, [handleFilterClick])
 
-  const clearAllFilters = useCallback(() => {
-    onFilterChange([])
-  }, [onFilterChange])
-
   return (
     <div className={cn("relative", className)}>
       {/* Contenedor de filtros con scroll */}
@@ -64,19 +59,6 @@ export function FilterSlider({
         role="listbox"
         aria-label="Filteroptionen"
       >
-        {/* Botón "Alle Filter löschen" */}
-        {selectedFilters.length > 0 && (
-          <button
-            onClick={clearAllFilters}
-            className="flex items-center gap-1.5 whitespace-nowrap rounded-sm bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition-ios hover:bg-red-100 hover:scale-105 active:scale-95 border border-red-200"
-            aria-label="Alle Filter löschen"
-            tabIndex={0}
-          >
-            <X className="h-3 w-3" />
-            Löschen
-          </button>
-        )}
-
         {/* Filterchips */}
         {filters.map((filter) => {
           const isSelected = selectedFilters.includes(filter.id)

@@ -1,16 +1,49 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogIn, Store, ScanBarcode } from 'lucide-react';
+import { LogIn, Store, ScanBarcode, Loader2 } from 'lucide-react';
 import { getCopyrightText } from '@/lib/config/brand';
+import { supabase } from '@/lib/supabase/client';
 
 const WelcomeAuth: React.FC = () => {
   const router = useRouter();
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    // Si el usuario llega aquí con una sesión activa (ej: después de Google OAuth
+    // que redirige a / en vez de /auth/callback), mandarlo directo al dashboard.
+    const checkAndRedirect = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        router.replace('/dashboard');
+        return;
+      }
+      setChecking(false);
+    };
+
+    // También escuchar SIGNED_IN en caso de que Supabase procese el token aquí
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        router.replace('/dashboard');
+      }
+    });
+
+    checkAndRedirect();
+    return () => subscription.unsubscribe();
+  }, [router]);
 
   const handleLogin = () => {
     router.push('/login');
   };
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 flex items-center justify-center">
+        <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 flex items-center justify-center p-4 sm:p-6">

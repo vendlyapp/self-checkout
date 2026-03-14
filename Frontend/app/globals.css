@@ -600,8 +600,11 @@
   /* Contenedor del navbar */
   .nav-container {
     @apply fixed bottom-0 left-0 right-0 z-50;
-    @apply bg-white border-t border-gray-200;
-    box-shadow: var(--shadow-md);
+    @apply bg-white;
+    box-shadow:
+      0 -8px 24px rgba(0, 0, 0, 0.10),
+      0 -4px 8px  rgba(0, 0, 0, 0.06),
+      0 -1px 2px  rgba(0, 0, 0, 0.04);
     border-top-left-radius: 20px;
     border-top-right-radius: 20px;
     min-height: calc(80px + env(safe-area-inset-bottom));
@@ -616,8 +619,11 @@
 
   .nav-container-user {
     @apply fixed bottom-0 left-0 right-0 z-40;
-    @apply bg-white border-t border-gray-200 flex flex-col;
-    box-shadow: var(--shadow-md);
+    @apply bg-white flex flex-col;
+    box-shadow:
+      0 -8px 24px rgba(0, 0, 0, 0.10),
+      0 -4px 8px  rgba(0, 0, 0, 0.06),
+      0 -1px 2px  rgba(0, 0, 0, 0.04);
     border-top-left-radius: 20px;
     border-top-right-radius: 20px;
     min-height: calc(80px + env(safe-area-inset-bottom));
@@ -2352,7 +2358,7 @@
 }
 
 /* Animación de pulso suave para elementos interactivos */
-@keyframes pulse-soft {
+@keyframes pulse-soft-light {
   0%, 100% {
     opacity: 1;
     transform: scale(1);
@@ -2364,7 +2370,7 @@
 }
 
 .animate-pulse-soft {
-  animation: pulse-soft 2s cubic-bezier(0.4, 0.0, 0.6, 1) infinite;
+  animation: pulse-soft-light 2s cubic-bezier(0.4, 0.0, 0.6, 1) infinite;
 }
 
 /* Animación de shimmer para loading states */

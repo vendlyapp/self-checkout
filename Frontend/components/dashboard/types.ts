@@ -45,10 +45,11 @@ export interface GreetingSectionProps {
   onToggleStore: () => void;
 }
 
+/** DailyGoalCard is self-contained: it uses useMyStore + useGoalRevenues. No props required. */
 export interface DailyGoalCardProps {
-  currentAmount: number;
-  goalAmount: number;
-  percentage: number;
+  currentAmount?: number;
+  goalAmount?: number;
+  percentage?: number;
 }
 
 export interface QuickAccessSliderProps {

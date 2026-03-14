@@ -19,7 +19,6 @@ export const AuthGuard = ({ children, allowedRoles }: AuthGuardProps) => {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (loading) {
-        console.warn('[AuthGuard] Safety timeout: forcing render after 10s');
         setForceRender(true);
       }
     }, 10000);

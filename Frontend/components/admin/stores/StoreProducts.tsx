@@ -7,6 +7,7 @@ import { SuperAdminService, type Product, type Store } from '@/lib/services/supe
 import { formatSwissPrice } from '@/lib/utils';
 import EditProductModal from './EditProductModal';
 import { ProductService, type Product as ProductServiceProduct } from '@/lib/services/productService';
+import { devError } from '@/lib/utils/logger';
 
 interface StoreProductsProps {
   storeId: string;
@@ -37,7 +38,7 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
         setError(response.error || 'Fehler beim Laden der Produkte');
       }
     } catch (error) {
-      console.error('Error fetching products:', error);
+      devError('Error fetching products:', error);
       setError(error instanceof Error ? error.message : 'Fehler beim Laden der Produkte');
     } finally {
       setLoading(false);
@@ -56,7 +57,7 @@ export default function StoreProducts({ storeId }: StoreProductsProps) {
         setError('Produktinformationen konnten nicht geladen werden');
       }
     } catch (err) {
-      console.error('Error loading product:', err);
+      devError('Error loading product:', err);
       setError('Fehler beim Laden des Produkts');
     }
   };

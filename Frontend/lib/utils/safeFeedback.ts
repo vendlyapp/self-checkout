@@ -5,6 +5,8 @@
  * para máxima compatibilidad con Chrome y otros navegadores.
  */
 
+import { devWarn } from '@/lib/utils/logger';
+
 interface FeedbackOptions {
   type?: 'light' | 'medium' | 'strong' | 'success' | 'error';
   element?: HTMLElement | null;
@@ -61,7 +63,7 @@ export const safeFeedback = (options: FeedbackOptions = {}): void => {
         }, duration);
       }
     } catch (error) {
-      console.warn('Visual feedback failed:', error);
+      devWarn('Visual feedback failed:', error);
     }
   }
 };

@@ -54,8 +54,7 @@ const getAuthHeaders = async () => {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
     };
-  } catch (error) {
-    console.error('Failed to get auth token:', error);
+  } catch {
     return {
       'Content-Type': 'application/json',
     };
@@ -82,7 +81,6 @@ export const discountCodeService = {
       const result = await response.json();
       return result.data || [];
     } catch (error) {
-      console.error('Error en getAll discount codes:', error);
       throw error;
     }
   },
@@ -249,7 +247,6 @@ export const discountCodeService = {
       const result = await response.json();
       return result.data || [];
     } catch (error) {
-      console.error('Error en getArchived discount codes:', error);
       throw error;
     }
   },

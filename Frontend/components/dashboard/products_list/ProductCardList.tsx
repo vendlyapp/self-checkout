@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronRight, Package, ChevronDown } from 'lucide-react'
+import { ChevronRight, Package, ChevronDown, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useDeleteProduct } from '@/hooks/mutations'
 
 interface Product {
   id: string;
@@ -39,6 +40,7 @@ interface Product {
   discountPercentage?: number;
   parentId?: string;
   variants?: Product[];
+  isActive?: boolean;
 }
 
 interface ProductCardListProps {
@@ -48,9 +50,14 @@ interface ProductCardListProps {
 
 export default function ProductCardList({ product, onClick }: ProductCardListProps) {
   const router = useRouter()
-  // Por defecto, null = producto padre seleccionado
-  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null)
+  const deleteProductMutation = useDeleteProduct()
+  // Inicializar con la primera variante si existen hijos, no con el padre
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(
+    product.variants && product.variants.length > 0 ? product.variants[0].id : null
+  )
   const [isVariantDropdownOpen, setIsVariantDropdownOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleteSuccess, setDeleteSuccess] = useState(false)
 
   const formatPrice = (price: number): string => {
     // Usar formato suizo: .– cuando es exacto, .45 cuando tiene decimales
@@ -167,7 +174,8 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
     if (onClick) {
       onClick(currentProduct)
     } else {
-      router.push(`/products_list/view/${currentProduct.id}`)
+      // Siempre abrir el producto PADRE para ver/editar con todas sus variantes
+      router.push(`/products_list/view/${product.id}`)
     }
   }
 
@@ -226,17 +234,85 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
     }
   }, [isVariantDropdownOpen])
 
+  const isInactive = product.isActive === false;
+
   return (
     <div 
-      className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer 
+      className={`bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer 
                  transition-interactive gpu-accelerated group
                  hover:shadow-lg hover:scale-[1.02] hover:border-brand-200
-                 active:scale-[0.98] active:shadow-md relative"
+                 active:scale-[0.98] active:shadow-md relative
+                 ${isInactive ? 'opacity-75' : ''}`}
       onClick={handleProductClick}
       tabIndex={0}
       onKeyDown={handleKeyDown}
       aria-label={`Produkt anzeigen: ${currentProduct.name}`}
     >
+      {isInactive && !confirmDelete && (
+        <span className="absolute top-2 right-2 text-[10px] font-medium px-2 py-0.5 rounded bg-gray-200 text-gray-600">
+          Inaktiv
+        </span>
+      )}
+
+      {/* Overlay de eliminación: confirmación → cargando → éxito */}
+      {isInactive && (confirmDelete || deleteSuccess) && (
+        <div
+          className="absolute inset-0 z-10 rounded-xl flex items-center justify-center gap-3 px-4 animate-fade-in-scale"
+          style={{ background: deleteSuccess ? 'rgba(220,252,231,0.97)' : 'rgba(255,255,255,0.97)' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Estado: cargando */}
+          {deleteProductMutation.isPending && (
+            <div className="flex items-center gap-3">
+              <svg className="animate-spin w-5 h-5 text-red-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+              </svg>
+              <span className="text-sm font-semibold text-red-600">Produkt wird gelöscht…</span>
+            </div>
+          )}
+
+          {/* Estado: éxito */}
+          {deleteSuccess && (
+            <div className="flex items-center gap-3">
+              <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              <span className="text-sm font-semibold text-green-700">Produkt wurde gelöscht</span>
+            </div>
+          )}
+
+          {/* Estado: confirmar */}
+          {!deleteProductMutation.isPending && !deleteSuccess && (
+            <>
+              <span className="text-sm font-medium text-gray-700 flex-1">Produkt löschen?</span>
+              <button
+                type="button"
+                onClick={async (e) => {
+                  e.stopPropagation()
+                  try {
+                    await deleteProductMutation.mutateAsync(product.id)
+                    setDeleteSuccess(true)
+                  } catch {
+                    setConfirmDelete(false)
+                  }
+                }}
+                className="px-3 py-1.5 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 active:scale-95 transition-ios"
+              >
+                Ja, löschen
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setConfirmDelete(false) }}
+                className="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-200 active:scale-95 transition-ios"
+              >
+                Abbrechen
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       <div className="flex items-center gap-4">
         <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center relative
                         transition-interactive gpu-accelerated
@@ -310,8 +386,18 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
           </div>
         </div>
 
-        <div className="flex-shrink-0 transition-interactive group-hover:translate-x-1">
-          <ChevronRight className="w-5 h-5 text-gray-400 transition-interactive" />
+        <div className="flex-shrink-0 flex items-center gap-2">
+          {isInactive && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setConfirmDelete(true) }}
+              className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-ios active:scale-95"
+              aria-label="Produkt löschen"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+          <ChevronRight className="w-5 h-5 text-gray-400 transition-interactive group-hover:translate-x-1" />
         </div>
       </div>
 
@@ -328,26 +414,28 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Opción del producto padre */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              setSelectedVariantId(null)
-              setIsVariantDropdownOpen(false)
-            }}
-            className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 transition-colors ${
-              selectedVariantId === null ? 'bg-brand-50 text-brand-700 font-medium' : 'text-gray-700'
-            }`}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <span className="flex-1 break-words">{getVariantName(null)}</span>
-              <span className="text-gray-500 font-medium text-sm flex-shrink-0">
-                {formatPrice(product.price)}
-              </span>
-            </div>
-          </button>
+          {/* Opción del producto padre — solo si tiene nombre de variante propio */}
+          {getVariantName(null) !== '' && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setSelectedVariantId(null)
+                setIsVariantDropdownOpen(false)
+              }}
+              className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 transition-colors ${
+                selectedVariantId === null ? 'bg-brand-50 text-brand-700 font-medium' : 'text-gray-700'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex-1 break-words">{getVariantName(null)}</span>
+                <span className="text-gray-500 font-medium text-sm flex-shrink-0">
+                  {formatPrice(product.price)}
+                </span>
+              </div>
+            </button>
+          )}
           {/* Variantes */}
           {product.variants.map((variant) => (
             <button

@@ -3,9 +3,18 @@
  * Centraliza la configuración de endpoints y opciones de la API
  */
 
+function getBaseUrl(): string {
+  const url = process.env.NEXT_PUBLIC_API_URL;
+  if (process.env.NODE_ENV === 'production' && !url) {
+    throw new Error('NEXT_PUBLIC_API_URL must be set in production');
+  }
+  return url || 'http://localhost:5000';
+}
+
 export const API_CONFIG = {
-  // URL base de la API
-  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
+  get BASE_URL() {
+    return getBaseUrl();
+  },
   
   // Timeouts
   TIMEOUT: 10000, // 10 segundos
@@ -57,6 +66,11 @@ export const API_CONFIG = {
     DISCOUNT_CODES: '/api/discount-codes',
     DISCOUNT_CODE_VALIDATE: (code: string) => `/api/discount-codes/validate/${code}`,
     DISCOUNT_CODE_BY_ID: (id: string) => `/api/discount-codes/${id}`,
+
+    // Notifications
+    NOTIFICATIONS: '/api/notifications',
+    NOTIFICATION_READ: (id: string) => `/api/notifications/${id}/read`,
+    NOTIFICATIONS_READ_ALL: '/api/notifications/read-all',
   },
   
   // Configuración de paginación

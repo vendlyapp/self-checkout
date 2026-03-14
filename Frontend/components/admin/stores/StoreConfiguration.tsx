@@ -10,6 +10,7 @@ import { useUpdatePaymentMethod } from '@/hooks/mutations/usePaymentMethodMutati
 import { getPaymentMethodIcon, isSvgIcon } from '@/lib/utils/paymentMethodIcons';
 import Image from 'next/image';
 import { Loader } from '@/components/ui/Loader';
+import { devError } from '@/lib/utils/logger';
 import type { PaymentMethod as ApiPaymentMethod } from '@/hooks/queries/usePaymentMethods';
 
 interface StoreConfigurationProps {
@@ -87,7 +88,7 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
         setError(response.error || 'Fehler beim Aktualisieren des Geschäfts');
       }
     } catch (error) {
-      console.error('Error updating store:', error);
+      devError('Error updating store:', error);
       setError(error instanceof Error ? error.message : 'Fehler beim Aktualisieren des Geschäfts');
     } finally {
       setLoading(false);
@@ -112,7 +113,7 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
         setError(response.error || 'Fehler beim Ändern des Status');
       }
     } catch (error) {
-      console.error('Error toggling status:', error);
+      devError('Error toggling status:', error);
       setError(error instanceof Error ? error.message : 'Fehler beim Ändern des Status');
     } finally {
       setLoading(false);
@@ -188,7 +189,7 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
       });
       await refetchPaymentMethods();
     } catch (error) {
-      console.error('Fehler beim Aktualisieren der Zahlungsmethode:', error);
+      devError('Fehler beim Aktualisieren der Zahlungsmethode:', error);
     } finally {
       setUpdatingMethodName(null);
     }
@@ -212,7 +213,7 @@ export default function StoreConfiguration({ store, onUpdate }: StoreConfigurati
         refetchPaymentMethods();
       }, 500);
     } catch (error) {
-      console.error('Fehler beim Aktualisieren der Zahlungsmethode:', error);
+      devError('Fehler beim Aktualisieren der Zahlungsmethode:', error);
     } finally {
       setUpdatingMethodName(null);
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from "react";
+import React, { createContext, useContext, useState, ReactNode, useMemo } from "react";
 import { FilterState } from "./FilterModal";
 import { FilterOption } from "@/components/Sliders/SliderFIlter";
 import { getIcon } from "./data/iconMap";
@@ -89,14 +89,13 @@ export const ProductsListProvider: React.FC<ProductsListProviderProps> = ({
     status: "all" as const,
     priceRange: { min: 0, max: 1000 },
   });
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [selectedFilters, setSelectedFilters] = useState<string[]>(['all']);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFiltersCount, setActiveFiltersCount] = useState(0);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   // Obtener categorías y productos reales de la API
   const { data: categoriesData = [] } = useCategories();
-  const { data: productsData = [] } = useProducts({ isActive: true });
+  const { data: productsData = [] } = useProducts({ includeInactive: true });
 
   // Calcular filtros de productos con contadores dinámicos
   const productsListFilters: FilterOption[] = useMemo(() => {
@@ -135,10 +134,17 @@ export const ProductsListProvider: React.FC<ProductsListProviderProps> = ({
     ];
   }, [categoriesData, productsData]);
 
-  // Actualizar contador de filtros activos
-  useEffect(() => {
-    setActiveFiltersCount(selectedFilters.length);
-  }, [selectedFilters]);
+  // Contador de filtros activos (excluyendo 'all' que es el estado por defecto)
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (filterState.categories.length > 0 && !filterState.categories.includes('all')) {
+      count += filterState.categories.length;
+    }
+    if (filterState.sortBy !== 'name') count++;
+    if (filterState.status !== 'all') count++;
+    if (filterState.priceRange.min !== 0 || filterState.priceRange.max !== 1000) count++;
+    return count;
+  }, [filterState]);
 
   // Handlers
   const handleSearch = (query: string) => {
@@ -146,22 +152,14 @@ export const ProductsListProvider: React.FC<ProductsListProviderProps> = ({
   };
 
   const handleFilterChange = (filters: string[]) => {
-    setSelectedFilters(filters);
-    
-    // Sincronizar con filterState.categories
-    // Si no hay filtros o solo está "all", establecer categories a ["all"]
-    if (filters.length === 0 || (filters.length === 1 && filters[0] === 'all')) {
-      setFilterState(prev => ({
-        ...prev,
-        categories: ['all']
-      }));
+    // Si no hay nada seleccionado, volver a 'all' (estado por defecto)
+    const effective = filters.length === 0 ? ['all'] : filters;
+    setSelectedFilters(effective);
+
+    if (effective.includes('all')) {
+      setFilterState(prev => ({ ...prev, categories: ['all'] }));
     } else {
-      // Filtrar "all" si está presente y establecer las categorías seleccionadas
-      const categoriesWithoutAll = filters.filter(id => id !== 'all');
-      setFilterState(prev => ({
-        ...prev,
-        categories: categoriesWithoutAll.length > 0 ? categoriesWithoutAll : ['all']
-      }));
+      setFilterState(prev => ({ ...prev, categories: effective }));
     }
   };
 

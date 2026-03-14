@@ -45,28 +45,6 @@ export default function ProductsDashboard() {
   // Si hay datos en el store y no están viejos, usarlos mientras carga
   const immediateData = storeData && !isStale() ? storeData : null;
 
-  // Debug logging
-  React.useEffect(() => {
-    if (loading) {
-      console.log('[ProductsDashboard] Loading products data...');
-    }
-    if (error) {
-      console.error('[ProductsDashboard] Error loading products:', error);
-    }
-    if (data) {
-      console.log('[ProductsDashboard] Products data loaded:', {
-        hasData: !!data,
-        hasProducts: !!data.products,
-        hasCategories: !!data.categories,
-        productsTotal: data.products?.total,
-        categoriesTotal: data.categories?.total,
-        dataStructure: JSON.stringify(data, null, 2),
-      });
-    } else {
-      console.warn('[ProductsDashboard] No data available');
-    }
-  }, [loading, error, data]);
-
   // Intentar refrescar una vez si no hay datos
   useEffect(() => {
     if (!data || !data.products || !data.categories) {
@@ -98,7 +76,6 @@ export default function ProductsDashboard() {
   if (!displayData) {
     // Si ya intentamos refrescar y aún no hay datos, mostrar skeleton
     if (hasTriedRefresh) {
-      console.warn('[ProductsDashboard] No data after refresh attempt');
       return <ProductsDashboardSkeletonLoader />;
     }
     // Si aún no hemos intentado refrescar, mostrar skeleton mientras intenta
@@ -127,13 +104,6 @@ export default function ProductsDashboard() {
     },
     lastUpdated: displayData?.lastUpdated || new Date().toISOString(),
   };
-
-  console.log('[ProductsDashboard] Final data structure:', {
-    hasProducts: !!finalData.products,
-    hasCategories: !!finalData.categories,
-    productsTotal: finalData.products?.total,
-    categoriesTotal: finalData.categories?.total,
-  });
 
   const activeProductsCount = getActiveProductsCount(finalData.products);
   const activeCategoriesCount = getActiveCategoriesCount(finalData.categories);

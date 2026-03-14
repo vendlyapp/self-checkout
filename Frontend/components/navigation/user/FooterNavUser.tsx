@@ -154,18 +154,16 @@ export default function FooterNav() {
   }
 
   return (
-    <div className="bg-white rounded-t-3xl">
-      {/* Resumen de carrito arriba solo cuando estoy en el carrito Y hay items en el carrito - fuera del nav para separación visual */}
+    <div className="bg-white rounded-t-3xl shadow-[0_-8px_24px_rgba(0,0,0,0.10),0_-4px_8px_rgba(0,0,0,0.06)] safe-area-bottom">
+      {/* En carrito: resumen ARRIBA del nav */}
       {isCartRoute && hasValidCartItems && (
-        <div className="w-full max-w-[480px] mx-auto bg-white rounded-t-3xl pb-2">
+        <div className="px-3 pt-3">
           <UserCartSummaryCart variant="inline" />
         </div>
       )}
 
-      {/* Footer Nav con borde y sombra para separación visual */}
-      <div className="rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.12)] bg-white overflow-hidden transition-ios">
-        <nav className="bg-white rounded-t-3xl border-t border-[#E5E6F8] transition-ios safe-area-bottom" style={{ borderTopWidth: '0.5px' }}>
-          <div className="flex items-center justify-between w-full px-6 max-w-[480px] mx-auto pb-4 pt-2">
+      <nav>
+        <div className="flex items-center justify-between w-full px-6 max-w-[480px] mx-auto py-3">
         {processedItems.map((item) => {
           const Icon = item.icon;
 
@@ -234,11 +232,13 @@ export default function FooterNav() {
             );
           }
 
-          // Items regulares
+          // Items regulares — Warenkorb: si carrito vacío, ir a lista de productos
+          const isCartItem = item.id === "cart";
+          const cartHref = hasValidCartItems ? `${baseRoute}/cart` : baseRoute;
           return (
             <Link
               key={item.id}
-              href={item.href}
+              href={isCartItem ? cartHref : item.href}
               prefetch={true}
               className={clsx(
                 "nav-item transition-ios active:opacity-70",
@@ -285,15 +285,15 @@ export default function FooterNav() {
           );
         })}
         </div>
+      </nav>
 
-          {/* Resumen de carrito abajo solo cuando NO estoy en el carrito Y NO estoy en el pago - con contenedor limitado */}
-          {!isCartRoute && !isPaymentRoute && (
-            <div className="w-full max-w-[480px] mx-auto flex flex-col gap-2 px-4 pb-2">
-              <UserCartSummary variant="inline" />
-            </div>
-          )}
-        </nav>
-      </div>
+      {/* Barra de carrito — debajo del nav, visible solo con artículos */}
+      {/* En otras páginas (no carrito, no pago): barra verde DEBAJO del nav */}
+      {!isCartRoute && !isPaymentRoute && hasValidCartItems && (
+        <div className="px-4 pt-3 pb-3">
+          <UserCartSummary variant="inline" />
+        </div>
+      )}
     </div>
   );
 }

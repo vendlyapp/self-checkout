@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Loader } from '@/components/ui/Loader';
 import { useEffect } from 'react';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
+import { devError } from '@/lib/utils/logger';
 export default function SalesInvoiceDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -139,7 +140,7 @@ export default function SalesInvoiceDetailPage() {
         if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = originalResponsiveHeaderDisplay;
       }, 1000);
     } catch (error) {
-      console.error('Error printing:', error);
+      devError('Error printing:', error);
       toast.error('Fehler beim Drucken');
     }
   };

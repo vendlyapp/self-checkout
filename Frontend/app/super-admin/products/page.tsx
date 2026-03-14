@@ -89,21 +89,15 @@ export default function SuperAdminProducts() {
   const storeStats = selectedStore ? getStoreStats(selectedStore.products) : null;
 
   const handleEditProduct = async (product: Product) => {
-    // Fetch full product details
     try {
-      console.log('[SuperAdminProducts] Opening edit modal for product:', product.id);
-      setEditingProduct(product); // Set product immediately so modal can open
+      setEditingProduct(product);
       setIsEditModalOpen(true);
-      
       const response = await ProductService.getProductById(product.id);
       if (response.success && response.data) {
-        // Update with full product details
         setEditingProduct(response.data as Product);
-      } else {
-        console.error('[SuperAdminProducts] Failed to load product details');
       }
-    } catch (err) {
-      console.error('[SuperAdminProducts] Error loading product:', err);
+    } catch {
+      // Error loading product details
     }
   };
 

@@ -14,10 +14,16 @@ const ensureActiveSessionTable = async () => {
           role VARCHAR(32) NOT NULL,
           "ip" TEXT,
           "userAgent" TEXT,
+          "cartValue" NUMERIC(10,2) NOT NULL DEFAULT 0,
           "lastSeen" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
           "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
           "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
+      `);
+
+      await query(`
+        ALTER TABLE "ActiveSession"
+        ADD COLUMN IF NOT EXISTS "cartValue" NUMERIC(10,2) NOT NULL DEFAULT 0
       `);
 
       await query(`
@@ -176,6 +182,44 @@ class AnalyticsService {
     }));
   }
 
+  /**
+   * Top products by store (for store dashboard Bestseller).
+   * @param {string} storeId - Store ID
+   * @param {Object} options - { from, to, limit, metric }
+   */
+  async getTopProductsByStore(storeId, { from, to, limit = 10, metric = 'units' } = {}) {
+    if (!storeId) return [];
+    const { from: fromDate, to: toDate } = this.#resolveDateRange(from, to, 365);
+    const sanitizedLimit = Number.isFinite(Number(limit)) ? Math.max(1, Number(limit)) : 10;
+    const normalizedMetric = metric === 'revenue' ? 'revenue' : 'units';
+
+    const result = await query(
+      `
+        SELECT
+          p.id AS "productId",
+          p.name AS "productName",
+          COALESCE(SUM(oi.quantity * oi.price), 0) AS "revenue",
+          COALESCE(SUM(oi.quantity), 0) AS "unitsSold"
+        FROM "OrderItem" oi
+        INNER JOIN "Order" o ON oi."orderId" = o.id
+        INNER JOIN "Product" p ON oi."productId" = p.id
+        WHERE o."storeId" = $1 AND o."createdAt" BETWEEN $2 AND $3
+          AND (o.status IS NULL OR o.status != 'cancelled')
+        GROUP BY p.id, p.name
+        ORDER BY "${normalizedMetric === 'revenue' ? 'revenue' : 'unitsSold'}" DESC
+        LIMIT $4
+      `,
+      [storeId, fromDate, toDate, sanitizedLimit],
+    );
+
+    return result.rows.map((row) => ({
+      productId: row.productId,
+      productName: row.productName,
+      revenue: Number(row.revenue),
+      unitsSold: Number(row.unitsSold),
+    }));
+  }
+
   async registerHeartbeat({
     userId = null,
     storeId = null,
@@ -183,6 +227,7 @@ class AnalyticsService {
     role,
     ipAddress,
     userAgent,
+    cartValue = 0,
   }) {
     await ensureActiveSessionTable();
     if (!role) {
@@ -191,6 +236,7 @@ class AnalyticsService {
 
     const resolvedSessionId = sessionId || null;
     const resolvedStoreId = storeId || null;
+    const resolvedCartValue = Number.isFinite(Number(cartValue)) ? Math.max(0, Number(cartValue)) : 0;
 
     await transaction(async (client) => {
       if (!resolvedSessionId && !userId) {
@@ -200,19 +246,20 @@ class AnalyticsService {
       if (!userId) {
         const sessionResult = await client.query(
           `
-            INSERT INTO "ActiveSession" ("sessionId", "userId", "storeId", role, "ip", "userAgent", "lastSeen")
-            VALUES ($1, NULL, $2, $3, $4, $5, NOW())
+            INSERT INTO "ActiveSession" ("sessionId", "userId", "storeId", role, "ip", "userAgent", "cartValue", "lastSeen")
+            VALUES ($1, NULL, $2, $3, $4, $5, $6, NOW())
             ON CONFLICT ("sessionId")
             DO UPDATE SET
               "storeId" = COALESCE($2, "ActiveSession"."storeId"),
               role = $3,
               "ip" = $4,
               "userAgent" = $5,
+              "cartValue" = $6,
               "lastSeen" = NOW(),
               "updatedAt" = NOW()
             RETURNING id
           `,
-          [resolvedSessionId, resolvedStoreId, role, ipAddress, userAgent],
+          [resolvedSessionId, resolvedStoreId, role, ipAddress, userAgent, resolvedCartValue],
         );
 
         return sessionResult.rows[0];
@@ -220,19 +267,20 @@ class AnalyticsService {
 
       const result = await client.query(
         `
-          INSERT INTO "ActiveSession" ("userId", "storeId", "sessionId", role, "ip", "userAgent", "lastSeen")
-          VALUES ($1, $2, $3, $4, $5, $6, NOW())
+          INSERT INTO "ActiveSession" ("userId", "storeId", "sessionId", role, "ip", "userAgent", "cartValue", "lastSeen")
+          VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
           ON CONFLICT ("userId", role)
           DO UPDATE SET
             "storeId" = COALESCE($2, "ActiveSession"."storeId"),
             "sessionId" = COALESCE($3, "ActiveSession"."sessionId"),
             "ip" = $5,
             "userAgent" = $6,
+            "cartValue" = $7,
             "lastSeen" = NOW(),
             "updatedAt" = NOW()
           RETURNING id
         `,
-        [userId, resolvedStoreId, resolvedSessionId, role, ipAddress, userAgent],
+        [userId, resolvedStoreId, resolvedSessionId, role, ipAddress, userAgent, resolvedCartValue],
       );
 
       return result.rows[0];
@@ -285,6 +333,34 @@ class AnalyticsService {
     }
 
     return summary;
+  }
+
+  async getStoreActiveStats({ ownerId, intervalMinutes = 5 } = {}) {
+    await ensureActiveSessionTable();
+    if (!ownerId) throw new Error('ownerId es obligatorio');
+    const minutes = Number.isFinite(Number(intervalMinutes)) ? Number(intervalMinutes) : 5;
+
+    const result = await query(
+      `
+        SELECT
+          COALESCE(COUNT(a.id), 0) AS "activeCustomers",
+          COALESCE(SUM(a."cartValue"), 0) AS "openCartsValue",
+          MAX(a."lastSeen") AS "lastSeen"
+        FROM "Store" s
+        LEFT JOIN "ActiveSession" a ON s.id = a."storeId"::text
+          AND a.role = 'CUSTOMER'
+          AND a."lastSeen" >= NOW() - ($2::int || ' minutes')::interval
+        WHERE s."ownerId"::text = $1::text
+      `,
+      [ownerId, minutes],
+    );
+
+    const row = result.rows[0];
+    return {
+      activeCustomers: Number(row?.activeCustomers ?? 0),
+      openCartsValue: Number(row?.openCartsValue ?? 0),
+      lastSeen: row?.lastSeen ?? null,
+    };
   }
 
   async getActiveCustomersByStore({ intervalMinutes = 5 } = {}) {

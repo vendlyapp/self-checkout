@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShoppingCart, Search, Calendar, DollarSign, Package, CheckCircle2, Clock, XCircle, RefreshCw } from 'lucide-react';
 import { SuperAdminService, type Store } from '@/lib/services/superAdminService';
 import { formatSwissPrice } from '@/lib/utils';
+import { devError } from '@/lib/utils/logger';
 
 interface Order {
   id: string;
@@ -49,7 +50,7 @@ export default function StoreOrders({ storeId, store }: StoreOrdersProps) {
         throw new Error(response.error || 'Fehler beim Laden der Bestellungen');
       }
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      devError('Error fetching orders:', error);
       setError(error instanceof Error ? error.message : 'Fehler beim Laden der Bestellungen');
       // Fallback to empty array on error
       setOrders([]);

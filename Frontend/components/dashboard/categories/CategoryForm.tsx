@@ -6,6 +6,7 @@ import { useCreateCategory, useUpdateCategory } from "@/hooks/mutations";
 import type { Category, CreateCategoryRequest, UpdateCategoryRequest } from "@/lib/services/categoryService";
 import { getIcon, iconMap } from "../products_list/data/iconMap";
 import { Loader } from "@/components/ui/Loader";
+import { devError } from "@/lib/utils/logger";
 
 interface CategoryFormProps {
   category?: Category | null;
@@ -73,7 +74,7 @@ export default function CategoryForm({ category, onClose, onSuccess }: CategoryF
       }
       onSuccess();
     } catch (error) {
-      console.error("Fehler beim Speichern der Kategorie:", error);
+      devError("Fehler beim Speichern der Kategorie:", error);
       alert(error instanceof Error ? error.message : "Fehler beim Speichern der Kategorie");
     }
   };

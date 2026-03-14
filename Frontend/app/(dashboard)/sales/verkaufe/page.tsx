@@ -16,7 +16,7 @@ export default function SalesVerkaufePage() {
   const { data: orders = [], isLoading, isFetching, error: queryError } = useOrders({
     limit: 100,
     offset: 0,
-    status: 'completed',
+    // Sin filtro de status: mostrar completadas y canceladas
   });
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -104,7 +104,7 @@ export default function SalesVerkaufePage() {
           <div className="flex flex-col items-center justify-center py-16 px-4">
             <ShoppingCart className="w-16 h-16 text-gray-300 mb-4" aria-hidden />
             <p className="text-gray-600 text-center text-lg font-medium">
-              {searchQuery ? 'Keine Verkäufe gefunden' : 'Noch keine abgeschlossenen Verkäufe'}
+              {searchQuery ? 'Keine Verkäufe gefunden' : 'Noch keine Verkäufe'}
             </p>
           </div>
         ) : (
@@ -122,8 +122,10 @@ export default function SalesVerkaufePage() {
                       <span className="text-xs text-gray-500 font-mono">
                         {order.id.slice(-8).toUpperCase()}
                       </span>
-                      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
-                        Abgeschlossen
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        order.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'
+                      }`}>
+                        {order.status === 'cancelled' ? 'Storniert' : order.status === 'completed' ? 'Abgeschlossen' : order.status || 'Abgeschlossen'}
                       </span>
                     </div>
                     <div className="space-y-1.5">
@@ -170,7 +172,7 @@ export default function SalesVerkaufePage() {
             <h1 className="text-xl lg:text-2xl font-bold text-foreground tracking-tight">Verkäufe</h1>
             <p className="text-xs lg:text-sm text-muted-foreground mt-0.5">
               {filteredOrders.length}{' '}
-              {filteredOrders.length === 1 ? 'abgeschlossener Verkauf' : 'abgeschlossene Verkäufe'}
+              {filteredOrders.length === 1 ? 'Verkauf' : 'Verkäufe'}
               {searchQuery && ' gefunden'}
             </p>
           </div>
@@ -192,7 +194,7 @@ export default function SalesVerkaufePage() {
           <div className="bg-card rounded-2xl border border-border p-10 text-center">
             <ShoppingCart className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" aria-hidden />
             <p className="text-muted-foreground text-sm font-medium">
-              {searchQuery ? 'Keine Verkäufe gefunden' : 'Noch keine abgeschlossenen Verkäufe'}
+              {searchQuery ? 'Keine Verkäufe gefunden' : 'Noch keine Verkäufe'}
             </p>
           </div>
         ) : (
@@ -271,16 +273,20 @@ export default function SalesVerkaufePage() {
                         <div className="text-[11px] text-muted-foreground truncate max-w-[120px]">
                           {order.userName || 'Gast'}
                         </div>
-                        <span className="inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 text-emerald-700">
-                          Abgeschlossen
+                        <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                          order.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'
+                        }`}>
+                          {order.status === 'cancelled' ? 'Storniert' : order.status === 'completed' ? 'Abgeschlossen' : order.status || 'Abgeschlossen'}
                         </span>
                       </div>
                     </td>
 
                     {/* Status — desktop only */}
                     <td className="hidden lg:table-cell px-5 py-4">
-                      <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 whitespace-nowrap">
-                        Abgeschlossen
+                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                        order.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'
+                      }`}>
+                        {order.status === 'cancelled' ? 'Storniert' : order.status === 'completed' ? 'Abgeschlossen' : order.status || 'Abgeschlossen'}
                       </span>
                     </td>
 

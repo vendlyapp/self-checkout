@@ -99,18 +99,14 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
                 <div className="flex items-baseline gap-1 lg:gap-2">
                   <span
                     className="font-bold text-3xl lg:text-5xl text-[#373F49]"
-                    aria-label="Aktive Kunden"
+                    aria-label={totalActive === 1 ? '1 aktiver Kunde' : `${totalActive} aktive Kunden`}
                   >
                     {totalActive}
                   </span>
                   <span className="font-semibold text-[#373F49] lg:text-lg">
-                    Kunden aktiv
+                    {totalActive === 1 ? 'Kunde aktiv' : 'Kunden aktiv'}
                   </span>
                 </div>
-                <div className="hidden lg:block w-px h-8 bg-border mx-2"></div>
-                <span className="text-muted-foreground lg:text-lg">
-                  {totalInactive} inaktiv
-                </span>
               </div>
             </div>
           </div>
