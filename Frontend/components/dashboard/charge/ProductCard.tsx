@@ -16,8 +16,10 @@ interface ProductCardProps {
 const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCartView = false }: ProductCardProps) {
   const { cartItems } = useCartStore()
   const [showVariantOptions, setShowVariantOptions] = useState(false)
-  // Por defecto, null = producto padre seleccionado
-  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null)
+  // Inicializar con la primera variante si existen (igual que ProductCardList) para evitar selector vacío
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(
+    product.variants && product.variants.length > 0 ? product.variants[0].id : null
+  )
 
   // Actualizar selectedVariantId cuando cambian las variantes del producto o el producto mismo
   useEffect(() => {
@@ -119,6 +121,16 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
     }
     
     return variant.name
+  }
+
+  // Texto del selector: evita vacío usando fallback unit (igual que ProductCardList)
+  const getSelectorText = (): string => {
+    if (!product.variants || product.variants.length === 0) return ''
+    if (selectedVariantId) {
+      const variant = product.variants.find(v => v.id === selectedVariantId)
+      if (variant) return getVariantName(variant) || variant.unit || ''
+    }
+    return getVariantName(null) || ''
   }
 
   const handleQuantityChange = (newQuantity: number) => {
@@ -373,9 +385,7 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
                   className="flex items-center gap-1.5 text-[14px] lg:text-[15px] text-gray-700 hover:text-gray-900 transition-colors py-1 w-full justify-center"
                 >
                   <span className="font-medium truncate">
-                    {selectedVariantId 
-                      ? getVariantName(product.variants.find(v => v.id === selectedVariantId) || null)
-                      : getVariantName(null)}
+                    {getSelectorText()}
                   </span>
                   <ChevronDown className={`w-4 h-4 lg:w-5 lg:h-5 text-gray-500 transition-transform flex-shrink-0 ${showVariantOptions ? 'rotate-180' : ''}`} />
                 </button>
@@ -454,9 +464,7 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
                   className="flex items-center gap-1 text-[14px] text-gray-700 hover:text-gray-900 transition-colors w-full justify-center"
                 >
                   <span className="font-medium truncate">
-                    {selectedVariantId 
-                      ? getVariantName(product.variants.find(v => v.id === selectedVariantId) || null)
-                      : getVariantName(null)}
+                    {getSelectorText()}
                   </span>
                   <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform flex-shrink-0 ${showVariantOptions ? 'rotate-180' : ''}`} />
                 </button>
@@ -506,28 +514,30 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Opción del producto padre */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              setSelectedVariantId(null)
-              setShowVariantOptions(false)
-            }}
-            className={`block w-full text-left px-4 py-2 text-[14px] lg:text-[15px] font-medium transition-colors ${
-              selectedVariantId === null 
-                ? 'bg-brand-50 text-brand-700' 
-                : 'text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <span className="flex-1 break-words">{getVariantName(null)}</span>
-              <span className="text-gray-500 font-medium text-sm flex-shrink-0">
-                CHF {formatPrice(product.price)}
-              </span>
-            </div>
-          </button>
+          {/* Opción del producto padre — solo si tiene nombre de variante propio (igual que ProductCardList) */}
+          {getVariantName(null) !== '' && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setSelectedVariantId(null)
+                setShowVariantOptions(false)
+              }}
+              className={`block w-full text-left px-4 py-2 text-[14px] lg:text-[15px] font-medium transition-colors ${
+                selectedVariantId === null 
+                  ? 'bg-brand-50 text-brand-700' 
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex-1 break-words">{getVariantName(null)}</span>
+                <span className="text-gray-500 font-medium text-sm flex-shrink-0">
+                  CHF {formatPrice(product.price)}
+                </span>
+              </div>
+            </button>
+          )}
           {/* Variantes */}
           {product.variants && product.variants.map((variant) => (
             <button
@@ -546,7 +556,7 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
               }`}
             >
               <div className="flex items-center justify-between gap-3">
-                <span className="flex-1 break-words">{getVariantName(variant)}</span>
+                <span className="flex-1 break-words">{getVariantName(variant) || variant.unit || ''}</span>
                 <span className="text-gray-500 font-medium text-sm flex-shrink-0">
                   CHF {formatPrice(variant.price)}
                 </span>
