@@ -253,7 +253,7 @@ export class InvoiceService {
   static async getQRCode(
     invoiceId: string,
     requestOptions?: { signal?: AbortSignal }
-  ): Promise<ApiResponse<{ billSvg: string; qrrReference: string; amount: number; invoiceNumber: string }>> {
+  ): Promise<ApiResponse<{ billSvg: string; qrSvg: string; qrrReference: string; amount: number; invoiceNumber: string }>> {
     return makeRequest(`/api/invoices/${invoiceId}/qr-code`, {
       method: 'GET',
       signal: requestOptions?.signal,

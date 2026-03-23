@@ -1,12 +1,15 @@
 'use client';
 
 import { useMemo, useRef, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Download,
   Printer,
   Mail,
   Copy,
   Scissors,
+  X,
+  Maximize2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -471,14 +474,17 @@ export default function InvoiceTemplate({
 }: InvoiceTemplateProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const [qrBillSvg, setQrBillSvg] = useState<string | null>(null);
+  const [qrSvg, setQrSvg] = useState<string | null>(null);
+  const [qrFullscreen, setQrFullscreen] = useState(false);
 
   // Fetch real QR Bill SVG when invoice uses QR-Rechnung payment
   useEffect(() => {
     if (serviceInvoice.paymentMethod !== 'qr-rechnung' || !serviceInvoice.qrrReference) return;
     const controller = new AbortController();
     InvoiceService.getQRCode(serviceInvoice.id, { signal: controller.signal }).then((res) => {
-      if (res.success && res.data?.billSvg) {
-        setQrBillSvg(res.data.billSvg);
+      if (res.success && res.data) {
+        if (res.data.billSvg) setQrBillSvg(res.data.billSvg);
+        if (res.data.qrSvg) setQrSvg(res.data.qrSvg);
       }
     }).catch(() => {/* silently fail — placeholder remains */});
     return () => { controller.abort(); };
@@ -982,7 +988,7 @@ export default function InvoiceTemplate({
           </div>
         )}
 
-        {/* ═══ QR-RECHNUNG (PAYMENT SLIP) — solo para pago diferido ═══ */}
+        {/* ═══ QR-RECHNUNG (ZAHLSCHEIN) — solo para pago diferido ═══ */}
         {invoice.showQRSection && (issuer.iban || serviceInvoice.qrrReference) && (
           <>
             <div className={`${px}`}>
@@ -990,144 +996,126 @@ export default function InvoiceTemplate({
             </div>
 
             <div className={`${px} pb-8`}>
-              <div className="border-2 border-black rounded-sm overflow-hidden">
-                <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} ${isMobile ? '' : 'divide-x-2'} divide-black`}>
-                  {/* Left: Zahlteil (Payment section) */}
-                  <div className="p-4 md:p-5">
-                    <div className="text-[10px] font-bold tracking-[0.15em] uppercase mb-3 text-gray-900">
-                      Zahlteil
+              {/* ── Mobile (< md): tarjeta compacta + botón fullscreen ── */}
+              <div className="block md:hidden">
+                <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                  {/* Header de la tarjeta */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500">Zahlschein</p>
+                      <p className="text-[18px] font-extrabold text-gray-900 tabular-nums leading-tight">
+                        CHF {formatCHF(totalBrutto)}
+                      </p>
                     </div>
-                    <div className={`flex ${isMobile ? 'flex-col' : ''} gap-4`}>
-                      {qrBillSvg ? (
-                        <div
-                          className="w-[120px] h-[120px] md:w-[132px] md:h-[132px] flex-shrink-0"
-                          dangerouslySetInnerHTML={{ __html: qrBillSvg }}
+                    {qrBillSvg && (
+                      <button
+                        onClick={() => setQrFullscreen(true)}
+                        className="flex items-center gap-1.5 bg-gray-900 text-white text-[11px] font-semibold rounded-xl px-3 py-2 active:scale-95 transition-transform"
+                      >
+                        <Maximize2 className="w-3.5 h-3.5" />
+                        Vollbild
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Contenido: QR cuadrado + datos clave */}
+                  <div className="flex items-start gap-4 p-4">
+                    {/* QR code square — img data URL para escala correcta */}
+                    <div className="flex-shrink-0">
+                      {qrSvg ? (
+                        <img
+                          src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrSvg)}`}
+                          alt="QR-Code"
+                          className="w-[100px] h-[100px] object-contain"
+                          draggable={false}
                         />
                       ) : (
                         <QRCodePlaceholder />
                       )}
-                      <div className="text-[10px] md:text-[11px] space-y-2.5 flex-1 min-w-0">
-                        <div>
-                          <div className="text-gray-400 text-[9px] font-semibold uppercase tracking-[0.1em] mb-0.5">
-                            Konto / Zahlbar an
-                          </div>
-                          <div className="text-gray-800 leading-relaxed font-mono text-[10px]">
-                            {issuer.iban}
-                          </div>
-                          <div className="text-gray-700 leading-relaxed">
-                            {issuer.name}
-                            <br />
-                            {issuer.street && <>{issuer.street}<br /></>}
-                            {issuer.zip} {issuer.city}
-                          </div>
-                        </div>
-                        {invoice.referenz && (
-                          <div>
-                            <div className="text-gray-400 text-[9px] font-semibold uppercase tracking-[0.1em] mb-0.5">
-                              Referenz
-                            </div>
-                            <div className="text-gray-800 font-mono text-[10px]">
-                              {invoice.referenz}
-                            </div>
-            </div>
-          )}
-                        <div>
-                          <div className="text-gray-400 text-[9px] font-semibold uppercase tracking-[0.1em] mb-0.5">
-                            Zahlbar durch
-                          </div>
-                          <div className="text-gray-700 leading-relaxed">
-                            {recipient.name}
-                            <br />
-                            {recipient.street && <>{recipient.street}<br /></>}
-                            {recipient.zip} {recipient.city}
-                          </div>
-                        </div>
-                      </div>
                     </div>
-                    <div className="flex items-baseline gap-4 mt-4 pt-3 border-t border-gray-200">
-                      <div>
-                        <div className="text-gray-400 text-[9px] uppercase tracking-[0.1em] font-semibold">
-                          Währung
-                        </div>
-                        <div className="text-[12px] font-bold text-gray-900">
-                          {invoice.waehrung || 'CHF'}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-gray-400 text-[9px] uppercase tracking-[0.1em] font-semibold">
-                          Betrag
-                        </div>
-                        <div className="text-[12px] font-bold text-gray-900 tabular-nums">
-                          {formatCHF(totalBrutto)}
-                        </div>
-                      </div>
-                    </div>
-        </div>
 
-                  {/* Right: Empfangsschein (Receipt) */}
-                  <div className={`p-4 md:p-5 ${isMobile ? 'border-t-2 border-black' : ''}`}>
-                    <div className="text-[10px] font-bold tracking-[0.15em] uppercase mb-3 text-gray-900">
-                      Empfangsschein
-                    </div>
-                    <div className="text-[10px] space-y-2.5">
+                    {/* Datos del acreedor y referencia */}
+                    <div className="flex-1 min-w-0 space-y-2.5 text-[11px]">
                       <div>
-                        <div className="text-gray-400 text-[9px] font-semibold uppercase tracking-[0.1em] mb-0.5">
-                          Konto / Zahlbar an
-                        </div>
-                        <div className="text-gray-800 font-mono text-[10px] leading-relaxed">
-                          {issuer.iban}
-                        </div>
-                        <div className="text-gray-700 leading-relaxed">
-                          {issuer.name}
-                          <br />
-                          {issuer.zip} {issuer.city}
-                        </div>
+                        <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-gray-400 mb-0.5">Konto / Zahlbar an</p>
+                        <p className="font-mono text-[10px] text-gray-700 leading-relaxed break-all">{issuer.iban}</p>
+                        <p className="text-gray-700 leading-relaxed">{issuer.name}</p>
+                        {issuer.zip && <p className="text-gray-500">{issuer.zip} {issuer.city}</p>}
                       </div>
                       {invoice.referenz && (
                         <div>
-                          <div className="text-gray-400 text-[9px] font-semibold uppercase tracking-[0.1em] mb-0.5">
-                            Referenz
-                          </div>
-                          <div className="text-gray-800 font-mono text-[10px]">
-                            {invoice.referenz}
-              </div>
-                </div>
-              )}
-                      <div>
-                        <div className="text-gray-400 text-[9px] font-semibold uppercase tracking-[0.1em] mb-0.5">
-                          Zahlbar durch
+                          <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-gray-400 mb-0.5">Referenz</p>
+                          <p className="font-mono text-[10px] text-gray-700 break-all">{invoice.referenz}</p>
                         </div>
-                        <div className="text-gray-700 leading-relaxed">
-                          {recipient.name}
-                          <br />
-                          {recipient.zip} {recipient.city}
-                        </div>
-                      </div>
-                      <div className="flex items-baseline gap-4 pt-2 border-t border-gray-200">
+                      )}
+                      <div className="flex gap-6 pt-1 border-t border-gray-100">
                         <div>
-                          <div className="text-gray-400 text-[9px] uppercase tracking-[0.1em] font-semibold">
-                            Währung
-                          </div>
-                          <div className="text-[11px] font-bold text-gray-900">
-                            {invoice.waehrung || 'CHF'}
-                          </div>
+                          <p className="text-[9px] uppercase tracking-[0.1em] text-gray-400 font-semibold">Währung</p>
+                          <p className="text-[12px] font-bold text-gray-900">{invoice.waehrung || 'CHF'}</p>
                         </div>
                         <div>
-                          <div className="text-gray-400 text-[9px] uppercase tracking-[0.1em] font-semibold">
-                            Betrag
-                          </div>
-                          <div className="text-[11px] font-bold text-gray-900 tabular-nums">
-                            {formatCHF(totalBrutto)}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="pt-4">
-                        <div className="text-gray-400 text-[9px] uppercase tracking-[0.1em] font-semibold">
-                          Annahmestelle
+                          <p className="text-[9px] uppercase tracking-[0.1em] text-gray-400 font-semibold">Betrag</p>
+                          <p className="text-[12px] font-bold text-gray-900 tabular-nums">{formatCHF(totalBrutto)}</p>
                         </div>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Hint: compatible banks */}
+                  <div className="px-4 pb-3">
+                    <p className="text-[10px] text-gray-400 text-center">
+                      UBS · ZKB · Raiffeisen · PostFinance · und alle Schweizer Banking-Apps
+                    </p>
+                  </div>
+                </div>
+
+                {/* Fullscreen portal — mismo patrón que el kiosko */}
+                {qrFullscreen && qrBillSvg && createPortal(
+                  <div className="fixed inset-0 z-[100000] bg-[#F2F2F7] flex flex-col">
+                    <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white border-b border-gray-100 shrink-0">
+                      <button
+                        onClick={() => setQrFullscreen(false)}
+                        className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 active:bg-gray-200"
+                      >
+                        <X className="w-5 h-5 text-gray-700" />
+                      </button>
+                      <div className="text-center">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400">Zahlschein</p>
+                        <p className="text-[17px] font-bold text-gray-900 tabular-nums">CHF {formatCHF(totalBrutto)}</p>
+                      </div>
+                      <div className="w-10" />
+                    </div>
+                    <div className="flex-1 overflow-hidden flex items-center justify-center">
+                      <div className="shrink-0" style={{ transform: 'rotate(90deg)', width: 'calc(100dvh - 72px)', maxWidth: 'calc(100dvh - 72px)' }}>
+                        <img
+                          src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrBillSvg)}`}
+                          alt="QR-Rechnung Zahlschein"
+                          className="w-full block rounded-sm shadow-md"
+                          draggable={false}
+                        />
+                      </div>
+                    </div>
+                  </div>,
+                  document.body
+                )}
               </div>
+
+              {/* ── Desktop / tablet (≥ md): bill completo en orientación natural ── */}
+              <div className="hidden md:block">
+                <div className="flex flex-col items-center gap-3">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-400">Zahlschein · QR-Rechnung</p>
+                  {qrBillSvg ? (
+                    <img
+                      src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrBillSvg)}`}
+                      alt="QR-Rechnung Zahlschein"
+                      className="w-full max-w-[680px] block rounded-xl shadow-md border border-gray-100"
+                      draggable={false}
+                    />
+                  ) : (
+                    <div className="w-full max-w-[680px] h-48 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-center">
+                      <p className="text-[13px] text-gray-400">Zahlschein wird geladen...</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

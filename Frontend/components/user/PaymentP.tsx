@@ -443,23 +443,30 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   <div className="w-10" />
                 </div>
 
-                {/* QR Bill rotado 90° para llenar la pantalla portrait con el documento landscape */}
-                <div className="flex-1 relative overflow-hidden flex items-center justify-center">
+                {/* Contenido: mobile portrait → rotado 90°; desktop/landscape → natural centrado */}
+                <div className="flex-1 overflow-hidden md:overflow-auto flex items-center justify-center p-4 md:p-8">
+                  {/* Mobile portrait (< md): rotado para llenar alto disponible */}
                   <div
+                    className="block md:hidden shrink-0"
                     style={{
                       transform: 'rotate(90deg)',
-                      /* CSS width → visual height tras rotación.
-                         Queremos que el documento llene el alto disponible.
-                         100dvh - header(56px) - footer(148px) ≈ 100dvh - 204px */
                       width: 'calc(100dvh - 210px)',
                       maxWidth: 'calc(100dvh - 210px)',
-                      flexShrink: 0,
                     }}
                   >
                     <img
                       src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrCodeData.billSvg)}`}
                       alt="QR-Rechnung Zahlschein"
                       className="w-full block rounded-sm shadow-md"
+                      draggable={false}
+                    />
+                  </div>
+                  {/* Desktop / tablet (≥ md): orientación natural, max 680px de ancho */}
+                  <div className="hidden md:block w-full max-w-[680px]">
+                    <img
+                      src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrCodeData.billSvg)}`}
+                      alt="QR-Rechnung Zahlschein"
+                      className="w-full block rounded-xl shadow-lg"
                       draggable={false}
                     />
                   </div>
@@ -470,21 +477,23 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   <p className="text-[11px] text-gray-400 text-center mb-3">
                     UBS · ZKB · Raiffeisen · PostFinance · und alle Schweizer Banking-Apps
                   </p>
-                  <button
-                    onClick={onConfirmQRPayment}
-                    disabled={isConfirmingPayment}
-                    className="w-full py-[15px] bg-[#25D076] text-white font-semibold text-[16px] rounded-2xl active:scale-[0.98] transition-transform shadow-lg shadow-[#25D076]/30 disabled:opacity-60 flex items-center justify-center gap-2"
-                  >
-                    {isConfirmingPayment ? (
-                      <>
-                        <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                        </svg>
-                        Wird bestätigt...
-                      </>
-                    ) : 'Ich habe bezahlt ✓'}
-                  </button>
+                  <div className="max-w-md mx-auto">
+                    <button
+                      onClick={onConfirmQRPayment}
+                      disabled={isConfirmingPayment}
+                      className="w-full py-[15px] bg-[#25D076] text-white font-semibold text-[16px] rounded-2xl active:scale-[0.98] transition-transform shadow-lg shadow-[#25D076]/30 disabled:opacity-60 flex items-center justify-center gap-2"
+                    >
+                      {isConfirmingPayment ? (
+                        <>
+                          <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                          </svg>
+                          Wird bestätigt...
+                        </>
+                      ) : 'Ich habe bezahlt ✓'}
+                    </button>
+                  </div>
                 </div>
               </div>,
               document.body
@@ -495,7 +504,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               {/* Top: label + monto + instrucción */}
               <div className="text-center w-full">
                 <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#25D076] mb-1">QR-Rechnung</p>
-                <p className="text-[40px] leading-none font-extrabold text-gray-900 tabular-nums tracking-tight">
+                <p className="text-[36px] md:text-[44px] leading-none font-extrabold text-gray-900 tabular-nums tracking-tight">
                   CHF {qrCodeData?.amount?.toFixed(2)}
                 </p>
                 <p className="text-[13px] text-gray-400 mt-2">
@@ -509,8 +518,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   onClick={() => setQrFullscreen(true)}
                   className="relative rounded-[20px] bg-white active:scale-[0.97] transition-transform"
                   style={{
-                    width: 'min(72vw, 290px)',
-                    height: 'min(72vw, 290px)',
+                    /* Mobile: hasta 72vw pero máx 290px. Desktop (modal ~448px): fijo 300px */
+                    width: 'min(72vw, 300px)',
+                    height: 'min(72vw, 300px)',
                     boxShadow: '0 4px 24px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04)',
                   }}
                 >
@@ -531,7 +541,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               ) : (
                 <div
                   className="rounded-[20px] bg-gray-50 border border-gray-200 flex flex-col items-center justify-center gap-3"
-                  style={{ width: 'min(72vw, 290px)', height: 'min(72vw, 290px)' }}
+                  style={{ width: 'min(72vw, 300px)', height: 'min(72vw, 300px)' }}
                 >
                   <QrCode className="w-12 h-12 text-gray-200" />
                   <span className="text-[13px] text-gray-400">QR wird geladen...</span>

@@ -415,18 +415,39 @@ class InvoiceController {
       const additionalInfo = invoice.invoiceNumber ? `Rechnung ${invoice.invoiceNumber}` : undefined;
       const amount = Number(invoice.total);
 
+      // Pasar datos del deudor (cliente) si están disponibles en la factura
+      const debtor = invoice.customerName ? {
+        name: invoice.customerName,
+        address: invoice.customerAddress || '',
+        buildingNumber: '',
+        zip: invoice.customerPostalCode || '',
+        city: invoice.customerCity || '',
+        country: 'CH',
+      } : undefined;
+
       const billSvg = QRBillService.generateQRCodeSVG({
         creditorConfig,
         amount,
         reference: qrrReference,
         additionalInfo,
+        debtor,
         language: 'DE',
+      });
+
+      // qrSvg: solo el cuadrado QR (sin layout), usado en vista compacta mobile de la factura
+      const qrSvg = QRBillService.generateQROnlySVG({
+        creditorConfig,
+        amount,
+        reference: qrrReference,
+        additionalInfo,
+        debtor,
       });
 
       res.status(HTTP_STATUS.OK).json({
         success: true,
         data: {
           billSvg,
+          qrSvg,
           qrrReference,
           amount,
           invoiceNumber: invoice.invoiceNumber,
