@@ -38,7 +38,8 @@ export default function SalesOrderDetailPage() {
   const error = orderError instanceof Error ? orderError.message : orderError ? String(orderError) : null;
 
   /** Muestra el método de pago con formato correcto (ej. qr-rechnung → QR-Rechnung) */
-  const formatPaymentMethodDisplay = (code: string) => {
+  const formatPaymentMethodDisplay = (code: string | undefined | null) => {
+    if (code == null || typeof code !== 'string') return '—';
     const known = getAvailablePaymentMethod(code);
     if (known?.displayName) return known.displayName;
     return code
@@ -184,6 +185,11 @@ export default function SalesOrderDetailPage() {
 
   if (!order) return null;
 
+  const orderShortId =
+    order.id != null && String(order.id).length > 0
+      ? String(order.id).slice(-8).toUpperCase()
+      : '—';
+
   const statusConfig = getStatusConfig(order.status);
 
   return (
@@ -206,7 +212,7 @@ export default function SalesOrderDetailPage() {
                       <div>
                         <div className="text-xs text-gray-600 mb-1">Bestellnummer</div>
                         <div className="text-base font-bold text-gray-900 font-mono">
-                          #{order.id.slice(-8).toUpperCase()}
+                          #{orderShortId}
                         </div>
                       </div>
                     </div>
@@ -398,7 +404,7 @@ export default function SalesOrderDetailPage() {
                     <h1 className="text-xl lg:text-2xl font-bold text-gray-900 mb-0.5 lg:mb-1 truncate">Bestellung</h1>
                     <div className="flex items-center gap-2 lg:gap-3 flex-wrap">
                       <span className="text-xs lg:text-sm font-mono text-gray-600 truncate">
-                        #{order.id.slice(-8).toUpperCase()}
+                        #{orderShortId}
                       </span>
                       <span className="text-gray-400 flex-shrink-0">•</span>
                       <span className="text-xs lg:text-sm text-gray-600 truncate">{formatDate(order.createdAt)}</span>
@@ -572,7 +578,7 @@ export default function SalesOrderDetailPage() {
       {/* Cancel Order Modal */}
       <CancelOrderModal
         isOpen={isCancelModalOpen}
-        orderNumber={order?.id ? order.id.slice(-8).toUpperCase() : undefined}
+        orderNumber={order?.id != null && String(order.id).length > 0 ? String(order.id).slice(-8).toUpperCase() : undefined}
         onClose={handleCloseCancelModal}
         onConfirm={handleConfirmCancel}
         isLoading={cancelOrder.isPending}

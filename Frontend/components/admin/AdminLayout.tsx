@@ -464,7 +464,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {/* Header de order detail - Solo en móvil y en detalle de orden */}
         {isMobile && isOrderDetailRoute && (
           <HeaderNav 
-            title={orderForHeader ? `Bestellung #${orderForHeader.id.slice(-8).toUpperCase()}` : 'Bestellung'} 
+            title={
+              orderForHeader?.id != null && String(orderForHeader.id).length > 0
+                ? `Bestellung #${String(orderForHeader.id).slice(-8).toUpperCase()}`
+                : 'Bestellung'
+            }
             closeDestination="/sales/orders"
             isFixed={true} 
           />

@@ -17,6 +17,8 @@ class OrderController {
     this.createOrderSimple = this.createOrderSimple.bind(this);
     this.confirmPayment = this.confirmPayment.bind(this);
     this.getQRCode = this.getQRCode.bind(this);
+    // Express invoca handlers como funciones sueltas; sin bind, `this` es undefined.
+    this.getOrderById = this.getOrderById.bind(this);
   }
 
   /**
