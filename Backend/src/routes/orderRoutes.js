@@ -47,7 +47,7 @@ const { checkoutLimiter } = require('../middleware/rateLimiter');
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/stats', optionalAuth, orderController.getOrderStats);
+router.get('/stats', authMiddleware, orderController.getOrderStats);
 
 // Top productos de la tienda (Bestseller) — requiere auth y storeId
 router.get('/top-products', authMiddleware, orderController.getTopProducts);
@@ -114,7 +114,7 @@ router.get('/', optionalAuth, orderController.getAllOrders);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/recent', optionalAuth, orderController.getRecentOrders);
+router.get('/recent', authMiddleware, orderController.getRecentOrders);
 
 /**
  * @swagger
@@ -177,7 +177,10 @@ router.get('/recent', optionalAuth, orderController.getRecentOrders);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/:id', optionalAuth, validateUUID('id'), orderController.getOrderById);
+// /user/:userId must stay before /:id (single-segment routes like /recent are registered above)
+router.get('/user/:userId', authMiddleware, validateUUID('userId'), orderController.getOrdersByUserId);
+
+router.get('/:id', authMiddleware, validateUUID('id'), orderController.getOrderById);
 
 /**
  * Actualizar estado de una orden
@@ -321,7 +324,10 @@ router.post('/', checkoutLimiter, optionalAuth, validateOrder, orderController.c
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-// Ruta para obtener órdenes de un usuario específico
-router.get('/user/:userId', optionalAuth, validateUUID('userId'), orderController.getOrdersByUserId);
+// QR Code para orden QR-Rechnung (público — el kiosko lo llama para mostrar el QR en pantalla)
+router.get('/:id/qr-code', optionalAuth, validateUUID('id'), orderController.getQRCode);
+
+// Confirmar pago de una orden QR-Rechnung pendiente (solo admin de la tienda)
+router.patch('/:id/confirm-payment', authMiddleware, validateUUID('id'), orderController.confirmPayment);
 
 module.exports = router;

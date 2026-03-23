@@ -4,6 +4,7 @@ const invoiceService = require('./InvoiceService');
 const storeService = require('./StoreService');
 const customerService = require('./CustomerService');
 const notificationService = require('./NotificationService');
+const QRBillService = require('./QRBillService');
 
 class OrderService {
 
@@ -99,13 +100,15 @@ class OrderService {
     const paymentMethod = orderPayload.paymentMethod || null;
 
     const result = await transaction(async (client) => {
-      // Establecer status como 'completed' por defecto ya que el pago se procesa inmediatamente
-      const orderStatus = orderPayload.status || 'completed';
-      
+      // QR-Rechnung: orden en estado 'pending' hasta que el admin confirme el pago.
+      // Otros métodos: 'completed' de inmediato (honor system).
+      const isQRRechnung = paymentMethod === 'qr-rechnung';
+      const orderStatus = isQRRechnung ? 'pending' : (orderPayload.status || 'completed');
+
       // Preparar metadata como JSONB, incluyendo datos del cliente si están disponibles
       let metadataJson = '{}';
-      const metadata = orderPayload.metadata && typeof orderPayload.metadata === 'object' 
-        ? { ...orderPayload.metadata } 
+      const metadata = orderPayload.metadata && typeof orderPayload.metadata === 'object'
+        ? { ...orderPayload.metadata }
         : {};
       
       // Agregar datos del cliente a metadata si están disponibles
@@ -134,6 +137,23 @@ class OrderService {
         metadataJson
       ]);
       const order = orderResult.rows[0];
+
+      // Para QR-Rechnung: generar una referencia QRR única y guardarla en metadata.
+      // La referencia QRR es un número de 27 dígitos (26 + check digit Mod10).
+      // Usamos timestamp + random para garantizar unicidad (max 20 dígitos → cabe en los 26 dígitos del QRR).
+      if (isQRRechnung) {
+        try {
+          const qrrNumericId = String(Date.now()) + String(Math.floor(Math.random() * 999) + 1).padStart(3, '0');
+          const qrrReference = QRBillService.generateQRReference(qrrNumericId);
+          await client.query(
+            `UPDATE "Order" SET metadata = metadata || $1::jsonb WHERE id = $2`,
+            [JSON.stringify({ qrrReference }), order.id]
+          );
+          order.metadata = { ...(order.metadata || {}), qrrReference };
+        } catch (qrrError) {
+          console.error('Error generating QRR reference:', qrrError);
+        }
+      }
 
       const orderItems = [];
 

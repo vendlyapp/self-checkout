@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import {
   Download,
   Printer,
@@ -23,7 +23,7 @@ import {
   type InvoiceLineItem,
   type InvoiceStatus,
 } from '@/lib/invoice-utils';
-import { Invoice as ServiceInvoice, InvoiceItem } from '@/lib/services/invoiceService';
+import { Invoice as ServiceInvoice, InvoiceItem, InvoiceService } from '@/lib/services/invoiceService';
 import { getDefaultStoreName } from '@/lib/config/brand';
 import { devError } from '@/lib/utils/logger';
 
@@ -106,15 +106,23 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
   const storeLogoVal = (si.storeLogo ?? si.storelogo ?? '')?.toString().trim();
 
   const storeAddressParsed = parseAddress(storeAddressVal, undefined, undefined);
+
+  // For QR-Rechnung: use creditor snapshot data for the payment slip section
+  const qrSnapshot = serviceInvoice.qrCreditorSnapshot;
+  const isQRRechnung = (serviceInvoice as { paymentMethod?: string }).paymentMethod === 'qr-rechnung';
+
   const issuer: InvoiceParty = {
-    name: storeName || getDefaultStoreName(),
-    street: storeAddressParsed.street?.trim() || undefined,
-    zip: storeAddressParsed.zip?.trim() || undefined,
-    city: storeAddressParsed.city?.trim() || undefined,
-    country: 'Schweiz',
+    name: (isQRRechnung && qrSnapshot?.creditorName) ? qrSnapshot.creditorName : (storeName || getDefaultStoreName()),
+    street: (isQRRechnung && qrSnapshot?.creditorStreet)
+      ? `${qrSnapshot.creditorStreet}${qrSnapshot.creditorHouseNo ? ' ' + qrSnapshot.creditorHouseNo : ''}`
+      : storeAddressParsed.street?.trim() || undefined,
+    zip: (isQRRechnung && qrSnapshot?.creditorZip) ? qrSnapshot.creditorZip : storeAddressParsed.zip?.trim() || undefined,
+    city: (isQRRechnung && qrSnapshot?.creditorCity) ? qrSnapshot.creditorCity : storeAddressParsed.city?.trim() || undefined,
+    country: (isQRRechnung && qrSnapshot?.creditorCountry) ? qrSnapshot.creditorCountry : 'Schweiz',
     email: storeEmailVal || undefined,
     phone: storePhoneVal || undefined,
     mwstNummer: storeVatNumber?.trim() || undefined,
+    iban: (isQRRechnung && qrSnapshot?.qrIban) ? qrSnapshot.qrIban : undefined,
   };
 
   // Build recipient (customer) info - ensure all fields are properly structured
@@ -270,7 +278,7 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
     faelligkeitsDatum: dueDate.toISOString(),
     zahlungsfrist: deferred ? 30 : 0,
     waehrung: 'CHF',
-    referenz: serviceInvoice.invoiceNumber || serviceInvoice.id,
+    referenz: serviceInvoice.qrrReference || serviceInvoice.invoiceNumber || serviceInvoice.id,
     status,
     issuer,
     recipient,
@@ -462,6 +470,19 @@ export default function InvoiceTemplate({
   onPrint,
 }: InvoiceTemplateProps) {
   const printRef = useRef<HTMLDivElement>(null);
+  const [qrBillSvg, setQrBillSvg] = useState<string | null>(null);
+
+  // Fetch real QR Bill SVG when invoice uses QR-Rechnung payment
+  useEffect(() => {
+    if (serviceInvoice.paymentMethod !== 'qr-rechnung' || !serviceInvoice.qrrReference) return;
+    const controller = new AbortController();
+    InvoiceService.getQRCode(serviceInvoice.id, { signal: controller.signal }).then((res) => {
+      if (res.success && res.data?.billSvg) {
+        setQrBillSvg(res.data.billSvg);
+      }
+    }).catch(() => {/* silently fail — placeholder remains */});
+    return () => { controller.abort(); };
+  }, [serviceInvoice.id, serviceInvoice.paymentMethod, serviceInvoice.qrrReference]);
 
   // Transform service invoice to Swiss invoice format
   const invoice = useMemo(() => transformInvoice(serviceInvoice), [serviceInvoice]);
@@ -962,7 +983,7 @@ export default function InvoiceTemplate({
         )}
 
         {/* ═══ QR-RECHNUNG (PAYMENT SLIP) — solo para pago diferido ═══ */}
-        {invoice.showQRSection && issuer.iban && (
+        {invoice.showQRSection && (issuer.iban || serviceInvoice.qrrReference) && (
           <>
             <div className={`${px}`}>
               <CutLine />
@@ -977,7 +998,14 @@ export default function InvoiceTemplate({
                       Zahlteil
                     </div>
                     <div className={`flex ${isMobile ? 'flex-col' : ''} gap-4`}>
-                      <QRCodePlaceholder />
+                      {qrBillSvg ? (
+                        <div
+                          className="w-[120px] h-[120px] md:w-[132px] md:h-[132px] flex-shrink-0"
+                          dangerouslySetInnerHTML={{ __html: qrBillSvg }}
+                        />
+                      ) : (
+                        <QRCodePlaceholder />
+                      )}
                       <div className="text-[10px] md:text-[11px] space-y-2.5 flex-1 min-w-0">
                         <div>
                           <div className="text-gray-400 text-[9px] font-semibold uppercase tracking-[0.1em] mb-0.5">

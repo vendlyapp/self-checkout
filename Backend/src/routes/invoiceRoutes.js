@@ -242,6 +242,7 @@ router.get('/store/:storeId', authMiddleware, validateUUID('storeId'), invoiceCo
  *       404:
  *         description: Factura no encontrada
  */
+router.get('/:id/qr-code', optionalAuth, validateUUID('id'), invoiceController.getQRCode);
 router.get('/:id', authMiddleware, validateUUID('id'), invoiceController.getInvoiceById);
 router.patch('/:id', authMiddleware, validateUUID('id'), invoiceController.updateInvoice);
 

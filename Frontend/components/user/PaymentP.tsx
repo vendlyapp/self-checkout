@@ -45,7 +45,7 @@ interface PaymentMethodDisplay {
   methodData?: { id: string; name: string; displayName: string; code: string; bgColor?: string | null; textColor?: string | null; [key: string]: unknown };
 }
 
-type PaymentStep = "confirm" | "processing" | "success" | "askData" | "personal" | "viewInvoice" | "completing";
+type PaymentStep = "confirm" | "processing" | "qr-display" | "success" | "askData" | "personal" | "viewInvoice" | "completing";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -98,6 +98,9 @@ interface PaymentModalProps {
   onViewInvoice?: () => void;
   onSkipViewInvoice?: () => void;
   onCreateInvoice?: (data?: { name: string; email: string; address: string; phone: string }) => Promise<void>;
+  qrCodeData?: { qrSvg: string; billSvg: string; amount: number; qrrReference: string } | null;
+  isConfirmingPayment?: boolean;
+  onConfirmQRPayment?: () => void;
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -129,8 +132,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   onViewInvoice,
   onSkipViewInvoice,
   onCreateInvoice,
+  qrCodeData,
+  isConfirmingPayment = false,
+  onConfirmQRPayment,
 }) => {
   const [modalContainer, setModalContainer] = useState<HTMLElement | null>(null);
+  const [qrFullscreen, setQrFullscreen] = useState(false);
   const [invoiceOption, setInvoiceOption] = useState<'none' | 'print' | 'email' | 'phone' | 'full'>('none');
   const [invoiceEmail, setInvoiceEmail] = useState('');
   const [invoicePhone, setInvoicePhone] = useState('');
@@ -211,7 +218,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       style={{ pointerEvents: 'auto' }}
       onClick={(e) => {
         // Cerrar al hacer clic fuera del modal (solo si no está en estados críticos)
-        if (e.target === e.currentTarget && paymentStep !== "processing" && paymentStep !== "completing") {
+        if (e.target === e.currentTarget && paymentStep !== "processing" && paymentStep !== "completing" && paymentStep !== "qr-display") {
           lightHaptic();
           onClose();
         }
@@ -391,13 +398,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <div className="flex-1 flex flex-col items-center justify-center py-16 px-6">
               {/* Animación de loading - Más sutil */}
               <div className="relative w-28 h-28 mx-auto mb-8 flex items-center justify-center">
-                <Loader size="xl" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <methodInfo.icon 
-                    className="w-12 h-12" 
-                    style={{ color: methodInfo.color }}
-                  />
-                </div>
+                <Loader size="xl" showCenterDot={false} />
               </div>
               
               <h3 className="text-2xl font-bold text-gray-900 mb-3 text-center">
@@ -417,6 +418,147 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               <p className="text-base text-gray-600 text-center max-w-xs">
                 Bitte schliessen Sie dieses Fenster nicht
               </p>
+            </div>
+          </>
+        )}
+
+        {/* ── QR-Rechnung: escanear y confirmar pago ── */}
+        {paymentStep === "qr-display" && (
+          <>
+            {/* ── Fullscreen: QR Bill completo rotado para llenar pantalla portrait ── */}
+            {qrFullscreen && qrCodeData && createPortal(
+              <div className="fixed inset-0 z-[100000] bg-[#F2F2F7] flex flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white border-b border-gray-100 shrink-0">
+                  <button
+                    onClick={() => setQrFullscreen(false)}
+                    className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 active:bg-gray-200 transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-700" />
+                  </button>
+                  <div className="text-center">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400">Zahlschein</p>
+                    <p className="text-[17px] font-bold text-gray-900 tabular-nums">CHF {qrCodeData.amount?.toFixed(2)}</p>
+                  </div>
+                  <div className="w-10" />
+                </div>
+
+                {/* QR Bill rotado 90° para llenar la pantalla portrait con el documento landscape */}
+                <div className="flex-1 relative overflow-hidden flex items-center justify-center">
+                  <div
+                    style={{
+                      transform: 'rotate(90deg)',
+                      /* CSS width → visual height tras rotación.
+                         Queremos que el documento llene el alto disponible.
+                         100dvh - header(56px) - footer(148px) ≈ 100dvh - 204px */
+                      width: 'calc(100dvh - 210px)',
+                      maxWidth: 'calc(100dvh - 210px)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <img
+                      src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrCodeData.billSvg)}`}
+                      alt="QR-Rechnung Zahlschein"
+                      className="w-full block rounded-sm shadow-md"
+                      draggable={false}
+                    />
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="bg-white border-t border-gray-100 px-4 pt-3 pb-7 shrink-0">
+                  <p className="text-[11px] text-gray-400 text-center mb-3">
+                    UBS · ZKB · Raiffeisen · PostFinance · und alle Schweizer Banking-Apps
+                  </p>
+                  <button
+                    onClick={onConfirmQRPayment}
+                    disabled={isConfirmingPayment}
+                    className="w-full py-[15px] bg-[#25D076] text-white font-semibold text-[16px] rounded-2xl active:scale-[0.98] transition-transform shadow-lg shadow-[#25D076]/30 disabled:opacity-60 flex items-center justify-center gap-2"
+                  >
+                    {isConfirmingPayment ? (
+                      <>
+                        <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                        </svg>
+                        Wird bestätigt...
+                      </>
+                    ) : 'Ich habe bezahlt ✓'}
+                  </button>
+                </div>
+              </div>,
+              document.body
+            )}
+
+            {/* ── Vista compacta en modal ── */}
+            <div className="flex-1 flex flex-col items-center justify-between px-5 pt-5 pb-5 overflow-hidden">
+              {/* Top: label + monto + instrucción */}
+              <div className="text-center w-full">
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#25D076] mb-1">QR-Rechnung</p>
+                <p className="text-[40px] leading-none font-extrabold text-gray-900 tabular-nums tracking-tight">
+                  CHF {qrCodeData?.amount?.toFixed(2)}
+                </p>
+                <p className="text-[13px] text-gray-400 mt-2">
+                  Scannen Sie den QR-Code mit Ihrer Banking-App
+                </p>
+              </div>
+
+              {/* Centro: QR grande, tappable */}
+              {qrCodeData?.qrSvg ? (
+                <button
+                  onClick={() => setQrFullscreen(true)}
+                  className="relative rounded-[20px] bg-white active:scale-[0.97] transition-transform"
+                  style={{
+                    width: 'min(72vw, 290px)',
+                    height: 'min(72vw, 290px)',
+                    boxShadow: '0 4px 24px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04)',
+                  }}
+                >
+                  <img
+                    src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrCodeData.qrSvg)}`}
+                    alt="QR-Code"
+                    className="absolute inset-0 w-full h-full object-contain p-[14px]"
+                    draggable={false}
+                  />
+                  {/* Badge Zahlschein */}
+                  <span className="absolute bottom-2.5 right-2.5 flex items-center gap-1 bg-black/55 backdrop-blur-sm text-white text-[10px] font-semibold rounded-lg px-2 py-1 select-none">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15m11.25-11.25h-4.5m4.5 0v4.5m0-4.5L15 9m0 6 5.25 5.25m0 0v-4.5m0 4.5h-4.5" />
+                    </svg>
+                    Zahlschein
+                  </span>
+                </button>
+              ) : (
+                <div
+                  className="rounded-[20px] bg-gray-50 border border-gray-200 flex flex-col items-center justify-center gap-3"
+                  style={{ width: 'min(72vw, 290px)', height: 'min(72vw, 290px)' }}
+                >
+                  <QrCode className="w-12 h-12 text-gray-200" />
+                  <span className="text-[13px] text-gray-400">QR wird geladen...</span>
+                </div>
+              )}
+
+              {/* Bottom: apps + botón */}
+              <div className="w-full space-y-3">
+                <p className="text-[11px] text-gray-400 text-center">
+                  UBS · ZKB · Raiffeisen · PostFinance
+                </p>
+                <button
+                  onClick={onConfirmQRPayment}
+                  disabled={isConfirmingPayment}
+                  className="w-full py-[15px] bg-[#25D076] text-white font-semibold text-[16px] rounded-2xl active:scale-[0.98] transition-transform shadow-lg shadow-[#25D076]/25 disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {isConfirmingPayment ? (
+                    <>
+                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                      </svg>
+                      Wird bestätigt...
+                    </>
+                  ) : 'Ich habe bezahlt ✓'}
+                </button>
+              </div>
             </div>
           </>
         )}
@@ -480,6 +622,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     mediumHaptic();
                     onStepChange?.("personal");
                   }}
+                  disabled={isCreatingInvoice}
                   className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-2xl py-4 text-base transition-colors shadow-lg shadow-[#25D076]/25 active:scale-[0.97] active:shadow-md touch-target"
                   style={{ minHeight: '56px' }}
                 >
@@ -488,6 +631,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 <button
                   onClick={async () => {
                     lightHaptic();
+                    setIsCreatingInvoice(true);
 
                     if (onCreateInvoice) {
                       try {
@@ -495,15 +639,27 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                         await new Promise((r) => setTimeout(r, 50));
                       } catch (error) {
                         devError('Error creating invoice:', error);
+                      } finally {
+                        setIsCreatingInvoice(false);
                       }
+                    } else {
+                      setIsCreatingInvoice(false);
                     }
 
                     onStepChange?.("viewInvoice");
                   }}
-                  className="w-full bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 font-semibold rounded-2xl py-4 text-base transition-colors border-2 border-gray-200 active:scale-[0.97] active:border-gray-300 touch-target"
+                  disabled={isCreatingInvoice}
+                  className="w-full bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 font-semibold rounded-2xl py-4 text-base transition-colors border-2 border-gray-200 active:scale-[0.97] active:border-gray-300 touch-target disabled:opacity-60 disabled:cursor-not-allowed"
                   style={{ minHeight: '56px' }}
                 >
-                  Weiter ohne Daten
+                  {isCreatingInvoice ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader size="sm" showCenterDot={false} />
+                      Rechnung wird erstellt...
+                    </span>
+                  ) : (
+                    'Weiter ohne Daten'
+                  )}
                 </button>
               </div>
             </div>
@@ -765,6 +921,8 @@ export default function PaymentP() {
 
   const [personalData, setPersonalData] = useState(loadSavedCustomerData());
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
+  const [qrCodeData, setQrCodeData] = useState<{ qrSvg: string; billSvg: string; amount: number; qrrReference: string } | null>(null);
+  const [isConfirmingPayment, setIsConfirmingPayment] = useState(false);
   const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
   const [createdInvoiceShareToken, setCreatedInvoiceShareToken] = useState<string | null>(null);
   const router = useRouter();
@@ -908,13 +1066,26 @@ export default function PaymentP() {
       }
       // NO guardar invoiceId ni invoiceShareToken aquí - se crearán después
 
-      // IMPORTANTE: La compra ya se completó correctamente aquí
-      // El carrito se limpiará cuando se cierre el modal o se complete el flujo
-      // Los productos ya se descontaron y el código promocional ya se usó
-      
       // Feedback háptico de éxito
       successHaptic();
-      
+
+      // QR-Rechnung: mostrar el QR Code en pantalla para que el cliente escanee
+      if (selectedPaymentMethod === 'qr-rechnung' && orderResult?.id) {
+        try {
+          const { buildApiUrl } = await import('@/lib/config/api');
+          const response = await fetch(buildApiUrl(`/api/orders/${orderResult.id}/qr-code`));
+          const data = await response.json();
+          if (data.success && data.data?.qrSvg) {
+            setQrCodeData({ qrSvg: data.data.qrSvg, billSvg: data.data.billSvg, amount: data.data.amount, qrrReference: data.data.qrrReference });
+            setPaymentStep("qr-display");
+            return;
+          }
+        } catch (qrError) {
+          console.error('Error fetching QR code:', qrError);
+          // Si falla cargar el QR, continuar con flujo normal
+        }
+      }
+
       setPaymentStep("success");
 
       // NO cambiar automáticamente - el usuario debe hacer clic para avanzar
@@ -1183,6 +1354,24 @@ export default function PaymentP() {
     } catch (error) {
       devError('Error al actualizar factura:', error);
       throw error;
+    }
+  };
+
+  const handleConfirmQRPayment = async () => {
+    if (!createdOrderId || isConfirmingPayment) return;
+    setIsConfirmingPayment(true);
+    try {
+      const { buildApiUrl, getAuthHeaders } = await import('@/lib/config/api');
+      const headers = await getAuthHeaders();
+      await fetch(buildApiUrl(`/api/orders/${createdOrderId}/confirm-payment`), {
+        method: 'PATCH',
+        headers,
+      });
+    } catch (error) {
+      devError('Error confirming QR payment:', error);
+    } finally {
+      setIsConfirmingPayment(false);
+      setPaymentStep("success");
     }
   };
 
@@ -1537,6 +1726,9 @@ export default function PaymentP() {
         onViewInvoice={handleViewInvoice}
         onSkipViewInvoice={handleSkipViewInvoice}
         onCreateInvoice={handleCreateInvoice}
+        qrCodeData={qrCodeData}
+        isConfirmingPayment={isConfirmingPayment}
+        onConfirmQRPayment={handleConfirmQRPayment}
       />
     </div>
   );

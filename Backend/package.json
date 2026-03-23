@@ -13,6 +13,7 @@
     "dev": "nodemon server.js",
     "build": "npm run verify:production",
     "test": "node scripts/test_crud.js",
+    "test:security": "node --test tests/orderAuth.security.test.js",
     "test:analytics": "node scripts/test_analytics_endpoints.js",
     "verify:production": "node scripts/verify_production.js",
     "db:setup": "node scripts/setup_database.js",
@@ -44,11 +45,13 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "~1.9.1",
+    "pdfkit": "^0.18.0",
     "pg": "^8.16.3",
     "pg-format": "^1.0.4",
     "qrcode": "^1.5.4",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
+    "swissqrbill": "^4.3.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
@@ -56,6 +59,7 @@
     "@types/express": "^4.17.23",
     "@types/node": "^24.5.2",
     "nodemon": "^3.1.10",
+    "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"

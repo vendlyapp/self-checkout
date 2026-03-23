@@ -1,8 +1,10 @@
 const { randomUUID } = require('crypto');
+const { query: dbQuery } = require('../../lib/database');
 const orderService = require('../services/OrderService');
 const storeService = require('../services/StoreService');
 const userService = require('../services/UserService');
 const analyticsService = require('../services/AnalyticsService');
+const QRBillService = require('../services/QRBillService');
 const { HTTP_STATUS } = require('../types');
 
 /**
@@ -13,6 +15,8 @@ const { HTTP_STATUS } = require('../types');
 class OrderController {
   constructor() {
     this.createOrderSimple = this.createOrderSimple.bind(this);
+    this.confirmPayment = this.confirmPayment.bind(this);
+    this.getQRCode = this.getQRCode.bind(this);
   }
 
   /**
@@ -31,6 +35,15 @@ class OrderController {
     try {
       const { userId } = req.params;
       const { limit } = req.query;
+
+      const role = req.user?.role;
+      const selfId = req.user?.userId;
+      if (role !== 'SUPER_ADMIN' && userId !== selfId) {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({
+          success: false,
+          error: 'Forbidden',
+        });
+      }
 
       const options = {};
       if (limit) options.limit = parseInt(limit);
@@ -103,9 +116,20 @@ class OrderController {
     try {
       const { id } = req.params;
       const result = await orderService.findById(id);
+      const order = result.data;
+      const allowed = await this._canViewOrder(req.user, order);
+      if (!allowed) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({
+          success: false,
+          error: 'Bestellung nicht gefunden',
+        });
+      }
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      const statusCode = error.message.includes('no encontrada')
+      const notFound =
+        error.message.includes('no encontrada') ||
+        error.message.includes('nicht gefunden');
+      const statusCode = notFound
         ? HTTP_STATUS.NOT_FOUND
         : HTTP_STATUS.INTERNAL_SERVER_ERROR;
 
@@ -114,6 +138,33 @@ class OrderController {
         error: error.message
       });
     }
+  }
+
+  /**
+   * Returns whether the authenticated user may read full order details.
+   */
+  async _canViewOrder(user, order) {
+    if (!user || !order) return false;
+    if (user.role === 'SUPER_ADMIN') return true;
+    if (order.userId === user.userId) return true;
+    if (user.role === 'ADMIN') {
+      if (user.storeId && order.storeId && order.storeId === user.storeId) {
+        return true;
+      }
+      return this._orderHasProductOwnedBy(order.id, user.userId);
+    }
+    return false;
+  }
+
+  async _orderHasProductOwnedBy(orderId, ownerUserId) {
+    const r = await dbQuery(
+      `SELECT 1 FROM "OrderItem" oi
+       INNER JOIN "Product" p ON p.id = oi."productId"
+       WHERE oi."orderId" = $1 AND p."ownerId" = $2
+       LIMIT 1`,
+      [orderId, ownerUserId]
+    );
+    return r.rows.length > 0;
   }
 
   /**
@@ -264,6 +315,154 @@ class OrderController {
     }
   }
 
+  /**
+   * Genera y devuelve el SVG del QR Code suizo para una orden QR-Rechnung.
+   * Público (no requiere auth) — el kiosko lo llama justo después de crear la orden.
+   * @route GET /api/orders/:id/qr-code
+   */
+  async getQRCode(req, res) {
+    try {
+      const { id } = req.params;
+
+      const orderResult = await orderService.findById(id);
+      if (!orderResult.success || !orderResult.data) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, error: 'Orden no encontrada' });
+      }
+
+      const order = orderResult.data;
+
+      if (order.paymentMethod !== 'qr-rechnung') {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, error: 'Esta orden no es de tipo QR-Rechnung' });
+      }
+
+      const metadata = order.metadata || {};
+      const qrrReference = metadata.qrrReference;
+
+      if (!qrrReference) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, error: 'Esta orden no tiene referencia QRR generada' });
+      }
+
+      const { query: dbQuery } = require('../../lib/database');
+      const pmResult = await dbQuery(
+        `SELECT config FROM "PaymentMethod" WHERE "storeId" = $1 AND code = 'qr-rechnung' AND "isActive" = true LIMIT 1`,
+        [order.storeId]
+      );
+
+      const creditorConfig = pmResult.rows[0]?.config;
+      if (!creditorConfig) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: 'El método QR-Rechnung no está configurado para esta tienda. Configura el QR-IBAN en el panel de administración.',
+        });
+      }
+
+      const validation = QRBillService.validateQRIBAN(creditorConfig.qrIban || '');
+      if (!validation.valid) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, error: validation.error });
+      }
+
+      const amount = Number(metadata.totalWithVAT || order.total);
+      const additionalInfo = `Bestellung ${id.slice(0, 8).toUpperCase()}`;
+
+      // qrSvg: solo el cuadrado QR (para mostrar en kiosko, escaneable)
+      // billSvg: QR Bill completo con Zahlteil + Empfangsschein (para imprimir en factura)
+      const qrSvg = QRBillService.generateQROnlySVG({
+        creditorConfig,
+        amount,
+        reference: qrrReference,
+        additionalInfo,
+      });
+
+      const billSvg = QRBillService.generateQRCodeSVG({
+        creditorConfig,
+        amount,
+        reference: qrrReference,
+        additionalInfo,
+        language: 'DE',
+      });
+
+      res.status(HTTP_STATUS.OK).json({
+        success: true,
+        data: { qrSvg, billSvg, qrrReference, amount, orderId: id },
+      });
+    } catch (error) {
+      console.error('Error al generar QR Code para orden:', error);
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: error.message || 'Error al generar el QR Code',
+      });
+    }
+  }
+
+  /**
+   * Confirma el pago de una orden QR-Rechnung pendiente.
+   * Solo el admin de la tienda puede confirmar.
+   * @route PATCH /api/orders/:id/confirm-payment
+   */
+  async confirmPayment(req, res) {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({ success: false, error: 'Autenticación requerida' });
+      }
+
+      const orderResult = await orderService.findById(id);
+      if (!orderResult.success || !orderResult.data) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, error: 'Orden no encontrada' });
+      }
+
+      const order = orderResult.data;
+
+      // Verificar que la orden pertenece a la tienda del usuario autenticado
+      const isOwner = await this.isStoreOwner(userId, order.storeId);
+      if (!isOwner) {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({ success: false, error: 'No tienes permiso para confirmar esta orden' });
+      }
+
+      if (order.status !== 'pending') {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: `La orden ya está en estado '${order.status}'. Solo se pueden confirmar órdenes en estado 'pending'.`,
+        });
+      }
+
+      const { query: dbQuery } = require('../../lib/database');
+      const confirmedAt = new Date().toISOString();
+
+      await dbQuery(
+        `UPDATE "Order"
+         SET status = 'completed',
+             metadata = metadata || $1::jsonb,
+             "updatedAt" = CURRENT_TIMESTAMP
+         WHERE id = $2`,
+        [JSON.stringify({ confirmedAt, confirmedBy: userId }), id]
+      );
+
+      await dbQuery(
+        `UPDATE "Invoice"
+         SET status = 'paid',
+             "paidAt" = CURRENT_TIMESTAMP,
+             "updatedAt" = CURRENT_TIMESTAMP
+         WHERE "orderId" = $1`,
+        [id]
+      );
+
+      res.status(HTTP_STATUS.OK).json({
+        success: true,
+        data: { orderId: id, status: 'completed', confirmedAt },
+        message: 'Zahlung erfolgreich bestätigt',
+      });
+    } catch (error) {
+      console.error('Error al confirmar pago:', error);
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: error.message || 'Error al confirmar el pago',
+      });
+    }
+  }
+
   async resolveGuestUserId(context = {}) {
     const { storeSlug, storeId, customer } = context;
 
@@ -394,24 +593,33 @@ class OrderController {
    */
   async getOrderStats(req, res) {
     try {
-      const { date, dateFrom, dateTo, ownerId } = req.query;
+      const role = req.user?.role;
+      if (role !== 'SUPER_ADMIN' && role !== 'ADMIN') {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({
+          success: false,
+          error: 'Forbidden',
+        });
+      }
+
+      const { date, dateFrom, dateTo, ownerId: ownerIdQuery } = req.query;
       const options = {};
-      
-      // Si se proporciona fecha, filtrar por día
+
       if (date) {
         options.date = date;
       }
-      // Si se proporcionan dateFrom y dateTo, filtrar por rango
       if (dateFrom && dateTo) {
         options.dateFrom = dateFrom;
         options.dateTo = dateTo;
       }
-      
-      // Si se proporciona ownerId, filtrar por usuario/tienda
-      if (ownerId) {
-        options.ownerId = ownerId;
+
+      if (role === 'ADMIN') {
+        options.ownerId = req.user.userId;
+      } else if (role === 'SUPER_ADMIN') {
+        if (ownerIdQuery) {
+          options.ownerId = ownerIdQuery;
+        }
       }
-      
+
       const result = await orderService.getStats(options);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
@@ -434,11 +642,32 @@ class OrderController {
    */
   async getRecentOrders(req, res) {
     try {
-      const { limit, status, storeId } = req.query;
+      const role = req.user?.role;
+      const { limit, status, storeId: storeIdQuery } = req.query;
+
+      let effectiveStoreId = null;
+      if (role === 'SUPER_ADMIN') {
+        effectiveStoreId = storeIdQuery || null;
+      } else if (role === 'ADMIN') {
+        effectiveStoreId = req.user.storeId || null;
+        if (!effectiveStoreId) {
+          return res.status(HTTP_STATUS.OK).json({
+            success: true,
+            data: [],
+            count: 0,
+          });
+        }
+      } else {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({
+          success: false,
+          error: 'Forbidden',
+        });
+      }
+
       const result = await orderService.getRecentOrders(
-        parseInt(limit) || 10,
+        parseInt(limit, 10) || 10,
         status || null,
-        storeId || null
+        effectiveStoreId
       );
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {

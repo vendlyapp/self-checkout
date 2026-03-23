@@ -26,19 +26,13 @@ Fly.io puede conectarse directamente a tu repositorio y desplegar automáticamen
 
 3. **Configurar Variables de Entorno (Secrets):**
    - Ve a "Secrets" en el dashboard de la app
-   - Agrega cada variable una por una:
-     - `DATABASE_URL` = `postgresql://postgres.dkkvxzigqqvolbyeybgr:BmvKhmXieYSKcu9F@aws-1-eu-central-2.pooler.supabase.com:6543/postgres`
-     - `DIRECT_URL` = `postgresql://postgres.dkkvxzigqqvolbyeybgr:BmvKhmXieYSKcu9F@aws-1-eu-central-2.pooler.supabase.com:5432/postgres`
-     - `NODE_ENV` = `production`
-     - `PORT` = `3000`
-     - `SUPABASE_URL` = `https://dkkvxzigqqvolbyeybgr.supabase.co`
-     - `SUPABASE_ANON_KEY` = `sb_publishable_w5YLhoNEwZViKFH8HoiEOg_Hru9YwGv`
-     - `FRONTEND_URL` = `https://self-checkout-kappa.vercel.app`
-     - `CORS_ORIGIN` = `https://self-checkout-kappa.vercel.app`
-     - `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET` = `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`
-     - `SUPABASE_SERVICE_ROLE_KEY` = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRra3Z4emlncXF2b2xieWV5YmdyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODQ4NjcyMiwiZXhwIjoyMDc0MDYyNzIyfQ.fC0kC7or1a1BF6VDr_KwBlymZN7rN5RBu-VJxwUg7Hg`
-     - `SUPER_ADMIN_EMAIL` = `admin@vendly.co`
-     - `SUPER_ADMIN_PASSWORD` = `SuperAdmin123!`
+   - Agrega cada variable con valores reales (no copies secretos al repo). Nombres típicos:
+     - `DATABASE_URL`, `DIRECT_URL`, `NODE_ENV`, `PORT`
+     - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+     - `FRONTEND_URL`, `CORS_ORIGIN`
+     - `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET` (si usas Google OAuth)
+     - `SUPER_ADMIN_EMAIL`, `SUPER_ADMIN_PASSWORD` (si aplica)
+   - Localmente: copia `scripts/env.fly.secrets.example` → `scripts/.env.fly.secrets` y ejecuta `bash scripts/setup_fly_secrets.sh`
 
 4. **Primer Despliegue:**
    - Ve a "Deployments" → "Deploy now"

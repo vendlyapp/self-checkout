@@ -116,11 +116,8 @@ class StoreController {
         });
       }
 
-      // Obtener productos del dueño de la tienda
-      const result = await productService.findAll({
-        ownerId: store.ownerId,
-        limit: 100
-      });
+      // Public storefront query (single query, no COUNT aggregate).
+      const result = await productService.findByOwnerPublic(store.ownerId, 100);
 
       // Public endpoint — allow CDN and browsers to cache for 60 s, stale-while-revalidate 30 s
       res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=30');

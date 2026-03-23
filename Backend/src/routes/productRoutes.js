@@ -218,7 +218,7 @@ router.get('/qr/:qrCode', productController.getProductByQR);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/:id', validateUUID('id'), productController.getProductById);
+router.get('/:id', authMiddleware, validateUUID('id'), productController.getProductById);
 
 /**
  * @swagger

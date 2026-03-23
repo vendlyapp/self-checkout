@@ -61,7 +61,29 @@ class PaymentMethodController {
   async getPaymentMethodById(req, res) {
     try {
       const { id } = req.params;
+      const userId = req.user?.userId;
+      const userRole = req.user?.role;
+
+      if (!userId) {
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+          success: false,
+          error: 'Usuario no autenticado',
+        });
+      }
+
       const result = await paymentMethodService.findById(id);
+      const storeId = result.data.storeId;
+
+      if (userRole !== 'SUPER_ADMIN') {
+        const isOwner = await paymentMethodService.verifyStoreOwner(storeId, userId);
+        if (!isOwner) {
+          return res.status(HTTP_STATUS.NOT_FOUND).json({
+            success: false,
+            error: 'Método de pago no encontrado',
+          });
+        }
+      }
+
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       const statusCode = error.message.includes('no encontrado')

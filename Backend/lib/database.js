@@ -6,10 +6,17 @@ require('dotenv').config();
 // Configuración de la base de datos
 // IMPORTANTE: Si usas Transaction Pooler de Supabase (puerto 6543), NO soporta PREPARE statements
 // Por lo tanto, debemos deshabilitar prepared statements
-const isUsingPooler = process.env.DATABASE_URL?.includes(':6543') || process.env.DATABASE_URL?.includes('pooler.supabase.com');
+const resolvedConnectionString =
+  process.env.NODE_ENV === 'development' && process.env.DIRECT_URL
+    ? process.env.DIRECT_URL
+    : process.env.DATABASE_URL;
+
+const isUsingPooler =
+  resolvedConnectionString?.includes(':6543') ||
+  resolvedConnectionString?.includes('pooler.supabase.com');
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: resolvedConnectionString,
   ssl: {
     rejectUnauthorized: false
   },
@@ -25,6 +32,23 @@ const pool = new Pool({
   // NOTA: No modificamos la configuración de tipos aquí
   // El manejo de prepared statements se hace en la función query() usando pg-format
 });
+
+// Attach a safe error handler to each checked-out pg Client.
+// Without this, a connection drop can emit an unhandled "error" event
+// and crash the Node process even if higher-level try/catch exists.
+const attachClientErrorHandler = (client, context = 'db-client') => {
+  const onClientError = (err) => {
+    const code = err?.code || 'N/A';
+    const message = err?.message || 'Unknown client error';
+    if (code === 'XX000' || code === '57P01' || message.includes('Connection terminated')) {
+      console.warn(`⚠️ [${context}] pg client connection dropped: ${message} (${code})`);
+      return;
+    }
+    console.error(`❌ [${context}] pg client error: ${message} (${code})`);
+  };
+  client.on('error', onClientError);
+  return () => client.removeListener('error', onClientError);
+};
 
 // Set a per-query statement timeout so slow queries release pool connections promptly.
 // This fires once per new physical connection from the pool.
@@ -133,14 +157,18 @@ async function testConnection(maxRetries = 3, retryDelay = 2000) {
 // IMPORTANTE: Si usamos Transaction Pooler, NO podemos usar prepared statements
 async function query(text, params = [], retries = 1) {
   let client;
+  let detachClientErrorHandler = null;
   let lastError;
   
   // Detectar si estamos usando Transaction Pooler
-  const isUsingPooler = process.env.DATABASE_URL?.includes(':6543') || process.env.DATABASE_URL?.includes('pooler.supabase.com');
+  const isUsingPooler =
+    resolvedConnectionString?.includes(':6543') ||
+    resolvedConnectionString?.includes('pooler.supabase.com');
   
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       client = await pool.connect();
+      detachClientErrorHandler = attachClientErrorHandler(client, 'query');
       
       // Si usamos Transaction Pooler, ejecutar query sin prepared statements
       // El Transaction Pooler NO soporta PREPARE statements
@@ -218,6 +246,10 @@ async function query(text, params = [], retries = 1) {
       // Si llegamos aquí, la query fue exitosa
       if (client) {
         try {
+          if (detachClientErrorHandler) {
+            detachClientErrorHandler();
+            detachClientErrorHandler = null;
+          }
           client.release();
         } catch (releaseError) {
           // Error al liberar, pero la query fue exitosa
@@ -232,6 +264,10 @@ async function query(text, params = [], retries = 1) {
       // Si hay un cliente, intentar liberarlo
       if (client) {
         try {
+          if (detachClientErrorHandler) {
+            detachClientErrorHandler();
+            detachClientErrorHandler = null;
+          }
           client.release();
         } catch (releaseError) {
           // El cliente está en mal estado, el pool lo manejará
@@ -273,8 +309,10 @@ async function query(text, params = [], retries = 1) {
 // Función para ejecutar transacciones con manejo robusto de errores
 async function transaction(callback) {
   let client;
+  let detachClientErrorHandler = null;
   try {
     client = await pool.connect();
+    detachClientErrorHandler = attachClientErrorHandler(client, 'transaction');
     await client.query('BEGIN');
     const result = await callback(client);
     await client.query('COMMIT');
@@ -293,6 +331,10 @@ async function transaction(callback) {
   } finally {
     if (client) {
       try {
+        if (detachClientErrorHandler) {
+          detachClientErrorHandler();
+          detachClientErrorHandler = null;
+        }
         client.release();
       } catch (releaseError) {
         console.error('❌ Error al liberar cliente en transacción:', releaseError.message);

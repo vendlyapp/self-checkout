@@ -6,6 +6,7 @@ package-lock.json
 # Environment variables
 .env
 .env.local
+scripts/.env.fly.secrets
 .env.*.local
 .env.production
 .env.development

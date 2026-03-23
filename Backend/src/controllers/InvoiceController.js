@@ -3,6 +3,7 @@ const invoiceService = require('../services/InvoiceService');
 const orderService = require('../services/OrderService');
 const storeService = require('../services/StoreService');
 const userService = require('../services/UserService');
+const QRBillService = require('../services/QRBillService');
 const { HTTP_STATUS } = require('../types');
 
 class InvoiceController {
@@ -140,6 +141,17 @@ class InvoiceController {
           storeVatNumber: storeVatNumber || undefined,
           createdAt: new Date().toISOString(),
         },
+        // QR-Rechnung: pasar referencia QRR y snapshot del acreedor para guardar en factura
+        qrrReference: order.paymentMethod === 'qr-rechnung' ? (metadata.qrrReference || null) : null,
+        qrCreditorSnapshot: order.paymentMethod === 'qr-rechnung' ? await (async () => {
+          try {
+            const pmResult = await query(
+              `SELECT config FROM "PaymentMethod" WHERE "storeId" = $1 AND code = 'qr-rechnung' AND "isActive" = true LIMIT 1`,
+              [order.storeId]
+            );
+            return pmResult.rows[0]?.config || null;
+          } catch { return null; }
+        })() : null,
       };
 
       const result = await invoiceService.create(invoiceData);
@@ -361,6 +373,70 @@ class InvoiceController {
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         error: error.message || 'Error al actualizar la factura',
+      });
+    }
+  }
+
+  /**
+   * Genera y devuelve el SVG del QR Code suizo para una factura QR-Rechnung.
+   * Usado por el kiosko para mostrar el código en pantalla y por la factura impresa.
+   * @route GET /api/invoices/:id/qr-code
+   */
+  async getQRCode(req, res) {
+    try {
+      const { id } = req.params;
+
+      const invoiceResult = await invoiceService.findById(id);
+      if (!invoiceResult.success || !invoiceResult.data) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, error: 'Factura no encontrada' });
+      }
+
+      const invoice = invoiceResult.data;
+
+      if (invoice.paymentMethod !== 'qr-rechnung') {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, error: 'Esta factura no es de tipo QR-Rechnung' });
+      }
+
+      const qrrReference = invoice.qrrReference;
+      const creditorConfig = invoice.qrCreditorSnapshot;
+
+      if (!qrrReference || !creditorConfig) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: 'Faltan datos QR (qrrReference o qrCreditorSnapshot). Verifica que el método QR-Rechnung esté correctamente configurado.',
+        });
+      }
+
+      const validation = QRBillService.validateQRIBAN(creditorConfig.qrIban || '');
+      if (!validation.valid) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, error: validation.error });
+      }
+
+      const additionalInfo = invoice.invoiceNumber ? `Rechnung ${invoice.invoiceNumber}` : undefined;
+      const amount = Number(invoice.total);
+
+      const billSvg = QRBillService.generateQRCodeSVG({
+        creditorConfig,
+        amount,
+        reference: qrrReference,
+        additionalInfo,
+        language: 'DE',
+      });
+
+      res.status(HTTP_STATUS.OK).json({
+        success: true,
+        data: {
+          billSvg,
+          qrrReference,
+          amount,
+          invoiceNumber: invoice.invoiceNumber,
+        },
+      });
+    } catch (error) {
+      console.error('Error al generar QR Code:', error);
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: error.message || 'Error al generar el QR Code',
       });
     }
   }

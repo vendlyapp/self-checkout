@@ -55,6 +55,8 @@ class InvoiceService {
       total,
       paymentMethod,
       metadata = {},
+      qrrReference,
+      qrCreditorSnapshot,
     } = invoiceData;
 
     if (!orderId) {
@@ -91,9 +93,11 @@ class InvoiceService {
         "total",
         "paymentMethod",
         "status",
-        "metadata"
+        "metadata",
+        "qrrReference",
+        "qrCreditorSnapshot"
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16::jsonb, $17, $18, $19, $20, $21, $22, $23::jsonb)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16::jsonb, $17, $18, $19, $20, $21, $22, $23::jsonb, $24, $25::jsonb)
       RETURNING *
     `;
 
@@ -131,6 +135,8 @@ class InvoiceService {
             paymentMethod || null,
             'issued',
             JSON.stringify(metadata),
+            qrrReference || null,
+            qrCreditorSnapshot ? JSON.stringify(qrCreditorSnapshot) : null,
           ]);
           return invoiceResult.rows[0];
         });

@@ -27,18 +27,25 @@ class ProductController {
       const { limit, search } = req.query;
       const ownerId = req.user?.userId; // Obtener del usuario autenticado
 
+      const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
+
       if (search) {
-        const result = await productService.search(search, { ownerId });
+        const searchLimit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
+        const result = await productService.search(search, {
+          ownerId,
+          limit: searchLimit,
+          offset,
+        });
         return res.status(HTTP_STATUS.OK).json(result);
       }
 
-      const options = { ownerId };
+      const options = { ownerId, offset };
       const includeCodes = req.query.includeCodes === 'true' || req.query.includeCodes === '1';
       if (includeCodes) {
         options.includeCodes = true;
-        options.limit = Math.min(parseInt(limit) || 100, 100);
+        options.limit = Math.min(parseInt(limit, 10) || 100, 100);
       } else if (limit) {
-        options.limit = Math.min(parseInt(limit) || 100, 500);
+        options.limit = Math.min(parseInt(limit, 10) || 100, 500);
       }
       if (req.query.includeInactive === 'true' || req.query.includeInactive === '1') {
         options.includeInactive = true;
@@ -73,6 +80,14 @@ class ProductController {
     try {
       const { id } = req.params;
       const result = await productService.findById(id);
+      const product = result.data;
+      const user = req.user;
+      if (user.role !== 'SUPER_ADMIN' && product.ownerId !== user.userId) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({
+          success: false,
+          error: 'Producto no encontrado',
+        });
+      }
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       const statusCode = error.message.includes('no encontrado')

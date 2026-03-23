@@ -164,7 +164,7 @@ router.post('/store/:storeId', authMiddleware, paymentMethodController.createPay
  */
 // Ruta genérica: debe estar DESPUÉS de todas las rutas específicas
 // IMPORTANTE: Esta ruta solo debe hacer match si NO es 'store' (para permitir que /store/:storeId se evalúe primero)
-router.get('/:id', (req, res, next) => {
+router.get('/:id', authMiddleware, (req, res, next) => {
   // Si el id es 'store', rechazar explícitamente para que Express continúe buscando otras rutas
   // Sin embargo, esto no debería suceder si las rutas están en el orden correcto
   if (req.params.id === 'store') {

@@ -452,35 +452,64 @@ class ProductService {
     }
   }
 
-  async search(searchTerm) {
-    // description is excluded from ILIKE: it can contain thousands of chars and
-    // a leading-wildcard ILIKE forces a full sequential scan on that column.
-    // name/sku/category are short indexed-friendly fields — this is already fast.
-    // If pg_trgm GIN indexes are enabled (see migrations/add_trgm_indexes.sql)
-    // all three ILIKE clauses will use index scans instead of seq scans.
+  /**
+   * @param {string} searchTerm
+   * @param {{ ownerId?: string, limit?: number, offset?: number }} [opts]
+   */
+  async search(searchTerm, opts = {}) {
+    const ownerId = opts.ownerId;
+    const limit = Math.min(Math.max(1, parseInt(opts.limit, 10) || 50), 200);
+    const offset = Math.max(0, parseInt(opts.offset, 10) || 0);
+
+    const params = [`%${searchTerm}%`, `${searchTerm}%`];
+    let ownerClause = '';
+    if (ownerId) {
+      params.push(ownerId);
+      ownerClause = ` AND "ownerId" = $3`;
+    }
+    const limitIdx = params.length + 1;
+    const offsetIdx = params.length + 2;
+    params.push(limit, offset);
+
     const searchQuery = `
       SELECT ${PRODUCT_LIST_COLS} FROM "Product"
       WHERE "isActive" = true AND (
         name ILIKE $1 OR
         sku ILIKE $1 OR
         category ILIKE $1
-      )
+      ) ${ownerClause}
       ORDER BY
         CASE WHEN name ILIKE $2 THEN 0
              WHEN sku  ILIKE $2 THEN 1
              ELSE 2
         END,
         name ASC
-      LIMIT 50
+      LIMIT $${limitIdx} OFFSET $${offsetIdx}
     `;
 
-    const result = await query(searchQuery, [`%${searchTerm}%`, `${searchTerm}%`]);
+    const whereForCount = ownerId
+      ? `WHERE "isActive" = true AND (
+        name ILIKE $1 OR sku ILIKE $1 OR category ILIKE $1
+      ) AND "ownerId" = $3`
+      : `WHERE "isActive" = true AND (
+        name ILIKE $1 OR sku ILIKE $1 OR category ILIKE $1
+      )`;
+
+    const countParams = ownerId
+      ? [`%${searchTerm}%`, `${searchTerm}%`, ownerId]
+      : [`%${searchTerm}%`, `${searchTerm}%`];
+
+    const [result, countResult] = await Promise.all([
+      query(searchQuery, params),
+      query(`SELECT COUNT(*)::int AS c FROM "Product" ${whereForCount}`, countParams),
+    ]);
     const products = result.rows;
 
     return {
       success: true,
       data: products,
-      count: products.length
+      count: products.length,
+      total: parseInt(countResult.rows[0]?.c, 10) || 0,
     };
   }
 
@@ -491,6 +520,32 @@ class ProductService {
 
   async findByCategory(categoryId) {
     return this.findAll({ categoryId });
+  }
+
+  /**
+   * Public storefront query: owner-scoped active products without COUNT.
+   * This avoids the extra aggregate query used by admin lists.
+   */
+  async findByOwnerPublic(ownerId, limit = 100) {
+    if (!ownerId) {
+      return { success: true, data: [], count: 0 };
+    }
+    const sanitizedLimit = Math.min(Math.max(parseInt(limit, 10) || 100, 1), 200);
+    const result = await query(
+      `
+        SELECT ${PRODUCT_LIST_COLS}
+        FROM "Product"
+        WHERE "ownerId" = $1 AND "isActive" = true
+        ORDER BY "createdAt" DESC
+        LIMIT $2
+      `,
+      [ownerId, sanitizedLimit]
+    );
+    return {
+      success: true,
+      data: result.rows,
+      count: result.rows.length,
+    };
   }
 
   async updateStock(id, stock) {

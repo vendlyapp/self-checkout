@@ -1,89 +1,78 @@
 #!/bin/bash
+#
+# Push Fly.io secrets from a local env file (never commit real values).
+#
+# 1. Copy scripts/env.fly.secrets.example to scripts/.env.fly.secrets
+# 2. Fill in real values (scripts/.env.fly.secrets is gitignored)
+# 3. Run: bash scripts/setup_fly_secrets.sh
+#
+# If credentials were ever committed to git, rotate them in Supabase / Google / Fly.
 
-# Script para configurar variables de entorno en Fly.io
-# Ejecuta: bash scripts/setup_fly_secrets.sh
+set -euo pipefail
 
-echo "🚀 Configurando variables de entorno en Fly.io..."
-echo ""
-
-# Verificar que flyctl esté instalado
-if ! command -v flyctl &> /dev/null; then
-    echo "❌ Error: flyctl no está instalado"
-    echo "   Instala desde: https://fly.io/docs/getting-started/installing-flyctl/"
-    exit 1
-fi
-
-# Verificar que estés autenticado
-if ! flyctl auth whoami &> /dev/null; then
-    echo "❌ Error: No estás autenticado en Fly.io"
-    echo "   Ejecuta: flyctl auth login"
-    exit 1
-fi
-
-echo "✅ flyctl verificado"
-echo ""
-
-# Cambiar al directorio del backend (donde está fly.toml)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SECRETS_FILE="${SCRIPT_DIR}/.env.fly.secrets"
+
+if ! command -v flyctl &> /dev/null; then
+  echo "Error: flyctl is not installed. See https://fly.io/docs/hands-on/install-flyctl/"
+  exit 1
+fi
+
+if ! flyctl auth whoami &> /dev/null; then
+  echo "Error: not logged in to Fly. Run: flyctl auth login"
+  exit 1
+fi
+
+if [[ ! -f "$SECRETS_FILE" ]]; then
+  echo "Missing secrets file: $SECRETS_FILE"
+  echo "Copy scripts/env.fly.secrets.example to scripts/.env.fly.secrets and set values."
+  exit 1
+fi
+
 BACKEND_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$BACKEND_DIR" || exit 1
 
-# Verificar si la app existe, si no, crearla
-APP_NAME="vendly-checkout-backend"
-echo "🔍 Verificando si la app '$APP_NAME' existe..."
+APP_NAME="${FLY_APP_NAME:-vendly-checkout-backend}"
 
-# Intentar verificar si la app existe
-if flyctl apps show "$APP_NAME" &>/dev/null; then
-    echo "✅ App '$APP_NAME' encontrada"
-    echo ""
-else
-    echo "⚠️  La app '$APP_NAME' no existe en Fly.io"
-    echo "📦 Creando la app..."
-    echo ""
-    
-    # Crear la app
-    if flyctl apps create "$APP_NAME" 2>&1; then
-        echo ""
-        echo "✅ App creada exitosamente"
-        echo ""
-    else
-        echo ""
-        echo "❌ Error al crear la app"
-        echo ""
-        echo "💡 Intenta manualmente:"
-        echo "   cd Backend"
-        echo "   flyctl apps create $APP_NAME"
-        echo ""
-        echo "   O si ya tienes una app, verifica el nombre en fly.toml"
-        exit 1
-    fi
-fi
+echo "Loading secrets from $SECRETS_FILE (not printed)"
+# shellcheck disable=SC1090
+set -a
+source "$SECRETS_FILE"
+set +a
 
-# Variables de entorno - TODAS como secrets (más seguro)
-echo "📝 Configurando secrets en Fly.io para la app '$APP_NAME'..."
-echo ""
+required_vars=(
+  DATABASE_URL
+  DIRECT_URL
+  SUPABASE_URL
+  SUPABASE_ANON_KEY
+  SUPABASE_SERVICE_ROLE_KEY
+  FRONTEND_URL
+  CORS_ORIGIN
+)
 
-flyctl secrets set --app "$APP_NAME" \
-  DATABASE_URL="postgresql://postgres.dkkvxzigqqvolbyeybgr:BmvKhmXieYSKcu9F@aws-1-eu-central-2.pooler.supabase.com:6543/postgres" \
-  DIRECT_URL="postgresql://postgres.dkkvxzigqqvolbyeybgr:BmvKhmXieYSKcu9F@aws-1-eu-central-2.pooler.supabase.com:5432/postgres" \
-  NODE_ENV="production" \
-  PORT="3000" \
-  SUPABASE_URL="https://dkkvxzigqqvolbyeybgr.supabase.co" \
-  SUPABASE_ANON_KEY="sb_publishable_w5YLhoNEwZViKFH8HoiEOg_Hru9YwGv" \
-  FRONTEND_URL="https://self-checkout-kappa.vercel.app" \
-  CORS_ORIGIN="https://self-checkout-kappa.vercel.app" \
-  SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET="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" \
-  SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRra3Z4emlncXF2b2xieWV5YmdyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODQ4NjcyMiwiZXhwIjoyMDc0MDYyNzIyfQ.fC0kC7or1a1BF6VDr_KwBlymZN7rN5RBu-VJxwUg7Hg" \
-  SUPER_ADMIN_EMAIL="admin@vendly.co" \
-  SUPER_ADMIN_PASSWORD="SuperAdmin123!"
+for v in "${required_vars[@]}"; do
+  if [[ -z "${!v:-}" ]]; then
+    echo "Error: $v is not set in $SECRETS_FILE"
+    exit 1
+  fi
+done
 
-echo ""
-echo "✅ Variables de entorno configuradas exitosamente!"
-echo ""
-echo "📋 Para verificar los secrets configurados:"
-echo "   flyctl secrets list"
-echo ""
-echo "🚀 Para desplegar:"
-echo "   flyctl deploy"
-echo ""
+echo "Setting secrets on Fly app: $APP_NAME"
+FLY_SECRETS=(
+  DATABASE_URL="$DATABASE_URL"
+  DIRECT_URL="$DIRECT_URL"
+  NODE_ENV="${NODE_ENV:-production}"
+  PORT="${PORT:-3000}"
+  SUPABASE_URL="$SUPABASE_URL"
+  SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+  FRONTEND_URL="$FRONTEND_URL"
+  CORS_ORIGIN="$CORS_ORIGIN"
+  SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY"
+)
+[[ -n "${SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET:-}" ]] && FLY_SECRETS+=(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET="$SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET")
+[[ -n "${SUPER_ADMIN_EMAIL:-}" ]] && FLY_SECRETS+=(SUPER_ADMIN_EMAIL="$SUPER_ADMIN_EMAIL")
+[[ -n "${SUPER_ADMIN_PASSWORD:-}" ]] && FLY_SECRETS+=(SUPER_ADMIN_PASSWORD="$SUPER_ADMIN_PASSWORD")
 
+flyctl secrets set --app "$APP_NAME" "${FLY_SECRETS[@]}"
+
+echo "Done. Verify with: flyctl secrets list --app $APP_NAME"

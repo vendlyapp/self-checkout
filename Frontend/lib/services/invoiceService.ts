@@ -43,6 +43,8 @@ export interface Invoice {
   updatedAt: string;
   orderDate?: string;
   orderStatus?: string;
+  qrrReference?: string;
+  qrCreditorSnapshot?: Record<string, string>;
 }
 
 export interface CreateInvoicePayload {
@@ -92,11 +94,13 @@ const makeRequest = async <T>(
     
     // Si ya hay un signal en options, usar ese (React Query lo proporciona)
     const controller = options.signal ? null : new AbortController();
-    const timeoutId = controller ? setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT) : null;
-    
+    const timeoutId = controller
+      ? setTimeout(() => controller.abort(new DOMException('Request timeout', 'AbortError')), API_CONFIG.TIMEOUT)
+      : null;
+
     // Usar el signal de options si existe (React Query), sino usar el del controller
     const signal = options.signal || controller?.signal;
-    
+
     const response = await fetch(url, {
       ...options,
       headers: {
@@ -105,7 +109,7 @@ const makeRequest = async <T>(
       },
       signal,
     });
-    
+
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
@@ -118,10 +122,12 @@ const makeRequest = async <T>(
     const data = await response.json();
     return data;
   } catch (error) {
+    // AbortError: request cancelado por timeout o por desmontaje del componente (React Query / StrictMode).
+    // No re-lanzar — retornar error silencioso para evitar ruido en consola.
     if (error instanceof Error && error.name === 'AbortError') {
-      throw error;
+      return { success: false, error: 'cancelled' };
     }
-    
+
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -239,6 +245,19 @@ export class InvoiceService {
       method: 'GET',
       signal: requestOptions?.signal,
     });
+  }
+
+  /**
+   * Obtener QR Code SVG de una factura QR-Rechnung
+   */
+  static async getQRCode(
+    invoiceId: string,
+    requestOptions?: { signal?: AbortSignal }
+  ): Promise<ApiResponse<{ billSvg: string; qrrReference: string; amount: number; invoiceNumber: string }>> {
+    return makeRequest(`/api/invoices/${invoiceId}/qr-code`, {
+      method: 'GET',
+      signal: requestOptions?.signal,
+    }, false);
   }
 
   /**

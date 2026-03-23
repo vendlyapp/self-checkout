@@ -22,6 +22,8 @@ interface LoaderProps {
   className?: string;
   /** Si es fullscreen, mostrar fondo completo */
   fullScreen?: boolean;
+  /** Mostrar punto central del spinner */
+  showCenterDot?: boolean;
 }
 
 const sizeClasses: Record<LoaderSize, string> = {
@@ -93,6 +95,7 @@ export const Loader: React.FC<LoaderProps> = ({
   icon: Icon,
   className = '',
   fullScreen = false,
+  showCenterDot = true,
 }) => {
   const selectedSize = sizeClasses[size];
   const selectedBorderSize = borderSizeClasses[size];
@@ -130,7 +133,7 @@ export const Loader: React.FC<LoaderProps> = ({
       />
       
       {/* Punto central - solo para tamaños medianos y grandes */}
-      {(size === 'md' || size === 'lg' || size === 'xl') && (
+      {showCenterDot && (size === 'md' || size === 'lg' || size === 'xl') && (
         <div 
           className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 ${dotSize} ${selectedColors.center} rounded-full`}
         />
@@ -186,7 +189,9 @@ export const Loader: React.FC<LoaderProps> = ({
             />
             
             {/* Punto central minimalista */}
-            <div className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 ${selectedColors.center} rounded-full`} />
+            {showCenterDot && (
+              <div className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 ${selectedColors.center} rounded-full`} />
+            )}
           </div>
           
           {/* Texto y dots */}

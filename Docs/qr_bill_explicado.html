@@ -1,0 +1,426 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.stepper{font-family:var(--font-sans)}
+.steps-nav{display:flex;gap:0;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:24px;overflow-x:auto}
+.step-btn{padding:10px 16px;font-size:13px;cursor:pointer;border:none;background:none;color:var(--color-text-secondary);border-bottom:2px solid transparent;white-space:nowrap;transition:.15s;flex-shrink:0}
+.step-btn.on{color:var(--color-text-primary);border-bottom-color:var(--color-text-primary);font-weight:500}
+.panel{display:none}.panel.on{display:block}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+.b-teal{background:#E1F5EE;color:#085041}
+.b-blue{background:#E6F1FB;color:#0C447C}
+.b-amber{background:#FAEEDA;color:#633806}
+.b-gray{background:#F1EFE8;color:#444441}
+.b-coral{background:#FAECE7;color:#712B13}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:var(--color-background-secondary);border-radius:8px;padding:14px;border:0.5px solid var(--color-border-tertiary)}
+.card-title{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:6px}
+.card-sub{font-size:12px;color:var(--color-text-secondary);line-height:1.5}
+.mono{font-family:var(--font-mono);font-size:11px;background:var(--color-background-primary);padding:2px 5px;border-radius:3px;border:0.5px solid var(--color-border-tertiary)}
+.note{font-size:12px;color:var(--color-text-secondary);background:var(--color-background-info);border-left:2px solid var(--color-border-info);padding:8px 12px;border-radius:0 6px 6px 0;margin:10px 0;line-height:1.5}
+.warn{font-size:12px;color:var(--color-text-warning);background:var(--color-background-warning);border-left:2px solid var(--color-border-warning);padding:8px 12px;border-radius:0 6px 6px 0;margin:10px 0;line-height:1.5}
+.flow-row{display:flex;align-items:center;gap:8px;margin:8px 0;flex-wrap:wrap}
+.flow-box{background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--color-text-primary);min-width:100px;text-align:center}
+.flow-arrow{color:var(--color-text-tertiary);font-size:16px}
+.section{margin-top:18px}
+.section-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+</style>
+
+<div class="stepper">
+<div class="steps-nav">
+  <button class="step-btn on" onclick="go(0)">1. Qué es</button>
+  <button class="step-btn" onclick="go(1)">2. Anatomía del documento</button>
+  <button class="step-btn" onclick="go(2)">3. Qué contiene el QR</button>
+  <button class="step-btn" onclick="go(3)">4. Cómo se paga</button>
+  <button class="step-btn" onclick="go(4)">5. Reconciliación</button>
+  <button class="step-btn" onclick="go(5)">6. Para tu software</button>
+</div>
+
+<!-- PANEL 0: QUÉ ES -->
+<div class="panel on" id="p0">
+  <svg width="100%" viewBox="0 0 680 200">
+    <defs><marker id="a0" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+    <!-- Antes -->
+    <g class="c-gray"><rect x="30" y="30" width="160" height="80" rx="8" stroke-width="0.5"/>
+    <text class="th" x="110" y="62" text-anchor="middle" dominant-baseline="central">Orange slip</text>
+    <text class="ts" x="110" y="84" text-anchor="middle" dominant-baseline="central">ISR / ISE (hasta 2022)</text></g>
+    <text class="ts" x="110" y="124" text-anchor="middle" fill="var(--color-text-secondary)">Papel impreso</text>
+    <text class="ts" x="110" y="140" text-anchor="middle" fill="var(--color-text-secondary)">Manual, error-prone</text>
+    <text class="ts" x="110" y="156" text-anchor="middle" fill="var(--color-text-secondary)">Sin reconciliación auto</text>
+    <text class="ts" x="110" y="172" text-anchor="middle" fill="var(--color-text-danger)">Inválido desde oct 2022</text>
+
+    <!-- Flecha -->
+    <path d="M210 70 L250 70" fill="none" stroke="var(--color-text-tertiary)" stroke-width="1" marker-end="url(#a0)"/>
+    <text class="ts" x="230" y="60" text-anchor="middle" fill="var(--color-text-secondary)">reemplazado</text>
+
+    <!-- Ahora -->
+    <g class="c-teal"><rect x="260" y="30" width="170" height="80" rx="8" stroke-width="0.5"/>
+    <text class="th" x="345" y="62" text-anchor="middle" dominant-baseline="central">Swiss QR Bill</text>
+    <text class="ts" x="345" y="84" text-anchor="middle" dominant-baseline="central">Estándar SIX desde 2020</text></g>
+    <text class="ts" x="345" y="124" text-anchor="middle" fill="var(--color-text-secondary)">PDF o papel con QR Code</text>
+    <text class="ts" x="345" y="140" text-anchor="middle" fill="var(--color-text-secondary)">Todos los datos en el QR</text>
+    <text class="ts" x="345" y="156" text-anchor="middle" fill="var(--color-text-secondary)">Reconciliacion automatica</text>
+    <text class="ts" x="345" y="172" text-anchor="middle" fill="var(--color-text-success)">Unico metodo valido hoy</text>
+
+    <!-- Quien lo usa -->
+    <g class="c-blue"><rect x="460" y="30" width="190" height="140" rx="8" stroke-width="0.5"/>
+    <text class="th" x="555" y="58" text-anchor="middle" dominant-baseline="central">Quien lo usa</text>
+    <text class="ts" x="555" y="80" text-anchor="middle" dominant-baseline="central">Empresas suizas (B2B)</text>
+    <text class="ts" x="555" y="98" text-anchor="middle" dominant-baseline="central">Empresas a consumidores</text>
+    <text class="ts" x="555" y="116" text-anchor="middle" dominant-baseline="central">Empresas del exterior</text>
+    <text class="ts" x="555" y="134" text-anchor="middle" dominant-baseline="central">que facturan en CH</text>
+    <text class="ts" x="555" y="152" text-anchor="middle" dominant-baseline="central">Self-checkouts, e-commerce</text></g>
+  </svg>
+
+  <div class="row" style="margin-top:4px">
+    <div class="card">
+      <div class="card-title">Concepto central</div>
+      <div class="card-sub">Un QR Bill es una factura suiza que lleva un <strong>código QR en la parte inferior</strong>. Ese QR contiene <em>todos los datos de pago</em> ya precargados: quién cobra, a qué cuenta, cuánto, con qué referencia. El pagador solo escanea y confirma — cero escritura manual.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Por qué importa para tu self-checkout</div>
+      <div class="card-sub">Tu cliente finaliza la compra, recibe el PDF con el QR Bill, lo escanea con su app bancaria suiza (UBS, Raiffeisen, ZKB...) y paga en segundos. Tu sistema recibe confirmación automática vía <span class="mono">camt.054</span> del banco y marca el pedido como pagado — sin intervención humana.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL 1: ANATOMÍA -->
+<div class="panel" id="p1">
+  <svg width="100%" viewBox="0 0 680 340">
+    <defs><marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+    <!-- Document sheet -->
+    <rect x="160" y="10" width="280" height="310" rx="4" fill="var(--color-background-primary)" stroke="var(--color-border-secondary)" stroke-width="0.5"/>
+
+    <!-- Zona factura -->
+    <rect x="160" y="10" width="280" height="170" rx="4" fill="var(--color-background-secondary)" stroke="var(--color-border-tertiary)" stroke-width="0.5"/>
+    <text class="ts" x="300" y="45" text-anchor="middle" fill="var(--color-text-secondary)">Factura / Rechnung</text>
+    <text class="ts" x="300" y="62" text-anchor="middle" fill="var(--color-text-secondary)">(contenido libre del emisor)</text>
+    <text class="ts" x="300" y="80" text-anchor="middle" fill="var(--color-text-tertiary)">logo, items, totales, IVA...</text>
+
+    <!-- Línea de corte -->
+    <line x1="160" y1="182" x2="440" y2="182" stroke="var(--color-text-secondary)" stroke-width="0.5" stroke-dasharray="4 3"/>
+    <text class="ts" x="160" y="178" fill="var(--color-text-secondary)">✂</text>
+    <text class="ts" x="176" y="178" fill="var(--color-text-secondary)">Separate before paying in</text>
+
+    <!-- Receipt -->
+    <rect x="160" y="183" width="90" height="135" rx="0" fill="#E1F5EE" stroke="var(--color-border-tertiary)" stroke-width="0.5"/>
+    <text class="ts" x="205" y="202" text-anchor="middle" fill="#085041" font-weight="500">Receipt</text>
+    <text class="ts" x="205" y="218" text-anchor="middle" fill="#085041">Account</text>
+    <text class="ts" x="205" y="232" text-anchor="middle" fill="#085041">Reference</text>
+    <text class="ts" x="205" y="246" text-anchor="middle" fill="#085041">Payable by</text>
+    <text class="ts" x="205" y="275" text-anchor="middle" fill="#085041">CHF xxx.xx</text>
+    <text class="ts" x="205" y="307" text-anchor="middle" fill="#085041">Acceptance point</text>
+
+    <!-- Payment Part -->
+    <rect x="250" y="183" width="190" height="135" rx="0" fill="#E6F1FB" stroke="var(--color-border-tertiary)" stroke-width="0.5"/>
+    <text class="ts" x="345" y="202" text-anchor="middle" fill="#0C447C" font-weight="500">Payment part</text>
+
+    <!-- QR mock -->
+    <rect x="258" y="208" width="66" height="66" rx="2" fill="var(--color-background-primary)" stroke="var(--color-border-secondary)" stroke-width="0.5"/>
+    <rect x="262" y="212" width="20" height="20" rx="1" fill="#0C447C" opacity="0.3"/>
+    <rect x="300" y="212" width="20" height="20" rx="1" fill="#0C447C" opacity="0.3"/>
+    <rect x="262" y="250" width="20" height="20" rx="1" fill="#0C447C" opacity="0.3"/>
+    <rect x="284" y="222" width="36" height="4" fill="#0C447C" opacity="0.15"/>
+    <rect x="284" y="230" width="28" height="4" fill="#0C447C" opacity="0.15"/>
+    <rect x="284" y="238" width="32" height="4" fill="#0C447C" opacity="0.15"/>
+    <rect x="282" y="256" width="20" height="4" fill="#0C447C" opacity="0.15"/>
+    <!-- Swiss cross -->
+    <rect x="314" y="234" width="6" height="2" rx="0.5" fill="#0C447C" opacity="0.5"/>
+    <rect x="316" y="232" width="2" height="6" rx="0.5" fill="#0C447C" opacity="0.5"/>
+
+    <!-- Info zona payment -->
+    <text class="ts" x="336" y="215" fill="#0C447C">Account / Payable to</text>
+    <text class="ts" x="336" y="228" fill="#185FA5">CH44 3199 9123...</text>
+    <text class="ts" x="336" y="243" fill="#0C447C">Reference</text>
+    <text class="ts" x="336" y="256" fill="#185FA5">21 00000 00003...</text>
+    <text class="ts" x="336" y="271" fill="#0C447C">Payable by</text>
+    <text class="ts" x="336" y="284" fill="#185FA5">Peter Muster</text>
+    <text class="ts" x="258" y="297" fill="#0C447C">CHF</text>
+    <text class="ts" x="295" y="297" fill="#185FA5">1 590.00</text>
+
+    <!-- Separator receipt/payment -->
+    <line x1="250" y1="183" x2="250" y2="318" stroke="var(--color-text-secondary)" stroke-width="0.5" stroke-dasharray="3 2"/>
+
+    <!-- Labels con arrows -->
+    <path d="M30 95 L158 95" fill="none" stroke="var(--color-text-tertiary)" stroke-width="0.5" marker-end="url(#a1)"/>
+    <text class="ts" x="25" y="82" text-anchor="end" fill="var(--color-text-secondary)">Zona</text>
+    <text class="ts" x="25" y="96" text-anchor="end" fill="var(--color-text-secondary)">factura libre</text>
+
+    <path d="M100 245 L158 245" fill="none" stroke="#085041" stroke-width="0.5" marker-end="url(#a1)"/>
+    <text class="ts" x="95" y="240" text-anchor="end" fill="#085041">Receipt</text>
+    <text class="ts" x="95" y="254" text-anchor="end" fill="#085041">62 mm</text>
+
+    <path d="M460 245 L442 245" fill="none" stroke="#0C447C" stroke-width="0.5" marker-end="url(#a1)"/>
+    <text class="ts" x="465" y="236" fill="#0C447C">Payment part</text>
+    <text class="ts" x="465" y="250" fill="#0C447C">148 mm</text>
+    <text class="ts" x="465" y="264" fill="#0C447C">QR Code 46x46mm</text>
+
+    <path d="M460" y1="290" x2="442" y2="290" fill="none" stroke="var(--color-text-tertiary)" stroke-width="0.5"/>
+    <text class="ts" x="300" y="330" text-anchor="middle" fill="var(--color-text-secondary)">Ancho total: 210 mm — Alto: 105 mm (DIN A6/5)</text>
+  </svg>
+
+  <div class="row" style="margin-top:4px">
+    <div class="card">
+      <div class="card-title">Las 3 zonas del documento</div>
+      <div class="card-sub"><strong>Zona factura (libre):</strong> el emisor pone lo que quiere — logo, tabla de items, IVA, fecha. No hay reglas de formato aquí.<br><br><strong>Receipt (62mm):</strong> copia compacta para quien paga. Lo guarda como comprobante.<br><br><strong>Payment part (148mm):</strong> la zona estandarizada con el QR Code. Aquí SÍ hay reglas estrictas de SIX.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">La línea de corte (obligatoria en PDF)</div>
+      <div class="card-sub">Para un PDF enviado por email (tu caso), la línea de separación entre la factura y el payment part lleva el símbolo <strong>✂</strong> o el texto "Separate before paying in".<br><br>Sin esta línea, el QR Bill es <strong>técnicamente inválido</strong>. La librería <span class="mono">swissqrbill</span> lo añade automáticamente.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL 2: QUÉ CONTIENE EL QR -->
+<div class="panel" id="p2">
+  <div class="row">
+    <div>
+      <div class="section-label">Datos obligatorios en el QR Code</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;align-items:flex-start;gap:8px;padding:8px;background:var(--color-background-secondary);border-radius:6px">
+          <span class="badge b-teal" style="flex-shrink:0">IBAN</span>
+          <div style="font-size:12px;color:var(--color-text-primary)"><strong>QR-IBAN del acreedor</strong><br><span style="color:var(--color-text-secondary)">21 chars. Si usas QRR, debe ser QR-IBAN (IID 30000–31999). Si usas SCOR, IBAN normal.</span></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:8px;padding:8px;background:var(--color-background-secondary);border-radius:6px">
+          <span class="badge b-blue" style="flex-shrink:0">Creditor</span>
+          <div style="font-size:12px;color:var(--color-text-primary)"><strong>Nombre y dirección del acreedor (tú)</strong><br><span style="color:var(--color-text-secondary)">Desde nov 2025: solo dirección <em>estructurada</em> (calle, número, zip, ciudad, país separados).</span></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:8px;padding:8px;background:var(--color-background-secondary);border-radius:6px">
+          <span class="badge b-amber" style="flex-shrink:0">Amount</span>
+          <div style="font-size:12px;color:var(--color-text-primary)"><strong>Importe y moneda</strong><br><span style="color:var(--color-text-secondary)">Solo CHF o EUR. Siempre 2 decimales. Puede omitirse (campo en blanco para que el cliente lo escriba).</span></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:8px;padding:8px;background:var(--color-background-secondary);border-radius:6px">
+          <span class="badge b-coral" style="flex-shrink:0">Reference</span>
+          <div style="font-size:12px;color:var(--color-text-primary)"><strong>Referencia de pago</strong><br><span style="color:var(--color-text-secondary)">QRR (27 dígitos, Mod10) o SCOR (ISO 11649, hasta 25 chars). Esta referencia es lo que te permite identificar qué pedido fue pagado.</span></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:8px;padding:8px;background:var(--color-background-secondary);border-radius:6px">
+          <span class="badge b-gray" style="flex-shrink:0">Debtor</span>
+          <div style="font-size:12px;color:var(--color-text-primary)"><strong>Nombre y dirección del deudor (opcional)</strong><br><span style="color:var(--color-text-secondary)">Si lo incluyes, el banco lo muestra prerellenado. Si no, el cliente lo completa al pagar.</span></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:8px;padding:8px;background:var(--color-background-secondary);border-radius:6px">
+          <span class="badge b-gray" style="flex-shrink:0">Info</span>
+          <div style="font-size:12px;color:var(--color-text-primary)"><strong>Additional information (opcional)</strong><br><span style="color:var(--color-text-secondary)">Max 140 chars. Para texto libre tipo "Pedido #1234" o billing info estructurada (Swico S1).</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="section-label">El QR Code por dentro (datos en texto plano)</div>
+      <div style="background:var(--color-background-secondary);border-radius:8px;padding:12px;font-family:var(--font-mono);font-size:11px;color:var(--color-text-secondary);line-height:1.8;border:0.5px solid var(--color-border-tertiary)">
+        <span style="color:var(--color-text-tertiary)">SPC</span><br>
+        <span style="color:var(--color-text-tertiary)">0200</span><br>
+        <span style="color:var(--color-text-tertiary)">1</span><br>
+        <span style="color:var(--color-text-primary)">CH4431999123000889012</span>  <span style="color:var(--color-text-tertiary)">← QR-IBAN</span><br>
+        <span style="color:var(--color-text-primary)">S</span>  <span style="color:var(--color-text-tertiary)">← tipo dirección estructurada</span><br>
+        <span style="color:var(--color-text-primary)">SwissQRBill GmbH</span><br>
+        <span style="color:var(--color-text-primary)">Musterstrasse</span><br>
+        <span style="color:var(--color-text-primary)">7</span><br>
+        <span style="color:var(--color-text-primary)">1234</span><br>
+        <span style="color:var(--color-text-primary)">Musterstadt</span><br>
+        <span style="color:var(--color-text-primary)">CH</span><br>
+        <span style="color:var(--color-text-tertiary)">[ultimate creditor vacío x5]</span><br>
+        <span style="color:var(--color-text-primary)">1994.75</span>  <span style="color:var(--color-text-tertiary)">← importe</span><br>
+        <span style="color:var(--color-text-primary)">CHF</span><br>
+        <span style="color:var(--color-text-primary)">S</span><br>
+        <span style="color:var(--color-text-primary)">Peter Muster</span><br>
+        <span style="color:var(--color-text-primary)">Musterstrasse</span><br>
+        <span style="color:var(--color-text-primary)">1</span><br>
+        <span style="color:var(--color-text-primary)">1234</span><br>
+        <span style="color:var(--color-text-primary)">Musterstadt</span><br>
+        <span style="color:var(--color-text-primary)">CH</span><br>
+        <span style="color:var(--color-text-primary)">QRR</span>  <span style="color:var(--color-text-tertiary)">← tipo referencia</span><br>
+        <span style="color:var(--color-text-primary)">210000000031394714300 09017</span><br>
+        <span style="color:var(--color-text-tertiary)">EPD</span>  <span style="color:var(--color-text-tertiary)">← fin de datos</span>
+      </div>
+      <div class="note" style="margin-top:8px">El QR Code tiene entre 31 y 34 líneas de datos en texto plano. Lo genera <span class="mono">swissqrbill</span> automáticamente a partir del objeto que le pasas.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL 3: CÓMO SE PAGA -->
+<div class="panel" id="p3">
+  <svg width="100%" viewBox="0 0 680 300">
+    <defs><marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+    <!-- Paso 1 -->
+    <g class="node c-gray" onclick="sendPrompt('Cómo genera mi backend el QR Bill PDF?')">
+      <rect x="20" y="60" width="130" height="56" rx="8" stroke-width="0.5"/>
+      <text class="th" x="85" y="82" text-anchor="middle" dominant-baseline="central">Tu backend</text>
+      <text class="ts" x="85" y="100" text-anchor="middle" dominant-baseline="central">genera PDF con QR Bill</text>
+    </g>
+    <line x1="150" y1="88" x2="175" y2="88" stroke="var(--color-text-tertiary)" stroke-width="1" marker-end="url(#a3)"/>
+    <text class="ts" x="162" y="80" text-anchor="middle" fill="var(--color-text-tertiary)">email/pantalla</text>
+
+    <!-- Paso 2 -->
+    <g class="node c-blue" onclick="sendPrompt('Qué ve el cliente cuando recibe el QR Bill?')">
+      <rect x="175" y="60" width="130" height="56" rx="8" stroke-width="0.5"/>
+      <text class="th" x="240" y="82" text-anchor="middle" dominant-baseline="central">Cliente recibe</text>
+      <text class="ts" x="240" y="100" text-anchor="middle" dominant-baseline="central">PDF con QR Code</text>
+    </g>
+    <line x1="305" y1="88" x2="330" y2="88" stroke="var(--color-text-tertiary)" stroke-width="1" marker-end="url(#a3)"/>
+    <text class="ts" x="317" y="80" text-anchor="middle" fill="var(--color-text-tertiary)">escanea</text>
+
+    <!-- Paso 3 -->
+    <g class="node c-teal" onclick="sendPrompt('Cómo escanea el cliente el QR Bill con su app bancaria?')">
+      <rect x="330" y="60" width="130" height="56" rx="8" stroke-width="0.5"/>
+      <text class="th" x="395" y="82" text-anchor="middle" dominant-baseline="central">App bancaria</text>
+      <text class="ts" x="395" y="100" text-anchor="middle" dominant-baseline="central">prerrellena todo</text>
+    </g>
+    <line x1="460" y1="88" x2="485" y2="88" stroke="var(--color-text-tertiary)" stroke-width="1" marker-end="url(#a3)"/>
+    <text class="ts" x="472" y="80" text-anchor="middle" fill="var(--color-text-tertiary)">confirma</text>
+
+    <!-- Paso 4 -->
+    <g class="node c-amber" onclick="sendPrompt('Qué pasa cuando el cliente confirma el pago?')">
+      <rect x="485" y="60" width="130" height="56" rx="8" stroke-width="0.5"/>
+      <text class="th" x="550" y="82" text-anchor="middle" dominant-baseline="central">Banco procesa</text>
+      <text class="ts" x="550" y="100" text-anchor="middle" dominant-baseline="central">transfiere a tu cuenta</text>
+    </g>
+
+    <!-- Detalle de lo que ve el cliente -->
+    <rect x="20" y="150" width="640" height="130" rx="8" fill="var(--color-background-secondary)" stroke="var(--color-border-tertiary)" stroke-width="0.5"/>
+    <text class="ts" x="340" y="172" text-anchor="middle" fill="var(--color-text-secondary)">Lo que ve el cliente en su app bancaria al escanear</text>
+
+    <g class="c-teal"><rect x="40" y="183" width="180" height="80" rx="6" stroke-width="0.5"/>
+    <text class="th" x="130" y="202" text-anchor="middle" dominant-baseline="central">Payable to</text>
+    <text class="ts" x="130" y="222" text-anchor="middle" dominant-baseline="central">Tu empresa AG</text>
+    <text class="ts" x="130" y="238" text-anchor="middle" dominant-baseline="central">CH44 3199 9123...</text></g>
+
+    <g class="c-blue"><rect x="240" y="183" width="130" height="80" rx="6" stroke-width="0.5"/>
+    <text class="th" x="305" y="202" text-anchor="middle" dominant-baseline="central">Amount</text>
+    <text class="th" x="305" y="230" text-anchor="middle" dominant-baseline="central">CHF 49.90</text>
+    <text class="ts" x="305" y="250" text-anchor="middle" dominant-baseline="central">prerellenado</text></g>
+
+    <g class="c-coral"><rect x="390" y="183" width="180" height="80" rx="6" stroke-width="0.5"/>
+    <text class="th" x="480" y="202" text-anchor="middle" dominant-baseline="central">Reference</text>
+    <text class="ts" x="480" y="220" text-anchor="middle" dominant-baseline="central">21 00000 00003</text>
+    <text class="ts" x="480" y="236" text-anchor="middle" dominant-baseline="central">13947 14300 09017</text>
+    <text class="ts" x="480" y="252" text-anchor="middle" dominant-baseline="central">identifica tu pedido</text></g>
+  </svg>
+
+  <div class="note">El cliente no escribe ningún dato. La app bancaria lee el QR, prerrellena la cuenta, el importe y la referencia, y el cliente solo toca "Confirmar". Es el equivalente suizo de pagar con Twint pero vía transferencia bancaria estándar.</div>
+</div>
+
+<!-- PANEL 4: RECONCILIACIÓN -->
+<div class="panel" id="p4">
+  <div class="row">
+    <div>
+      <div class="section-label">El secreto: la referencia QRR</div>
+      <div class="card" style="margin-bottom:10px">
+        <div class="card-title">Cómo funciona la reconciliación</div>
+        <div class="card-sub" style="margin-bottom:8px">Cuando generas el QR Bill, embutes el <strong>ID del pedido</strong> dentro de los 26 dígitos de la referencia QRR. El check digit (dígito 27) valida la integridad.</div>
+        <div style="font-family:var(--font-mono);font-size:11px;background:var(--color-background-primary);padding:8px;border-radius:4px;border:0.5px solid var(--color-border-tertiary);line-height:1.8">
+          <span style="color:var(--color-text-tertiary)">Pedido #4271</span><br>
+          <span style="color:var(--color-text-secondary)">→ 00000 00000 00000 00000 04271</span> + checkdigit<br>
+          <span style="color:var(--color-text-primary)">→ 21 00000 00000 00000 00004 27187</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Cuando el banco te notifica el pago</div>
+        <div class="card-sub">El banco envía un archivo <span class="mono">camt.054</span> (XML) con todos los pagos recibidos. Cada entrada incluye la referencia QRR completa. Tu backend:<br><br>1. Recibe el <span class="mono">camt.054</span><br>2. Extrae la referencia de cada pago<br>3. Recupera el orderId de los dígitos<br>4. Marca ese pedido como pagado automáticamente</div>
+      </div>
+    </div>
+    <div>
+      <div class="section-label">Ciclo completo de un pago</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:24px;height:24px;border-radius:50%;background:var(--color-background-info);color:var(--color-text-info);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0">1</div>
+          <div style="font-size:12px;color:var(--color-text-primary)">Tu sistema crea pedido <span class="mono">orderId=4271</span> y genera QRR con ese ID</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:24px;height:24px;border-radius:50%;background:var(--color-background-info);color:var(--color-text-info);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0">2</div>
+          <div style="font-size:12px;color:var(--color-text-primary)"><span class="mono">swissqrbill</span> genera el PDF con QR Code embebido</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:24px;height:24px;border-radius:50%;background:var(--color-background-info);color:var(--color-text-info);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0">3</div>
+          <div style="font-size:12px;color:var(--color-text-primary)">PDF enviado al cliente (email o pantalla del kiosko)</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:24px;height:24px;border-radius:50%;background:var(--color-background-info);color:var(--color-text-info);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0">4</div>
+          <div style="font-size:12px;color:var(--color-text-primary)">Cliente escanea con UBS/ZKB/Raiffeisen app → confirma pago</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:24px;height:24px;border-radius:50%;background:var(--color-background-info);color:var(--color-text-info);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0">5</div>
+          <div style="font-size:12px;color:var(--color-text-primary)">Banco acredita en tu QR-IBAN y genera <span class="mono">camt.054</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:24px;height:24px;border-radius:50%;background:var(--color-background-success);color:var(--color-text-success);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0">6</div>
+          <div style="font-size:12px;color:var(--color-text-primary)">Tu sistema lee <span class="mono">camt.054</span>, extrae referencia, marca pedido <strong>#4271 como pagado</strong></div>
+        </div>
+      </div>
+      <div class="warn" style="margin-top:12px">La reconciliación automática solo funciona si guardas la referencia QRR en tu DB al crear el pedido y la usas para hacer match cuando llega el camt.054.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL 5: PARA TU SOFTWARE -->
+<div class="panel" id="p5">
+  <div class="row">
+    <div>
+      <div class="section-label">Lo que el paquete swissqrbill hace por ti</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <div style="display:flex;gap:8px;align-items:flex-start;padding:7px;background:var(--color-background-success);border-radius:6px">
+          <span style="color:var(--color-text-success);font-size:13px;font-weight:500;flex-shrink:0">OK</span>
+          <span style="font-size:12px;color:var(--color-text-primary)">Genera el QR Code (con Swiss cross superpuesto) exactamente 46×46mm</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;padding:7px;background:var(--color-background-success);border-radius:6px">
+          <span style="color:var(--color-text-success);font-size:13px;font-weight:500;flex-shrink:0">OK</span>
+          <span style="font-size:12px;color:var(--color-text-primary)">Coloca Receipt (62mm) a la izquierda y Payment part (148mm) a la derecha</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;padding:7px;background:var(--color-background-success);border-radius:6px">
+          <span style="color:var(--color-text-success);font-size:13px;font-weight:500;flex-shrink:0">OK</span>
+          <span style="font-size:12px;color:var(--color-text-primary)">Aplica tipografía, tamaños y headings según el Style Guide SIX</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;padding:7px;background:var(--color-background-success);border-radius:6px">
+          <span style="color:var(--color-text-success);font-size:13px;font-weight:500;flex-shrink:0">OK</span>
+          <span style="font-size:12px;color:var(--color-text-primary)">Formatea IBAN en grupos de 4, QRR en grupos de 5, SCOR en grupos de 4</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;padding:7px;background:var(--color-background-success);border-radius:6px">
+          <span style="color:var(--color-text-success);font-size:13px;font-weight:500;flex-shrink:0">OK</span>
+          <span style="font-size:12px;color:var(--color-text-primary)">Añade línea de corte con ✂ para PDFs (versión 3)</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;padding:7px;background:var(--color-background-success);border-radius:6px">
+          <span style="color:var(--color-text-success);font-size:13px;font-weight:500;flex-shrink:0">OK</span>
+          <span style="font-size:12px;color:var(--color-text-primary)">Valida el formato de los datos antes de generar (lanza error si algo falla)</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;padding:7px;background:var(--color-background-success);border-radius:6px">
+          <span style="color:var(--color-text-success);font-size:13px;font-weight:500;flex-shrink:0">OK</span>
+          <span style="font-size:12px;color:var(--color-text-primary)">Soporta PDF completo (con tu contenido arriba) o solo SVG del QR Bill</span>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="section-label">Lo que tú debes proveer</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <div style="display:flex;gap:8px;align-items:flex-start;padding:7px;background:var(--color-background-warning);border-radius:6px">
+          <span style="color:var(--color-text-warning);font-size:13px;font-weight:500;flex-shrink:0">TU</span>
+          <span style="font-size:12px;color:var(--color-text-primary)"><strong>QR-IBAN:</strong> lo solicitas a tu banco suizo. Sin esto no puedes usar QRR.</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;padding:7px;background:var(--color-background-warning);border-radius:6px">
+          <span style="color:var(--color-text-warning);font-size:13px;font-weight:500;flex-shrink:0">TU</span>
+          <span style="font-size:12px;color:var(--color-text-primary)"><strong>Referencia QRR:</strong> calcular el check digit Modulo 10 recursivo (o usar una lib helper).</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;padding:7px;background:var(--color-background-warning);border-radius:6px">
+          <span style="color:var(--color-text-warning);font-size:13px;font-weight:500;flex-shrink:0">TU</span>
+          <span style="font-size:12px;color:var(--color-text-primary)"><strong>Dirección estructurada:</strong> separar calle, número, zip, ciudad, país como campos distintos.</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;padding:7px;background:var(--color-background-warning);border-radius:6px">
+          <span style="color:var(--color-text-warning);font-size:13px;font-weight:500;flex-shrink:0">TU</span>
+          <span style="font-size:12px;color:var(--color-text-primary)"><strong>Reconciliación:</strong> guardar la referencia QRR en DB y parsear el camt.054 del banco.</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;padding:7px;background:var(--color-background-warning);border-radius:6px">
+          <span style="color:var(--color-text-warning);font-size:13px;font-weight:500;flex-shrink:0">TU</span>
+          <span style="font-size:12px;color:var(--color-text-primary)"><strong>Validar en staging:</strong> pasar los QR Bills generados por el validador oficial de SIX.</span>
+        </div>
+      </div>
+      <button onclick="sendPrompt('Muéstrame el código completo para integrar swissqrbill en mi backend Express, incluyendo la función generateQRReference con Modulo10')" style="margin-top:14px;width:100%;padding:10px;font-size:13px;cursor:pointer;border-radius:var(--border-radius-md)">Ver código de integración completo ↗</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+function go(i){
+  document.querySelectorAll('.step-btn').forEach((b,j)=>b.classList.toggle('on',i===j));
+  document.querySelectorAll('.panel').forEach((p,j)=>p.classList.toggle('on',i===j));
+}
+</script>
