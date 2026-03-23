@@ -50,6 +50,7 @@ import {
   MAIN_PT_HEADER_NAV_ONLY_PX,
   MAIN_PT_STORE_SECTION_PX,
   MAIN_PT_WITH_FILTER_BARS_PX,
+  MAIN_PT_ORDERS_LIST_MOBILE_PX,
   BESTSELLER_TOP_OFFSET_PX,
 } from "@/lib/constants/layoutHeights";
 
@@ -502,7 +503,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           // Bestseller tiene su propio FilterSlider sticky — solo necesita el alto del HeaderNav (60px),
           // no el MAIN_PT_HEADER_NAV_ONLY_PX completo (140px) que incluye el alto del ResponsiveHeader ya en flujo.
           const mainPtPx = needsFilterBarsPt
-            ? MAIN_PT_WITH_FILTER_BARS_PX
+            ? isOrdersListMainPage
+              ? MAIN_PT_ORDERS_LIST_MOBILE_PX
+              : MAIN_PT_WITH_FILTER_BARS_PX
             : isBestsellerRoute
             ? BESTSELLER_TOP_OFFSET_PX
             : isStoreSectionRoute

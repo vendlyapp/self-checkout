@@ -40,6 +40,20 @@ export const MAIN_GAP_BELOW_FILTER_BARS_PX = -50;
 /** Padding-top del main cuando hay HeaderNav + Filter_Busqueda (products_list) o OrderFilters (orders) */
 export const MAIN_PT_WITH_FILTER_BARS_PX = TOP_FILTER_SLIDER_BAR_PX + MAIN_GAP_BELOW_FILTER_BARS_PX;
 
+/**
+ * OrderFilters (móvil): chips medianos en flex-wrap (≈min-h-40/44, bis 2 Zeilen).
+ */
+export const ORDER_FILTERS_STATUS_BLOCK_HEIGHT_PX = 10;
+
+/** Espacio entre el borde inferior de OrderFilters y el contenido desplazable */
+export const MAIN_GAP_BELOW_ORDER_FILTERS_PX = 5;
+
+/** padding-top del main en /sales/orders (solo aplica en móvil vía .main-pt-mobile-only) */
+export const MAIN_PT_ORDERS_LIST_MOBILE_PX =
+  TOP_FILTER_SLIDER_BAR_PX +
+  ORDER_FILTERS_STATUS_BLOCK_HEIGHT_PX +
+  MAIN_GAP_BELOW_ORDER_FILTERS_PX;
+
 /** Consistencia UI dashboard: padding horizontal y vertical del contenido en móvil (clases: p-4) */
 export const DASHBOARD_MOBILE_CONTENT_PADDING = 16;
 

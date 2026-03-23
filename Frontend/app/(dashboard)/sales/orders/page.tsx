@@ -11,7 +11,6 @@ import {
   ChevronRight,
   FileText,
   XCircle,
-  Filter,
   CheckCircle,
   Clock,
   Trash2,
@@ -22,6 +21,8 @@ import { Loader } from '@/components/ui/Loader';
 import { useCancelOrder } from '@/hooks/mutations/useOrderMutations';
 import CancelOrderModal from '@/components/orders/CancelOrderModal';
 import { OrdersProvider, useOrdersContext } from '@/components/dashboard/orders/OrdersContext';
+import { SearchInput } from '@/components/ui/search-input';
+import { OrderStatusFilterChips } from '@/components/dashboard/orders/OrderStatusFilterChips';
 
 function SalesOrdersPageContent() {
   const router = useRouter();
@@ -42,7 +43,7 @@ function SalesOrdersPageContent() {
     status: statusFilter,
   });
 
-  const { searchQuery } = useOrdersContext();
+  const { searchQuery, onSearch } = useOrdersContext();
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState<{ id: string; orderNumber: string } | null>(null);
   const [isConfirmingCancel, setIsConfirmingCancel] = useState(false);
@@ -182,41 +183,9 @@ function SalesOrdersPageContent() {
       ? 'Noch keine stornierten Bestellungen'
       : statusFilter === 'completed'
       ? 'Noch keine abgeschlossenen Bestellungen'
+      : statusFilter === 'pending'
+      ? 'Noch keine ausstehenden Bestellungen'
       : 'Noch keine Bestellungen';
-
-  /* ── Status filter buttons ───────────────────────────────────────── */
-  const StatusFilters = () => (
-    <div className="flex flex-wrap items-center gap-1.5 lg:gap-2">
-      <Filter className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
-      {[
-        { label: 'Alle', href: '/sales/orders', active: !statusFilter },
-        {
-          label: 'Abgeschlossen',
-          href: '/sales/orders?status=completed',
-          active: statusFilter === 'completed',
-          activeClass: 'bg-emerald-600 text-white shadow-sm',
-        },
-        {
-          label: 'Storniert',
-          href: '/sales/orders?status=cancelled',
-          active: statusFilter === 'cancelled',
-          activeClass: 'bg-red-600 text-white shadow-sm',
-        },
-      ].map(({ label, href, active, activeClass }) => (
-        <button
-          key={label}
-          onClick={() => router.push(href)}
-          className={`px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl text-xs lg:text-sm font-medium transition-ios ${
-            active
-              ? (activeClass ?? 'bg-primary text-primary-foreground shadow-sm')
-              : 'bg-card text-muted-foreground hover:bg-muted border border-border'
-          }`}
-        >
-          {label}
-        </button>
-      ))}
-    </div>
-  );
 
   /* ── Mobile ─────────────────────────────────────────────────────── */
   if (isMobile) {
@@ -322,17 +291,26 @@ function SalesOrdersPageContent() {
       />
       <div className="w-full h-full overflow-auto gpu-accelerated">
         <div className="px-4 pt-6 pb-8 lg:px-8 lg:pt-10 max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-5">
-            <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-foreground tracking-tight">
-                Bestellungen verwalten
-              </h1>
-              <p className="text-xs lg:text-sm text-muted-foreground mt-0.5">
-                Alle Bestellungen anzeigen, Details einsehen und bei Bedarf stornieren
-              </p>
+          <div className="flex flex-col gap-4 mb-6">
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+              <div className="min-w-0">
+                <h1 className="text-xl lg:text-2xl font-bold text-foreground tracking-tight">
+                  Bestellungen verwalten
+                </h1>
+                <p className="text-xs lg:text-sm text-muted-foreground mt-0.5">
+                  Alle Bestellungen anzeigen, Details einsehen und bei Bedarf stornieren
+                </p>
+              </div>
+              <div className="w-full lg:max-w-md xl:max-w-lg flex-shrink-0">
+                <SearchInput
+                  placeholder="Nach Bestellnummer, Kunde oder Zahlungsmethode suchen…"
+                  value={searchQuery}
+                  onChange={onSearch}
+                  className="w-full"
+                />
+              </div>
             </div>
-            <StatusFilters />
+            <OrderStatusFilterChips />
           </div>
 
           {/* Empty state */}

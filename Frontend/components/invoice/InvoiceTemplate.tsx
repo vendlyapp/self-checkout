@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { InvoicePrintView } from './InvoicePrintView';
 import {
   Download,
   Printer,
@@ -631,11 +632,23 @@ export default function InvoiceTemplate({
         </div>
       )}
 
-      {/* ── Invoice Paper ── */}
+      {/* ── Print-only view (InvoicePrintView, hidden on screen) ── */}
+      <InvoicePrintView
+        invoice={invoice}
+        totalBrutto={totalBrutto}
+        totalNetto={totalNetto}
+        totalMwst={totalMwst}
+        discountAmount={discountAmount}
+        breakdown={breakdown}
+        qrBillSvg={qrBillSvg}
+      />
+
+      {/* ── Invoice Paper (screen view, hidden in print) ── */}
       <div
         ref={printRef}
         id="invoice-content"
         className={`
+          invoice-screen-view
           bg-white
           ${isMobile ? 'rounded-xl shadow-sm' : 'rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)]'}
           overflow-hidden
@@ -995,9 +1008,9 @@ export default function InvoiceTemplate({
               <CutLine />
             </div>
 
-            <div className={`${px} pb-8`}>
+            <div className={`${px} pb-8 qr-zahlteil`}>
               {/* ── Mobile (< md): tarjeta compacta + botón fullscreen ── */}
-              <div className="block md:hidden">
+              <div className="qr-mobile-card block md:hidden">
                 <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
                   {/* Header de la tarjeta */}
                   <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
@@ -1101,14 +1114,14 @@ export default function InvoiceTemplate({
               </div>
 
               {/* ── Desktop / tablet (≥ md): bill completo en orientación natural ── */}
-              <div className="hidden md:block">
-                <div className="flex flex-col items-center gap-3">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-400">Zahlschein · QR-Rechnung</p>
+              <div className="qr-desktop-bill hidden md:block">
+                <div className="flex flex-col items-center gap-3 print:gap-0">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-400 print:hidden">Zahlschein · QR-Rechnung</p>
                   {qrBillSvg ? (
                     <img
                       src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrBillSvg)}`}
                       alt="QR-Rechnung Zahlschein"
-                      className="w-full max-w-[680px] block rounded-xl shadow-md border border-gray-100"
+                      className="qr-bill-img w-full max-w-[680px] block rounded-xl shadow-md border border-gray-100 print:max-w-none print:rounded-none print:shadow-none print:border-0"
                       draggable={false}
                     />
                   ) : (

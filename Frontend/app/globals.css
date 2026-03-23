@@ -1942,130 +1942,436 @@
   }
 }
 
-/* Estilos de impresión globales para facturas */
+/* =============================================================================
+ * INVOICE PRINT STYLES
+ * Architecture: InvoicePrintView (inv-p-*) is shown only in @media print.
+ *               InvoiceTemplate screen view (.invoice-screen-view) is hidden.
+ * This avoids the responsive Tailwind breakpoint problem in print contexts.
+ * ============================================================================= */
+
+/* ── Screen: hide print view, show screen view ── */
+.invoice-print-view {
+  display: none;
+}
+.invoice-screen-view {
+  display: block;
+}
+
+/* ── Print: show print view, hide screen view ── */
 @media print {
-  /* Asegurar que el body sea blanco y visible */
+  @page {
+    size: A4 portrait;
+    margin: 12mm 12mm 10mm 12mm;
+  }
+
   html, body {
     background: white !important;
     margin: 0 !important;
     padding: 0 !important;
-    width: 100% !important;
-    height: auto !important;
-    overflow: visible !important;
   }
-  
-  /* Ocultar todos los elementos de navegación y UI */
-  header,
-  nav,
-  footer,
+
+  /* Hide all page chrome */
+  header, nav, footer, aside,
   [class*="HeaderNav"],
   [class*="ResponsiveHeader"],
   [class*="InvoiceActionsFooter"],
   [class*="ResponsiveFooterNav"],
   [class*="Sidebar"],
-  .fixed,
-  .sticky {
+  .fixed, .sticky {
     display: none !important;
-    visibility: hidden !important;
   }
-  
-  /* Mostrar el contenedor de la factura y su contenido */
+
+  /* Show the print container */
   .invoice-print-container {
     display: block !important;
-    position: static !important;
     width: 100% !important;
-    height: auto !important;
-    margin: 0 !important;
     padding: 0 !important;
+    margin: 0 !important;
     background: white !important;
-    overflow: visible !important;
   }
-  
-  .invoice-print-container,
-  .invoice-print-container *,
-  #invoice-content,
-  #invoice-content * {
+
+  /* Hide screen view */
+  .invoice-screen-view {
+    display: none !important;
+  }
+
+  /* Show print view */
+  .invoice-print-view {
     display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 9.5pt;
+    color: #111827;
+    width: 100%;
+    background: white;
   }
-  
-  /* Force white background for invoice container */
-  #invoice-content {
-    background-color: white !important;
+
+  /* ── Header ── */
+  .inv-p-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20pt;
+    padding-bottom: 14pt;
+    border-bottom: 2pt solid #111827;
   }
-  
-  #invoice-content > div {
-    background-color: white !important;
+
+  .inv-p-logo {
+    display: block;
+    width: 36pt;
+    height: 36pt;
+    object-fit: contain;
+    margin-bottom: 6pt;
   }
-  
-  /* Ensure flex elements display correctly */
-  .invoice-print-container .flex,
-  #invoice-content .flex {
-    display: flex !important;
+
+  .inv-p-logo-mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28pt;
+    height: 28pt;
+    background-color: #25D076;
+    color: white;
+    font-size: 13pt;
+    font-weight: 700;
+    border-radius: 4pt;
+    margin-bottom: 6pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
-  
-  /* Ensure tables display correctly */
-  .invoice-print-container table,
-  #invoice-content table {
-    display: table !important;
+
+  .inv-p-issuer-name {
+    font-size: 11pt;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 2pt;
   }
-  
-  .invoice-print-container tr,
-  #invoice-content tr {
-    display: table-row !important;
+
+  .inv-p-issuer-vat {
+    font-size: 7.5pt;
+    color: #9ca3af;
+    font-family: monospace;
+    letter-spacing: 0.05em;
+    margin-bottom: 4pt;
   }
-  
-  .invoice-print-container td,
-  .invoice-print-container th,
-  #invoice-content td,
-  #invoice-content th {
-    display: table-cell !important;
+
+  .inv-p-issuer-addr {
+    font-size: 8.5pt;
+    color: #6b7280;
+    line-height: 1.5;
+    margin-bottom: 4pt;
   }
-  
-  /* Ensure grid elements display correctly */
-  .invoice-print-container .grid,
-  #invoice-content .grid {
-    display: grid !important;
+
+  .inv-p-issuer-contact {
+    font-size: 8pt;
+    color: #9ca3af;
+    margin-top: 4pt;
   }
-  
-  /* Only apply green to the 3px stripe at the top - use specific class */
-  #invoice-content .print-green-stripe {
-    background-color: rgb(37, 208, 118) !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+
+  .inv-p-title-block {
+    text-align: right;
+    flex-shrink: 0;
   }
-  
-  /* Green borders - target by class attribute */
-  #invoice-content [class*="border"][class*="25D076"] {
-    border-color: rgb(37, 208, 118) !important;
+
+  .inv-p-doc-type {
+    font-size: 24pt;
+    font-weight: 200;
+    color: #111827;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 10pt;
   }
-  
-  #invoice-content [class*="divide"][class*="25D076"] {
-    border-color: rgb(37, 208, 118) !important;
+
+  .inv-p-meta-table {
+    border: none;
+    border-collapse: collapse;
   }
-  
-  /* Green logo mark - target small square backgrounds */
-  #invoice-content [class*="bg"][class*="25D076"][class*="w-9"],
-  #invoice-content [class*="bg"][class*="25D076"][class*="w-6"],
-  #invoice-content [class*="bg"][class*="25D076"][class*="w-7"] {
-    background-color: rgb(37, 208, 118) !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+
+  .inv-p-meta-table td {
+    padding: 1pt 0;
+    font-size: 8pt;
+    border: none;
   }
-  
-  /* Ensure all backgrounds are white by default */
-  #invoice-content > div > div {
-    background-color: white !important;
+
+  .inv-p-meta-label {
+    color: #9ca3af;
+    padding-right: 10pt !important;
+    text-align: right;
+    min-width: 40pt;
   }
-  
-  /* Ensure text colors are correct */
-  #invoice-content {
-    color: rgb(31, 41, 55) !important;
+
+  .inv-p-meta-value {
+    color: #374151;
+    font-weight: 500;
+    text-align: right;
   }
-  
-  #invoice-content * {
-    color: inherit !important;
+
+  .inv-p-meta-bold {
+    color: #111827 !important;
+    font-weight: 700 !important;
+  }
+
+  /* ── Recipient ── */
+  .inv-p-recipient-section {
+    margin-bottom: 18pt;
+  }
+
+  .inv-p-section-label {
+    font-size: 7pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #d1d5db;
+    margin-bottom: 4pt;
+  }
+
+  .inv-p-recipient-name {
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 2pt;
+  }
+
+  .inv-p-recipient-addr {
+    font-size: 8.5pt;
+    color: #6b7280;
+    line-height: 1.5;
+  }
+
+  .inv-p-recipient-contact {
+    font-size: 8pt;
+    color: #9ca3af;
+    margin-top: 2pt;
+  }
+
+  /* ── Line items table ── */
+  .inv-p-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 14pt;
+  }
+
+  .inv-p-items-table thead tr {
+    border-top: 2pt solid #111827;
+    border-bottom: 2pt solid #111827;
+  }
+
+  .inv-p-th {
+    font-size: 7pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #9ca3af;
+    padding: 5pt 4pt;
+    text-align: left;
+  }
+
+  .inv-p-item-row {
+    border-bottom: 0.5pt solid #f3f4f6;
+  }
+
+  .inv-p-item-row:last-child {
+    border-bottom: none;
+  }
+
+  .inv-p-td {
+    font-size: 9pt;
+    color: #1f2937;
+    padding: 6pt 4pt;
+    vertical-align: top;
+  }
+
+  .inv-p-item-name {
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  .inv-p-item-detail {
+    font-size: 7.5pt;
+    color: #9ca3af;
+    margin-top: 1.5pt;
+  }
+
+  /* Column widths */
+  .inv-p-col-pos   { width: 24pt; }
+  .inv-p-col-desc  { width: auto; }
+  .inv-p-col-qty   { width: 28pt; }
+  .inv-p-col-price { width: 54pt; }
+  .inv-p-col-mwst  { width: 30pt; }
+  .inv-p-col-total { width: 50pt; }
+
+  /* Alignment helpers */
+  .inv-p-td-right   { text-align: right !important; }
+  .inv-p-td-center  { text-align: center !important; }
+  .inv-p-td-muted   { color: #6b7280 !important; }
+  .inv-p-td-bold    { font-weight: 600 !important; }
+
+  /* MwSt badge (A / B) */
+  .inv-p-mwst-badge {
+    display: inline-block;
+    width: 14pt;
+    height: 12pt;
+    line-height: 12pt;
+    text-align: center;
+    font-size: 7.5pt;
+    font-weight: 700;
+    color: #374151;
+    background-color: #f3f4f6;
+    border: 0.5pt solid #d1d5db;
+    border-radius: 2pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ── Totals ── */
+  .inv-p-totals-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-bottom: 14pt;
+  }
+
+  .inv-p-total-row {
+    display: flex;
+    justify-content: space-between;
+    width: 180pt;
+    padding: 2pt 0;
+    font-size: 8.5pt;
+    color: #374151;
+  }
+
+  .inv-p-total-row.inv-p-total-muted {
+    color: #9ca3af;
+  }
+
+  .inv-p-total-label {
+    color: inherit;
+  }
+
+  .inv-p-total-amount {
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .inv-p-total-divider {
+    width: 180pt;
+    border-top: 2pt solid #111827;
+    margin: 5pt 0;
+  }
+
+  .inv-p-total-grand {
+    display: flex;
+    justify-content: space-between;
+    width: 180pt;
+    font-size: 8pt;
+    font-weight: 700;
+    color: #111827;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .inv-p-total-grand span:last-child {
+    font-size: 14pt;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── MwSt summary table ── */
+  .inv-p-mwst-section {
+    margin-bottom: 14pt;
+    padding: 8pt 10pt;
+    background-color: #f9fafb;
+    border-radius: 4pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .inv-p-mwst-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 5pt;
+  }
+
+  .inv-p-mwst-th {
+    font-size: 7pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #9ca3af;
+    padding: 3pt 4pt;
+    border-bottom: 0.5pt solid #e5e7eb;
+  }
+
+  .inv-p-mwst-td {
+    font-size: 8.5pt;
+    color: #374151;
+    padding: 3pt 4pt;
+  }
+
+  .inv-p-mwst-total-row td {
+    border-top: 0.5pt solid #d1d5db;
+    padding-top: 4pt;
+  }
+
+  /* ── Notes ── */
+  .inv-p-notes {
+    font-size: 8pt;
+    color: #9ca3af;
+    line-height: 1.5;
+    margin-bottom: 10pt;
+  }
+
+  /* ── Footer ── */
+  .inv-p-footer {
+    font-size: 7.5pt;
+    color: #6b7280;
+    border-top: 0.5pt solid #e5e7eb;
+    padding-top: 6pt;
+    margin-top: 10pt;
+  }
+
+  /* ── QR Bill / Zahlschein ── */
+  .inv-p-qr-section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-top: 10pt;
+  }
+
+  .inv-p-cutline {
+    display: flex;
+    align-items: center;
+    gap: 6pt;
+    margin: 8pt 0;
+    color: #d1d5db;
+    font-size: 9pt;
+  }
+
+  .inv-p-scissors {
+    flex-shrink: 0;
+    font-size: 10pt;
+  }
+
+  .inv-p-cutline-dashes {
+    flex: 1;
+    border-top: 1.5pt dashed #d1d5db;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /*
+   * El Zahlschein (QR Bill) es un SVG de 210×105mm (landscape, ratio 2:1).
+   * En A4 portrait con márgenes de 12mm, el área útil es 186mm de ancho.
+   * width: 100% escala el SVG al ancho completo del área imprimible.
+   * El browser mantiene la proporción 2:1 → altura visual ~93mm.
+   */
+  .inv-p-qr-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: none;
+    box-shadow: none;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    image-rendering: auto;
   }
 }
 
