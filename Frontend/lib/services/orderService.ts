@@ -85,23 +85,35 @@ const makeRequest = async <T>(
   try {
     const { buildApiUrl, getAuthHeaders } = await import('@/lib/config/api');
     const { supabase } = await import('@/lib/supabase/client');
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
-    
+    let {
+      data: { session },
+    } = await supabase.auth.getSession();
+    let token: string | undefined = session?.access_token;
+    if (!token) {
+      const { data: refreshed } = await supabase.auth.refreshSession();
+      token = refreshed.session?.access_token;
+    }
+
     const url = buildApiUrl(endpoint);
-    const headers = getAuthHeaders(token);
-    
+    const authHeaders = getAuthHeaders(token);
+
     // Si ya hay un signal en options, usar ese (React Query lo proporciona)
     const controller = options.signal ? null : new AbortController();
     const timeoutId = controller ? setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT) : null;
-    
-    // Usar el signal de options si existe (React Query), sino usar el del controller
+
     const signal = options.signal || controller?.signal;
-    
+
+    // Nunca dejar que ...options sobrescriba Authorization (p. ej. headers: {} en RequestInit)
+    const { headers: _optionHeaders, signal: _sig, ...restOptions } = options;
+    const mergedHeaders: Record<string, string> = { ...authHeaders };
+    if (_optionHeaders && typeof _optionHeaders === 'object' && !(_optionHeaders instanceof Headers)) {
+      Object.assign(mergedHeaders, _optionHeaders as Record<string, string>);
+    }
+
     const response = await fetch(url, {
-      headers,
+      ...restOptions,
       signal,
-      ...options,
+      headers: mergedHeaders,
     });
     
     if (timeoutId) {

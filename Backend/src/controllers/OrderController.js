@@ -396,7 +396,7 @@ class OrderController {
   async confirmPayment(req, res) {
     try {
       const { id } = req.params;
-      const userId = req.user?.userId;
+      const userId = req.user?.userId ?? req.user?.id;
 
       if (!userId) {
         return res.status(HTTP_STATUS.UNAUTHORIZED).json({ success: false, error: 'Autenticación requerida' });
