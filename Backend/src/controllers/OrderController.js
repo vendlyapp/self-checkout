@@ -17,8 +17,6 @@ class OrderController {
     this.createOrderSimple = this.createOrderSimple.bind(this);
     this.confirmPayment = this.confirmPayment.bind(this);
     this.getQRCode = this.getQRCode.bind(this);
-    // Express invoca handlers como funciones sueltas; sin bind, `this` es undefined.
-    this.getOrderById = this.getOrderById.bind(this);
   }
 
   /**
@@ -106,15 +104,9 @@ class OrderController {
   /**
    * Obtiene una orden específica por su ID
    * @route GET /api/orders/:id
-   * @param {Object} req - Request object de Express
-   * @param {Object} req.params - Parámetros de ruta
-   * @param {string} req.params.id - ID de la orden
-   * @param {Object} res - Response object de Express
-   * @returns {Promise<void>} JSON con los datos de la orden
-   * @throws {404} Si la orden no existe
-   * @throws {500} Si hay error en el servidor
+   * Arrow property: Express llama el handler sin `this`; así `this` sigue siendo la instancia del controlador.
    */
-  async getOrderById(req, res) {
+  getOrderById = async (req, res) => {
     try {
       const { id } = req.params;
       const result = await orderService.findById(id);
@@ -140,7 +132,7 @@ class OrderController {
         error: error.message
       });
     }
-  }
+  };
 
   /**
    * Returns whether the authenticated user may read full order details.
