@@ -1371,17 +1371,16 @@ export default function PaymentP() {
     if (!createdOrderId || isConfirmingPayment) return;
     setIsConfirmingPayment(true);
     try {
-      const { buildApiUrl, getAuthHeaders } = await import('@/lib/config/api');
-      const headers = await getAuthHeaders();
-      await fetch(buildApiUrl(`/api/orders/${createdOrderId}/confirm-payment`), {
-        method: 'PATCH',
-        headers,
-      });
+      const { OrderService } = await import('@/lib/services/orderService');
+      const res = await OrderService.confirmQRPayment(createdOrderId);
+      if (!res.success || !res.data) {
+        throw new Error(res.error || 'Zahlung konnte nicht bestätigt werden');
+      }
+      setPaymentStep('success');
     } catch (error) {
       devError('Error confirming QR payment:', error);
     } finally {
       setIsConfirmingPayment(false);
-      setPaymentStep("success");
     }
   };
 

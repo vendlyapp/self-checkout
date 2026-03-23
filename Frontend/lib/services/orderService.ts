@@ -317,6 +317,21 @@ export const OrderService = {
   },
 
   /**
+   * QR-Rechnung: marca la orden como pagada (solo sesión del admin de la tienda).
+   * PATCH /api/orders/:id/confirm-payment
+   */
+  confirmQRPayment: async (
+    orderId: string,
+    requestOptions?: { signal?: AbortSignal }
+  ): Promise<ApiResponse<{ orderId: string; status: string; confirmedAt: string }>> => {
+    const endpoint = `${API_CONFIG.ENDPOINTS.ORDERS}/${orderId}/confirm-payment`;
+    return makeRequest<{ orderId: string; status: string; confirmedAt: string }>(endpoint, {
+      method: 'PATCH',
+      ...requestOptions,
+    });
+  },
+
+  /**
    * Actualizar el estado de una orden
    * @param orderId - ID de la orden
    * @param status - Nuevo estado (pending, processing, completed, cancelled)

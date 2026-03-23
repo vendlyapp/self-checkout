@@ -10,7 +10,7 @@ import { Loader } from '@/components/ui/Loader';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 import { getAvailablePaymentMethod } from '@/lib/constants/paymentMethods';
 import Link from 'next/link';
-import { useCancelOrder } from '@/hooks/mutations/useOrderMutations';
+import { useCancelOrder, useConfirmQRPayment } from '@/hooks/mutations/useOrderMutations';
 import { useEffect, useState } from 'react';
 import CancelOrderModal from '@/components/orders/CancelOrderModal';
 
@@ -20,6 +20,7 @@ export default function SalesOrderDetailPage() {
   const { isMobile } = useResponsive();
   const orderId = params.id as string;
   const cancelOrder = useCancelOrder();
+  const confirmQrPayment = useConfirmQRPayment();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   
   // Usar React Query hooks para obtener orden e invoices con cache
@@ -128,6 +129,14 @@ export default function SalesOrderDetailPage() {
     } catch {
       // Error ya se maneja en el hook
       // El modal se mantiene abierto si hay error para que el usuario pueda intentar de nuevo
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    try {
+      await confirmQrPayment.mutateAsync(orderId);
+    } catch {
+      // Toast en el hook
     }
   };
 
@@ -272,6 +281,27 @@ export default function SalesOrderDetailPage() {
                     )}
                   </div>
 
+                  {order.status === 'pending' && (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3 space-y-3">
+                      <p className="text-xs text-amber-900/90 leading-relaxed">
+                        Wenn die Zahlung auf Ihrem Konto eingegangen ist, bestätigen Sie sie hier. Die Bestellung wird als abgeschlossen markiert.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleConfirmPayment}
+                        disabled={confirmQrPayment.isPending}
+                        className="w-full flex items-center justify-center gap-2 bg-[#25D076] hover:bg-[#20B865] disabled:opacity-60 text-white rounded-xl py-3 px-4 font-semibold transition-colors touch-target active:scale-[0.98] shadow-sm"
+                      >
+                        {confirmQrPayment.isPending ? (
+                          <Loader size="sm" color="white" />
+                        ) : (
+                          <CheckCircle className="w-5 h-5" />
+                        )}
+                        <span>{confirmQrPayment.isPending ? 'Wird bestätigt…' : 'Zahlung bestätigen'}</span>
+                      </button>
+                    </div>
+                  )}
+
                   {/* Botón de cancelar */}
                   {order.status !== 'cancelled' && (
                     <button
@@ -411,10 +441,25 @@ export default function SalesOrderDetailPage() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
+                <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0 flex-wrap justify-end">
                   <span className={`px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-full text-xs lg:text-sm font-semibold whitespace-nowrap ${statusConfig.color}`}>
                     {statusConfig.label}
                   </span>
+                  {order.status === 'pending' && (
+                    <button
+                      type="button"
+                      onClick={handleConfirmPayment}
+                      disabled={confirmQrPayment.isPending}
+                      className="flex items-center gap-1.5 lg:gap-2 bg-[#25D076] hover:bg-[#20B865] disabled:opacity-60 text-white rounded-xl py-2 px-3 lg:py-2.5 lg:px-4 font-semibold transition-colors text-xs lg:text-sm shadow-sm"
+                    >
+                      {confirmQrPayment.isPending ? (
+                        <Loader size="sm" color="white" />
+                      ) : (
+                        <CheckCircle className="w-3.5 h-3.5 lg:w-4 lg:h-4 flex-shrink-0" />
+                      )}
+                      <span>Zahlung bestätigen</span>
+                    </button>
+                  )}
                   {order.status !== 'cancelled' && (
                     <button
                       onClick={handleOpenCancelModal}

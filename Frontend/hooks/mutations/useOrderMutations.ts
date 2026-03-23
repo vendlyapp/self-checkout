@@ -296,3 +296,34 @@ export const useUpdateOrderStatus = () => {
     },
   });
 };
+
+/**
+ * QR-Rechnung: Zahlung im Dashboard bestätigen (PATCH confirm-payment, mit Supabase-Bearer).
+ */
+export const useConfirmQRPayment = () => {
+  const queryClient = useQueryClient();
+  const { data: store } = useMyStore();
+
+  return useMutation({
+    mutationFn: async (orderId: string) => {
+      const response = await OrderService.confirmQRPayment(orderId);
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Zahlung konnte nicht bestätigt werden');
+      }
+      return response.data;
+    },
+    onSuccess: (_data, orderId) => {
+      if (store?.id) {
+        queryClient.invalidateQueries({ queryKey: ['orders', store.id], exact: false });
+        queryClient.invalidateQueries({ queryKey: ['recentOrders', store.id], exact: false });
+      }
+      queryClient.invalidateQueries({ queryKey: ['orderStats'] });
+      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['invoicesByOrderId', orderId] });
+      toast.success('Zahlung bestätigt');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Zahlung konnte nicht bestätigt werden');
+    },
+  });
+};
