@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
+import path from "path";
+import { fileURLToPath } from "url";
+
+/** Evita que Next infiera /home/steven por un package-lock.json ajeno al app */
+const appDir = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
+  outputFileTracingRoot: appDir,
   images: {
     remotePatterns: [
       {

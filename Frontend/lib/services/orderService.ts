@@ -85,7 +85,7 @@ const makeRequest = async <T>(
   try {
     const { buildApiUrl, getAuthHeaders } = await import('@/lib/config/api');
     const { supabase } = await import('@/lib/supabase/client');
-    let {
+    const {
       data: { session },
     } = await supabase.auth.getSession();
     let token: string | undefined = session?.access_token;
@@ -101,10 +101,9 @@ const makeRequest = async <T>(
     const controller = options.signal ? null : new AbortController();
     const timeoutId = controller ? setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT) : null;
 
-    const signal = options.signal || controller?.signal;
-
     // Nunca dejar que ...options sobrescriba Authorization (p. ej. headers: {} en RequestInit)
-    const { headers: _optionHeaders, signal: _sig, ...restOptions } = options;
+    const { headers: _optionHeaders, signal: optionsSignal, ...restOptions } = options;
+    const signal = optionsSignal || controller?.signal;
     const mergedHeaders: Record<string, string> = { ...authHeaders };
     if (_optionHeaders && typeof _optionHeaders === 'object' && !(_optionHeaders instanceof Headers)) {
       Object.assign(mergedHeaders, _optionHeaders as Record<string, string>);
