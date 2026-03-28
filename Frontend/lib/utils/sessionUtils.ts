@@ -29,21 +29,11 @@ const clearSupabaseCookies = (): void => {
   });
 };
 
-/** Clears browser caches: Service Workers, Cache API, IndexedDB, Next.js keys. */
+/** Clears browser caches: Cache API, IndexedDB, Next.js keys. PWA: no SW unregister (Chrome install + updates). */
 const clearBrowserCache = async (): Promise<void> => {
   if (typeof window === 'undefined') return;
 
   try {
-    if ('serviceWorker' in navigator) {
-      try {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(
-          registrations.map((registration) => registration.unregister())
-        );
-      } catch (error) {
-        devWarn('Failed to unregister Service Workers:', error);
-      }
-    }
     if ('caches' in window) {
       try {
         const cacheNames = await caches.keys();

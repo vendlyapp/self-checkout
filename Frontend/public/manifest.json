@@ -1,22 +1,36 @@
 {
-    "name": "SelfCheckout Swiss",
-    "short_name": "SelfCheckout",
-    "description": "Digital checkout for Swiss farm shops",
-    "start_url": "/",
-    "display": "standalone",
-    "background_color": "#25D076",
-    "theme_color": "#25D076",
-    "orientation": "portrait",
-    "icons": [
-      {
-        "src": "/logo.svg",
-        "sizes": "100x100",
-        "type": "image/svg+xml"
-      },
-      {
-        "src": "/logo.svg",
-        "sizes": "100x100",
-        "type": "image/svg+xml"
-      }
-    ]
-  }
+  "id": "/",
+  "name": "SelfCheckout Swiss",
+  "short_name": "SelfCheckout",
+  "description": "Digital checkout for Swiss farm shops",
+  "lang": "de",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#42E894",
+  "theme_color": "#25D076",
+  "orientation": "portrait",
+  "categories": ["business", "finance", "shopping"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

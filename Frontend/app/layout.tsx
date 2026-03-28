@@ -6,14 +6,28 @@ import { UserProvider } from "@/lib/contexts/UserContext";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import { QueryProvider } from "@/lib/providers/QueryProvider";
 import { SessionTimeoutManager } from "@/components/auth/SessionTimeoutManager";
-// import { PWAInstallBanner } from "@/components/pwa/PWAInstallBanner";
+import { PWAInstallBanner } from "@/components/pwa/PWAInstallBanner";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "SelfCheckout",
+  applicationName: "SelfCheckout",
+  title: {
+    default: "SelfCheckout",
+    template: "%s · SelfCheckout",
+  },
   description: "Digital checkout for Swiss farm shops",
   manifest: "/manifest.json",
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -41,8 +55,7 @@ export default function RootLayout({
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="format-detection" content="telephone=no" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="apple-touch-fullscreen" content="yes" />
         <meta name="theme-color" content="#25D076" />
@@ -52,8 +65,7 @@ export default function RootLayout({
           <AuthProvider>
             <UserProvider>
               <SessionTimeoutManager />
-              {/* PWA install banner hidden for now */}
-              {/* <PWAInstallBanner /> */}
+              <PWAInstallBanner />
               {/* Container principal responsive - fondo verde visible en safe areas de iPhone */}
               <div className="h-responsive w-full relative bg-[#25D076] overflow-hidden">
                 {/* Contenedor interno responsive - fondo claro para el contenido con padding para safe areas */}
