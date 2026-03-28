@@ -1,5 +1,4 @@
 .cursor/debug-78f5f5.log
 
-# MCP: tokens y rutas locales; copiar desde .mcp.json.example
-.mcp.json
+# MCP local (tokens / rutas); no subir — plantilla: .mcp.json.example
 .mcp.json
