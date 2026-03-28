@@ -59,19 +59,21 @@ function SuperAdminLayoutContent({ children }: { children: React.ReactNode }) {
     : "lg:ml-[90px]";
 
   return (
-    <div className="min-h-screen xl:flex bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col flex-1 min-h-0 w-full overflow-hidden xl:flex-row bg-gray-50 dark:bg-gray-900">
       {/* Sidebar and Backdrop */}
       <SuperAdminSidebar />
       <Backdrop />
       
       {/* Main Content Area */}
-      <div className={`flex-1 transition-ios-slow ${mainContentMargin}`}>
+      <div className={`flex-1 min-h-0 flex flex-col transition-ios-slow ${mainContentMargin}`}>
         {/* Header */}
         <SuperAdminHeader />
         
-        {/* Page Content */}
-        <div className="p-4 mx-auto max-w-[1920px] w-full md:p-6 lg:p-8">
-          {children}
+        {/* Page Content — scroll interno, cabecera fija en columna */}
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+          <div className="p-4 mx-auto max-w-[1920px] w-full md:p-6 lg:p-8">
+            {children}
+          </div>
         </div>
       </div>
     </div>

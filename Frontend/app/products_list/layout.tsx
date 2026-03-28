@@ -13,7 +13,7 @@ function ProductsListLayoutContent({ children }: { children: ReactNode }) {
 
   return (
     <AdminLayout>
-      <div className={`${isMobile ? "pb-24" : "pb-6"} gpu-accelerated`}>{children}</div>
+      <div className={`${isMobile ? "pb-24" : "pb-6"} min-w-0`}>{children}</div>
     </AdminLayout>
   );
 }

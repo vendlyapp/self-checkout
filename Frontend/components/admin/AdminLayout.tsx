@@ -362,7 +362,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <LoadingProductsModal isOpen={isProductsLoadingModalOpen} />
       )}
       
-      <div className="flex h-responsive w-full min-w-0 overflow-x-hidden bg-background-cream">
+      <div className="flex flex-1 min-h-0 h-full w-full min-w-0 overflow-hidden bg-background-cream">
         {/* Sidebar - ancho responsivo según viewport para que no se salga */}
         {shouldShowSidebar && (
           <Sidebar
@@ -382,7 +382,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* Contenido principal - min-w-0 para que pueda encogerse y no desbordar */}
       <div className={clsx(
-        "flex flex-col flex-1 min-w-0 overflow-hidden transition-ios-slow",
+        "flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden transition-ios-slow",
         isMobile ? "ml-0" : ""
       )}>
         {/* Header: oculto en tablet/desktop cuando el sidebar está visible para no duplicar logo */}

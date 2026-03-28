@@ -116,7 +116,7 @@ function StoreLayoutContent({ children }: StoreLayoutContentProps) {
       {/* Pantalla de carga inicial - solo en recarga completa, no en navegación */}
       {showInitialLoading && <InitialLoadingScreen message="Wird geladen..." />}
       
-      <div className={`flex flex-col h-mobile w-full ${containerBgClass} relative overflow-hidden`}>
+      <div className={`flex flex-col flex-1 min-h-0 h-full w-full ${containerBgClass} relative overflow-hidden`}>
         {/* Contenedor unificado de todos los headers fijos — bg-background-cream cubre los espacios entre componentes */}
         {!isStoreClosed && (
           <div className="fixed top-0 left-0 right-0 z-[100] bg-background-cream flex flex-col">

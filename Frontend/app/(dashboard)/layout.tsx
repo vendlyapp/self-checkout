@@ -15,9 +15,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <LoadingProductsModalProvider>
           <StoreSettingsHeaderProvider>
             <AdminLayout>
-              <div className="gpu-accelerated">
-                {children}
-              </div>
+              <div className="min-w-0">{children}</div>
             </AdminLayout>
           </StoreSettingsHeaderProvider>
         </LoadingProductsModalProvider>

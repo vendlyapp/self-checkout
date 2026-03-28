@@ -71,8 +71,8 @@ export default function ResponsiveHeader({
       )}
 
       <header className={clsx(
-        "bg-white transition-ios-slow",
-        isMobile ? "h-[calc(80px+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] border-b border-gray-100" : (isDesktop || sidebarVisible) ? "h-0 min-h-0 border-0 overflow-hidden" : "h-16 border-b border-gray-100"
+        "bg-white transition-ios-slow shrink-0 z-[45]",
+        isMobile ? "h-[calc(80px+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] border-b border-gray-100" : (isDesktop || sidebarVisible) ? "h-0 min-h-0 border-0 overflow-hidden shrink-0" : "h-16 border-b border-gray-100"
       )}>
         {(isDesktop || sidebarVisible) ? null : isMobile ? (
           // Header original para móvil (sin cambios)

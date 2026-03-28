@@ -144,9 +144,7 @@ export default function ChargeLayout({ children }: ChargeLayoutProps) {
       >
         <ChargeProvider value={chargeContextValue}>
           <AdminLayout>
-            <div className="gpu-accelerated">
-              {children}
-            </div>
+            <div className="min-w-0">{children}</div>
           </AdminLayout>
         </ChargeProvider>
       </FilterModalProvider>

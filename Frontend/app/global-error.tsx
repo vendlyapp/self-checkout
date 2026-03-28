@@ -1,7 +1,7 @@
 'use client';
 
 export default function GlobalError({
-  error,
+  error: _error,
   reset,
 }: {
   error: Error & { digest?: string };
@@ -11,14 +11,16 @@ export default function GlobalError({
     <html lang="de">
       <body>
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           padding: 24,
+          paddingTop: 'max(24px, env(safe-area-inset-top, 0px))',
+          paddingBottom: 'max(24px, env(safe-area-inset-bottom, 0px))',
           fontFamily: 'system-ui, sans-serif',
-          backgroundColor: '#f5f5f5',
+          backgroundColor: '#F2EDE8',
         }}>
           <div style={{
             maxWidth: 400,

@@ -39,14 +39,14 @@ const WelcomeAuth: React.FC = () => {
 
   if (checking) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 flex items-center justify-center">
+      <div className="flex flex-1 min-h-[100dvh] w-full items-center justify-center bg-gradient-to-br from-brand-50 via-background-cream to-brand-100">
         <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 flex items-center justify-center p-4 sm:p-6">
+    <div className="flex flex-1 min-h-[100dvh] w-full items-center justify-center bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 p-4 sm:p-6">
       <div className="w-full max-w-sm sm:max-w-md">
         {/* Logo y Título */}
         <div className="text-center mb-8 sm:mb-10">
