@@ -8,7 +8,7 @@ export default function ScanProductPage() {
   const router = useRouter()
 
   return (
-    <div className="relative flex h-[100dvh] max-h-[100dvh] min-h-[100dvh] w-full flex-col items-center justify-center overflow-hidden bg-background-cream">
+    <div className="relative flex h-dvh max-h-dvh min-h-dvh w-full flex-col items-center justify-center overflow-hidden bg-background-cream">
       {/* Botón de volver atrás - Fijo en la parte superior */}
       <button
         onClick={() => router.push('/')}

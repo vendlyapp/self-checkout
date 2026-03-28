@@ -129,7 +129,7 @@ export const CartGaugeSkeletonLoader: React.FC = () => (
 
 // ===== DESKTOP/TABLET ANALYTICS DASHBOARD SKELETON =====
 export const AnalyticsDashboardSkeletonLoaderDesktop: React.FC = () => (
-  <div className="hidden md:block p-4 md:px-6 md:pt-10 md:pb-6 lg:p-6 xl:p-8 space-y-5 md:space-y-6 lg:space-y-8 xl:space-y-10 bg-background-cream min-h-screen">
+  <div className="hidden md:block p-4 md:px-6 md:pt-10 md:pb-6 lg:p-6 xl:p-8 space-y-5 md:space-y-6 lg:space-y-8 xl:space-y-10 bg-background-cream min-h-dvh">
     {/* Header */}
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6">
       <div className="space-y-2">
@@ -162,7 +162,7 @@ export const AnalyticsDashboardSkeletonLoaderDesktop: React.FC = () => (
 
 // ===== FULL ANALYTICS DASHBOARD SKELETON (responsive) =====
 export const AnalyticsDashboardSkeletonLoader: React.FC = () => (
-  <div className="w-full min-h-screen bg-background-cream">
+  <div className="w-full min-h-dvh bg-background-cream">
     {/* Vista móvil */}
     <div className="block md:hidden p-4 space-y-5">
       <SearchSkeletonLoader />

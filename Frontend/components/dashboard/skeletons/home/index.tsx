@@ -204,7 +204,7 @@ export const RecentSalesSectionSkeletonLoader: React.FC = () => (
 
 // ===== DESKTOP/TABLET HOME DASHBOARD SKELETON =====
 export const HomeDashboardSkeletonLoaderDesktop: React.FC = () => (
-  <div className="hidden md:block p-4 md:px-6 md:pt-10 md:pb-6 lg:p-8 space-y-6 md:space-y-8 lg:space-y-10 xl:space-y-12 bg-background-cream min-h-screen">
+  <div className="hidden md:block p-4 md:px-6 md:pt-10 md:pb-6 lg:p-8 space-y-6 md:space-y-8 lg:space-y-10 xl:space-y-12 bg-background-cream min-h-dvh">
     {/* Header */}
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6">
       <div className="space-y-2">
@@ -293,7 +293,7 @@ export const HomeDashboardSkeletonLoaderDesktop: React.FC = () => (
 
 // ===== HOME DASHBOARD COMPLETE SKELETON (móvil + tablet/desktop responsivo) =====
 export const HomeDashboardSkeletonLoader: React.FC = () => (
-  <div className="w-full min-h-screen bg-background-cream">
+  <div className="w-full min-h-dvh bg-background-cream">
     {/* Vista móvil */}
     <div className="block md:hidden px-4 pt-2 pb-4 space-y-6 bg-background-cream">
       <GreetingSkeletonLoader />
@@ -313,7 +313,7 @@ export const DashboardErrorState: React.FC<{
   error: string; 
   onRetry: () => void;
 }> = ({ error, onRetry }) => (
-  <div className="px-4 pt-8 pb-4 min-h-screen bg-background">
+  <div className="px-4 pt-8 pb-4 min-h-dvh bg-background">
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
         <svg 

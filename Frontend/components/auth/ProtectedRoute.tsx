@@ -33,7 +33,7 @@ export const ProtectedRoute = ({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 flex items-center justify-center">
+      <div className="min-h-dvh bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-brand-500 animate-spin mx-auto mb-4" />
           <p className="text-gray-600 font-medium">Wird geladen...</p>

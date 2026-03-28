@@ -58,7 +58,7 @@ const HomeDashboard: React.FC = () => {
   const { recentSales } = data;
 
   return (
-    <div className="w-full min-h-screen">
+    <div className="w-full min-h-dvh">
       {/* ===== SOLO MÓVIL (< 768px) ===== */}
       <div className="block md:hidden">
         <div className="p-4 space-y-6">

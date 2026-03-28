@@ -140,7 +140,7 @@ export default function CategoriesPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-dvh">
         <div className="text-center">
           <Loader size="lg" className="mx-auto" />
           <p className="mt-4 text-gray-600">Kategorien werden geladen...</p>
@@ -151,7 +151,7 @@ export default function CategoriesPage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-dvh">
         <div className="text-center">
           <p className="text-red-600">Fehler beim Laden der Kategorien</p>
           <button
@@ -166,10 +166,10 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-background-cream">
+    <div className="w-full min-h-dvh bg-background-cream">
       {/* HeaderNav fijo */}
       <div className="fixed top-[80px] left-0 right-0 flex justify-between items-center p-4 bg-white border-b border-gray-200 z-40 safe-area-top pt-[calc(1rem+env(safe-area-inset-top))] 
-                      animate-slide-down gpu-accelerated">
+                      animate-slide-down">
         <div className="flex items-center gap-2 justify-between w-full pt-[10px] px-4 touch-target">
           <button
             className="flex items-center gap-2 cursor-pointer transition-interactive gpu-accelerated active:scale-95"
@@ -195,7 +195,7 @@ export default function CategoriesPage() {
 
       {/* Barra de búsqueda fija */}
       <div className="fixed top-[140px] left-0 right-0 p-4 flex gap-4 items-center justify-center bg-background-cream border-b border-gray-100 z-40 
-                      animate-slide-down gpu-accelerated">
+                      animate-slide-down">
         <div className="animate-stagger-1 w-full max-w-md">
           <SearchInput
             placeholder="Kategorie suchen…"

@@ -7,10 +7,10 @@ export default function ProfilePage() {
   const { isMobile } = useResponsive()
 
   return (
-    <div className="w-full h-full gpu-accelerated animate-fade-in">
+    <div className="w-full h-full min-w-0 animate-fade-in">
       {/* Mobile Layout */}
       {isMobile && (
-        <div className="w-full min-h-screen bg-[#F2EDE8] safe-area-bottom">
+        <div className="w-full min-h-dvh bg-[#F2EDE8] safe-area-bottom">
           <div className="px-4 py-6 pb-32 max-w-full mx-auto">
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-1.5">
@@ -42,7 +42,7 @@ export default function ProfilePage() {
 
       {/* Desktop Layout */}
       {!isMobile && (
-        <div className="w-full min-h-screen bg-[#F2EDE8] py-8">
+        <div className="w-full min-h-dvh bg-[#F2EDE8] py-8">
           <div className="max-w-4xl mx-auto px-6">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">

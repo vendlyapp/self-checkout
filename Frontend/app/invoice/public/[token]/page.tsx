@@ -145,7 +145,7 @@ export default function PublicInvoicePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+      <div className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center p-4">
         <Loader2 className="w-8 h-8 text-[#25D076] animate-spin" />
         <p className="text-gray-600 font-medium mt-4">Rechnung wird geladen...</p>
       </div>
@@ -154,7 +154,7 @@ export default function PublicInvoicePage() {
 
   if (error || !invoice) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+      <div className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-8 h-8 text-red-600" />
@@ -167,7 +167,7 @@ export default function PublicInvoicePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-dvh bg-gray-50 pb-24">
       {/* Contenido compacto para móvil */}
       <div className={`${isMobile ? 'px-3 py-4' : 'px-4 py-8 max-w-3xl mx-auto'}`}>
         <InvoiceTemplate

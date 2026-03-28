@@ -31,7 +31,7 @@ export default function InvoicePage() {
 
   if (loading && !invoice) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      <div className="flex flex-col items-center justify-center min-h-dvh p-4">
         <Loader size="lg" />
         <p className="text-gray-600 font-medium mt-4">Rechnung wird geladen...</p>
       </div>

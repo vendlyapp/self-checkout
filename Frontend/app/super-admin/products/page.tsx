@@ -107,7 +107,7 @@ export default function SuperAdminProducts() {
 
   if (productsLoading && products.length === 0) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-screen">
+      <div className="p-8 flex items-center justify-center min-h-dvh">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-brand-500 mx-auto" />
           <p className="mt-4 text-gray-600 dark:text-gray-400">Produkte werden geladen...</p>

@@ -14,11 +14,11 @@ export default function Categories() {
   const { } = useResponsive();
 
   return (
-    <div className="w-full animate-page-enter gpu-accelerated">
+    <div className="w-full min-w-0 animate-page-enter">
       {/* Mobile Layout - Diseño original con HeaderNav */}
       <div className="block lg:hidden">
         <Suspense fallback={
-          <div className="min-h-screen flex items-center justify-center bg-background-cream animate-fade-in-scale">
+          <div className="min-h-dvh flex items-center justify-center bg-background-cream animate-fade-in-scale">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
           </div>
         }>
@@ -31,7 +31,7 @@ export default function Categories() {
       </div>
 
       {/* Desktop Layout - Diseño limpio */}
-      <div className="hidden lg:block min-h-screen">
+      <div className="hidden lg:block min-h-dvh">
         <div className="max-w-[1600px] mx-auto px-8 py-8 space-y-6">
           {/* Header Section */}
           <div className="flex items-center justify-between gap-6 animate-stagger-1">

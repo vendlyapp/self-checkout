@@ -198,7 +198,7 @@ function SalesOrdersPageContent() {
           onConfirm={handleConfirmCancel}
           isLoading={cancelOrder.isPending}
         />
-        <div className="w-full h-full overflow-auto gpu-accelerated">
+        <div className="w-full h-full overflow-auto min-w-0">
           <div className="flex flex-col h-full">
             <div className="flex-1 overflow-y-auto pt-4">
               {filteredOrders.length === 0 ? (
@@ -289,7 +289,7 @@ function SalesOrdersPageContent() {
         onConfirm={handleConfirmCancel}
         isLoading={cancelOrder.isPending}
       />
-      <div className="w-full h-full overflow-auto gpu-accelerated">
+      <div className="w-full h-full overflow-auto min-w-0">
         <div className="px-4 pt-6 pb-8 lg:px-8 lg:pt-10 max-w-6xl mx-auto">
           <div className="flex flex-col gap-4 mb-6">
             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">

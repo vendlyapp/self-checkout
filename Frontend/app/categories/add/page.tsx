@@ -19,9 +19,9 @@ function AddCategoryContent() {
     : null;
 
   return (
-    <div className="w-full animate-page-enter gpu-accelerated">
+    <div className="w-full min-w-0 animate-page-enter">
       {/* Mobile Layout */}
-      <div className="lg:hidden h-screen flex flex-col overflow-hidden">
+      <div className="flex h-dvh min-h-0 flex-col overflow-hidden lg:hidden">
         <div className="animate-slide-in-right flex-shrink-0">
             <HeaderNav 
               title={categoryToEdit ? "Kategorie bearbeiten" : "Kategorie erstellen"} 
@@ -61,7 +61,7 @@ function AddCategoryContent() {
 export default function AddCategory() {
   return (
     <Suspense fallback={
-      <div className="w-full h-screen flex items-center justify-center">
+      <div className="flex h-dvh w-full min-h-0 items-center justify-center">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-500"></div>
       </div>
     }>

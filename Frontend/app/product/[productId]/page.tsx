@@ -122,7 +122,7 @@ export default function ProductQRPage() {
   // Pantalla de carga
   if (loading && !error) {
     return (
-      <div className="min-h-screen bg-[#F9F6F4] flex items-center justify-center p-4 animate-fade-in">
+      <div className="min-h-dvh bg-[#F9F6F4] flex items-center justify-center p-4 animate-fade-in">
         <div className="text-center animate-scale-in">
           <Loader size="lg" className="mx-auto mb-4" />
           <p className="text-gray-700 font-medium transition-ios">Produkt wird geladen...</p>
@@ -134,7 +134,7 @@ export default function ProductQRPage() {
   // Pantalla de error
   if (error) {
     return (
-      <div className="min-h-screen bg-[#F9F6F4] flex items-center justify-center p-4 animate-fade-in">
+      <div className="min-h-dvh bg-[#F9F6F4] flex items-center justify-center p-4 animate-fade-in">
         <div className="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl animate-scale-in">
           <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-spring-bounce">
             <XCircle className="w-8 h-8 text-white" />
@@ -155,7 +155,7 @@ export default function ProductQRPage() {
   // Pantalla de éxito (se muestra brevemente antes de redirigir)
   if (product) {
     return (
-      <div className="min-h-screen bg-[#F9F6F4] flex items-center justify-center p-4 animate-fade-in">
+      <div className="min-h-dvh bg-[#F9F6F4] flex items-center justify-center p-4 animate-fade-in">
         <div className="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl animate-spring-bounce">
           <div className="w-16 h-16 bg-[#25D076] rounded-full flex items-center justify-center mx-auto mb-4 animate-spring-bounce">
             <CheckCircle className="w-8 h-8 text-white" />

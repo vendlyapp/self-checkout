@@ -468,7 +468,7 @@ export default function EditProductModal({ product, isOpen, onClose, onSuccess }
       />
       
       {/* Modal Container */}
-      <div className="relative min-h-screen flex items-start justify-center p-4 py-8">
+      <div className="relative min-h-dvh flex items-start justify-center p-4 py-8">
         <div className="relative bg-gray-50 rounded-2xl shadow-2xl w-full max-w-7xl max-h-[95vh] overflow-hidden flex flex-col my-8">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white sticky top-0 z-10">

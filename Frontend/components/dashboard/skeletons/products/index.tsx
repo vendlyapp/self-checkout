@@ -102,7 +102,7 @@ export const NavigationListSkeletonLoader: React.FC = () => (
 
 // ===== PRODUCTS DASHBOARD SKELETON — TABLET + DESKTOP =====
 export const ProductsDashboardSkeletonLoaderDesktop: React.FC = () => (
-  <div className="hidden md:block min-w-0 bg-background min-h-screen">
+  <div className="hidden md:block min-w-0 bg-background min-h-dvh">
     <div className="p-4 md:px-6 md:pt-10 md:pb-6 lg:p-8 xl:p-10 space-y-6 md:space-y-8 lg:space-y-10 xl:space-y-12 min-w-0 max-w-[1600px]">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-5 lg:gap-8">
@@ -159,7 +159,7 @@ export const ProductsDashboardSkeletonLoaderDesktop: React.FC = () => (
 
 // ===== COMPLETE PRODUCTS DASHBOARD SKELETON (móvil + tablet/desktop) =====
 export const ProductsDashboardSkeletonLoader: React.FC = () => (
-  <div className="w-full min-h-screen bg-background">
+  <div className="w-full min-h-dvh bg-background">
     {/* Vista móvil */}
     <div className="block md:hidden min-w-0 p-4 space-y-5">
       <div className="w-full h-12 bg-muted rounded-full animate-pulse" />
@@ -177,7 +177,7 @@ export const ProductsErrorState: React.FC<{
   error: string; 
   onRetry: () => void;
 }> = ({ error, onRetry }) => (
-  <div className="p-4 space-y-4 bg-background min-h-screen">
+  <div className="p-4 space-y-4 bg-background min-h-dvh">
     <div className="mb-2">
       <h1 className="text-2xl font-bold text-foreground">Produkte</h1>
       <p className="text-sm text-red-500">Fehler: {error}</p>

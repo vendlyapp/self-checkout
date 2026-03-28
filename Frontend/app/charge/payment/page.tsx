@@ -100,7 +100,7 @@ export default function PaymentPage() {
   // Mostrar loading state durante la hidratación o mientras se cargan los datos
   if (!mounted || storeLoading || paymentMethodsLoading) {
     return (
-      <div className="w-full h-screen flex items-center justify-center animate-fade-in gpu-accelerated">
+      <div className="flex h-dvh w-full min-h-0 items-center justify-center animate-fade-in min-w-0">
         <div className="flex flex-col items-center justify-center text-center">
           <Loader size="lg" className="mb-4" />
           <p className="text-xl font-semibold text-gray-900">
@@ -113,7 +113,7 @@ export default function PaymentPage() {
 
   return (
     <>
-      <div className="w-full animate-fade-in gpu-accelerated">
+      <div className="w-full min-w-0 animate-fade-in">
         {/* Mobile Layout */}
         <div className="block lg:hidden">
           <div className="flex flex-col">

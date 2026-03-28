@@ -14,7 +14,7 @@ export default function FixedHeaderContainer({
   children,
 }: FixedHeaderContainerProps) {
   return (
-    <div className="flex-1 overflow-y-auto pb-32 pt-20 gpu-accelerated animate-fade-in-scale">
+    <div className="min-w-0 flex-1 animate-fade-in-scale overflow-y-auto pb-32 pt-20">
       {children}
     </div>
   );

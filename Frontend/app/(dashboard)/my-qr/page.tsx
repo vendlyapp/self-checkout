@@ -91,7 +91,7 @@ export default function MyQRPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-dvh">
         <Loader size="md" />
       </div>
     )
@@ -110,7 +110,7 @@ export default function MyQRPage() {
   }
 
   return (
-    <div className="w-full h-full overflow-auto animate-page-enter gpu-accelerated">
+    <div className="h-full w-full min-w-0 overflow-auto animate-page-enter">
       {/* MOBILE & TABLET */}
       <div className="block xl:hidden">
         <div className="p-4 md:px-6 md:pt-10 md:pb-6 space-y-5 md:space-y-6 max-w-2xl mx-auto">

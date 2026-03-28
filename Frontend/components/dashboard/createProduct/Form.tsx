@@ -456,7 +456,7 @@ export default function Form({ isDesktop = false }: FormProps) {
     const modalContent = (
       <div className="fixed inset-0 z-[99998] flex items-center justify-center overflow-hidden">
         {/* Backdrop con blur moderno */}
-        <div className="absolute inset-0 w-screen h-screen bg-black/40 backdrop-blur-md"></div>
+        <div className="absolute inset-0 z-10 bg-black/40 backdrop-blur-md" aria-hidden />
         
         {/* Modal de carga */}
         <div className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full mx-4 animate-in fade-in-0 zoom-in-95 duration-300">
@@ -489,7 +489,7 @@ export default function Form({ isDesktop = false }: FormProps) {
     const modalContent = (
       <div className="fixed inset-0 z-[99999] flex items-center justify-center overflow-hidden">
         {/* Backdrop con blur moderno - cubre toda la pantalla */}
-        <div className="absolute inset-0 w-screen h-screen bg-black/30 backdrop-blur-md"></div>
+        <div className="absolute inset-0 z-10 bg-black/30 backdrop-blur-md" aria-hidden />
         
         {/* Modal moderno con animación */}
         <div className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full mx-4 animate-in fade-in-0 zoom-in-95 duration-300">

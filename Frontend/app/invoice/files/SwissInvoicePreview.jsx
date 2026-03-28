@@ -126,7 +126,7 @@ export default function SwissInvoicePreview() {
   const px = view === "mobile" ? "px-5" : "px-10";
 
   return (
-    <div className="min-h-screen" style={{ background: "linear-gradient(145deg, #edebe6 0%, #e4e0d8 50%, #dbd5cb 100%)", fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
+    <div className="min-h-dvh" style={{ background: "linear-gradient(145deg, #edebe6 0%, #e4e0d8 50%, #dbd5cb 100%)", fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
       {/* ── Top Nav ── */}
       <div className="max-w-4xl mx-auto pt-6 pb-4 px-4 flex items-center justify-between">
         <div className="flex items-center gap-2">

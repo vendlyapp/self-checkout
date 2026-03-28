@@ -70,7 +70,7 @@ export default function Charge() {
   };
 
   return (
-    <div className="animate-fade-in gpu-accelerated">
+    <div className="min-w-0 animate-fade-in">
       {/* Mobile Layout */}
       <div className="block lg:hidden">
         <FixedHeaderContainer>
@@ -82,7 +82,7 @@ export default function Charge() {
       </div>
 
       {/* Desktop Layout */}
-      <div className="hidden lg:block min-h-screen">
+      <div className="hidden lg:block min-h-dvh">
         <div className="max-w-[1600px] mx-auto px-8 py-8 space-y-8 charge-desktop-content">
           {/* Header: title + full-width search */}
           <div className="space-y-4">

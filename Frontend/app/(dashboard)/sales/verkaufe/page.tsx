@@ -81,7 +81,7 @@ export default function SalesVerkaufePage() {
   /* ── Mobile ─────────────────────────────────────────────────────── */
   if (isMobile) {
     return (
-      <div className="w-full h-full overflow-auto gpu-accelerated">
+      <div className="w-full h-full overflow-auto min-w-0">
         <div className="p-4 pb-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" aria-hidden />
@@ -164,7 +164,7 @@ export default function SalesVerkaufePage() {
    *   lg (1024px) → ~728px available → show all columns
    */
   return (
-    <div className="w-full h-full overflow-auto gpu-accelerated">
+    <div className="w-full h-full overflow-auto min-w-0">
       <div className="px-4 pt-6 pb-8 lg:px-8 lg:pt-10 max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">

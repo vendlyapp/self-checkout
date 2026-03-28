@@ -153,7 +153,7 @@ export default function MobileForm(props: SharedFormProps) {
       {/* Renderizar modales fuera del contenedor usando Portal en el contenedor global */}
       {modalContainer && showSuccessModal && createPortal(successModalContent, modalContainer)}
 
-      <div className="block mx-auto lg:m-10 ml-5 mr-5 bg-background-cream min-h-screen pt-4 pb-24">
+      <div className="block mx-auto lg:m-10 ml-5 mr-5 bg-background-cream min-h-dvh pt-4 pb-24">
         {/* Content */}
         <div className="pl-1 pr-1 space-y-5">
         {/* Produktbilder */}

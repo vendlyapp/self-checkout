@@ -53,7 +53,7 @@ export default function PaymentMethodsRoute() {
   const showThankYouBanner = isOnboarding && (onboardingCompleted || !!store?.onboardingCompletedAt)
 
   return (
-    <div className="w-full h-full gpu-accelerated">
+    <div className="h-full w-full min-w-0">
       {/* Banner de agradecimiento al terminar onboarding */}
       {showThankYouBanner && (
         <div className="mx-auto mt-4 max-w-4xl px-4 sm:mt-6 sm:px-6">

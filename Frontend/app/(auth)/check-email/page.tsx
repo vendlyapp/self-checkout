@@ -11,7 +11,7 @@ function CheckEmailContent() {
   const email = searchParams.get('email');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 flex items-center justify-center p-4">
+    <div className="min-h-dvh bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Botón de regreso */}
         <Link
@@ -115,7 +115,7 @@ function CheckEmailContent() {
 export default function CheckEmailPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-dvh flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
       </div>
     }>

@@ -153,7 +153,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 flex items-center justify-center p-4 relative">
+    <div className="min-h-dvh bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 flex items-center justify-center p-4 relative">
       {/* Botón de volver atrás - Fijo en la parte superior */}
       <button
         onClick={() => router.push('/')}

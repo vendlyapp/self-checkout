@@ -82,8 +82,8 @@ export default function StoreInvoicesPage() {
 
   if (storeLoading || loading) {
     return (
-      <div className="w-full h-full overflow-auto gpu-accelerated">
-        <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      <div className="w-full h-full overflow-auto min-w-0">
+        <div className="flex flex-col items-center justify-center min-h-dvh p-4">
           <Loader size="lg" />
           <p className="text-gray-600 font-medium mt-4">Rechnungen werden geladen...</p>
         </div>
@@ -93,7 +93,7 @@ export default function StoreInvoicesPage() {
 
   if (error) {
     return (
-      <div className="w-full h-full overflow-auto gpu-accelerated">
+      <div className="w-full h-full overflow-auto min-w-0">
         {isMobile && (
           <div className="flex flex-col h-full">
             <div className="flex-1 flex items-center justify-center p-4">
@@ -129,7 +129,7 @@ export default function StoreInvoicesPage() {
   }
 
   return (
-    <div className="w-full h-full overflow-auto gpu-accelerated">
+    <div className="w-full h-full overflow-auto min-w-0">
       {/* Mobile Layout */}
       {isMobile && (
         <div className="flex flex-col h-full">

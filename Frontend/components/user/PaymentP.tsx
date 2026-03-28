@@ -1473,7 +1473,7 @@ export default function PaymentP() {
   // Mostrar mensaje amigable si el carrito está vacío (solo después de montar para evitar hydration mismatch)
   if (mounted && totalItems === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#F9F6F4] px-4 -mt-20">
+      <div className="flex flex-col items-center justify-center min-h-dvh bg-[#F9F6F4] px-4 -mt-20">
         <div className="text-center max-w-md">
           {/* Icono de carrito vacío */}
           <div className="w-32 h-32 mx-auto mb-6 flex items-center justify-center">

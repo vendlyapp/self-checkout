@@ -10,7 +10,7 @@ interface PageProps {
 
 function ViewProductContent({ productId }: { productId: string }) {
   return (
-    <div className="animate-page-enter gpu-accelerated">
+    <div className="min-w-0 animate-page-enter">
       {/* Mobile Layout (HeaderNav está en layout) */}
       <div className="block lg:hidden">
         <div className="animate-slide-up-fade">

@@ -30,13 +30,13 @@ export default function Filter_Busqueda({
     <>
       {/* Barra de búsqueda y filtros - FIJOS (posición alineada con layoutHeights) */}
       <div
-        className={`${isFixed ? "fixed" : ""} left-0 right-0 p-4 flex flex-row gap-3 items-center bg-background-cream ${isFixed ? "z-40" : ""} animate-slide-down gpu-accelerated`}
+        className={`${isFixed ? "fixed" : ""} left-0 right-0 p-4 flex flex-row gap-3 items-center bg-background-cream ${isFixed ? "z-40" : ""} animate-slide-down`}
         style={isFixed ? { top: `${TOP_FILTER_SEARCH_BAR_PX}px` } : undefined}
       >
         <div className="animate-stagger-1 flex-1 min-w-0">
           <SearchInput
             placeholder="Produkte durchsuchen…"
-            className="w-full h-[54px] transition-interactive gpu-accelerated"
+            className="w-full h-[54px] transition-interactive"
             value={searchQuery}
             onChange={onSearch}
           />
@@ -44,10 +44,7 @@ export default function Filter_Busqueda({
         <div className="animate-stagger-2 flex-shrink-0">
           <button
             onClick={onOpenFilterModal}
-            className="relative bg-white cursor-pointer text-black px-4 py-4 flex items-center font-semibold gap-2 rounded-lg 
-                     transition-interactive gpu-accelerated
-                     hover:bg-brand-600 hover:text-white hover:scale-105
-                     active:scale-95"
+            className="relative flex cursor-pointer items-center gap-2 rounded-lg bg-white px-4 py-4 font-semibold text-black transition-interactive hover:scale-105 hover:bg-brand-600 hover:text-white active:scale-95"
             aria-label="Filter öffnen"
           >
             <SlidersHorizontal className="w-6 h-6 transition-interactive" />
@@ -65,7 +62,7 @@ export default function Filter_Busqueda({
 
       {/* Filtros de categorías - FIJOS (posición alineada con layoutHeights) */}
       <div
-        className={`${isFixed ? "fixed" : ""} left-0 right-0 bg-background-cream ${isFixed ? "z-40" : ""} animate-slide-down gpu-accelerated`}
+        className={`${isFixed ? "fixed" : ""} left-0 right-0 bg-background-cream ${isFixed ? "z-40" : ""} animate-slide-down`}
         style={isFixed ? { top: `${TOP_FILTER_SLIDER_BAR_PX}px`, animationDelay: "0.1s", animationFillMode: "both" } : { animationDelay: "0.1s", animationFillMode: "both" }}
       >
         <FilterSlider

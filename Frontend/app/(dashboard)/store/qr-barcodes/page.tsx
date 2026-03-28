@@ -198,7 +198,7 @@ export default function QRBarcodesPage() {
   const hasProducts = list.length > 0
 
   return (
-    <div className="w-full min-w-0 h-full overflow-auto gpu-accelerated">
+    <div className="w-full min-w-0 h-full overflow-auto min-w-0">
       <div className="p-4 md:px-6 md:pt-10 md:pb-8 lg:p-8 max-w-5xl mx-auto min-w-0">
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">

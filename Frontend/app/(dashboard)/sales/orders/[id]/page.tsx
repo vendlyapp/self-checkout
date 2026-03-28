@@ -142,7 +142,7 @@ export default function SalesOrderDetailPage() {
 
   if (loading && !order) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      <div className="flex flex-col items-center justify-center min-h-dvh p-4">
         <Loader size="lg" />
         <p className="text-gray-600 font-medium mt-4">Bestellung wird geladen...</p>
       </div>
@@ -202,7 +202,7 @@ export default function SalesOrderDetailPage() {
   const statusConfig = getStatusConfig(order.status);
 
   return (
-    <div className="w-full h-full overflow-auto gpu-accelerated">
+    <div className="w-full h-full overflow-auto min-w-0">
       {isMobile && (
         <div className="flex flex-col h-full">
           <div className="flex-1 overflow-y-auto pb-24">

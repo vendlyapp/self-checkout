@@ -23,7 +23,7 @@ interface CategoriesListComponentProps {
 export default function CategoriesListComponent({
   isStandalone = false,
   className = "",
-  maxHeight = "100vh",
+  maxHeight = "100dvh",
 }: CategoriesListComponentProps) {
   const router = useRouter();
   const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
@@ -170,7 +170,7 @@ export default function CategoriesListComponent({
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-dvh">
         <div className="text-center">
           <p className="text-red-600">Fehler beim Laden der Kategorien</p>
           <button

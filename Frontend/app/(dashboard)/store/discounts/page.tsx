@@ -61,7 +61,7 @@ export default function DiscountsPage() {
   )
 
   return (
-    <div className="w-full min-w-0 flex flex-col h-full min-h-0 gpu-accelerated">
+    <div className="w-full min-w-0 flex flex-col h-full min-h-0 min-w-0">
       {isMobile && (
         <div className="flex-1 min-h-0 min-w-0 flex flex-col">
           <DiscountsList

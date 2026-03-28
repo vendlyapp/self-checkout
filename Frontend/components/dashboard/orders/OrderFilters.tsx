@@ -14,13 +14,13 @@ export default function OrderFilters({ searchQuery, onSearch, isFixed = false }:
   return (
     <>
       <div
-        className={`${isFixed ? "fixed" : ""} left-0 right-0 flex justify-center bg-background-cream ${isFixed ? "z-40" : ""} animate-slide-down gpu-accelerated px-4 py-3 box-border`}
+        className={`${isFixed ? "fixed" : ""} left-0 right-0 flex justify-center bg-background-cream ${isFixed ? "z-40" : ""} animate-slide-down px-4 py-3 box-border`}
         style={isFixed ? { top: `${TOP_FILTER_SEARCH_BAR_PX}px` } : undefined}
       >
         <div className="animate-stagger-1 w-full max-w-[430px] min-w-0">
           <SearchInput
             placeholder="Nach Bestellnummer, Kunde oder Zahlungsmethode suchen…"
-            className="w-full h-[54px] transition-interactive gpu-accelerated"
+            className="w-full h-[54px] transition-interactive"
             value={searchQuery}
             onChange={onSearch}
           />
@@ -28,7 +28,7 @@ export default function OrderFilters({ searchQuery, onSearch, isFixed = false }:
       </div>
 
       <div
-        className={`${isFixed ? "fixed" : ""} left-0 right-0 bg-background-cream ${isFixed ? "z-40" : ""} animate-slide-down gpu-accelerated`}
+        className={`${isFixed ? "fixed" : ""} left-0 right-0 bg-background-cream ${isFixed ? "z-40" : ""} animate-slide-down`}
         style={
           isFixed
             ? {

@@ -58,7 +58,7 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="w-full min-h-0 gpu-accelerated animate-fade-in">
+    <div className="w-full min-h-0 min-w-0 animate-fade-in">
       {isMobile ? (
         <div className="bg-background-cream safe-area-bottom pb-28">
           <div className="px-4 pt-4 pb-4 space-y-6">

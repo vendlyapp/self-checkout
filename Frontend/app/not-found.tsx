@@ -8,7 +8,7 @@ export default function NotFound() {
   const router = useRouter()
 
   return (
-    <div className="flex flex-1 flex-col w-full min-h-[100dvh] items-center justify-center overflow-y-auto overflow-x-hidden bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 p-4 py-10">
+    <div className="flex flex-1 flex-col w-full min-h-dvh items-center justify-center overflow-y-auto overflow-x-hidden bg-gradient-to-br from-brand-50 via-background-cream to-brand-100 p-4 py-10">
       <div className="max-w-2xl w-full text-center">
         {/* Ilustración 404 */}
         <div className="mb-8">

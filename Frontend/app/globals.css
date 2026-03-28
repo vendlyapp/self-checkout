@@ -285,6 +285,19 @@
     }
   }
 
+  /* Viewport dinámico (PWA / iOS): usar en lugar de min-h-screen / h-screen sueltos */
+  .min-h-dvh {
+    min-height: 100vh;
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+  }
+
+  .h-dvh {
+    height: 100vh;
+    height: 100dvh;
+    height: -webkit-fill-available;
+  }
+
   /* Margen inferior para móvil con navbar */
   .mobile-content-padding {
     padding-bottom: 120px;

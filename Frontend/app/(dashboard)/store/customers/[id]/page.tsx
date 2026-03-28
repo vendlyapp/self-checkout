@@ -76,7 +76,7 @@ export default function CustomerDetailPage() {
 
   if (storeLoading || isLoading) {
     return (
-      <div className="w-full h-full flex items-center justify-center min-h-screen bg-[#F2EDE8]">
+      <div className="w-full h-full flex items-center justify-center min-h-dvh bg-[#F2EDE8]">
         <div className="text-center">
           <Loader size="lg" className="mx-auto mb-4" />
           <p className="text-gray-600">Wird geladen...</p>
@@ -90,10 +90,10 @@ export default function CustomerDetailPage() {
   }
 
   return (
-    <div className="w-full h-full gpu-accelerated animate-fade-in">
+    <div className="w-full h-full min-w-0 animate-fade-in">
       {/* Mobile Layout */}
       {isMobile && (
-        <div className="w-full min-h-screen bg-[#F2EDE8] safe-area-bottom">
+        <div className="w-full min-h-dvh bg-[#F2EDE8] safe-area-bottom">
           <div className="px-4 py-6 pb-32 max-w-full mx-auto">
             {/* Customer Info Card */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mb-6">
@@ -229,7 +229,7 @@ export default function CustomerDetailPage() {
 
       {/* Desktop Layout */}
       {!isMobile && (
-        <div className="w-full min-h-screen bg-[#F2EDE8] py-8">
+        <div className="w-full min-h-dvh bg-[#F2EDE8] py-8">
           <div className="max-w-6xl mx-auto px-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Customer Info Sidebar */}

@@ -98,7 +98,7 @@ export default function SalesInvoicesPage() {
   /* ── Mobile ─────────────────────────────────────────────────────── */
   if (isMobile) {
     return (
-      <div className="w-full h-full overflow-auto gpu-accelerated">
+      <div className="w-full h-full overflow-auto min-w-0">
         <div className="p-4 pb-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" aria-hidden />
@@ -189,7 +189,7 @@ export default function SalesInvoicesPage() {
 
   /* ── Tablet + Desktop ───────────────────────────────────────────── */
   return (
-    <div className="w-full h-full overflow-auto gpu-accelerated">
+    <div className="w-full h-full overflow-auto min-w-0">
       <div className="px-5 pt-8 pb-10 lg:px-8 lg:pt-10 max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">

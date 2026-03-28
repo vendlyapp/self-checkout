@@ -220,7 +220,7 @@ export default function CategoryFormPage({
   if (!isDesktop) {
     return (
       <>
-      <form onSubmit={handleSubmit} id="category-form" className="min-h-screen bg-background-cream flex flex-col">
+      <form onSubmit={handleSubmit} id="category-form" className="min-h-dvh bg-background-cream flex flex-col">
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           {/* Kategorie-Name */}
           <div>

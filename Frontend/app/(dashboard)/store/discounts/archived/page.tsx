@@ -27,7 +27,7 @@ export default function ArchivedDiscountsPage() {
   }
 
   return (
-    <div className="w-full h-full overflow-auto gpu-accelerated">
+    <div className="w-full h-full overflow-auto min-w-0">
       {/* Mobile Layout */}
       {!isDesktop && (
         <div className="flex flex-col h-full">

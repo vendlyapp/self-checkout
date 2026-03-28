@@ -6,7 +6,7 @@ import Form from '@/components/dashboard/createProduct/Form';
 export default function AddProduct() {
 
   return (
-    <div className="w-full min-w-0 animate-page-enter gpu-accelerated">
+    <div className="w-full min-w-0 animate-page-enter">
       {/* Móvil: formulario (HeaderNav está en layout) */}
       <div className="block md:hidden">
         <div className="h-full w-full overflow-hidden min-w-0">

@@ -26,7 +26,7 @@ export default function CartPage() {
   };
 
   return (
-    <div className="w-full animate-fade-in gpu-accelerated">
+    <div className="w-full min-w-0 animate-fade-in">
       {/* Mobile Layout */}
       <div className="block lg:hidden">
         {/* HeaderNav específico para el carrito */}

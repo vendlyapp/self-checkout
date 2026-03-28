@@ -68,7 +68,7 @@ export default function StoreSettingsPage() {
   }
 
   return (
-    <div className="w-full h-full gpu-accelerated">
+    <div className="h-full w-full min-w-0">
       {/* Banner primera vez — compacto y claro */}
       {isFirstTimeSetup && (
         <div className="mx-auto max-w-2xl px-4 pt-4 md:px-6 md:pt-6">
@@ -94,7 +94,7 @@ export default function StoreSettingsPage() {
 
       {/* Mobile: mismo fondo que el resto del dashboard (crema) */}
       {isMobile && (
-        <div className="min-h-screen bg-background-cream safe-area-bottom">
+        <div className="min-h-dvh bg-background-cream safe-area-bottom">
           <div className="px-4 py-4">
             <StoreSettingsForm onUpdate={handleStoreUpdate} />
           </div>
@@ -103,7 +103,7 @@ export default function StoreSettingsPage() {
 
       {/* Desktop */}
       {!isMobile && (
-        <div className="min-h-screen bg-background-cream py-8">
+        <div className="min-h-dvh bg-background-cream py-8">
           <div className="mx-auto max-w-2xl px-4 md:px-6">
             <StoreSettingsForm onUpdate={handleStoreUpdate} />
           </div>

@@ -9,14 +9,14 @@ export default function StorePage() {
 
   if (isLoading) {
     return (
-      <div className="animate-page-enter gpu-accelerated">
+      <div className="min-w-0 animate-page-enter">
         <StoreDashboardSkeletonLoader />
       </div>
     )
   }
 
   return (
-    <div className="animate-page-enter gpu-accelerated">
+    <div className="min-w-0 animate-page-enter">
       <StoreDashboard />
     </div>
   )

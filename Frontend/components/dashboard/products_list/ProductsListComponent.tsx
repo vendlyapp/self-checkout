@@ -59,7 +59,7 @@ export default function ProductsListComponent({
   isStandalone = false,
   onProductClick,
   className = "",
-  maxHeight = "100vh",
+  maxHeight = "100dvh",
 }: ProductsListComponentProps) {
   // Estado local para cuando NO es standalone
   const [, setLocalSelectedFilters] = useState<string[]>(

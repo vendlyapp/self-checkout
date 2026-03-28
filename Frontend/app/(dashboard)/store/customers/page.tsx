@@ -52,7 +52,7 @@ export default function CustomersPage() {
 
   if (isLoading) {
     return (
-      <div className="w-full h-full flex items-center justify-center min-h-screen bg-[#F2EDE8]">
+      <div className="w-full h-full flex items-center justify-center min-h-dvh bg-[#F2EDE8]">
         <div className="text-center">
           <Loader size="lg" className="mx-auto mb-4" />
           <p className="text-gray-600">Wird geladen...</p>
@@ -62,10 +62,10 @@ export default function CustomersPage() {
   }
 
   return (
-    <div className="w-full h-full gpu-accelerated animate-fade-in">
+    <div className="w-full h-full min-w-0 animate-fade-in">
       {/* Mobile Layout */}
       {isMobile && (
-        <div className="w-full min-h-screen bg-[#F2EDE8] safe-area-bottom">
+        <div className="w-full min-h-dvh bg-[#F2EDE8] safe-area-bottom">
           <div className="px-4 py-6 pb-32 max-w-full mx-auto">
             {/* Header */}
             <div className="mb-6">
@@ -170,7 +170,7 @@ export default function CustomersPage() {
 
       {/* Tablet + Desktop Layout */}
       {!isMobile && (
-        <div className="w-full min-h-screen bg-[#F2EDE8] pt-8 md:pt-10 pb-8 lg:py-10">
+        <div className="w-full min-h-dvh bg-[#F2EDE8] pt-8 md:pt-10 pb-8 lg:py-10">
           <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8">
             {/* Header */}
             <div className="mb-6 md:mb-8">
