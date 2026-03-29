@@ -143,13 +143,25 @@ class OrderService {
       // Usamos timestamp + random para garantizar unicidad (max 20 dígitos → cabe en los 26 dígitos del QRR).
       if (isQRRechnung) {
         try {
-          const qrrNumericId = String(Date.now()) + String(Math.floor(Math.random() * 999) + 1).padStart(3, '0');
+          const qrrNumericId = String(Date.now()) + String(Math.floor(Math.random() * 999999) + 1).padStart(6, '0');
           const qrrReference = QRBillService.generateQRReference(qrrNumericId);
+
+          // Snapshot del config del acreedor para auditoría histórica.
+          // Evita que cambios futuros en la config del comercio rompan QRs ya emitidos.
+          const pmSnapshot = await client.query(
+            `SELECT config FROM "PaymentMethod" WHERE "storeId" = $1 AND code = 'qr-rechnung' AND "isActive" = true LIMIT 1`,
+            [storeId]
+          );
+          const qrCreditorSnapshot = pmSnapshot.rows[0]?.config || null;
+
+          const qrrUpdate = { qrrReference };
+          if (qrCreditorSnapshot) qrrUpdate.qrCreditorSnapshot = qrCreditorSnapshot;
+
           await client.query(
             `UPDATE "Order" SET metadata = metadata || $1::jsonb WHERE id = $2`,
-            [JSON.stringify({ qrrReference }), order.id]
+            [JSON.stringify(qrrUpdate), order.id]
           );
-          order.metadata = { ...(order.metadata || {}), qrrReference };
+          order.metadata = { ...(order.metadata || {}), ...qrrUpdate };
         } catch (qrrError) {
           console.error('Error generating QRR reference:', qrrError);
         }

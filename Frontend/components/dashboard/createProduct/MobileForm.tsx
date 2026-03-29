@@ -32,6 +32,7 @@ export default function MobileForm(props: SharedFormProps) {
     setProductImages, // Not used directly (handled by handleImageUpload)
     handleImageUpload,
     handleRemoveImage,
+    uploadingImages,
     isActive,
     setIsActive,
     hasPromotion,
@@ -212,36 +213,47 @@ export default function MobileForm(props: SharedFormProps) {
           {/* Upload Area */}
           {productImages.length < 3 && (
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors bg-background-cream">
-              <Camera className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-              <div className="space-y-2 flex flex-col items-center">
-                <label className="w-[283px] h-[46px] bg-brand-500 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-1 cursor-pointer hover:bg-brand-600">
-                  <Camera className="w-4 h-4" />
-                  <span>Foto aufnehmen</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                </label>
-                <label className="w-[283px] h-[46px] bg-white text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-1 cursor-pointer border border-gray-300 hover:bg-gray-50">
-                  <FolderOpen className="w-4 h-4" />
-                  <span>Aus Galerie wählen</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-              <div className="text-xs text-gray-500 mt-2">
-                {productImages.length === 0
-                  ? "Erstes Bild wird als Hauptbild verwendet"
-                  : `Noch ${3 - productImages.length} Bild${3 - productImages.length > 1 ? 'er' : ''} möglich`}
-              </div>
+              {uploadingImages ? (
+                <div className="flex flex-col items-center gap-2 py-2">
+                  <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm text-gray-500">Wird hochgeladen...</span>
+                </div>
+              ) : (
+                <>
+                  <Camera className="w-6 h-6 text-gray-400 mx-auto mb-2" />
+                  <div className="space-y-2 flex flex-col items-center">
+                    <label className="w-[283px] h-[46px] bg-brand-500 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-1 cursor-pointer hover:bg-brand-600">
+                      <Camera className="w-4 h-4" />
+                      <span>Foto aufnehmen</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        disabled={uploadingImages}
+                      />
+                    </label>
+                    <label className="w-[283px] h-[46px] bg-white text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-1 cursor-pointer border border-gray-300 hover:bg-gray-50">
+                      <FolderOpen className="w-4 h-4" />
+                      <span>Aus Galerie wählen</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        disabled={uploadingImages}
+                      />
+                    </label>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-2">
+                    {productImages.length === 0
+                      ? "Erstes Bild wird als Hauptbild verwendet"
+                      : `Noch ${3 - productImages.length} Bild${3 - productImages.length > 1 ? 'er' : ''} möglich`}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

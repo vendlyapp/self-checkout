@@ -45,6 +45,7 @@ export interface SharedFormProps {
   setProductImages: (images: string[]) => void;
   handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleRemoveImage: (index: number) => void;
+  uploadingImages?: boolean;
   isActive: boolean;
   setIsActive: (value: boolean) => void;
   stock: number; // Stock fijo de 999 (solo lectura)

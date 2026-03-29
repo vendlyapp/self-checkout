@@ -1,4 +1,5 @@
 const paymentMethodService = require('../services/PaymentMethodService');
+const QRBillService = require('../services/QRBillService');
 const { HTTP_STATUS } = require('../types');
 
 /**
@@ -151,6 +152,17 @@ class PaymentMethodController {
         storeId
       };
 
+      // Validar QR-IBAN al crear para dar feedback inmediato al comercio
+      if (methodData.code === 'qr-rechnung' && methodData.config?.qrIban) {
+        const validation = QRBillService.validateQRIBAN(methodData.config.qrIban);
+        if (!validation.valid) {
+          return res.status(HTTP_STATUS.BAD_REQUEST).json({
+            success: false,
+            error: `QR-IBAN ungültig: ${validation.error}`,
+          });
+        }
+      }
+
       const result = await paymentMethodService.create(methodData);
       res.status(HTTP_STATUS.CREATED).json(result);
     } catch (error) {
@@ -205,6 +217,17 @@ class PaymentMethodController {
           return res.status(HTTP_STATUS.FORBIDDEN).json({
             success: false,
             error: 'No tienes permiso para actualizar métodos de pago de este store'
+          });
+        }
+      }
+
+      // Validar QR-IBAN al actualizar para dar feedback inmediato al comercio
+      if (req.body.config?.qrIban) {
+        const validation = QRBillService.validateQRIBAN(req.body.config.qrIban);
+        if (!validation.valid) {
+          return res.status(HTTP_STATUS.BAD_REQUEST).json({
+            success: false,
+            error: `QR-IBAN ungültig: ${validation.error}`,
           });
         }
       }

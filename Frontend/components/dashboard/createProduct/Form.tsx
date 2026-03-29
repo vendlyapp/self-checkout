@@ -17,11 +17,15 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { CreateProductRequest } from "@/lib/services/productService";
 import { Loader } from "@/components/ui/Loader";
 import { useProductFormStore } from "@/lib/stores/productFormStore";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { uploadProductImage } from "@/lib/services/imageUploadService";
 
 export default function Form({ isDesktop = false }: FormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const createProductMutation = useCreateProduct();
+  const { user } = useAuth();
+  const [uploadingImages, setUploadingImages] = useState(false);
   
   // Obtener categorías reales del backend
   const { data: backendCategories = [], isLoading: categoriesLoading } = useCategories();
@@ -143,8 +147,8 @@ export default function Form({ isDesktop = false }: FormProps) {
     [variants.length]
   );
 
-  // Función para manejar subida de imágenes
-  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  // Función para manejar subida de imágenes a Supabase Storage
+  const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -152,31 +156,32 @@ export default function Form({ isDesktop = false }: FormProps) {
     const remainingSlots = maxImages - productImages.length;
     const filesToProcess = Array.from(files).slice(0, remainingSlots);
 
-    filesToProcess.forEach((file) => {
-      if (!file.type.startsWith('image/')) {
-        alert(`${file.name} ist kein gültiges Bild`);
-        return;
-      }
+    const invalidFile = filesToProcess.find(f => !f.type.startsWith('image/'));
+    if (invalidFile) {
+      alert(`${invalidFile.name} ist kein gültiges Bild`);
+      e.target.value = '';
+      return;
+    }
 
-      if (file.size > 5 * 1024 * 1024) {
-        alert(`${file.name} ist zu gross. Maximum 5MB`);
-        return;
-      }
+    if (!user?.id) {
+      alert('Keine aktive Sitzung. Bitte neu anmelden.');
+      e.target.value = '';
+      return;
+    }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setProductImages((prev) => [...prev, base64String]);
-      };
-      reader.onerror = () => {
-        alert(`Fehler beim Lesen von ${file.name}`);
-      };
-      reader.readAsDataURL(file);
-    });
-
-    // Limpiar el input para permitir seleccionar el mismo archivo nuevamente
-    e.target.value = '';
-  }, [productImages.length]);
+    setUploadingImages(true);
+    try {
+      const urls = await Promise.all(
+        filesToProcess.map(file => uploadProductImage(file, user.id))
+      );
+      setProductImages(prev => [...prev, ...urls]);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Fehler beim Hochladen der Bilder');
+    } finally {
+      setUploadingImages(false);
+      e.target.value = '';
+    }
+  }, [productImages.length, user?.id]);
 
   // Función para eliminar imagen
   const handleRemoveImage = useCallback((index: number) => {
@@ -452,14 +457,15 @@ export default function Form({ isDesktop = false }: FormProps) {
   // Función para renderizar el modal de carga
   const renderLoadingModal = () => {
     if (typeof window === 'undefined' || !isCreating) return null;
-    
+    const target = document.getElementById('global-modals-container') ?? document.body;
+
     const modalContent = (
-      <div className="fixed inset-0 z-[99998] flex items-center justify-center overflow-hidden">
+      <div className="fixed inset-0 z-[100000] flex items-center justify-center overflow-hidden">
         {/* Backdrop con blur moderno */}
-        <div className="absolute inset-0 z-10 bg-black/40 backdrop-blur-md" aria-hidden />
-        
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-md" aria-hidden />
+
         {/* Modal de carga */}
-        <div className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full mx-4 animate-in fade-in-0 zoom-in-95 duration-300">
+        <div className="relative z-10 bg-white rounded-3xl shadow-2xl max-w-sm w-full mx-4 animate-in fade-in-0 zoom-in-95 duration-300">
           {/* Gradiente superior */}
           <div className="bg-gradient-to-br from-[#25D076] to-[#20BA68] rounded-t-3xl p-8 text-center">
             <div className="w-20 h-20 bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -479,20 +485,21 @@ export default function Form({ isDesktop = false }: FormProps) {
       </div>
     );
 
-    return createPortal(modalContent, document.body);
+    return createPortal(modalContent, target);
   };
 
   // Función para renderizar el modal fuera del árbol DOM normal
   const renderSuccessModal = () => {
     if (typeof window === 'undefined') return null;
-    
+    const target = document.getElementById('global-modals-container') ?? document.body;
+
     const modalContent = (
-      <div className="fixed inset-0 z-[99999] flex items-center justify-center overflow-hidden">
+      <div className="fixed inset-0 z-[100000] flex items-center justify-center overflow-hidden">
         {/* Backdrop con blur moderno - cubre toda la pantalla */}
-        <div className="absolute inset-0 z-10 bg-black/30 backdrop-blur-md" aria-hidden />
-        
+        <div className="absolute inset-0 bg-black/30 backdrop-blur-md" aria-hidden />
+
         {/* Modal moderno con animación */}
-        <div className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full mx-4 animate-in fade-in-0 zoom-in-95 duration-300">
+        <div className="relative z-10 bg-white rounded-3xl shadow-2xl max-w-sm w-full mx-4 animate-in fade-in-0 zoom-in-95 duration-300">
           {/* Gradiente superior */}
           <div className="bg-gradient-to-br from-[#25D076] to-[#20BA68] rounded-t-3xl p-8 text-center">
             <div className="w-20 h-20 bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -556,7 +563,7 @@ export default function Form({ isDesktop = false }: FormProps) {
       </div>
     );
 
-    return createPortal(modalContent, document.body);
+    return createPortal(modalContent, target);
   };
 
   const registerSave = useProductFormStore((s) => s.registerSave);
@@ -598,6 +605,7 @@ export default function Form({ isDesktop = false }: FormProps) {
     setProductImages,
     handleImageUpload,
     handleRemoveImage,
+    uploadingImages,
     isActive,
     setIsActive,
     stock,
@@ -629,7 +637,8 @@ export default function Form({ isDesktop = false }: FormProps) {
     vatRates,
   };
 
-  const hasNoCategories = !categoriesLoading && categories.length === 0;
+  const { loading: authLoading } = useAuth();
+  const hasNoCategories = !authLoading && !categoriesLoading && categories.length === 0;
 
   if (hasNoCategories) {
     return (

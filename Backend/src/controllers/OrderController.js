@@ -8,6 +8,34 @@ const QRBillService = require('../services/QRBillService');
 const { HTTP_STATUS } = require('../types');
 
 /**
+ * Parsea una dirección suiza combinada del formato "Strasse Nr., PLZ Ort"
+ * en sus partes individuales para el QR Bill.
+ * @param {string} address - e.g. "Bahnhofstrasse 12, 8001 Zürich"
+ * @returns {{ street: string, buildingNumber: string, zip: string, city: string }}
+ */
+function _parseSwissAddress(address) {
+  if (!address?.trim()) return { street: '', buildingNumber: '', zip: '', city: '' };
+  const commaIdx = address.indexOf(',');
+  let streetPart = address.trim();
+  let plzOrtPart = '';
+  if (commaIdx > 0) {
+    streetPart = address.slice(0, commaIdx).trim();
+    plzOrtPart = address.slice(commaIdx + 1).trim();
+  }
+  const nrMatch = streetPart.match(/\s+(\d+[a-z]?)$/i);
+  const street = nrMatch ? streetPart.slice(0, nrMatch.index).trim() : streetPart;
+  const buildingNumber = nrMatch ? nrMatch[1] : '';
+  let zip = '';
+  let city = '';
+  const plzOrtMatch = plzOrtPart.match(/^(\d{4,5})\s+(.+)$/);
+  if (plzOrtMatch) {
+    zip = plzOrtMatch[1];
+    city = plzOrtMatch[2].trim();
+  }
+  return { street, buildingNumber, zip, city };
+}
+
+/**
  * Controlador de órdenes
  * Maneja todas las operaciones relacionadas con órdenes de compra
  * @class OrderController
@@ -336,13 +364,17 @@ class OrderController {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, error: 'Esta orden no tiene referencia QRR generada' });
       }
 
-      const { query: dbQuery } = require('../../lib/database');
-      const pmResult = await dbQuery(
-        `SELECT config FROM "PaymentMethod" WHERE "storeId" = $1 AND code = 'qr-rechnung' AND "isActive" = true LIMIT 1`,
-        [order.storeId]
-      );
+      // Usar snapshot guardado en la orden (preferido) o consultar config en vivo como fallback
+      let creditorConfig = metadata.qrCreditorSnapshot || null;
+      if (!creditorConfig) {
+        const { query: dbQuery } = require('../../lib/database');
+        const pmResult = await dbQuery(
+          `SELECT config FROM "PaymentMethod" WHERE "storeId" = $1 AND code = 'qr-rechnung' AND "isActive" = true LIMIT 1`,
+          [order.storeId]
+        );
+        creditorConfig = pmResult.rows[0]?.config || null;
+      }
 
-      const creditorConfig = pmResult.rows[0]?.config;
       if (!creditorConfig) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
@@ -358,6 +390,24 @@ class OrderController {
       const amount = Number(metadata.totalWithVAT || order.total);
       const additionalInfo = `Bestellung ${id.slice(0, 8).toUpperCase()}`;
 
+      // Construir datos del deudor desde metadata.customer si están disponibles.
+      // Solo se incluye si se tiene nombre + dirección completa (zip + ciudad).
+      const customer = metadata.customer;
+      let debtor;
+      if (customer?.name && customer?.address) {
+        const parsed = _parseSwissAddress(customer.address);
+        if (parsed.zip && parsed.city) {
+          debtor = {
+            name: customer.name,
+            address: parsed.street || '',
+            buildingNumber: parsed.buildingNumber || '',
+            zip: parsed.zip,
+            city: parsed.city,
+            country: 'CH',
+          };
+        }
+      }
+
       // qrSvg: solo el cuadrado QR (para mostrar en kiosko, escaneable)
       // billSvg: QR Bill completo con Zahlteil + Empfangsschein (para imprimir en factura)
       const qrSvg = QRBillService.generateQROnlySVG({
@@ -365,6 +415,7 @@ class OrderController {
         amount,
         reference: qrrReference,
         additionalInfo,
+        debtor,
       });
 
       const billSvg = QRBillService.generateQRCodeSVG({
@@ -372,6 +423,7 @@ class OrderController {
         amount,
         reference: qrrReference,
         additionalInfo,
+        debtor,
         language: 'DE',
       });
 

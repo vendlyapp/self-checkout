@@ -101,6 +101,8 @@ interface PaymentModalProps {
   qrCodeData?: { qrSvg: string; billSvg: string; amount: number; qrrReference: string } | null;
   isConfirmingPayment?: boolean;
   onConfirmQRPayment?: () => void;
+  isPreOrderMode?: boolean;
+  onPreCollectData?: () => void;
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -135,6 +137,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   qrCodeData,
   isConfirmingPayment = false,
   onConfirmQRPayment,
+  isPreOrderMode = false,
+  onPreCollectData,
 }) => {
   const [modalContainer, setModalContainer] = useState<HTMLElement | null>(null);
   const [qrFullscreen, setQrFullscreen] = useState(false);
@@ -374,7 +378,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               <button
                 onClick={() => {
                   mediumHaptic();
-                  onConfirm();
+                  // QR-Rechnung: siempre pedir/confirmar datos antes de crear la orden
+                  if (selectedMethod === 'qr-rechnung' && onPreCollectData) {
+                    onPreCollectData();
+                  } else {
+                    onConfirm();
+                  }
                 }}
                 disabled={isProcessing}
                 className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-2xl py-4 text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#25D076]/25 active:scale-[0.97] active:shadow-md touch-target"
@@ -595,9 +604,25 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               {/* Botón para continuar - El usuario debe hacer clic */}
               <div className="w-full max-w-xs">
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     mediumHaptic();
-                    onStepChange?.("askData");
+                    if (personalData?.name) {
+                      // Datos ya recopilados antes del pago → ir directo a factura
+                      setIsCreatingInvoice(true);
+                      try {
+                        if (onCreateInvoice) {
+                          await onCreateInvoice(personalData);
+                          await new Promise((r) => setTimeout(r, 50));
+                        }
+                      } catch (error) {
+                        devError('Error creating invoice:', error);
+                      } finally {
+                        setIsCreatingInvoice(false);
+                      }
+                      onStepChange?.("viewInvoice");
+                    } else {
+                      onStepChange?.("askData");
+                    }
                   }}
                   className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-2xl py-4 text-base transition-colors shadow-lg shadow-[#25D076]/25 active:scale-[0.97] active:shadow-md touch-target"
                   style={{ minHeight: '56px' }}
@@ -609,69 +634,81 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           </>
         )}
 
-        {/* Paso 3.5: ¿Quiere dar sus datos? - Diseño unificado */}
+        {/* Paso 3.5: Datos del cliente */}
         {paymentStep === "askData" && (
           <>
-            <div className="flex-1 flex flex-col items-center justify-center py-16 px-6">
-              {/* Icono - Sin animación excesiva */}
-              <div className="w-28 h-28 bg-gradient-to-br from-[#25D076]/20 to-[#20B865]/10 rounded-3xl flex items-center justify-center mb-8 shadow-lg shadow-[#25D076]/10">
-                <CheckCircle className="w-12 h-12 text-[#25D076]" strokeWidth={2.5} />
+            <div className="flex-1 flex flex-col items-center justify-center py-12 px-6">
+              <div className="w-28 h-28 bg-gradient-to-br from-[#25D076]/20 to-[#20B865]/10 rounded-3xl flex items-center justify-center mb-6 shadow-lg shadow-[#25D076]/10">
+                <FileText className="w-12 h-12 text-[#25D076]" strokeWidth={2} />
               </div>
-              
-              <h3 className="text-2xl font-bold text-gray-900 mb-3 text-center">
-                Möchten Sie Ihre Daten angeben?
-              </h3>
-              <p className="text-base text-gray-600 text-center mb-8 max-w-xs">
-                Ihre Daten helfen uns, Ihnen bessere Service zu bieten und Ihre Rechnung zu erstellen.
-              </p>
-              
-              {/* Botones - Sin animaciones de entrada */}
-              <div className="w-full max-w-xs space-y-3">
-                <button
-                  onClick={() => {
-                    mediumHaptic();
-                    onStepChange?.("personal");
-                  }}
-                  disabled={isCreatingInvoice}
-                  className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-2xl py-4 text-base transition-colors shadow-lg shadow-[#25D076]/25 active:scale-[0.97] active:shadow-md touch-target"
-                  style={{ minHeight: '56px' }}
-                >
-                  Ja, gerne
-                </button>
-                <button
-                  onClick={async () => {
-                    lightHaptic();
-                    setIsCreatingInvoice(true);
 
-                    if (onCreateInvoice) {
-                      try {
-                        await onCreateInvoice();
-                        await new Promise((r) => setTimeout(r, 50));
-                      } catch (error) {
-                        devError('Error creating invoice:', error);
-                      } finally {
-                        setIsCreatingInvoice(false);
-                      }
-                    } else {
-                      setIsCreatingInvoice(false);
-                    }
+              {personalData?.name ? (
+                <>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2 text-center">
+                    Ihre gespeicherten Daten
+                  </h3>
+                  <p className="text-sm text-gray-500 text-center mb-5 max-w-xs">
+                    Diese Daten werden für QR-Rechnung und Rechnung verwendet
+                  </p>
 
-                    onStepChange?.("viewInvoice");
-                  }}
-                  disabled={isCreatingInvoice}
-                  className="w-full bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 font-semibold rounded-2xl py-4 text-base transition-colors border-2 border-gray-200 active:scale-[0.97] active:border-gray-300 touch-target disabled:opacity-60 disabled:cursor-not-allowed"
-                  style={{ minHeight: '56px' }}
-                >
-                  {isCreatingInvoice ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Loader size="sm" showCenterDot={false} />
-                      Rechnung wird erstellt...
-                    </span>
-                  ) : (
-                    'Weiter ohne Daten'
-                  )}
-                </button>
-              </div>
+                  {/* Preview datos guardados */}
+                  <div className="w-full max-w-xs bg-gray-50 border border-gray-200 rounded-2xl p-4 mb-6 space-y-1.5">
+                    <p className="text-sm font-semibold text-gray-900">{personalData.name}</p>
+                    {personalData.email && <p className="text-sm text-gray-600">{personalData.email}</p>}
+                    {personalData.phone && <p className="text-sm text-gray-600">{personalData.phone}</p>}
+                    {personalData.address && <p className="text-sm text-gray-600">{personalData.address}</p>}
+                  </div>
+
+                  <div className="w-full max-w-xs space-y-3">
+                    <button
+                      onClick={() => { mediumHaptic(); onConfirm?.(); }}
+                      className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-2xl py-4 text-base transition-colors shadow-lg shadow-[#25D076]/25 active:scale-[0.97] touch-target"
+                      style={{ minHeight: '56px' }}
+                    >
+                      Daten verwenden
+                    </button>
+                    <button
+                      onClick={() => { lightHaptic(); onStepChange?.("personal"); }}
+                      className="w-full bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-2xl py-4 text-base transition-colors border-2 border-gray-200 active:scale-[0.97] touch-target"
+                      style={{ minHeight: '56px' }}
+                    >
+                      Daten ändern
+                    </button>
+                    <button
+                      onClick={() => { lightHaptic(); onConfirm?.(); }}
+                      className="w-full text-gray-400 text-sm py-2 touch-target"
+                    >
+                      Ohne Daten fortfahren
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3 text-center">
+                    Ihre Daten angeben?
+                  </h3>
+                  <p className="text-base text-gray-600 text-center mb-8 max-w-xs">
+                    Ihre Daten werden in QR-Rechnung und Rechnung eingetragen und für zukünftige Einkäufe gespeichert.
+                  </p>
+
+                  <div className="w-full max-w-xs space-y-3">
+                    <button
+                      onClick={() => { mediumHaptic(); onStepChange?.("personal"); }}
+                      className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-2xl py-4 text-base transition-colors shadow-lg shadow-[#25D076]/25 active:scale-[0.97] touch-target"
+                      style={{ minHeight: '56px' }}
+                    >
+                      Ja, Daten eingeben
+                    </button>
+                    <button
+                      onClick={() => { lightHaptic(); onConfirm?.(); }}
+                      className="w-full bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-2xl py-4 text-base transition-colors border-2 border-gray-200 active:scale-[0.97] touch-target"
+                      style={{ minHeight: '56px' }}
+                    >
+                      Ohne Daten fortfahren
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </>
         )}
@@ -681,7 +718,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           <>
             <div className="flex items-center gap-3 p-5 border-b border-gray-200 bg-white sticky top-0 z-10">
               <button
-                onClick={() => onStepChange?.("askData")}
+                onClick={() => onStepChange?.(isPreOrderMode ? "askData" : "askData")}
                 className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 rounded-full transition-ios-fast active:scale-95 touch-target"
                 aria-label="Zurück"
               >
@@ -758,11 +795,16 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               <button
                 onClick={async () => {
                   mediumHaptic();
+                  if (personalData.name && personalData.email) {
+                    onSaveCustomerData?.(personalData);
+                  }
+                  if (isPreOrderMode) {
+                    // Datos recopilados antes de crear la orden → proceder con el pago
+                    onConfirm?.();
+                    return;
+                  }
                   setIsCreatingInvoice(true);
                   try {
-                    if (personalData.name && personalData.email) {
-                      onSaveCustomerData?.(personalData);
-                    }
                     if (onCreateInvoice) {
                       try {
                         await onCreateInvoice(personalData);
@@ -814,19 +856,21 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
               {/* Botones - Opciones finales */}
               <div className="w-full max-w-xs space-y-3">
-                {(createdInvoiceShareToken || createdInvoiceId) ? (
-                  <button
-                    onClick={onViewInvoice}
-                    className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-2xl py-4 text-base transition-colors shadow-lg shadow-[#25D076]/25 active:scale-[0.97] active:shadow-md touch-target"
-                    style={{ minHeight: '56px' }}
-                  >
-                    Rechnung anzeigen
-                  </button>
-                ) : (
-                  <p className="text-sm text-gray-500 text-center mb-4">
-                    Rechnung wird vorbereitet...
-                  </p>
-                )}
+                <button
+                  onClick={onViewInvoice}
+                  disabled={!createdInvoiceShareToken && !createdInvoiceId}
+                  className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-2xl py-4 text-base transition-colors shadow-lg shadow-[#25D076]/25 active:scale-[0.97] active:shadow-md touch-target disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  style={{ minHeight: '56px' }}
+                >
+                  {(!createdInvoiceShareToken && !createdInvoiceId) ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Rechnung wird vorbereitet...
+                    </>
+                  ) : (
+                    'Rechnung anzeigen'
+                  )}
+                </button>
                 <button
                   onClick={onSkipViewInvoice}
                   className="w-full bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 font-semibold rounded-2xl py-4 text-base transition-colors border-2 border-gray-200 active:scale-[0.97] active:border-gray-300 touch-target"
@@ -930,6 +974,7 @@ export default function PaymentP() {
   };
 
   const [personalData, setPersonalData] = useState(loadSavedCustomerData());
+  const [isPreOrderMode, setIsPreOrderMode] = useState(false);
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
   const [qrCodeData, setQrCodeData] = useState<{ qrSvg: string; billSvg: string; amount: number; qrrReference: string } | null>(null);
   const [isConfirmingPayment, setIsConfirmingPayment] = useState(false);
@@ -1039,10 +1084,11 @@ export default function PaymentP() {
       setPaymentStep("processing");
 
       // Prepare customer data to send to backend
-      const customerData = personalData.name && personalData.email 
+      // Para QR-Rechnung basta con nombre (el debtor necesita nombre + dirección)
+      const customerData = personalData.name
         ? {
             name: personalData.name,
-            email: personalData.email,
+            email: personalData.email || undefined,
             address: personalData.address || undefined,
             phone: personalData.phone || undefined,
           }
@@ -1075,16 +1121,40 @@ export default function PaymentP() {
         setCreatedOrderId(orderResult.id);
       }
       // NO guardar invoiceId ni invoiceShareToken aquí - se crearán después
+      setIsPreOrderMode(false);
 
       // Feedback háptico de éxito
       successHaptic();
 
-      // QR-Rechnung: mostrar el QR Code en pantalla para que el cliente escanee
+      // QR-Rechnung: crear invoice + QR en paralelo, luego mostrar QR
       if (selectedPaymentMethod === 'qr-rechnung' && orderResult?.id) {
         try {
           const { buildApiUrl } = await import('@/lib/config/api');
-          const response = await fetch(buildApiUrl(`/api/orders/${orderResult.id}/qr-code`));
-          const data = await response.json();
+
+          // Crear invoice y obtener QR en paralelo
+          const [qrResponse] = await Promise.all([
+            fetch(buildApiUrl(`/api/orders/${orderResult.id}/qr-code`)),
+            // Crear invoice con los datos del cliente ya recopilados
+            (async () => {
+              try {
+                const inv = await InvoiceService.createInvoice({
+                  orderId: orderResult.id,
+                  customerName: customerData?.name || 'Gast',
+                  customerEmail: customerData?.email || undefined,
+                  customerAddress: customerData?.address || undefined,
+                  customerPhone: customerData?.phone || undefined,
+                });
+                if (inv.success && inv.data) {
+                  setCreatedInvoiceId(inv.data.id);
+                  if (inv.data.shareToken) setCreatedInvoiceShareToken(inv.data.shareToken);
+                }
+              } catch {
+                // No bloquear el flujo si falla el invoice
+              }
+            })(),
+          ]);
+
+          const data = await qrResponse.json();
           if (data.success && data.data?.qrSvg) {
             setQrCodeData({ qrSvg: data.data.qrSvg, billSvg: data.data.billSvg, amount: data.data.amount, qrrReference: data.data.qrrReference });
             setPaymentStep("qr-display");
@@ -1092,7 +1162,6 @@ export default function PaymentP() {
           }
         } catch (qrError) {
           console.error('Error fetching QR code:', qrError);
-          // Si falla cargar el QR, continuar con flujo normal
         }
       }
 
@@ -1376,7 +1445,8 @@ export default function PaymentP() {
       if (!res.success || !res.data) {
         throw new Error(res.error || 'Zahlung konnte nicht bestätigt werden');
       }
-      setPaymentStep('success');
+      // Ir directo a ver la factura — los datos ya fueron recopilados antes del QR
+      setPaymentStep('viewInvoice');
     } catch (error) {
       devError('Error confirming QR payment:', error);
     } finally {
@@ -1386,6 +1456,12 @@ export default function PaymentP() {
 
   const handleStepChange = (step: PaymentStep) => {
     setPaymentStep(step);
+  };
+
+  // Para QR-Rechnung: pedir datos ANTES de crear la orden para incluirlos en el QR Bill
+  const handlePreCollectData = () => {
+    setIsPreOrderMode(true);
+    setPaymentStep('askData');
   };
 
 
@@ -1738,6 +1814,8 @@ export default function PaymentP() {
         qrCodeData={qrCodeData}
         isConfirmingPayment={isConfirmingPayment}
         onConfirmQRPayment={handleConfirmQRPayment}
+        isPreOrderMode={isPreOrderMode}
+        onPreCollectData={handlePreCollectData}
       />
     </div>
   );

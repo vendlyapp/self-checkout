@@ -17,6 +17,9 @@ import type { UpdateProductRequest, Product, CreateProductRequest } from "@/lib/
 import { Loader } from "@/components/ui/Loader";
 import { useProductFormStore } from "@/lib/stores/productFormStore";
 import { devError, devWarn } from "@/lib/utils/logger";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { uploadProductImage } from "@/lib/services/imageUploadService";
+import { AlertTriangle } from "lucide-react";
 
 interface EditFormProps {
   productId: string;
@@ -28,6 +31,9 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
   const updateProductMutation = useUpdateProduct();
   const createProductMutation = useCreateProduct();
   const deleteProductMutation = useDeleteProduct();
+  const { user } = useAuth();
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   
   // Obtener producto existente
   const { data: existingProduct, isLoading: loadingProduct } = useProductById(productId);
@@ -77,8 +83,8 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
   
   // Función para comparar datos actuales con originales
   const hasChanges = useMemo(() => {
-    if (!originalProductData) return false;
-    
+    if (!originalProductData || !existingProduct) return false;
+
     const product = normalizeProductData(existingProduct as Product);
     const currentImages = productImages.length > 0 
       ? productImages 
@@ -318,8 +324,8 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
     }
   }, [existingProduct, backendCategories, originalProductData, allProducts, originalVariantsLoaded, productsLoading]);
 
-  // Función para manejar subida de imágenes
-  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  // Función para manejar subida de imágenes a Supabase Storage
+  const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -327,31 +333,32 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
     const remainingSlots = maxImages - productImages.length;
     const filesToProcess = Array.from(files).slice(0, remainingSlots);
 
-    filesToProcess.forEach((file) => {
-      if (!file.type.startsWith('image/')) {
-        alert(`${file.name} ist kein gültiges Bild`);
-        return;
-      }
+    const invalidFile = filesToProcess.find(f => !f.type.startsWith('image/'));
+    if (invalidFile) {
+      alert(`${invalidFile.name} ist kein gültiges Bild`);
+      e.target.value = '';
+      return;
+    }
 
-      if (file.size > 5 * 1024 * 1024) {
-        alert(`${file.name} ist zu gross. Maximum 5MB`);
-        return;
-      }
+    if (!user?.id) {
+      alert('Keine aktive Sitzung. Bitte neu anmelden.');
+      e.target.value = '';
+      return;
+    }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setProductImages((prev) => [...prev, base64String]);
-      };
-      reader.onerror = () => {
-        alert(`Fehler beim Lesen von ${file.name}`);
-      };
-      reader.readAsDataURL(file);
-    });
-
-    // Limpiar el input para permitir seleccionar el mismo archivo nuevamente
-    e.target.value = '';
-  }, [productImages.length]);
+    setUploadingImages(true);
+    try {
+      const urls = await Promise.all(
+        filesToProcess.map(file => uploadProductImage(file, user.id))
+      );
+      setProductImages(prev => [...prev, ...urls]);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Fehler beim Hochladen der Bilder');
+    } finally {
+      setUploadingImages(false);
+      e.target.value = '';
+    }
+  }, [productImages.length, user?.id]);
 
   // Función para eliminar imagen
   const handleRemoveImage = useCallback((index: number) => {
@@ -775,21 +782,31 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
   const handleModalClose = useCallback(() => {
     setShowSuccessModal(false);
     setUpdatedProduct(null);
-    // Redirigir a la lista de productos
     router.push('/products_list');
   }, [router]);
+
+  const handleDeleteProduct = useCallback(async () => {
+    if (!existingProduct) return;
+    try {
+      await deleteProductMutation.mutateAsync(existingProduct.id);
+      setShowDeleteModal(false);
+      router.push('/products_list');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Fehler beim Löschen des Produkts');
+    }
+  }, [existingProduct, deleteProductMutation, router]);
 
   // Función para renderizar el modal de carga
   const renderLoadingModal = () => {
     if (typeof window === 'undefined' || !isSaving) return null;
     
     const modalContent = (
-      <div className="fixed inset-0 z-[99998] flex items-center justify-center overflow-hidden">
+      <div className="fixed inset-0 z-[100000] flex items-center justify-center overflow-hidden">
         {/* Backdrop con blur moderno */}
-        <div className="absolute inset-0 z-10 bg-black/40 backdrop-blur-md" aria-hidden />
-        
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-md" aria-hidden />
+
         {/* Modal de carga */}
-        <div className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full mx-4 animate-in fade-in-0 zoom-in-95 duration-300">
+        <div className="relative z-10 bg-white rounded-3xl shadow-2xl max-w-sm w-full mx-4 animate-in fade-in-0 zoom-in-95 duration-300">
           {/* Gradiente superior */}
           <div className="bg-gradient-to-br from-[#25D076] to-[#20BA68] rounded-t-3xl p-8 text-center">
             <div className="w-20 h-20 bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -819,7 +836,8 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
       </div>
     );
 
-    return createPortal(modalContent, document.body);
+    const target = document.getElementById('global-modals-container') ?? document.body;
+    return createPortal(modalContent, target);
   };
 
   if (loadingProduct) {
@@ -867,6 +885,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
     setProductImages,
     handleImageUpload,
     handleRemoveImage,
+    uploadingImages,
     isActive,
     setIsActive,
     stock,
@@ -903,16 +922,85 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
     hideSubmitButton: true,
   };
 
+  const renderDeleteModal = () => {
+    if (!showDeleteModal) return null;
+    const target = document.getElementById('global-modals-container') ?? document.body;
+    return createPortal(
+      <div className="fixed inset-0 z-[100000] flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-md" aria-hidden />
+        <div className="relative z-10 bg-white rounded-3xl shadow-2xl max-w-sm w-full mx-4 animate-in fade-in-0 zoom-in-95 duration-300">
+          {/* Header rojo */}
+          <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-t-3xl p-8 text-center">
+            <div className="w-20 h-20 bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <AlertTriangle className="w-10 h-10 text-white" strokeWidth={2.5} />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-1">Produkt löschen</h3>
+            <p className="text-red-100 text-sm">Diese Aktion ist unwiderruflich</p>
+          </div>
+
+          <div className="p-6">
+            <p className="text-gray-700 text-center text-base mb-2">
+              Möchten Sie das Produkt
+            </p>
+            <p className="text-gray-900 font-semibold text-center text-base mb-4">
+              &quot;{existingProduct?.name}&quot;
+            </p>
+            <p className="text-gray-500 text-center text-sm mb-6">
+              wirklich dauerhaft löschen? Es kann nicht wiederhergestellt werden.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleteProductMutation.isPending}
+                className="flex-1 py-3 px-4 rounded-2xl border border-gray-200 text-gray-700 font-semibold text-sm hover:bg-gray-50 active:scale-95 transition-all disabled:opacity-50"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={handleDeleteProduct}
+                disabled={deleteProductMutation.isPending}
+                className="flex-1 py-3 px-4 rounded-2xl bg-red-600 text-white font-semibold text-sm hover:bg-red-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deleteProductMutation.isPending ? 'Wird gelöscht...' : 'Ja, löschen'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>,
+      target
+    );
+  };
+
   return (
     <>
       {/* Modal de carga */}
       {renderLoadingModal()}
-      
+
+      {/* Modal de confirmación de eliminación */}
+      {renderDeleteModal()}
+
       {isDesktop ? (
         <DesktopForm {...sharedProps} />
       ) : (
         <MobileForm {...sharedProps} />
       )}
+
+      {/* Zona de peligro */}
+      <div className={isDesktop ? 'px-6 pb-8' : 'px-4 pb-28'}>
+        <div className="border border-red-200 rounded-2xl p-4 bg-red-50/50">
+          <p className="text-sm font-semibold text-red-800 mb-1">Gefahrenzone</p>
+          <p className="text-xs text-red-600 mb-3">
+            Das Produkt wird dauerhaft gelöscht und kann nicht wiederhergestellt werden.
+          </p>
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 active:scale-95 transition-all"
+          >
+            Produkt löschen
+          </button>
+        </div>
+      </div>
     </>
   );
 }
