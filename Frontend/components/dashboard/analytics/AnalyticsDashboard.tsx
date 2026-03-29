@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 
 import { useAnalytics, useQuickAccess } from "@/hooks";
 import { useActiveStats } from "@/hooks/queries/useActiveStats";
@@ -12,6 +12,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { devError } from "@/lib/utils/logger";
 import SearchResultsSection from "../home/SearchResultsSection";
 import { AnalyticsDashboardSkeletonLoader } from "../skeletons";
+import type { Customer } from "./types";
 
 interface SearchResult {
   id: number;
@@ -48,21 +49,54 @@ const AnalyticsDashboard: React.FC = () => {
     handleGoToCart,
   } = useQuickAccess();
 
-  const { data: activeStats } = useActiveStats();
+  const {
+    data: activeStats,
+    isSuccess: activeTelemetryOk,
+    isLoading: activeTelemetryLoading,
+  } = useActiveStats();
 
-  const shopActivityData = data
-    ? {
-        ...data.shopActivity,
-        totalActive: activeStats?.activeCustomers ?? data.shopActivity.totalActive,
-        openCartsValue: activeStats?.openCartsValue ?? data.shopActivity.openCartsValue,
-      }
-    : {
-        activeCustomers: [],
+  /** „Jetzt im Shop“: bei erfolgreicher Telemetrie nur Live-Zähler + Platzhalter-Avatare; sonst Fallback aus Bestellungen (24h). */
+  const shopActivityData = useMemo(() => {
+    if (!data) {
+      return {
+        activeCustomers: [] as Customer[],
         totalActive: 0,
         totalInactive: 0,
         openCartsValue: 0,
         progressPercentage: 0,
+        lastSeenAt: null as string | null,
       };
+    }
+
+    const base = data.shopActivity;
+
+    if (!activeTelemetryOk || !activeStats) {
+      return { ...base, lastSeenAt: null };
+    }
+
+    const n = Math.max(0, Math.floor(Number(activeStats.activeCustomers) || 0));
+    const placeholders: Customer[] = Array.from(
+      { length: Math.min(2, n) },
+      (_, i) => ({
+        id: `live-${i}`,
+        avatar: "👤",
+        name: "Kunde im Shop",
+        status: "active" as const,
+      })
+    );
+
+    const progressPercentage =
+      n === 0 ? 0 : Math.min(100, 25 + (n - 1) * 22);
+
+    return {
+      activeCustomers: placeholders,
+      totalActive: n,
+      totalInactive: Math.max(0, n - 2),
+      openCartsValue: Number(activeStats.openCartsValue) || 0,
+      progressPercentage,
+      lastSeenAt: activeStats.lastSeen ?? null,
+    };
+  }, [data, activeTelemetryOk, activeStats]);
 
   // Simular búsqueda de analytics
   const searchAnalyticsData = useCallback(
@@ -173,7 +207,7 @@ const AnalyticsDashboard: React.FC = () => {
             <section>
               <ActiveCustomers
                 data={shopActivityData}
-                loading={loading}
+                loading={loading || activeTelemetryLoading}
               />
             </section>
 
@@ -273,7 +307,7 @@ const AnalyticsDashboard: React.FC = () => {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 md:gap-4 lg:gap-6 min-w-0">
             <ActiveCustomers
               data={shopActivityData}
-              loading={loading}
+              loading={loading || activeTelemetryLoading}
             />
             <SalesChart
               data={data?.salesData || []}

@@ -35,6 +35,8 @@ export interface ShopActivity {
   totalInactive: number;
   openCartsValue: number;
   progressPercentage: number;
+  /** Letzte Heartbeat-Zeit (Telemetrie), ISO */
+  lastSeenAt?: string | null;
 }
 
 export interface QuickAccessItem {

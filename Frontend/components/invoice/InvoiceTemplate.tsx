@@ -651,7 +651,7 @@ export default function InvoiceTemplate({
           invoice-screen-view
           bg-white
           ${isMobile ? 'rounded-xl shadow-sm' : 'rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)]'}
-          overflow-hidden
+          overflow-x-hidden
           print:shadow-none print:rounded-none
         `}
         style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}

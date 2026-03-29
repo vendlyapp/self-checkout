@@ -104,7 +104,7 @@ export function SearchInput({
           "relative flex items-center bg-white rounded-full border border-gray-200 transition-ios",
           "focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20",
           isFocused ? "shadow-lg" : "shadow-sm",
-          "h-12 md:h-12 lg:h-14"
+          "h-full min-h-[54px]"
         )}>
           {/* Icono de búsqueda: tablet y desktop */}
           <Search className="hidden md:block absolute left-4 w-4 h-4 lg:w-5 lg:h-5 text-gray-400 pointer-events-none flex-shrink-0" />
@@ -122,6 +122,7 @@ export function SearchInput({
             }}
             onBlur={() => setIsFocused(false)}
             placeholder={placeholder}
+            style={{ fontSize: '16px' }}
             className={clsx(
               "w-full min-w-0 h-full bg-transparent focus:outline-none text-gray-900 placeholder-gray-400 truncate",
               "placeholder:truncate text-ellipsis",
@@ -231,6 +232,7 @@ export function SearchInput({
           }}
           onBlur={() => setIsFocused(false)}
           placeholder={placeholder}
+          style={{ fontSize: '16px' }}
           className={clsx(
             "w-full min-w-0 h-full min-h-[2.75rem] pl-11 md:pl-12 pr-11 md:pr-12 text-foreground placeholder:text-muted-foreground bg-transparent focus:outline-none rounded-full truncate text-ellipsis",
             inputClassName ?? "text-sm md:text-base placeholder:text-sm md:placeholder:text-base"

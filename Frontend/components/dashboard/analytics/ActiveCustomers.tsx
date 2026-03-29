@@ -3,6 +3,22 @@ import { ChevronRight } from "lucide-react";
 import { formatSwissPrice } from "@/lib/utils";
 import { ShopActivity } from "./types";
 
+function formatLastActivityDe(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return null;
+  const diffSec = Math.max(0, Math.floor((Date.now() - t) / 1000));
+  if (diffSec < 45) return "gerade eben";
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `vor ${diffMin} Min.`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `vor ${diffH} Std.`;
+  const diffD = Math.floor(diffH / 24);
+  if (diffD === 1) return "vor 1 Tag";
+  if (diffD < 7) return `vor ${diffD} Tagen`;
+  return "vor längerer Zeit";
+}
+
 interface ActiveCustomersProps {
   data: ShopActivity;
   loading?: boolean;
@@ -44,10 +60,14 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
   const {
     activeCustomers,
     totalActive,
-    totalInactive,
     openCartsValue,
     progressPercentage,
+    lastSeenAt,
   } = data;
+
+  const shownAvatars = activeCustomers.slice(0, 2);
+  const moreOnline = Math.max(0, totalActive - shownAvatars.length);
+  const lastActivityLabel = formatLastActivityDe(lastSeenAt);
 
   return (
     <div className="bg-card border border-border rounded-2xl shadow-sm transition-ios hover:shadow-md w-full min-w-0">
@@ -73,7 +93,7 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
                 className="flex -space-x-3 lg:-space-x-2"
                 aria-label={`${totalActive} aktive Kunden`}
               >
-                {activeCustomers.slice(0, 2).map((customer, idx) => (
+                {shownAvatars.map((customer, idx) => (
                   <div
                     key={customer.id}
                     className="w-10 h-10 lg:w-14 lg:h-14 rounded-full border-2 border-white bg-muted flex items-center justify-center text-sm lg:text-lg font-medium relative shadow-sm hover:shadow-md transition-ios"
@@ -83,13 +103,13 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
                     {customer.avatar}
                   </div>
                 ))}
-                {totalInactive > 0 && (
+                {moreOnline > 0 && (
                   <div
                     className="w-10 h-10 lg:w-14 lg:h-14 rounded-full border-2 border-white bg-muted flex items-center justify-center text-sm lg:text-lg font-medium text-muted-foreground relative shadow-sm hover:shadow-md transition-shadow duration-200"
                     style={{ zIndex: 10 }}
-                    title={`+${totalInactive} weitere Kunden`}
+                    title={`+${moreOnline} weitere Kunden`}
                   >
-                    +{totalInactive}
+                    +{moreOnline}
                   </div>
                 )}
               </div>
@@ -135,11 +155,17 @@ const ActiveCustomers: React.FC<ActiveCustomersProps> = ({
                 in offenen Warenkörben
               </p>
             </div>
-            {/* Información adicional para desktop */}
-            <div className="hidden lg:flex items-center gap-2 text-xs text-muted-foreground">
-              <span>Letzte Aktivität: vor 2 Min</span>
-            </div>
+            {lastActivityLabel && (
+              <div className="hidden lg:flex items-center gap-2 text-xs text-muted-foreground shrink-0">
+                <span>Letzte Aktivität: {lastActivityLabel}</span>
+              </div>
+            )}
           </div>
+          {lastActivityLabel && (
+            <p className="lg:hidden text-xs text-muted-foreground mt-1">
+              Letzte Aktivität: {lastActivityLabel}
+            </p>
+          )}
         </div>
       </div>
     </div>

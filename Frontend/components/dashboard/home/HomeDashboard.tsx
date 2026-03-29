@@ -119,7 +119,7 @@ const HomeDashboard: React.FC = () => {
                 value={searchQuery}
                 onChange={setSearchQuery}
                 onSearch={handleSearch}
-                className="w-full"
+                className="w-full h-[54px]"
                 esHome={true}
                 showFilters={true}
                 onFilterClick={() => {}}

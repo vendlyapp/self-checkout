@@ -557,8 +557,40 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 </div>
               )}
 
-              {/* Bottom: apps + botón */}
+              {/* Bottom: info + descarga + apps + botón */}
               <div className="w-full space-y-3">
+                {/* Card con datos del deudor si están disponibles */}
+                {personalData?.name && (
+                  <div className="bg-gray-50 rounded-2xl px-4 py-3 text-left">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-400 mb-1.5">Zahlungspflichtiger</p>
+                    <p className="text-[13px] font-semibold text-gray-900 leading-snug">{personalData.name}</p>
+                    {personalData.address && (
+                      <p className="text-[12px] text-gray-500 leading-snug">{personalData.address}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Botón descargar QR Bill */}
+                {qrCodeData?.billSvg && (
+                  <button
+                    onClick={() => {
+                      const blob = new Blob([qrCodeData.billSvg], { type: 'image/svg+xml' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = 'QR-Rechnung.svg';
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="w-full py-3 bg-white border border-gray-200 text-gray-700 font-semibold text-[14px] rounded-2xl active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    QR-Rechnung herunterladen
+                  </button>
+                )}
+
                 <p className="text-[11px] text-gray-400 text-center">
                   UBS · ZKB · Raiffeisen · PostFinance
                 </p>
@@ -1126,42 +1158,50 @@ export default function PaymentP() {
       // Feedback háptico de éxito
       successHaptic();
 
-      // QR-Rechnung: crear invoice + QR en paralelo, luego mostrar QR
+      // QR-Rechnung: 1) crear invoice con campos normalizados → 2) obtener QR del invoice
       if (selectedPaymentMethod === 'qr-rechnung' && orderResult?.id) {
         try {
           const { buildApiUrl } = await import('@/lib/config/api');
+          const { parseSwissAddress } = await import('@/components/ui/SwissAddressInput');
 
-          // Crear invoice y obtener QR en paralelo
-          const [qrResponse] = await Promise.all([
-            fetch(buildApiUrl(`/api/orders/${orderResult.id}/qr-code`)),
-            // Crear invoice con los datos del cliente ya recopilados
-            (async () => {
-              try {
-                const inv = await InvoiceService.createInvoice({
-                  orderId: orderResult.id,
-                  customerName: customerData?.name || 'Gast',
-                  customerEmail: customerData?.email || undefined,
-                  customerAddress: customerData?.address || undefined,
-                  customerPhone: customerData?.phone || undefined,
-                });
-                if (inv.success && inv.data) {
-                  setCreatedInvoiceId(inv.data.id);
-                  if (inv.data.shareToken) setCreatedInvoiceShareToken(inv.data.shareToken);
-                }
-              } catch {
-                // No bloquear el flujo si falla el invoice
-              }
-            })(),
-          ]);
+          // Parsear dirección completa "Strasse Nr., PLZ Ort" en campos separados
+          const parsed = customerData?.address
+            ? parseSwissAddress(customerData.address)
+            : { strasse: '', nr: '', plz: '', ort: '' };
 
-          const data = await qrResponse.json();
-          if (data.success && data.data?.qrSvg) {
-            setQrCodeData({ qrSvg: data.data.qrSvg, billSvg: data.data.billSvg, amount: data.data.amount, qrrReference: data.data.qrrReference });
-            setPaymentStep("qr-display");
-            return;
+          const streetFull = [parsed.strasse, parsed.nr].filter(Boolean).join(' ').trim();
+
+          // Crear invoice con campos normalizados (InvoiceController.getQRCode los usa directamente)
+          const inv = await InvoiceService.createInvoice({
+            orderId: orderResult.id,
+            customerName: customerData?.name || undefined,
+            customerEmail: customerData?.email || undefined,
+            customerAddress: streetFull || undefined,
+            customerPostalCode: parsed.plz || undefined,
+            customerCity: parsed.ort || undefined,
+            customerPhone: customerData?.phone || undefined,
+          });
+
+          if (inv.success && inv.data) {
+            setCreatedInvoiceId(inv.data.id);
+            if (inv.data.shareToken) setCreatedInvoiceShareToken(inv.data.shareToken);
+
+            // Obtener QR desde el invoice (usa columnas normalizadas → debtor siempre correcto)
+            const qrResponse = await fetch(buildApiUrl(`/api/invoices/${inv.data.id}/qr-code`));
+            const data = await qrResponse.json();
+            if (data.success && data.data?.qrSvg) {
+              setQrCodeData({
+                qrSvg: data.data.qrSvg,
+                billSvg: data.data.billSvg,
+                amount: data.data.amount,
+                qrrReference: data.data.qrrReference,
+              });
+              setPaymentStep("qr-display");
+              return;
+            }
           }
         } catch (qrError) {
-          console.error('Error fetching QR code:', qrError);
+          console.error('Error creating invoice/fetching QR:', qrError);
         }
       }
 

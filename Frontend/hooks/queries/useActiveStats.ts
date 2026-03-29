@@ -24,14 +24,16 @@ async function fetchActiveStats(): Promise<ActiveStatsData> {
     });
 
     if (!res.ok) {
-      devWarn(`[useActiveStats] ${res.status} — returning zeros`);
-      return FALLBACK;
+      devWarn(`[useActiveStats] ${res.status}`);
+      throw new Error(`active-stats ${res.status}`);
     }
 
     const json = await res.json();
     return (json.data as ActiveStatsData) ?? FALLBACK;
-  } catch {
-    return FALLBACK;
+  } catch (e) {
+    if (e instanceof Error && e.message.startsWith('active-stats')) throw e;
+    devWarn('[useActiveStats] Netzwerkfehler', e);
+    throw e instanceof Error ? e : new Error('active-stats failed');
   }
 }
 

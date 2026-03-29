@@ -347,10 +347,11 @@ class AnalyticsService {
           COALESCE(SUM(a."cartValue"), 0) AS "openCartsValue",
           MAX(a."lastSeen") AS "lastSeen"
         FROM "Store" s
-        LEFT JOIN "ActiveSession" a ON s.id = a."storeId"::text
+        LEFT JOIN "ActiveSession" a
+          ON CAST(s.id AS TEXT) = CAST(a."storeId" AS TEXT)
           AND a.role = 'CUSTOMER'
-          AND a."lastSeen" >= NOW() - ($2::int || ' minutes')::interval
-        WHERE s."ownerId"::text = $1::text
+          AND a."lastSeen" >= NOW() - (INTERVAL '1 minute' * $2::int)
+        WHERE CAST(s."ownerId" AS TEXT) = CAST($1 AS TEXT)
       `,
       [ownerId, minutes],
     );
@@ -374,9 +375,10 @@ class AnalyticsService {
           s.name AS "storeName",
           COALESCE(COUNT(a.id), 0) AS "activeCustomers"
         FROM "Store" s
-        LEFT JOIN "ActiveSession" a ON s.id = a."storeId"::text
+        LEFT JOIN "ActiveSession" a
+          ON CAST(s.id AS TEXT) = CAST(a."storeId" AS TEXT)
           AND a.role = 'CUSTOMER'
-          AND a."lastSeen" >= NOW() - ($1::int || ' minutes')::interval
+          AND a."lastSeen" >= NOW() - (INTERVAL '1 minute' * $1::int)
         GROUP BY s.id, s.name
         ORDER BY "activeCustomers" DESC, s.name ASC
       `,

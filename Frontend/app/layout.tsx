@@ -72,7 +72,7 @@ export default function RootLayout({
                 {/* Sin overflow-y global: scroll en main (AdminLayout / store) o layouts dedicados */}
                 <div className="flex flex-1 flex-col min-h-0 w-full relative bg-[#25D076] overflow-hidden">
                   <div
-                    className="flex flex-1 flex-col min-h-0 w-full overflow-hidden overflow-x-hidden bg-[#F2EDE8]"
+                    className="flex flex-1 flex-col min-h-0 w-full overflow-y-auto overflow-x-hidden bg-[#F2EDE8]"
                     style={{
                       paddingTop: "env(safe-area-inset-top, 0px)",
                       paddingBottom: "env(safe-area-inset-bottom, 0px)",
