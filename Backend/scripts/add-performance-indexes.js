@@ -108,18 +108,6 @@ const indexes = [
     description: 'ProductCategory.storeId — categorías por tienda',
   },
 
-  // ─── ActiveSession ────────────────────────────────────────────────────────
-  {
-    name: 'idx_activesession_lastseen',
-    sql: 'CREATE INDEX IF NOT EXISTS idx_activesession_lastseen ON "ActiveSession" ("lastSeen")',
-    description: 'ActiveSession.lastSeen — ventanas de tiempo para analytics en vivo',
-  },
-  {
-    name: 'idx_activesession_role',
-    sql: 'CREATE INDEX IF NOT EXISTS idx_activesession_role ON "ActiveSession" ("role")',
-    description: 'ActiveSession.role — agrupación de sesiones activas por rol',
-  },
-
   // ─── Composite indexes ────────────────────────────────────────────────────
   // Cubren los filtros multi-columna más frecuentes, evitando que Postgres
   // combine dos índices simples (bitmap AND) cuando puede usar uno solo.
@@ -142,6 +130,11 @@ const indexes = [
     name: 'idx_order_userid_createdat',
     sql: 'CREATE INDEX IF NOT EXISTS idx_order_userid_createdat ON "Order" ("userId", "createdAt" DESC)',
     description: 'Order.(userId, createdAt DESC) — historial de órdenes por usuario ordenado por fecha',
+  },
+  {
+    name: 'idx_order_storeid_createdat',
+    sql: 'CREATE INDEX IF NOT EXISTS idx_order_storeid_createdat ON "Order" ("storeId", "createdAt" DESC)',
+    description: 'Order.(storeId, createdAt DESC) — Kunden-heute / Listen nach Tag',
   },
 ];
 

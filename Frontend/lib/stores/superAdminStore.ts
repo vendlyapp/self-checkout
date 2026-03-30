@@ -7,8 +7,6 @@ import type {
   SalesOverTimePoint,
   StorePerformanceEntry,
   TopProductEntry,
-  ActiveOverview,
-  ActiveStoreEntry,
 } from '@/lib/services/analyticsService';
 import { devError } from '@/lib/utils/logger';
 
@@ -21,8 +19,6 @@ interface SuperAdminState {
   salesOverTime: SalesOverTimePoint[];
   storePerformance: StorePerformanceEntry[];
   topProducts: TopProductEntry[];
-  activeOverview: ActiveOverview | null;
-  activeStores: ActiveStoreEntry[];
   
   // Loading states
   statsLoading: boolean;
@@ -32,8 +28,6 @@ interface SuperAdminState {
   salesOverTimeLoading: boolean;
   storePerformanceLoading: boolean;
   topProductsLoading: boolean;
-  activeOverviewLoading: boolean;
-  activeStoresLoading: boolean;
   
   // Error states
   statsError: string | null;
@@ -43,8 +37,6 @@ interface SuperAdminState {
   salesOverTimeError: string | null;
   storePerformanceError: string | null;
   topProductsError: string | null;
-  activeOverviewError: string | null;
-  activeStoresError: string | null;
   
   // Cache timestamps
   statsLastFetch: number | null;
@@ -54,8 +46,6 @@ interface SuperAdminState {
   salesOverTimeLastFetch: number | null;
   storePerformanceLastFetch: number | null;
   topProductsLastFetch: number | null;
-  activeOverviewLastFetch: number | null;
-  activeStoresLastFetch: number | null;
   
   // Actions
   fetchStats: (force?: boolean) => Promise<void>;
@@ -65,8 +55,6 @@ interface SuperAdminState {
   fetchSalesOverTime: (force?: boolean) => Promise<void>;
   fetchStorePerformance: (force?: boolean) => Promise<void>;
   fetchTopProducts: (force?: boolean) => Promise<void>;
-  fetchActiveOverview: (force?: boolean) => Promise<void>;
-  fetchActiveStores: (force?: boolean) => Promise<void>;
   toggleStoreStatus: (storeId: string, isActive: boolean) => Promise<void>;
   
   // Utilities
@@ -88,8 +76,6 @@ export const useSuperAdminStore = create<SuperAdminState>()(
       salesOverTime: [],
       storePerformance: [],
       topProducts: [],
-      activeOverview: null,
-      activeStores: [],
       
       statsLoading: false,
       storesLoading: false,
@@ -98,8 +84,6 @@ export const useSuperAdminStore = create<SuperAdminState>()(
       salesOverTimeLoading: false,
       storePerformanceLoading: false,
       topProductsLoading: false,
-      activeOverviewLoading: false,
-      activeStoresLoading: false,
       
       statsError: null,
       storesError: null,
@@ -108,8 +92,6 @@ export const useSuperAdminStore = create<SuperAdminState>()(
       salesOverTimeError: null,
       storePerformanceError: null,
       topProductsError: null,
-      activeOverviewError: null,
-      activeStoresError: null,
       
       statsLastFetch: null,
       storesLastFetch: null,
@@ -118,8 +100,6 @@ export const useSuperAdminStore = create<SuperAdminState>()(
       salesOverTimeLastFetch: null,
       storePerformanceLastFetch: null,
       topProductsLastFetch: null,
-      activeOverviewLastFetch: null,
-      activeStoresLastFetch: null,
       
       // Fetch stats
       fetchStats: async (force = false) => {
@@ -393,78 +373,6 @@ export const useSuperAdminStore = create<SuperAdminState>()(
           });
         }
       },
-
-      // Fetch active overview
-      fetchActiveOverview: async (force = false) => {
-        const { activeOverviewLastFetch, activeOverview } = get();
-        const now = Date.now();
-
-        if (!force && activeOverviewLastFetch && activeOverview && (now - activeOverviewLastFetch) < CACHE_DURATION) {
-          return;
-        }
-
-        if (!activeOverview || force) {
-          set({ activeOverviewLoading: true, activeOverviewError: null });
-        }
-
-        try {
-          const response = await AnalyticsService.getActiveOverview();
-          if (response.success && response.data) {
-            set({
-              activeOverview: response.data,
-              activeOverviewLastFetch: now,
-              activeOverviewLoading: false,
-            });
-          } else {
-            set({
-              activeOverviewError: response.error || 'Error loading active overview',
-              activeOverviewLoading: false,
-            });
-          }
-        } catch (error) {
-          devError('Error fetching active overview:', error);
-          set({
-            activeOverviewError: error instanceof Error ? error.message : 'Network error',
-            activeOverviewLoading: false,
-          });
-        }
-      },
-
-      // Fetch active stores
-      fetchActiveStores: async (force = false) => {
-        const { activeStoresLastFetch, activeStores } = get();
-        const now = Date.now();
-
-        if (!force && activeStoresLastFetch && activeStores.length > 0 && (now - activeStoresLastFetch) < CACHE_DURATION) {
-          return;
-        }
-
-        if (activeStores.length === 0 || force) {
-          set({ activeStoresLoading: true, activeStoresError: null });
-        }
-
-        try {
-          const response = await AnalyticsService.getActiveStores();
-          if (response.success && response.data) {
-            set({
-              activeStores: response.data,
-              activeStoresLastFetch: now,
-              activeStoresLoading: false,
-            });
-          } else {
-            set({
-              activeStoresError: response.error || 'Error loading active stores',
-              activeStoresLoading: false,
-            });
-          }
-        } catch (error) {
-          devError('Error fetching active stores:', error);
-          set({
-            activeStoresError: error instanceof Error ? error.message : 'Network error',
-            activeStoresLoading: false,
-          });
-        }
-      },
       
       // Toggle store status
       toggleStoreStatus: async (storeId: string, isActive: boolean) => {
@@ -497,8 +405,6 @@ export const useSuperAdminStore = create<SuperAdminState>()(
           salesOverTimeLastFetch: null,
           storePerformanceLastFetch: null,
           topProductsLastFetch: null,
-          activeOverviewLastFetch: null,
-          activeStoresLastFetch: null,
         });
       },
       
@@ -512,8 +418,6 @@ export const useSuperAdminStore = create<SuperAdminState>()(
           get().fetchSalesOverTime(true),
           get().fetchStorePerformance(true),
           get().fetchTopProducts(true),
-          get().fetchActiveOverview(true),
-          get().fetchActiveStores(true),
         ]);
       },
     }),
@@ -527,8 +431,6 @@ export const useSuperAdminStore = create<SuperAdminState>()(
         salesOverTime: state.salesOverTime,
         storePerformance: state.storePerformance,
         topProducts: state.topProducts,
-        activeOverview: state.activeOverview,
-        activeStores: state.activeStores,
         statsLastFetch: state.statsLastFetch,
         storesLastFetch: state.storesLastFetch,
         usersLastFetch: state.usersLastFetch,
@@ -536,8 +438,6 @@ export const useSuperAdminStore = create<SuperAdminState>()(
         salesOverTimeLastFetch: state.salesOverTimeLastFetch,
         storePerformanceLastFetch: state.storePerformanceLastFetch,
         topProductsLastFetch: state.topProductsLastFetch,
-        activeOverviewLastFetch: state.activeOverviewLastFetch,
-        activeStoresLastFetch: state.activeStoresLastFetch,
         // DO NOT save loading states
       }),
       // Ensure loading is always false on hydrate
@@ -550,8 +450,6 @@ export const useSuperAdminStore = create<SuperAdminState>()(
           state.salesOverTimeLoading = false;
           state.storePerformanceLoading = false;
           state.topProductsLoading = false;
-          state.activeOverviewLoading = false;
-          state.activeStoresLoading = false;
         }
       },
     }

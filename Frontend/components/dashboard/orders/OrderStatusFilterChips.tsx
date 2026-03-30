@@ -36,6 +36,15 @@ export function OrderStatusFilterChips({ className }: OrderStatusFilterChipsProp
   const raw = searchParams?.get("status");
   const statusFilter =
     raw === "pending" || raw === "completed" || raw === "cancelled" ? raw : undefined;
+  const heute = searchParams?.get("heute") === "1";
+
+  const buildHref = (param: (typeof OPTIONS)[number]["param"]) => {
+    const p = new URLSearchParams();
+    if (heute) p.set("heute", "1");
+    if (param) p.set("status", param);
+    const qs = p.toString();
+    return qs ? `/sales/orders?${qs}` : "/sales/orders";
+  };
 
   return (
     <div
@@ -48,7 +57,7 @@ export function OrderStatusFilterChips({ className }: OrderStatusFilterChipsProp
     >
       {OPTIONS.map(({ param, label, activeClass }) => {
         const isActive = param === null ? statusFilter === undefined : statusFilter === param;
-        const href = param ? `/sales/orders?status=${param}` : "/sales/orders";
+        const href = buildHref(param);
 
         return (
           <button

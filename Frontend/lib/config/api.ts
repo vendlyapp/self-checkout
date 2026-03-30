@@ -54,6 +54,7 @@ export const API_CONFIG = {
     ORDER_BY_ID: (id: string) => `/api/orders/${id}`,
     ORDER_STATS: '/api/orders/stats',
     ORDER_RECENT: '/api/orders/recent',
+    ORDER_TODAY_CUSTOMERS: '/api/orders/today-customers',
     
     // Health
     HEALTH: '/health',

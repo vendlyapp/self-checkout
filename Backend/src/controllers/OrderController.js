@@ -725,6 +725,59 @@ class OrderController {
   }
 
   /**
+   * @route GET /api/orders/today-customers
+   * Distinct Kunden mit Bestellung heute (Kalendertag, Standard Europe/Zurich).
+   */
+  async getTodayCustomers(req, res) {
+    try {
+      const role = req.user?.role;
+      const { storeId: storeIdQuery, timeZone: tzQuery } = req.query;
+
+      let effectiveStoreId = null;
+      if (role === 'SUPER_ADMIN') {
+        effectiveStoreId = storeIdQuery || null;
+        if (!effectiveStoreId) {
+          return res.status(HTTP_STATUS.BAD_REQUEST).json({
+            success: false,
+            error: 'storeId ist erforderlich',
+          });
+        }
+      } else if (role === 'ADMIN') {
+        effectiveStoreId = req.user.storeId || null;
+        if (!effectiveStoreId) {
+          return res.status(HTTP_STATUS.OK).json({
+            success: true,
+            data: {
+              totalCount: 0,
+              customers: [],
+              timeZone: 'Europe/Zurich',
+            },
+          });
+        }
+      } else {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({
+          success: false,
+          error: 'Forbidden',
+        });
+      }
+
+      const timeZone =
+        typeof tzQuery === 'string' && tzQuery.length > 0 ? tzQuery : 'Europe/Zurich';
+
+      const result = await orderService.getTodayCustomersForStore(
+        effectiveStoreId,
+        timeZone,
+      );
+      res.status(HTTP_STATUS.OK).json(result);
+    } catch (error) {
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  }
+
+  /**
    * Actualiza el estado de una orden
    * @route PATCH /api/orders/:id/status
    */

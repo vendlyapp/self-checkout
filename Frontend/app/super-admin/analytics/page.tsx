@@ -61,8 +61,6 @@ const SuperAdminAnalytics: React.FC = () => {
     salesOverTimeLoading,
     storePerformanceLoading,
     topProductsLoading,
-    activeOverviewLoading,
-    activeStoresLoading,
     statsError,
     refreshAll,
     fetchStats,
@@ -72,8 +70,6 @@ const SuperAdminAnalytics: React.FC = () => {
     fetchSalesOverTime,
     fetchStorePerformance,
     fetchTopProducts,
-    fetchActiveOverview,
-    fetchActiveStores,
     statsLastFetch,
     storesLastFetch,
     productsLastFetch,
@@ -89,8 +85,6 @@ const SuperAdminAnalytics: React.FC = () => {
     fetchSalesOverTime();
     fetchStorePerformance();
     fetchTopProducts();
-    fetchActiveOverview();
-    fetchActiveStores();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     fetchStats,
@@ -100,8 +94,6 @@ const SuperAdminAnalytics: React.FC = () => {
     fetchSalesOverTime,
     fetchStorePerformance,
     fetchTopProducts,
-    fetchActiveOverview,
-    fetchActiveStores,
   ]);
 
   const isRefreshing =
@@ -111,9 +103,7 @@ const SuperAdminAnalytics: React.FC = () => {
     productsLoading ||
     salesOverTimeLoading ||
     storePerformanceLoading ||
-    topProductsLoading ||
-    activeOverviewLoading ||
-    activeStoresLoading;
+    topProductsLoading;
   const isInitialLoading =
     isRefreshing &&
     (!stats ||

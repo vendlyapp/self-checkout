@@ -23,6 +23,7 @@ import CancelOrderModal from '@/components/orders/CancelOrderModal';
 import { OrdersProvider, useOrdersContext } from '@/components/dashboard/orders/OrdersContext';
 import { SearchInput } from '@/components/ui/search-input';
 import { OrderStatusFilterChips } from '@/components/dashboard/orders/OrderStatusFilterChips';
+import { isSameShopCalendarDay } from '@/lib/utils/shopDay';
 
 function SalesOrdersPageContent() {
   const router = useRouter();
@@ -37,6 +38,8 @@ function SalesOrdersPageContent() {
     | 'cancelled'
     | undefined;
 
+  const heuteOnly = searchParams?.get('heute') === '1';
+
   const { data: orders = [], isLoading, isFetching, error: queryError } = useOrders({
     limit: 100,
     offset: 0,
@@ -48,17 +51,52 @@ function SalesOrdersPageContent() {
   const [orderToCancel, setOrderToCancel] = useState<{ id: string; orderNumber: string } | null>(null);
   const [isConfirmingCancel, setIsConfirmingCancel] = useState(false);
 
+  const ordersAfterHeute = useMemo(() => {
+    if (!heuteOnly) return orders;
+    return orders.filter((o) => isSameShopCalendarDay(new Date(o.createdAt)));
+  }, [orders, heuteOnly]);
+
   const filteredOrders = useMemo(() => {
-    if (!searchQuery.trim()) return orders;
+    if (!searchQuery.trim()) return ordersAfterHeute;
     const q = searchQuery.toLowerCase();
-    return orders.filter(
+    return ordersAfterHeute.filter(
       (order) =>
         order.id?.toLowerCase().includes(q) ||
         order.userName?.toLowerCase().includes(q) ||
         order.userEmail?.toLowerCase().includes(q) ||
         order.paymentMethod?.toLowerCase().includes(q)
     );
-  }, [orders, searchQuery]);
+  }, [ordersAfterHeute, searchQuery]);
+
+  const emptyLabel = useMemo(() => {
+    if (searchQuery.trim()) return 'Keine Treffer für Ihre Suche';
+    if (heuteOnly) {
+      if (statusFilter === 'cancelled') return 'Heute keine stornierten Bestellungen';
+      if (statusFilter === 'completed') return 'Heute keine abgeschlossenen Bestellungen';
+      if (statusFilter === 'pending') return 'Heute keine ausstehenden Bestellungen';
+      return 'Heute noch keine Bestellungen';
+    }
+    if (statusFilter === 'cancelled') return 'Noch keine stornierten Bestellungen';
+    if (statusFilter === 'completed') return 'Noch keine abgeschlossenen Bestellungen';
+    if (statusFilter === 'pending') return 'Noch keine ausstehenden Bestellungen';
+    return 'Noch keine Bestellungen';
+  }, [searchQuery, heuteOnly, statusFilter]);
+
+  const heuteBanner = heuteOnly ? (
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-200/80 bg-emerald-50/90 px-3 py-2.5 text-sm text-emerald-950 dark:border-emerald-900/50 dark:bg-emerald-950/25 dark:text-emerald-100">
+      <span className="font-medium">Nur Bestellungen von heute (Zeitzone Schweiz)</span>
+      <Link
+        href={
+          statusFilter
+            ? `/sales/orders?status=${statusFilter}`
+            : '/sales/orders'
+        }
+        className="shrink-0 text-emerald-800 underline-offset-2 hover:underline dark:text-emerald-200"
+      >
+        Alle Tage
+      </Link>
+    </div>
+  ) : null;
 
   const formatDate = (dateString: string) => {
     try {
@@ -178,15 +216,6 @@ function SalesOrdersPageContent() {
     );
   }
 
-  const emptyLabel =
-    statusFilter === 'cancelled'
-      ? 'Noch keine stornierten Bestellungen'
-      : statusFilter === 'completed'
-      ? 'Noch keine abgeschlossenen Bestellungen'
-      : statusFilter === 'pending'
-      ? 'Noch keine ausstehenden Bestellungen'
-      : 'Noch keine Bestellungen';
-
   /* ── Mobile ─────────────────────────────────────────────────────── */
   if (isMobile) {
     return (
@@ -201,6 +230,7 @@ function SalesOrdersPageContent() {
         <div className="w-full h-full overflow-auto min-w-0">
           <div className="flex flex-col h-full">
             <div className="flex-1 overflow-y-auto pt-4">
+              {heuteBanner && <div className="px-3 mb-3">{heuteBanner}</div>}
               {filteredOrders.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 px-4">
                   <ShoppingCart className="w-16 h-16 text-gray-300 mb-4" aria-hidden />
@@ -310,6 +340,7 @@ function SalesOrdersPageContent() {
                 />
               </div>
             </div>
+            {heuteBanner}
             <OrderStatusFilterChips />
           </div>
 

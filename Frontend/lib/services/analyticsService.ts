@@ -36,25 +36,9 @@ export interface TopProductEntry {
   unitsSold: number;
 }
 
-export interface ActiveOverview {
-  total: number;
-  roles: {
-    SUPER_ADMIN: number;
-    ADMIN: number;
-    CUSTOMER: number;
-  };
-}
-
-export interface ActiveStoreEntry {
-  storeId: string;
-  storeName: string;
-  activeCustomers: number;
-}
-
 type SalesOverTimeResponse = SalesOverTimePoint[];
 type StorePerformanceResponse = StorePerformanceEntry[];
 type TopProductsResponse = TopProductEntry[];
-type ActiveStoresResponse = ActiveStoreEntry[];
 
 async function makeRequest<T>(
   endpoint: string,
@@ -190,28 +174,6 @@ export class AnalyticsService {
 
     const url = `${API_CONFIG.BASE_URL}/api/super-admin/analytics/top-products${query}`;
     return makeRequest<TopProductsResponse>(url);
-  }
-
-  static async getActiveOverview(params?: {
-    interval?: number;
-  }): Promise<ApiResponse<ActiveOverview>> {
-    const query = buildQueryString({
-      interval: params?.interval,
-    });
-
-    const url = `${API_CONFIG.BASE_URL}/api/super-admin/analytics/active-overview${query}`;
-    return makeRequest<ActiveOverview>(url);
-  }
-
-  static async getActiveStores(params?: {
-    interval?: number;
-  }): Promise<ApiResponse<ActiveStoresResponse>> {
-    const query = buildQueryString({
-      interval: params?.interval,
-    });
-
-    const url = `${API_CONFIG.BASE_URL}/api/super-admin/analytics/active-stores${query}`;
-    return makeRequest<ActiveStoresResponse>(url);
   }
 }
 

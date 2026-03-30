@@ -39,6 +39,17 @@ interface OrderItemResponse {
   updatedAt: string;
 }
 
+export interface TodayCustomerEntry {
+  userId: string;
+  name: string;
+}
+
+export interface TodayCustomersData {
+  totalCount: number;
+  customers: TodayCustomerEntry[];
+  timeZone: string;
+}
+
 export interface OrderResponse {
   id: string;
   userId: string;
@@ -298,6 +309,19 @@ export const OrderService = {
     
     const endpoint = `${API_CONFIG.ENDPOINTS.ORDER_RECENT}?${params.toString()}`;
     return makeRequest<RecentOrder[]>(endpoint, requestOptions);
+  },
+
+  getTodayCustomers: async (
+    storeId?: string,
+    requestOptions?: { signal?: AbortSignal },
+  ): Promise<ApiResponse<TodayCustomersData>> => {
+    const params = new URLSearchParams();
+    if (storeId) params.append('storeId', storeId);
+    const qs = params.toString();
+    const endpoint = qs
+      ? `${API_CONFIG.ENDPOINTS.ORDER_TODAY_CUSTOMERS}?${qs}`
+      : API_CONFIG.ENDPOINTS.ORDER_TODAY_CUSTOMERS;
+    return makeRequest<TodayCustomersData>(endpoint, requestOptions);
   },
 
   /**

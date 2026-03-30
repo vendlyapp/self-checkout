@@ -10,7 +10,6 @@ import { useParams, useRouter, usePathname } from "next/navigation"
 import { useStoreData } from "@/hooks/data/useStoreData"
 import { InitialLoadingScreen } from "@/components/ui"
 import { StoreProvider, useStoreContext } from "./StoreContext"
-import { useHeartbeat } from "@/hooks/core/useHeartbeat"
 import StoreFixedHeader from "@/components/user/StoreFixedHeader"
 import StoreInfoHeader from "@/components/user/StoreInfoHeader"
 import HeaderNav from "@/components/navigation/HeaderNav"
@@ -29,7 +28,6 @@ function StoreLayoutContent({ children }: StoreLayoutContentProps) {
   const { isLoading: isStoreLoading } = useStoreData({ slug, autoLoad: true })
   const [modalContainer, setModalContainer] = useState<HTMLDivElement | null>(null)
 
-  useHeartbeat({ storeId: store?.id ?? null })
   const storeContext = useStoreContext()
   
   // Determinar si estamos en la página principal de productos (no en cart, payment, etc.)

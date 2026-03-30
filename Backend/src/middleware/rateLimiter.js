@@ -24,17 +24,6 @@ const checkoutLimiter = rateLimit({
   handler: rateLimitHandler,
 });
 
-// ─── Telemetry heartbeat ──────────────────────────────────────────────────────
-// Fires at most once per second from a real browser tab. 120/min per IP is
-// triple the expected rate — anything above that is a flood.
-const telemetryLimiter = rateLimit({
-  windowMs: 60 * 1000,        // 1 minute
-  max: 120,
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: rateLimitHandler,
-});
-
 // ─── Discount code validation ─────────────────────────────────────────────────
 // Prevents brute-forcing valid codes. 30 attempts per 15 min per IP covers
 // normal usage (a customer trying a couple of codes) but stops enumeration.
@@ -60,7 +49,6 @@ const globalLimiter = rateLimit({
 
 module.exports = {
   checkoutLimiter,
-  telemetryLimiter,
   discountValidationLimiter,
   globalLimiter,
 };

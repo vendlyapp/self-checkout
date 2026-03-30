@@ -36,10 +36,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_customer_storeid_email
 -- ProductCategory
 CREATE INDEX IF NOT EXISTS idx_productcategory_storeid ON "ProductCategory" ("storeId");
 
--- ActiveSession (time-window queries for analytics heartbeat)
-CREATE INDEX IF NOT EXISTS idx_activesession_lastseen ON "ActiveSession" ("lastSeen");
-CREATE INDEX IF NOT EXISTS idx_activesession_role     ON "ActiveSession" ("role");
-
 -- ============================================================
 -- Composite indexes — cover the most common multi-column filters
 -- ============================================================
@@ -59,3 +55,7 @@ CREATE INDEX IF NOT EXISTS idx_invoice_storeid_createdat
 -- Order: user order history sorted by date (replaces two single-column scans)
 CREATE INDEX IF NOT EXISTS idx_order_userid_createdat
   ON "Order" ("userId", "createdAt" DESC);
+
+-- Order: Tagesauswertung / Filter nach Laden + Datum
+CREATE INDEX IF NOT EXISTS idx_order_storeid_createdat
+  ON "Order" ("storeId", "createdAt" DESC);

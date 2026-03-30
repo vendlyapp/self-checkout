@@ -116,6 +116,8 @@ router.get('/', optionalAuth, orderController.getAllOrders);
  */
 router.get('/recent', authMiddleware, orderController.getRecentOrders);
 
+router.get('/today-customers', authMiddleware, orderController.getTodayCustomers);
+
 /**
  * @swagger
  * /api/orders/{id}:

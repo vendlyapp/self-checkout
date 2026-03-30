@@ -772,6 +772,77 @@ class OrderService {
     };
   }
 
+  /**
+   * Kunden mit mindestens einer nicht stornierten Bestellung heute (Kalendertag in timeZone).
+   * Gleiche Store-Logik wie findAll (Join über Product/Store).
+   */
+  async getTodayCustomersForStore(storeId, timeZone = 'Europe/Zurich') {
+    if (!storeId) {
+      return {
+        success: true,
+        data: { totalCount: 0, customers: [], timeZone },
+      };
+    }
+
+    const store = await storeService.getById(storeId);
+    if (!store) {
+      return {
+        success: true,
+        data: { totalCount: 0, customers: [], timeZone },
+      };
+    }
+
+    const tz =
+      typeof timeZone === 'string' && /^[A-Za-z_]+\/[A-Za-z0-9_+-]+$/.test(timeZone)
+        ? timeZone
+        : 'Europe/Zurich';
+
+    const baseJoin = `
+      FROM "Order" o
+      INNER JOIN "OrderItem" oi ON o.id = oi."orderId"
+      INNER JOIN "Product" p ON oi."productId" = p.id
+      INNER JOIN "Store" s ON s."ownerId" = p."ownerId" AND s.id = $1
+      LEFT JOIN "User" u ON u.id = o."userId"
+      WHERE (o.status IS NULL OR o.status <> 'cancelled')
+        AND o."createdAt" >= (date_trunc('day', timezone($2::text, now())) AT TIME ZONE $2::text)
+        AND o."createdAt" < ((date_trunc('day', timezone($2::text, now())) + interval '1 day') AT TIME ZONE $2::text)
+    `;
+
+    const countResult = await query(
+      `SELECT COUNT(DISTINCT o."userId")::int AS "totalCount" ${baseJoin}`,
+      [storeId, tz],
+    );
+    const totalCount = Number(countResult.rows[0]?.totalCount ?? 0);
+
+    const listResult = await query(
+      `
+      SELECT su."userId", su.name
+      FROM (
+        SELECT o."userId" AS "userId",
+          MAX(COALESCE(NULLIF(TRIM(u.name), ''), NULLIF(TRIM(SPLIT_PART(COALESCE(u.email, ''), '@', 1)), ''), 'Kunde')) AS name,
+          MAX(o."createdAt") AS last_at
+        ${baseJoin}
+        GROUP BY o."userId"
+      ) su
+      ORDER BY su.last_at DESC
+      LIMIT 50
+      `,
+      [storeId, tz],
+    );
+
+    return {
+      success: true,
+      data: {
+        totalCount,
+        customers: listResult.rows.map((row) => ({
+          userId: row.userId,
+          name: row.name || 'Kunde',
+        })),
+        timeZone: tz,
+      },
+    };
+  }
+
   async getRecentOrders(limit = 10, status = null, storeId = null) {
     let ownerId = null;
 

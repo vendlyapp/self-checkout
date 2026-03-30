@@ -45,7 +45,6 @@ export const mockShopActivity: ShopActivity = {
   activeCustomers: mockCustomers.filter(customer => customer.status === 'active'),
   totalActive: 3,
   totalInactive: 4,
-  openCartsValue: 93,
   progressPercentage: 43
 };
 

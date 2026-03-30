@@ -33,10 +33,7 @@ export interface ShopActivity {
   activeCustomers: Customer[];
   totalActive: number;
   totalInactive: number;
-  openCartsValue: number;
   progressPercentage: number;
-  /** Letzte Heartbeat-Zeit (Telemetrie), ISO */
-  lastSeenAt?: string | null;
 }
 
 export interface QuickAccessItem {

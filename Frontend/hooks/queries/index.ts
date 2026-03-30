@@ -20,6 +20,7 @@ export { useOrderStats } from './useOrderStats';
 export { useGoalRevenues } from './useGoalRevenues';
 export type { GoalRevenues } from './useGoalRevenues';
 export { useRecentOrders } from './useRecentOrders';
+export { useTodayCustomers } from './useTodayCustomers';
 export { useOrders } from './useOrders';
 export type { UseOrdersOptions } from './useOrders';
 export { useOrder } from './useOrder';

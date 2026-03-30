@@ -320,7 +320,6 @@ export interface ShopActivity {
   activeCustomers: Customer[];
   totalActive: number;
   totalInactive: number;
-  openCartsValue: number;
   progressPercentage: number;
 }
 

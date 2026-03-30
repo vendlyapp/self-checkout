@@ -135,12 +135,6 @@ Request
 |--------|------|------|-------------|
 | GET | `/api/analytics` | Sí | Métricas generales de la tienda |
 
-### Telemetría — `/api/telemetry`
-
-| Método | Ruta | Auth | Descripción |
-|--------|------|------|-------------|
-| POST | `/api/telemetry` | No | Registrar evento de usuario (anónimo) |
-
 ### Super Admin — `/api/super-admin`
 
 | Método | Ruta | Auth | Descripción |

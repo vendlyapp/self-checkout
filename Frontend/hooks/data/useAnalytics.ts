@@ -10,6 +10,7 @@ import { useMyStore } from '@/hooks/queries/useMyStore';
 import type { SalesData, PaymentMethod, ShopActivity, CartData, Customer } from '@/components/dashboard/analytics/types';
 import { RecentOrder } from '@/lib/services/orderService';
 import { useCartStore } from '@/lib/stores/cartStore';
+import { isSameShopCalendarDay } from '@/lib/utils/shopDay';
 
 /**
  * Hook para gestión de analytics y métricas del dashboard
@@ -376,9 +377,8 @@ const getPaymentMethodColor = (method: string): string => {
 
 // Helper function to transform orders into ShopActivity
 const transformOrdersToShopActivity = (orders: RecentOrder[]): ShopActivity => {
-  // Obtener usuarios únicos de las órdenes
   const uniqueUsers = new Map<string, { name: string; lastOrder: Date }>();
-  
+
   orders.forEach((order) => {
     const userId = order.userId;
     const userName = order.userName || 'Kunde';
@@ -389,13 +389,9 @@ const transformOrdersToShopActivity = (orders: RecentOrder[]): ShopActivity => {
     }
   });
 
-  // Considerar usuarios activos si han hecho una orden en las últimas 24 horas
   const now = new Date();
   const activeCustomers: Customer[] = Array.from(uniqueUsers.values())
-    .filter(user => {
-      const hoursSinceLastOrder = (now.getTime() - user.lastOrder.getTime()) / (1000 * 60 * 60);
-      return hoursSinceLastOrder <= 24;
-    })
+    .filter((user) => isSameShopCalendarDay(user.lastOrder, now))
     .map((user, index) => ({
       id: `customer-${index}`,
       avatar: '👤',
@@ -405,15 +401,13 @@ const transformOrdersToShopActivity = (orders: RecentOrder[]): ShopActivity => {
 
   const totalActive = activeCustomers.length;
   const totalInactive = Math.max(0, uniqueUsers.size - totalActive);
-
-  const openCartsValue = 0; // overridden in AnalyticsDashboard by useActiveStats
-  const progressPercentage = totalActive > 0 ? Math.round((totalActive / Math.max(1, uniqueUsers.size)) * 100) : 0;
+  const progressPercentage =
+    totalActive > 0 ? Math.round((totalActive / Math.max(1, uniqueUsers.size)) * 100) : 0;
 
   return {
     activeCustomers,
     totalActive,
     totalInactive,
-    openCartsValue,
     progressPercentage,
   };
 };
@@ -481,7 +475,6 @@ export const useAnalytics = (): UseAnalyticsReturn => {
         activeCustomers: [] as Customer[],
         totalActive: 0,
         totalInactive: 0,
-        openCartsValue: 0,
         progressPercentage: 0,
       },
       salesData: [] as SalesData[],

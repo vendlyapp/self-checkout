@@ -119,19 +119,7 @@ Este documento describe la estructura completa de la base de datos de Vendly Che
 - `created_at` (timestamp without time zone, NOT NULL, DEFAULT: CURRENT_TIMESTAMP)
 - `updated_at` (timestamp without time zone, NOT NULL, DEFAULT: CURRENT_TIMESTAMP)
 
-### 8. ActiveSession (Sesiones Activas)
-- `id` (bigint, NOT NULL, DEFAULT: nextval) - ID único de la sesión
-- `userId` (uuid) - ID del usuario
-- `storeId` (uuid) - ID de la tienda
-- `sessionId` (text) - ID de la sesión
-- `role` (character varying, NOT NULL) - Rol del usuario
-- `ip` (text) - Dirección IP
-- `userAgent` (text) - User agent
-- `lastSeen` (timestamp with time zone, NOT NULL, DEFAULT: now()) - Última vez visto
-- `createdAt` (timestamp with time zone, NOT NULL, DEFAULT: now())
-- `updatedAt` (timestamp with time zone, NOT NULL, DEFAULT: now())
-
-### 9. MigrationLog (Log de Migraciones)
+### 8. MigrationLog (Log de Migraciones)
 - Tabla interna para rastrear migraciones de base de datos
 
 ## Relaciones
@@ -156,12 +144,7 @@ Este documento describe la estructura completa de la base de datos de Vendly Che
    - Los campos usan camelCase con comillas dobles: `"ownerId"`, `"createdAt"`, etc.
    - Algunas tablas antiguas (DiscountCode) usan snake_case: `owner_id`, `created_at`, etc.
 
-4. **Timestamps**: 
-   - La mayoría de las tablas usan `timestamp without time zone`
-   - ActiveSession usa `timestamp with time zone`
+4. **Timestamps**: La mayoría de las tablas usan `timestamp without time zone`.
 
-5. **IDs**: 
-   - La mayoría de las tablas usan `text` con `gen_random_uuid()`
-   - DiscountCode usa `uuid` directamente
-   - ActiveSession usa `bigint` con secuencia
+5. **IDs**: La mayoría de las tablas usan `text` con `gen_random_uuid()`; DiscountCode usa `uuid` directamente.
 

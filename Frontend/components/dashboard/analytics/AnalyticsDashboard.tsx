@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 
 import { useAnalytics, useQuickAccess } from "@/hooks";
-import { useActiveStats } from "@/hooks/queries/useActiveStats";
+import { useTodayCustomers } from "@/hooks/queries/useTodayCustomers";
 import ActiveCustomers from "./ActiveCustomers";
+import type { Customer } from "./types";
 import SalesChart from "./SalesChart";
 import QuickAccessGrid from "./QuickAccessGrid";
 import PaymentMethods from "./PaymentMethods";
@@ -12,7 +13,6 @@ import { SearchInput } from "@/components/ui/search-input";
 import { devError } from "@/lib/utils/logger";
 import SearchResultsSection from "../home/SearchResultsSection";
 import { AnalyticsDashboardSkeletonLoader } from "../skeletons";
-import type { Customer } from "./types";
 
 interface SearchResult {
   id: number;
@@ -50,53 +50,43 @@ const AnalyticsDashboard: React.FC = () => {
   } = useQuickAccess();
 
   const {
-    data: activeStats,
-    isSuccess: activeTelemetryOk,
-    isLoading: activeTelemetryLoading,
-  } = useActiveStats();
+    data: todayCustomers,
+    isLoading: todayCustomersLoading,
+    isError: todayCustomersError,
+  } = useTodayCustomers();
 
-  /** „Jetzt im Shop“: bei erfolgreicher Telemetrie nur Live-Zähler + Platzhalter-Avatare; sonst Fallback aus Bestellungen (24h). */
   const shopActivityData = useMemo(() => {
     if (!data) {
       return {
         activeCustomers: [] as Customer[],
         totalActive: 0,
         totalInactive: 0,
-        openCartsValue: 0,
         progressPercentage: 0,
-        lastSeenAt: null as string | null,
       };
     }
-
     const base = data.shopActivity;
-
-    if (!activeTelemetryOk || !activeStats) {
-      return { ...base, lastSeenAt: null };
+    if (todayCustomersError || !todayCustomers) {
+      return base;
     }
-
-    const n = Math.max(0, Math.floor(Number(activeStats.activeCustomers) || 0));
-    const placeholders: Customer[] = Array.from(
-      { length: Math.min(2, n) },
-      (_, i) => ({
-        id: `live-${i}`,
-        avatar: "👤",
-        name: "Kunde im Shop",
-        status: "active" as const,
-      })
-    );
-
+    const activeCustomers: Customer[] = todayCustomers.customers.map((c) => ({
+      id: c.userId,
+      avatar: "👤",
+      name: c.name,
+      status: "active" as const,
+    }));
+    const total = todayCustomers.totalCount;
     const progressPercentage =
-      n === 0 ? 0 : Math.min(100, 25 + (n - 1) * 22);
-
+      total === 0 ? 0 : Math.min(100, Math.round(10 + Math.min(total, 20) * 4.2));
     return {
-      activeCustomers: placeholders,
-      totalActive: n,
-      totalInactive: Math.max(0, n - 2),
-      openCartsValue: Number(activeStats.openCartsValue) || 0,
+      activeCustomers,
+      totalActive: total,
+      totalInactive: Math.max(0, total - Math.min(2, activeCustomers.length)),
       progressPercentage,
-      lastSeenAt: activeStats.lastSeen ?? null,
     };
-  }, [data, activeTelemetryOk, activeStats]);
+  }, [data, todayCustomers, todayCustomersError]);
+
+  const activeCustomersCardLoading =
+    !!data && todayCustomersLoading && !todayCustomersError;
 
   // Simular búsqueda de analytics
   const searchAnalyticsData = useCallback(
@@ -207,7 +197,12 @@ const AnalyticsDashboard: React.FC = () => {
             <section>
               <ActiveCustomers
                 data={shopActivityData}
-                loading={loading || activeTelemetryLoading}
+                loading={loading || activeCustomersCardLoading}
+                timeZone={
+                  todayCustomers && !todayCustomersError
+                    ? todayCustomers.timeZone
+                    : undefined
+                }
               />
             </section>
 
@@ -307,7 +302,12 @@ const AnalyticsDashboard: React.FC = () => {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 md:gap-4 lg:gap-6 min-w-0">
             <ActiveCustomers
               data={shopActivityData}
-              loading={loading || activeTelemetryLoading}
+              loading={loading || activeCustomersCardLoading}
+              timeZone={
+                todayCustomers && !todayCustomersError
+                  ? todayCustomers.timeZone
+                  : undefined
+              }
             />
             <SalesChart
               data={data?.salesData || []}
