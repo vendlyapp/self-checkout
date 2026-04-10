@@ -6,10 +6,11 @@ const userService = require('../services/UserService');
 const analyticsService = require('../services/AnalyticsService');
 const QRBillService = require('../services/QRBillService');
 const { HTTP_STATUS } = require('../types');
+const logger = require('../utils/logger');
 
 /**
- * Parsea una dirección suiza combinada del formato "Strasse Nr., PLZ Ort"
- * en sus partes individuales para el QR Bill.
+ * Parses a combined Swiss address from the format "Strasse Nr., PLZ Ort"
+ * into its individual parts for the QR Bill.
  * @param {string} address - e.g. "Bahnhofstrasse 12, 8001 Zürich"
  * @returns {{ street: string, buildingNumber: string, zip: string, city: string }}
  */
@@ -36,8 +37,8 @@ function _parseSwissAddress(address) {
 }
 
 /**
- * Controlador de órdenes
- * Maneja todas las operaciones relacionadas con órdenes de compra
+ * Order controller
+ * Handles all operations related to purchase orders
  * @class OrderController
  */
 class OrderController {
@@ -48,16 +49,16 @@ class OrderController {
   }
 
   /**
-   * Obtiene todas las órdenes de un usuario específico
+   * Gets all orders for a specific user
    * @route GET /api/orders/user/:userId
-   * @param {Object} req - Request object de Express
-   * @param {Object} req.params - Parámetros de ruta
-   * @param {string} req.params.userId - ID del usuario
+   * @param {Object} req - Express request object
+   * @param {Object} req.params - Route parameters
+   * @param {string} req.params.userId - User ID
    * @param {Object} req.query - Query parameters
-   * @param {number} [req.query.limit] - Límite de órdenes a retornar
-   * @param {Object} res - Response object de Express
-   * @returns {Promise<void>} JSON con lista de órdenes del usuario
-   * @throws {500} Si hay error en el servidor
+   * @param {number} [req.query.limit] - Maximum number of orders to return
+   * @param {Object} res - Express response object
+   * @returns {Promise<void>} JSON with user's order list
+   * @throws {500} On server error
    */
   async getOrdersByUserId(req, res) {
     try {
@@ -79,7 +80,8 @@ class OrderController {
       const result = await orderService.findByUserId(userId, options);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({
         success: false,
         error: error.message
       });
@@ -87,15 +89,15 @@ class OrderController {
   }
 
   /**
-   * Obtiene todas las órdenes del sistema (admin)
-   * Endpoint solo para administradores
+   * Gets all orders in the system (admin)
+   * Admin-only endpoint
    * @route GET /api/orders
-   * @param {Object} req - Request object de Express
+   * @param {Object} req - Express request object
    * @param {Object} req.query - Query parameters
-   * @param {number} [req.query.limit] - Límite de órdenes a retornar
-   * @param {Object} res - Response object de Express
-   * @returns {Promise<void>} JSON con lista de todas las órdenes
-   * @throws {500} Si hay error en el servidor
+   * @param {number} [req.query.limit] - Maximum number of orders to return
+   * @param {Object} res - Express response object
+   * @returns {Promise<void>} JSON with all orders list
+   * @throws {500} On server error
    */
   async getAllOrders(req, res) {
     try {
@@ -122,7 +124,8 @@ class OrderController {
       const result = await orderService.findAll(options);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({
         success: false,
         error: error.message
       });
@@ -130,9 +133,9 @@ class OrderController {
   }
 
   /**
-   * Obtiene una orden específica por su ID
+   * Gets a specific order by its ID
    * @route GET /api/orders/:id
-   * Arrow property: Express llama el handler sin `this`; así `this` sigue siendo la instancia del controlador.
+   * Arrow property so Express calls the handler with correct `this` binding.
    */
   getOrderById = async (req, res) => {
     try {
@@ -143,19 +146,13 @@ class OrderController {
       if (!allowed) {
         return res.status(HTTP_STATUS.NOT_FOUND).json({
           success: false,
-          error: 'Bestellung nicht gefunden',
+          error: 'Order not found',
         });
       }
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      const notFound =
-        error.message.includes('no encontrada') ||
-        error.message.includes('nicht gefunden');
-      const statusCode = notFound
-        ? HTTP_STATUS.NOT_FOUND
-        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
-
-      res.status(statusCode).json({
+      const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({
         success: false,
         error: error.message
       });
@@ -190,20 +187,20 @@ class OrderController {
   }
 
   /**
-   * Crea una nueva orden para un usuario específico
-   * Valida stock y actualiza inventario
+   * Creates a new order for a specific user
+   * Validates stock and updates inventory
    * @route POST /api/orders/:userId
-   * @param {Object} req - Request object de Express
-   * @param {Object} req.params - Parámetros de ruta
-   * @param {string} req.params.userId - ID del usuario
-   * @param {Object} req.body - Datos de la orden
-   * @param {Array} req.body.items - Items de la orden
-   * @param {string} req.body.items[].productId - ID del producto
-   * @param {number} req.body.items[].quantity - Cantidad del producto
-   * @param {Object} res - Response object de Express
-   * @returns {Promise<void>} JSON con la orden creada
-   * @throws {400} Si hay stock insuficiente o producto no encontrado
-   * @throws {500} Si hay error en el servidor
+   * @param {Object} req - Express request object
+   * @param {Object} req.params - Route parameters
+   * @param {string} req.params.userId - User ID
+   * @param {Object} req.body - Order data
+   * @param {Array} req.body.items - Order items
+   * @param {string} req.body.items[].productId - Product ID
+   * @param {number} req.body.items[].quantity - Product quantity
+   * @param {Object} res - Express response object
+   * @returns {Promise<void>} JSON with the created order
+   * @throws {400} On insufficient stock or product not found
+   * @throws {500} On server error
    */
   async createOrder(req, res) {
     try {
@@ -213,19 +210,15 @@ class OrderController {
       if (!Array.isArray(items) || items.length === 0) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          error: 'La orden debe incluir al menos un item',
+          error: 'Order must include at least one item',
         });
       }
 
       const result = await orderService.create(userId, req.body);
       res.status(HTTP_STATUS.CREATED).json(result);
     } catch (error) {
-      const statusCode = error.message.includes('no encontrado') ||
-                        error.message.includes('Stock insuficiente')
-        ? HTTP_STATUS.BAD_REQUEST
-        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
-
-      res.status(statusCode).json({
+      const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({
         success: false,
         error: error.message
       });
@@ -233,19 +226,19 @@ class OrderController {
   }
 
   /**
-   * Crea una nueva orden (método simplificado)
-   * Recibe userId e items en el body en lugar de params
+   * Creates a new order (simplified method)
+   * Receives userId and items in the body instead of params
    * @route POST /api/orders
-   * @param {Object} req - Request object de Express
-   * @param {Object} req.body - Datos de la orden
-   * @param {string} req.body.userId - ID del usuario
-   * @param {Array} req.body.items - Items de la orden
-   * @param {string} req.body.items[].productId - ID del producto
-   * @param {number} req.body.items[].quantity - Cantidad del producto
-   * @param {Object} res - Response object de Express
-   * @returns {Promise<void>} JSON con la orden creada
-   * @throws {400} Si faltan userId o items, o hay stock insuficiente
-   * @throws {500} Si hay error en el servidor
+   * @param {Object} req - Express request object
+   * @param {Object} req.body - Order data
+   * @param {string} req.body.userId - User ID
+   * @param {Array} req.body.items - Order items
+   * @param {string} req.body.items[].productId - Product ID
+   * @param {number} req.body.items[].quantity - Product quantity
+   * @param {Object} res - Express response object
+   * @returns {Promise<void>} JSON with the created order
+   * @throws {400} On missing userId or items, or insufficient stock
+   * @throws {500} On server error
    */
   async createOrderSimple(req, res) {
     try {
@@ -263,23 +256,23 @@ class OrderController {
       if (!items || !Array.isArray(items) || items.length === 0) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          error: 'La orden debe incluir items válidos',
+          error: 'Order must include valid items',
         });
       }
 
       let resolvedUserId = userId;
 
-      // Si hay un userId, verificar si es el dueño de la tienda
-      // Si es el dueño, NO usar ese userId, sino crear un usuario invitado con los datos del formulario
+      // If there is a userId, check if they are the store owner
+      // If they are the owner, do NOT use that userId — create a guest user with form data instead
       if (resolvedUserId && storeId) {
         const isStoreOwner = await this.isStoreOwner(resolvedUserId, storeId);
         if (isStoreOwner) {
-          // El usuario logueado es el dueño de la tienda, crear usuario invitado con datos del formulario
-          resolvedUserId = null; // Forzar creación de usuario invitado
+          // The logged-in user is the store owner — create a guest user with form data
+          resolvedUserId = null; // Force guest user creation
         }
       }
 
-      // Si no hay userId o era el dueño, crear usuario invitado con datos del formulario
+      // If no userId or it was the owner, create a guest user with form data
       if (!resolvedUserId) {
         try {
           resolvedUserId = await this.resolveGuestUserId({
@@ -306,12 +299,8 @@ class OrderController {
       });
       res.status(HTTP_STATUS.CREATED).json(result);
     } catch (error) {
-      const statusCode = error.message.includes('no encontrado') ||
-                        error.message.includes('Stock insuficiente')
-        ? HTTP_STATUS.BAD_REQUEST
-        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
-
-      res.status(statusCode).json({
+      const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({
         success: false,
         error: error.message
       });
@@ -319,10 +308,10 @@ class OrderController {
   }
 
   /**
-   * Verifica si un usuario es el dueño de una tienda
-   * @param {string} userId - ID del usuario
-   * @param {string} storeId - ID de la tienda
-   * @returns {Promise<boolean>} True si es el dueño
+   * Checks if a user is the owner of a store
+   * @param {string} userId - User ID
+   * @param {string} storeId - Store ID
+   * @returns {Promise<boolean>} True if the user is the owner
    */
   async isStoreOwner(userId, storeId) {
     try {
@@ -332,14 +321,14 @@ class OrderController {
       }
       return store.ownerId === userId;
     } catch (error) {
-      console.error('Error verificando dueño de tienda:', error);
+      logger.error('Error checking store owner', { userId, storeId, error: error.message });
       return false;
     }
   }
 
   /**
-   * Genera y devuelve el SVG del QR Code suizo para una orden QR-Rechnung.
-   * Público (no requiere auth) — el kiosko lo llama justo después de crear la orden.
+   * Generates and returns the Swiss QR Code SVG for a QR-Rechnung order.
+   * Public (no auth required) — the kiosk calls this right after creating the order.
    * @route GET /api/orders/:id/qr-code
    */
   async getQRCode(req, res) {
@@ -348,23 +337,23 @@ class OrderController {
 
       const orderResult = await orderService.findById(id);
       if (!orderResult.success || !orderResult.data) {
-        return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, error: 'Orden no encontrada' });
+        return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, error: 'Order not found' });
       }
 
       const order = orderResult.data;
 
       if (order.paymentMethod !== 'qr-rechnung') {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, error: 'Esta orden no es de tipo QR-Rechnung' });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, error: 'This order is not a QR-Rechnung type' });
       }
 
       const metadata = order.metadata || {};
       const qrrReference = metadata.qrrReference;
 
       if (!qrrReference) {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, error: 'Esta orden no tiene referencia QRR generada' });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, error: 'This order has no generated QRR reference' });
       }
 
-      // Usar snapshot guardado en la orden (preferido) o consultar config en vivo como fallback
+      // Use snapshot stored in the order (preferred) or query live config as fallback
       let creditorConfig = metadata.qrCreditorSnapshot || null;
       if (!creditorConfig) {
         const { query: dbQuery } = require('../../lib/database');
@@ -378,7 +367,7 @@ class OrderController {
       if (!creditorConfig) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          error: 'El método QR-Rechnung no está configurado para esta tienda. Configura el QR-IBAN en el panel de administración.',
+          error: 'The QR-Rechnung method is not configured for this store. Configure the QR-IBAN in the admin panel.',
         });
       }
 
@@ -390,8 +379,8 @@ class OrderController {
       const amount = Number(metadata.totalWithVAT || order.total);
       const additionalInfo = `Bestellung ${id.slice(0, 8).toUpperCase()}`;
 
-      // Construir datos del deudor desde metadata.customer si están disponibles.
-      // Solo se incluye si se tiene nombre + dirección completa (zip + ciudad).
+      // Build debtor data from metadata.customer if available.
+      // Only included if we have name + full address (zip + city).
       const customer = metadata.customer;
       let debtor;
       if (customer?.name && customer?.address) {
@@ -408,8 +397,8 @@ class OrderController {
         }
       }
 
-      // qrSvg: solo el cuadrado QR (para mostrar en kiosko, escaneable)
-      // billSvg: QR Bill completo con Zahlteil + Empfangsschein (para imprimir en factura)
+      // qrSvg: just the QR square (for kiosk display, scannable)
+      // billSvg: full QR Bill with Zahlteil + Empfangsschein (for invoice printing)
       const qrSvg = QRBillService.generateQROnlySVG({
         creditorConfig,
         amount,
@@ -432,17 +421,18 @@ class OrderController {
         data: { qrSvg, billSvg, qrrReference, amount, orderId: id },
       });
     } catch (error) {
-      console.error('Error al generar QR Code para orden:', error);
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      logger.error('Error generating QR Code for order', { error: error.message });
+      const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({
         success: false,
-        error: error.message || 'Error al generar el QR Code',
+        error: error.message || 'Error generating QR Code',
       });
     }
   }
 
   /**
-   * Confirma el pago de una orden QR-Rechnung pendiente.
-   * Solo el admin de la tienda puede confirmar.
+   * Confirms payment for a pending QR-Rechnung order.
+   * Only the store admin can confirm.
    * @route PATCH /api/orders/:id/confirm-payment
    */
   async confirmPayment(req, res) {
@@ -451,26 +441,26 @@ class OrderController {
       const userId = req.user?.userId ?? req.user?.id;
 
       if (!userId) {
-        return res.status(HTTP_STATUS.UNAUTHORIZED).json({ success: false, error: 'Autenticación requerida' });
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({ success: false, error: 'Authentication required' });
       }
 
       const orderResult = await orderService.findById(id);
       if (!orderResult.success || !orderResult.data) {
-        return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, error: 'Orden no encontrada' });
+        return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, error: 'Order not found' });
       }
 
       const order = orderResult.data;
 
-      // Verificar que la orden pertenece a la tienda del usuario autenticado
+      // Verify the order belongs to the authenticated user's store
       const isOwner = await this.isStoreOwner(userId, order.storeId);
       if (!isOwner) {
-        return res.status(HTTP_STATUS.FORBIDDEN).json({ success: false, error: 'No tienes permiso para confirmar esta orden' });
+        return res.status(HTTP_STATUS.FORBIDDEN).json({ success: false, error: 'You do not have permission to confirm this order' });
       }
 
       if (order.status !== 'pending') {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          error: `La orden ya está en estado '${order.status}'. Solo se pueden confirmar órdenes en estado 'pending'.`,
+          error: `Order is already in '${order.status}' status. Only 'pending' orders can be confirmed.`,
         });
       }
 
@@ -498,13 +488,14 @@ class OrderController {
       res.status(HTTP_STATUS.OK).json({
         success: true,
         data: { orderId: id, status: 'completed', confirmedAt },
-        message: 'Zahlung erfolgreich bestätigt',
+        message: 'Payment successfully confirmed',
       });
     } catch (error) {
-      console.error('Error al confirmar pago:', error);
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      logger.error('Error confirming payment', { error: error.message });
+      const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({
         success: false,
-        error: error.message || 'Error al confirmar el pago',
+        error: error.message || 'Error confirming payment',
       });
     }
   }
@@ -514,18 +505,18 @@ class OrderController {
 
     const normalizedEmail = customer?.email?.trim().toLowerCase();
     const hasCustomerData = customer && (customer.name || customer.email);
-    
-    // Determinar el nombre a usar
+
+    // Determine the display name to use
     let displayName = null;
-    
+
     if (hasCustomerData && customer.name && customer.name.trim().length > 0) {
-      // Si el cliente llenó el formulario con su nombre, usar ese nombre real
+      // If the customer filled in the form with their name, use that real name
       displayName = customer.name.trim();
     } else if (hasCustomerData && normalizedEmail) {
-      // Si hay email pero no nombre, usar la parte del email antes del @
+      // If there is an email but no name, use the part before @
       displayName = normalizedEmail.split('@')[0];
     } else {
-      // Si NO hay datos del formulario (cliente eligió "Weiter ohne Daten"), usar "Invitado de X tienda"
+      // If there is NO form data (customer chose "Weiter ohne Daten"), use "Guest of X store"
       const store = await this.findStore(storeSlug, storeId);
       if (store?.name) {
         displayName = `Invitado de ${store.name}`;
@@ -534,12 +525,12 @@ class OrderController {
       }
     }
 
-    // Si hay email del formulario, buscar usuario existente o crear uno nuevo
+    // If there is an email from the form, look for an existing user or create a new one
     if (normalizedEmail) {
       try {
         const existingUser = await userService.findByEmail(normalizedEmail);
         if (existingUser?.data?.id) {
-          // Si el usuario existe, actualizar su nombre si tenemos uno mejor del formulario
+          // If the user exists, update their name if we have a better one from the form
           if (hasCustomerData && customer.name && customer.name.trim().length > 0) {
             const currentName = existingUser.data.name || '';
             if (currentName !== customer.name.trim()) {
@@ -548,26 +539,26 @@ class OrderController {
                   name: customer.name.trim()
                 });
               } catch (updateError) {
-                console.warn('No se pudo actualizar el nombre del usuario:', updateError.message);
+                logger.warn('Could not update user name', { error: updateError.message });
               }
             }
           }
           return existingUser.data.id;
         }
       } catch (error) {
-        if (!error.message?.toLowerCase().includes('no encontrado')) {
+        if (!error.message?.toLowerCase().includes('not found') && !error.message?.toLowerCase().includes('no encontrado')) {
           throw error;
         }
       }
     }
 
-    // Generar email si no hay uno del formulario
+    // Generate email if there is none from the form
     const generatedEmail = normalizedEmail || this.generateGuestEmail(storeSlug, storeId);
     const password = randomUUID();
 
-    // Crear usuario con los datos disponibles
-    // Si hay datos del formulario, usar esos datos reales
-    // Si no hay datos, usar "Invitado de X tienda"
+    // Create user with available data
+    // If there is form data, use that real data
+    // If there is no data, use "Guest of X store"
     const userData = {
       email: generatedEmail,
       password,
@@ -605,7 +596,7 @@ class OrderController {
   }
 
   /**
-   * Top productos más vendidos de la tienda (para Bestseller en dashboard).
+   * Top selling products for the store (for Bestseller in dashboard).
    * @route GET /api/orders/top-products
    */
   async getTopProducts(req, res) {
@@ -621,7 +612,8 @@ class OrderController {
       });
       res.status(HTTP_STATUS.OK).json({ success: true, data });
     } catch (error) {
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({
         success: false,
         error: error.message,
       });
@@ -629,13 +621,13 @@ class OrderController {
   }
 
   /**
-   * Obtiene estadísticas de órdenes
-   * Retorna totales de ventas, número de órdenes, etc.
+   * Gets order statistics
+   * Returns sales totals, number of orders, etc.
    * @route GET /api/orders/stats
-   * @param {Object} req - Request object de Express
-   * @param {Object} res - Response object de Express
-   * @returns {Promise<void>} JSON con estadísticas de órdenes
-   * @throws {500} Si hay error en el servidor
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @returns {Promise<void>} JSON with order statistics
+   * @throws {500} On server error
    */
   async getOrderStats(req, res) {
     try {
@@ -669,7 +661,8 @@ class OrderController {
       const result = await orderService.getStats(options);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({
         success: false,
         error: error.message
       });
@@ -677,14 +670,14 @@ class OrderController {
   }
 
   /**
-   * Obtiene las órdenes más recientes
+   * Gets the most recent orders
    * @route GET /api/orders/recent
-   * @param {Object} req - Request object de Express
+   * @param {Object} req - Express request object
    * @param {Object} req.query - Query parameters
-   * @param {number} [req.query.limit=10] - Número de órdenes a retornar (default: 10)
-   * @param {Object} res - Response object de Express
-   * @returns {Promise<void>} JSON con las órdenes recientes
-   * @throws {500} Si hay error en el servidor
+   * @param {number} [req.query.limit=10] - Number of orders to return (default: 10)
+   * @param {Object} res - Express response object
+   * @returns {Promise<void>} JSON with recent orders
+   * @throws {500} On server error
    */
   async getRecentOrders(req, res) {
     try {
@@ -717,7 +710,8 @@ class OrderController {
       );
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({
         success: false,
         error: error.message
       });
@@ -726,7 +720,7 @@ class OrderController {
 
   /**
    * @route GET /api/orders/today-customers
-   * Distinct Kunden mit Bestellung heute (Kalendertag, Standard Europe/Zurich).
+   * Distinct customers with orders today (calendar day, default Europe/Zurich).
    */
   async getTodayCustomers(req, res) {
     try {
@@ -739,7 +733,7 @@ class OrderController {
         if (!effectiveStoreId) {
           return res.status(HTTP_STATUS.BAD_REQUEST).json({
             success: false,
-            error: 'storeId ist erforderlich',
+            error: 'storeId is required',
           });
         }
       } else if (role === 'ADMIN') {
@@ -770,7 +764,8 @@ class OrderController {
       );
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({
         success: false,
         error: error.message,
       });
@@ -778,7 +773,7 @@ class OrderController {
   }
 
   /**
-   * Actualiza el estado de una orden
+   * Updates the status of an order
    * @route PATCH /api/orders/:id/status
    */
   async updateOrderStatus(req, res) {
@@ -789,7 +784,7 @@ class OrderController {
       if (!status) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          error: 'El estado es requerido',
+          error: 'Status is required',
         });
       }
 
@@ -797,18 +792,15 @@ class OrderController {
       if (!validStatuses.includes(status)) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          error: `Estado inválido. Debe ser uno de: ${validStatuses.join(', ')}`,
+          error: `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
         });
       }
 
       const result = await orderService.updateStatus(id, status);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      const statusCode = error.message.includes('no encontrada')
-        ? HTTP_STATUS.NOT_FOUND
-        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
-
-      res.status(statusCode).json({
+      const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({
         success: false,
         error: error.message
       });

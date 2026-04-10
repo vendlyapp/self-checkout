@@ -64,6 +64,7 @@ export interface Invoice {
   documentType?: InvoiceDocumentType;
   paymentMethodDisplay?: string;
   isDeferredPayment?: boolean;
+  /** true = Swiss QR-Bill (Zahlteil + Empfangsschein) am Ende — nur bei QR-Rechnung mit QRR-Referenz */
   showQRSection?: boolean;
   // Computed or stored totals
   discountAmount?: number;
@@ -101,10 +102,32 @@ export function getPaymentMethodDisplay(code: string | undefined): string {
   return PAYMENT_METHOD_LABELS[normalized] ?? code;
 }
 
+export function normalizePaymentMethodCode(code: string | undefined): string {
+  if (!code) return '';
+  return String(code).toLowerCase().replace(/\s+/g, '-');
+}
+
 export function isDeferredPaymentMethod(code: string | undefined): boolean {
-  if (!code) return false;
-  const normalized = String(code).toLowerCase().replace(/\s+/g, '-');
+  const normalized = normalizePaymentMethodCode(code);
   return DEFERRED_PAYMENT_CODES.has(normalized);
+}
+
+/** Zahlschein nach Swiss Payments Association — nur diese Codes generieren QR-Bill-Daten im Backend */
+export function isSwissQRBillPaymentMethod(code: string | undefined): boolean {
+  const n = normalizePaymentMethodCode(code);
+  return n === 'qr-rechnung' || n === 'qr';
+}
+
+/**
+ * QR-Bill-Sektion (wie z. B. Digitec-Rechnung unten): nur bei QR-Rechnung und vorhandener QRR-Referenz.
+ * Andere Zahlungsarten (TWINT, Karte, Bargeld, „Rechnung“ ohne QR) erhalten keinen Zahlschein.
+ */
+export function shouldShowSwissQRBillOnInvoice(
+  paymentMethod: string | undefined,
+  qrrReference: string | null | undefined
+): boolean {
+  if (!qrrReference || String(qrrReference).trim() === '') return false;
+  return isSwissQRBillPaymentMethod(paymentMethod);
 }
 
 // ─── Formatting ──────────────────────────────────────────────────────────────

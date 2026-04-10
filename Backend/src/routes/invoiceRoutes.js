@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const invoiceController = require('../controllers/InvoiceController');
-const { validateUUID } = require('../middleware/validation');
+const { validateUUID, validateBody } = require('../middleware/validation');
 const { authMiddleware, optionalAuth } = require('../middleware/authMiddleware');
+const { createInvoiceSchema, updateInvoiceSchema } = require('../schemas/invoiceSchemas');
 
 /**
  * @swagger
@@ -54,7 +55,7 @@ const { authMiddleware, optionalAuth } = require('../middleware/authMiddleware')
  */
 // POST is called from the public checkout flow — optionalAuth allows both
 // anonymous customers and authenticated admins to create invoices.
-router.post('/', optionalAuth, invoiceController.createInvoice);
+router.post('/', optionalAuth, validateBody(createInvoiceSchema), invoiceController.createInvoice);
 
 /**
  * @swagger
@@ -182,6 +183,7 @@ router.get('/customer/:email', authMiddleware, invoiceController.getInvoicesByCu
  *         description: Factura no encontrada
  */
 router.get('/public/:shareToken', invoiceController.getInvoiceByShareToken);
+router.get('/public/:shareToken/pdf', invoiceController.downloadPDF);
 
 router.get('/store/:storeId', authMiddleware, validateUUID('storeId'), invoiceController.getInvoicesByStoreId);
 
@@ -243,8 +245,10 @@ router.get('/store/:storeId', authMiddleware, validateUUID('storeId'), invoiceCo
  *         description: Factura no encontrada
  */
 router.get('/:id/qr-code', optionalAuth, validateUUID('id'), invoiceController.getQRCode);
+// PDF download — accessible with auth OR with ?shareToken=xxx (public customer link)
+router.get('/:id/pdf', optionalAuth, validateUUID('id'), invoiceController.downloadPDF);
 router.get('/:id', authMiddleware, validateUUID('id'), invoiceController.getInvoiceById);
-router.patch('/:id', authMiddleware, validateUUID('id'), invoiceController.updateInvoice);
+router.patch('/:id', authMiddleware, validateUUID('id'), validateBody(updateInvoiceSchema), invoiceController.updateInvoice);
 
 module.exports = router;
 

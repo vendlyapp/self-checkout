@@ -1,72 +1,84 @@
 'use client'
 
 import { useResponsive } from '@/hooks'
-import { User } from 'lucide-react'
+import { useUser } from '@/lib/contexts/UserContext'
+import { useMyStore } from '@/hooks/queries/useMyStore'
+import ProfileAccountCard from '@/components/dashboard/store/ProfileAccountCard'
+import ProfileAccessCard from '@/components/dashboard/store/ProfileAccessCard'
+import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState'
+import { UserCircle2 } from 'lucide-react'
 
 export default function ProfilePage() {
   const { isMobile } = useResponsive()
+  const { profile, loading, refreshProfile } = useUser()
+  const { data: store } = useMyStore()
+
+  if (loading) {
+    return <DashboardLoadingState mode="page" message="Wird geladen..." />
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-dvh bg-background-cream px-4 py-8">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm">
+          <h1 className="text-xl font-semibold text-gray-900">Profil nicht verfügbar</h1>
+          <p className="mt-2 text-sm text-gray-600">
+            Ihr Profil konnte aktuell nicht geladen werden. Bitte laden Sie die Seite neu.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="w-full h-full min-w-0 animate-fade-in">
-      {/* Mobile Layout */}
+    <div className="h-full w-full min-w-0 animate-fade-in">
       {isMobile && (
-        <div className="w-full min-h-dvh bg-[#F2EDE8] safe-area-bottom">
-          <div className="px-4 py-6 pb-32 max-w-full mx-auto">
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-1.5">
-                Mein Profil
-              </h1>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                Verwalten Sie Ihre Profilinformationen
-              </p>
-            </div>
-            
-            {/* Placeholder Content */}
-            <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200 text-center">
-              <div className="w-20 h-20 rounded-xl bg-brand-100 flex items-center justify-center mx-auto mb-4">
-                <User className="w-10 h-10 text-brand-600" />
+        <div className="min-h-dvh bg-background-cream safe-area-bottom">
+          <div className="mx-auto w-full max-w-3xl px-4 py-5 pb-28">
+            <div className="mb-5 flex items-start gap-3">
+              <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100">
+                <UserCircle2 className="h-5 w-5 text-brand-600" />
               </div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                Profil-Einstellungen
-              </h2>
-              <p className="text-sm text-gray-500 mb-4">
-                Diese Funktion wird bald verfügbar sein.
-              </p>
-              <p className="text-xs text-gray-400">
-                Hier können Sie in Zukunft Ihre persönlichen Informationen, Passwort und andere Profil-Einstellungen verwalten.
-              </p>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Mein Profil</h1>
+                <p className="text-sm text-gray-500">Verwalten Sie Ihre persönlichen Kontodaten</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <ProfileAccountCard
+                userId={profile.id}
+                initialName={profile.name}
+                initialEmail={profile.email}
+                onProfileUpdated={refreshProfile}
+              />
+              <ProfileAccessCard role={profile.role} storeName={store?.name || profile.storeName} />
             </div>
           </div>
         </div>
       )}
 
-      {/* Desktop Layout */}
       {!isMobile && (
-        <div className="w-full min-h-dvh bg-[#F2EDE8] py-8">
-          <div className="max-w-4xl mx-auto px-6">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">
-                Mein Profil
-              </h1>
-              <p className="text-gray-500 text-base leading-relaxed">
-                Verwalten Sie Ihre Profilinformationen
-              </p>
-            </div>
-            
-            {/* Placeholder Content */}
-            <div className="bg-white rounded-xl p-12 shadow-sm border border-gray-200 text-center">
-              <div className="w-24 h-24 rounded-xl bg-brand-100 flex items-center justify-center mx-auto mb-6">
-                <User className="w-12 h-12 text-brand-600" />
+        <div className="min-h-dvh bg-background-cream py-8">
+          <div className="mx-auto max-w-4xl px-6">
+            <div className="mb-6 flex items-start gap-3">
+              <div className="mt-1 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-100">
+                <UserCircle2 className="h-6 w-6 text-brand-600" />
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">
-                Profil-Einstellungen
-              </h2>
-              <p className="text-base text-gray-500 mb-6">
-                Diese Funktion wird bald verfügbar sein.
-              </p>
-              <p className="text-sm text-gray-400">
-                Hier können Sie in Zukunft Ihre persönlichen Informationen, Passwort und andere Profil-Einstellungen verwalten.
-              </p>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Mein Profil</h1>
+                <p className="mt-1 text-base text-gray-500">Verwalten Sie Ihre persönlichen Kontodaten</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              <ProfileAccountCard
+                userId={profile.id}
+                initialName={profile.name}
+                initialEmail={profile.email}
+                onProfileUpdated={refreshProfile}
+              />
+              <ProfileAccessCard role={profile.role} storeName={store?.name || profile.storeName} />
             </div>
           </div>
         </div>

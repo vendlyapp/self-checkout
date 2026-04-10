@@ -69,12 +69,12 @@ app.use("/api", customerRoutes);
  * @swagger
  * /health:
  *   get:
- *     summary: Health check del sistema
- *     description: Verifica el estado de salud del servidor y sus servicios
+ *     summary: System health check
+ *     description: Verifies the health status of the server and its services
  *     tags: [Health]
  *     responses:
  *       200:
- *         description: Sistema funcionando correctamente
+ *         description: System running correctly
  *         content:
  *           application/json:
  *             schema:
@@ -88,7 +88,7 @@ app.use("/api", customerRoutes);
  *                   format: date-time
  *                 uptime:
  *                   type: number
- *                   description: Tiempo de actividad del servidor en segundos
+ *                   description: Server uptime in seconds
  */
 app.get("/health", (req, res) => {
   res.json({

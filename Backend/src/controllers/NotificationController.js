@@ -3,9 +3,7 @@ const storeService = require('../services/StoreService');
 const { HTTP_STATUS } = require('../types');
 
 /**
- * Obtiene el storeId del usuario autenticado (su tienda).
- * @param {Object} req
- * @returns {Promise<string|null>}
+ * Resolve the storeId for the authenticated user.
  */
 async function getStoreIdForUser(req) {
   if (req.user?.storeId) return req.user.storeId;
@@ -13,18 +11,19 @@ async function getStoreIdForUser(req) {
   return store?.id || null;
 }
 
+/**
+ * Notification controller.
+ * Handles listing and marking notifications as read.
+ */
 class NotificationController {
-  /**
-   * GET /api/notifications
-   * Lista notificaciones de la tienda del usuario. Query: limit, offset, unreadOnly.
-   */
+  /** @route GET /api/notifications */
   async list(req, res) {
     try {
       const storeId = await getStoreIdForUser(req);
       if (!storeId) {
         return res.status(HTTP_STATUS.NOT_FOUND).json({
           success: false,
-          error: 'Tienda no encontrada',
+          error: 'Store not found',
         });
       }
       const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
@@ -49,17 +48,14 @@ class NotificationController {
     }
   }
 
-  /**
-   * PATCH /api/notifications/:id/read
-   * Marca una notificación como leída (solo si pertenece a la tienda del usuario).
-   */
+  /** @route PATCH /api/notifications/:id/read */
   async markAsRead(req, res) {
     try {
       const storeId = await getStoreIdForUser(req);
       if (!storeId) {
         return res.status(HTTP_STATUS.NOT_FOUND).json({
           success: false,
-          error: 'Tienda no encontrada',
+          error: 'Store not found',
         });
       }
       const { id } = req.params;
@@ -67,13 +63,10 @@ class NotificationController {
       if (!updated) {
         return res.status(HTTP_STATUS.NOT_FOUND).json({
           success: false,
-          error: 'Benachrichtigung nicht gefunden',
+          error: 'Notification not found',
         });
       }
-      return res.status(HTTP_STATUS.OK).json({
-        success: true,
-        data: updated,
-      });
+      return res.status(HTTP_STATUS.OK).json({ success: true, data: updated });
     } catch (error) {
       return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
@@ -82,23 +75,20 @@ class NotificationController {
     }
   }
 
-  /**
-   * PATCH /api/notifications/read-all
-   * Marca todas las notificaciones de la tienda del usuario como leídas.
-   */
+  /** @route PATCH /api/notifications/read-all */
   async markAllAsRead(req, res) {
     try {
       const storeId = await getStoreIdForUser(req);
       if (!storeId) {
         return res.status(HTTP_STATUS.NOT_FOUND).json({
           success: false,
-          error: 'Tienda no encontrada',
+          error: 'Store not found',
         });
       }
       await notificationService.markAllAsRead(storeId);
       return res.status(HTTP_STATUS.OK).json({
         success: true,
-        message: 'Alle Benachrichtigungen als gelesen markiert',
+        message: 'All notifications marked as read',
       });
     } catch (error) {
       return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({

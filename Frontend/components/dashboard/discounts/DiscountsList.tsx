@@ -8,7 +8,7 @@ import { useDiscountCodes, useDiscountCodeStats, useArchiveDiscountCode, useUpda
 import { DiscountCode } from './types'
 import DeleteDiscountCodeModal from './DeleteDiscountCodeModal'
 import CreateDiscountModal, { DiscountFormData } from './CreateDiscountModal'
-import { Loader } from '@/components/ui/Loader'
+import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState'
 
 export interface DiscountsListProps {
   /** Contenido fijo arriba (ej. botón crear). Cuando se pasa, el header es sticky y solo la lista hace scroll. */
@@ -128,9 +128,7 @@ export default function DiscountsList({ stickyPrefix, scrollAreaClassName = '' }
 
   if (isLoading || isLoadingArchived) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader size="md" />
-      </div>
+      <DashboardLoadingState mode="page" message="Wird geladen..." />
     )
   }
 
@@ -235,6 +233,7 @@ export default function DiscountsList({ stickyPrefix, scrollAreaClassName = '' }
             onCreate={handleCreate}
             editingCode={editingCode}
             onUpdate={handleUpdate}
+            isSubmitting={updateMutation.isPending}
           />,
           modalContainer
         )}
@@ -268,6 +267,7 @@ export default function DiscountsList({ stickyPrefix, scrollAreaClassName = '' }
           onCreate={handleCreate}
           editingCode={editingCode}
           onUpdate={handleUpdate}
+          isSubmitting={updateMutation.isPending}
         />,
         modalContainer
       )}

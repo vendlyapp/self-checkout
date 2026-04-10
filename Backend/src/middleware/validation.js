@@ -1,8 +1,8 @@
-// src/middleware/validation.js - Middleware de validación
+// src/middleware/validation.js — Input validation middleware
 
 const { HTTP_STATUS } = require('../types');
 
-// Middleware para validar UUID
+// Validate UUID path parameter
 const validateUUID = (paramName = 'id') => {
   return (req, res, next) => {
     const id = req.params[paramName];
@@ -11,7 +11,7 @@ const validateUUID = (paramName = 'id') => {
     if (!id || !uuidRegex.test(id)) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
-        error: `El ${paramName} debe ser un UUID válido`
+        error: `${paramName} must be a valid UUID`,
       });
     }
 
@@ -19,14 +19,14 @@ const validateUUID = (paramName = 'id') => {
   };
 };
 
-// Middleware para validar email
+// Validate email in request body
 const validateEmail = (req, res, next) => {
   const { email } = req.body;
 
   if (!email) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
-      error: 'El email es requerido'
+      error: 'Email is required',
     });
   }
 
@@ -34,49 +34,49 @@ const validateEmail = (req, res, next) => {
   if (!emailRegex.test(email)) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
-      error: 'El email debe tener un formato válido'
+      error: 'Email must have a valid format',
     });
   }
 
   next();
 };
 
-// Middleware para validar datos de producto
+// Validate product data in request body
 const validateProduct = (req, res, next) => {
   const { name, price } = req.body;
 
   if (!name || !name.trim()) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
-      error: 'El nombre del producto es requerido'
+      error: 'Product name is required',
     });
   }
 
   if (!price || isNaN(parseFloat(price))) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
-      error: 'El precio debe ser un número válido'
+      error: 'Price must be a valid number',
     });
   }
 
   if (parseFloat(price) < 0) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
-      error: 'El precio no puede ser negativo'
+      error: 'Price cannot be negative',
     });
   }
 
   next();
 };
 
-// Middleware para validar datos de orden
+// Validate order data in request body
 const validateOrder = (req, res, next) => {
   const { items } = req.body;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
-      error: 'La orden debe contener al menos un producto'
+      error: 'Order must contain at least one item',
     });
   }
 
@@ -84,14 +84,14 @@ const validateOrder = (req, res, next) => {
     if (!item.productId || !item.quantity) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
-        error: 'Cada item debe tener productId y quantity'
+        error: 'Each item must have productId and quantity',
       });
     }
 
     if (!Number.isInteger(item.quantity) || item.quantity <= 0) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
-        error: 'La cantidad debe ser un número entero positivo'
+        error: 'Quantity must be a positive integer',
       });
     }
   }
@@ -99,18 +99,40 @@ const validateOrder = (req, res, next) => {
   next();
 };
 
-// Middleware para validar disponibilidad de producto
+// Validate product availability flag
 const validateProductAvailability = (req, res, next) => {
   const { isAvailable } = req.body;
 
   if (isAvailable !== undefined && typeof isAvailable !== 'boolean') {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
-      error: 'isAvailable debe ser true o false'
+      error: 'isAvailable must be true or false',
     });
   }
 
   next();
+};
+
+/**
+ * Generic Zod body validator.
+ * Usage: router.post('/route', validateBody(myZodSchema), controller.method)
+ */
+const validateBody = (schema) => {
+  return (req, res, next) => {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        error: 'Validation error',
+        details: result.error.errors.map((e) => ({
+          field: e.path.join('.'),
+          message: e.message,
+        })),
+      });
+    }
+    req.body = result.data;
+    next();
+  };
 };
 
 module.exports = {
@@ -118,5 +140,6 @@ module.exports = {
   validateEmail,
   validateProduct,
   validateOrder,
-  validateProductAvailability
+  validateProductAvailability,
+  validateBody,
 };

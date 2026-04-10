@@ -109,37 +109,15 @@ export default function PublicInvoicePage() {
 
   const handleDownload = async () => {
     lightFeedback();
-    
+    if (!invoice) return;
     try {
-      // Ocultar elementos que no deben aparecer al imprimir
-      const footer = document.querySelector('[class*="invoice-actions-footer"]');
-      const headerNav = document.querySelector('[class*="HeaderNav"]');
-      const responsiveHeader = document.querySelector('[class*="ResponsiveHeader"]');
-      
-      const originalFooterDisplay = footer ? (footer as HTMLElement).style.display : '';
-      const originalHeaderNavDisplay = headerNav ? (headerNav as HTMLElement).style.display : '';
-      const originalResponsiveHeaderDisplay = responsiveHeader ? (responsiveHeader as HTMLElement).style.display : '';
-      
-      if (footer) (footer as HTMLElement).style.display = 'none';
-      if (headerNav) (headerNav as HTMLElement).style.display = 'none';
-      if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = 'none';
-      
-      // Pequeño delay para asegurar que los elementos se oculten
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Usar window.print() que respetará los estilos @media print
-      // El navegador mostrará el diálogo donde el usuario puede guardar como PDF
-      window.print();
-      
-      // Restaurar elementos después de imprimir
-      setTimeout(() => {
-        if (footer) (footer as HTMLElement).style.display = originalFooterDisplay;
-        if (headerNav) (headerNav as HTMLElement).style.display = originalHeaderNavDisplay;
-        if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = originalResponsiveHeaderDisplay;
-      }, 1000);
+      const filename = invoice.invoiceNumber
+        ? `Rechnung-${invoice.invoiceNumber}`
+        : `Rechnung-${invoice.id.slice(0, 8)}`;
+      await InvoiceService.downloadPublicPDF(token, filename);
     } catch (error) {
-      devError('Error printing:', error);
-      toast.error('Fehler beim Drucken');
+      devError('Error downloading PDF:', error);
+      toast.error('Fehler beim Herunterladen der Rechnung');
     }
   };
 

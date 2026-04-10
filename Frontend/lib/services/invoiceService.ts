@@ -176,7 +176,7 @@ export class InvoiceService {
     return makeRequest<Invoice>(endpoint, {
       method: 'GET',
       signal: requestOptions?.signal,
-    });
+    }, false);
   }
 
   /**
@@ -258,6 +258,72 @@ export class InvoiceService {
       method: 'GET',
       signal: requestOptions?.signal,
     }, false);
+  }
+
+  /**
+   * Descarga el PDF de una factura directamente desde el backend.
+   * Soporta acceso autenticado (admin/tienda) y público (shareToken).
+   */
+  static async downloadPDF(
+    invoiceId: string,
+    filename: string,
+    shareToken?: string,
+  ): Promise<void> {
+    const params = shareToken ? `?shareToken=${encodeURIComponent(shareToken)}` : '';
+    const url = buildApiUrl(`/api/invoices/${invoiceId}/pdf${params}`);
+
+    let headers: Record<string, string> = {};
+    if (!shareToken) {
+      const { supabase } = await import('@/lib/supabase/client');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      headers = getAuthHeaders(token);
+    }
+
+    const res = await fetch(url, { method: 'GET', headers });
+    if (!res.ok) {
+      let msg = 'Fehler beim Generieren des PDFs';
+      try { const j = await res.json(); msg = j.error || msg; } catch (_) {}
+      throw new Error(msg);
+    }
+
+    const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
+  }
+
+  /**
+   * Descarga PDF público por shareToken.
+   * Usa el endpoint dedicado del backend para links compartidos.
+   */
+  static async downloadPublicPDF(
+    shareToken: string,
+    filename: string,
+  ): Promise<void> {
+    const url = buildApiUrl(`/api/invoices/public/${encodeURIComponent(shareToken)}/pdf`);
+    const res = await fetch(url, { method: 'GET' });
+
+    if (!res.ok) {
+      let msg = 'Fehler beim Generieren des PDFs';
+      try { const j = await res.json(); msg = j.error || msg; } catch (_) {}
+      throw new Error(msg);
+    }
+
+    const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
   }
 
   /**

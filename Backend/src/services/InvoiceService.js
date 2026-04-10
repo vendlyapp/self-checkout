@@ -1,6 +1,7 @@
 const { query, transaction } = require('../../lib/database');
 const crypto = require('crypto');
 const customerService = require('./CustomerService');
+const logger = require('../utils/logger');
 
 class InvoiceService {
   /**
@@ -27,7 +28,7 @@ class InvoiceService {
    * Crea una nueva factura
    */
   async create(invoiceData) {
-    console.log('📝 [InvoiceService.create] Iniciando creación de factura...', {
+    logger.info('[InvoiceService.create] Starting invoice creation', {
       hasOrderId: !!invoiceData?.orderId,
       orderId: invoiceData?.orderId,
       itemsCount: invoiceData?.items?.length || 0,
@@ -59,15 +60,9 @@ class InvoiceService {
       qrCreditorSnapshot,
     } = invoiceData;
 
-    if (!orderId) {
-      console.error('❌ [InvoiceService.create] Error: El ID de la orden es requerido');
-      throw new Error('El ID de la orden es requerido');
-    }
+    if (!orderId) throw new Error('orderId is required');
 
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      console.error('❌ [InvoiceService.create] Error: Los items de la factura son requeridos');
-      throw new Error('Los items de la factura son requeridos');
-    }
+    if (!items || !Array.isArray(items) || items.length === 0) throw new Error('Invoice items are required');
 
     const insertQuery = `
       INSERT INTO "Invoice" (
@@ -144,7 +139,7 @@ class InvoiceService {
       } catch (err) {
         // 23505 = unique_violation in PostgreSQL
         if (err.code === '23505' && attempt < MAX_RETRIES) {
-          console.warn(`⚠️ [InvoiceService.create] Unique constraint collision (attempt ${attempt}), retrying…`);
+          logger.warn('[InvoiceService.create] Unique constraint collision, retrying', { attempt });
           continue;
         }
         throw err; // Rethrow non-collision errors or final attempt failure
@@ -178,15 +173,15 @@ class InvoiceService {
           // Actualizar estadísticas del cliente
           await customerService.updateStats(customer.id);
           
-          console.log('✅ [InvoiceService.create] Cliente creado/actualizado:', customer.id);
+          logger.info('[InvoiceService.create] Customer upserted', { customerId: customer.id });
         }
       } catch (customerError) {
         // No fallar la factura si hay error al crear/actualizar el cliente
-        console.error('⚠️ [InvoiceService.create] Error al crear/actualizar cliente:', customerError);
+        logger.warn('[InvoiceService.create] Failed to upsert customer', { error: customerError.message });
       }
     }
 
-    console.log('✅ [InvoiceService.create] Factura creada exitosamente en la base de datos:', {
+    logger.info('[InvoiceService.create] Invoice created successfully', {
       invoiceId: result.id,
       invoiceNumber: result.invoiceNumber,
       orderId: result.orderId,
@@ -196,7 +191,7 @@ class InvoiceService {
     return {
       success: true,
       data: result,
-      message: 'Factura creada exitosamente',
+      message: 'Invoice created successfully',
     };
   }
 
@@ -287,7 +282,7 @@ class InvoiceService {
    */
   async findById(id) {
     if (!id) {
-      throw new Error('El ID de la factura es requerido');
+      throw new Error('Invoice id is required');
     }
 
     const selectQuery = `
@@ -305,7 +300,7 @@ class InvoiceService {
     if (result.rows.length === 0) {
       return {
         success: false,
-        error: 'Factura no encontrada',
+        error: 'Invoice not found',
       };
     }
 
@@ -332,7 +327,7 @@ class InvoiceService {
    */
   async findByShareToken(shareToken) {
     if (!shareToken) {
-      throw new Error('El token de compartir es requerido');
+      throw new Error('shareToken is required');
     }
 
     const selectQuery = `
@@ -350,7 +345,7 @@ class InvoiceService {
     if (result.rows.length === 0) {
       return {
         success: false,
-        error: 'Factura no encontrada',
+        error: 'Invoice not found',
         data: null,
       };
     }
@@ -375,7 +370,7 @@ class InvoiceService {
 
   async findByInvoiceNumber(invoiceNumber) {
     if (!invoiceNumber) {
-      throw new Error('El número de factura es requerido');
+      throw new Error('Invoice number is required');
     }
 
     const selectQuery = `
@@ -393,7 +388,7 @@ class InvoiceService {
     if (result.rows.length === 0) {
       return {
         success: false,
-        error: 'Factura no encontrada',
+        error: 'Invoice not found',
       };
     }
 
@@ -420,7 +415,7 @@ class InvoiceService {
    */
   async findByOrderId(orderId) {
     if (!orderId) {
-      throw new Error('El ID de la orden es requerido');
+      throw new Error('orderId is required');
     }
 
     const selectQuery = `
@@ -459,7 +454,7 @@ class InvoiceService {
    */
   async findByCustomerEmail(email, options = {}) {
     if (!email) {
-      throw new Error('El email del cliente es requerido');
+      throw new Error('Customer email is required');
     }
 
     const { limit = 50, offset = 0 } = options;
@@ -501,7 +496,7 @@ class InvoiceService {
    */
   async findByStoreId(storeId, options = {}) {
     if (!storeId) {
-      throw new Error('El ID de la tienda es requerido');
+      throw new Error('storeId is required');
     }
 
     const { limit = 100, offset = 0 } = options;
@@ -543,7 +538,7 @@ class InvoiceService {
    */
   async update(id, updateData) {
     if (!id) {
-      throw new Error('El ID de la factura es requerido');
+      throw new Error('Invoice id is required');
     }
 
     const {
@@ -597,7 +592,7 @@ class InvoiceService {
     }
 
     if (updateFields.length === 0) {
-      throw new Error('No hay campos para actualizar');
+      throw new Error('No fields to update');
     }
 
     paramCount++;
@@ -616,7 +611,7 @@ class InvoiceService {
     if (result.rows.length === 0) {
       return {
         success: false,
-        error: 'Factura no encontrada',
+        error: 'Invoice not found',
       };
     }
 
@@ -633,7 +628,7 @@ class InvoiceService {
     return {
       success: true,
       data: invoice,
-      message: 'Factura actualizada exitosamente',
+      message: 'Invoice updated successfully',
     };
   }
 
@@ -642,12 +637,12 @@ class InvoiceService {
    */
   async updateStatus(id, status) {
     if (!id) {
-      throw new Error('El ID de la factura es requerido');
+      throw new Error('Invoice id is required');
     }
 
     const validStatuses = ['issued', 'paid', 'cancelled'];
     if (!validStatuses.includes(status)) {
-      throw new Error(`Estado inválido. Debe ser uno de: ${validStatuses.join(', ')}`);
+      throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
     }
 
     const updateQuery = `
@@ -665,7 +660,7 @@ class InvoiceService {
     if (result.rows.length === 0) {
       return {
         success: false,
-        error: 'Factura no encontrada',
+        error: 'Invoice not found',
       };
     }
 
@@ -682,7 +677,7 @@ class InvoiceService {
     return {
       success: true,
       data: invoice,
-      message: 'Estado de factura actualizado exitosamente',
+      message: 'Invoice status updated successfully',
     };
   }
 }

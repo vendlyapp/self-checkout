@@ -514,13 +514,20 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
           productCategoryId, // Pasar el ID de la categoría
         );
 
+        // Resolve a safe categoryId for this store.
+        // Legacy products may carry stale categoryId values that are not part of current store categories.
+        const resolvedCategoryId =
+          backendCategories.find((cat) => cat.id === productCategoryId)?.id ||
+          backendCategories.find((cat) => cat.name === productCategory)?.id ||
+          '';
+
         // Agregar campos adicionales para actualización
         const updateData: UpdateProductRequest = {
           ...productData,
           isActive,
           images: productImages.length > 0 ? productImages : undefined,
           image: productImages.length > 0 ? productImages[0] : undefined,
-          categoryId: productCategoryId || productData.categoryId, // Asegurar que categoryId se incluya
+          categoryId: resolvedCategoryId || productData.categoryId, // Asegurar categoryId válido
           // Si hay promoción, configurar campos de promoción
           taxRate: parseFloat(vatRate) / 100,
           ...(hasPromotion && {
@@ -569,8 +576,16 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
           const createVariantData = (
             variantName: string,
             basePrice: number,
-            promoPrice?: string
+            promoPrice?: string,
+            variantIndex?: number
           ): CreateProductRequest => {
+            const skuSuffix = variantName
+              .toLowerCase()
+              .trim()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-+|-+$/g, '') || 'variant';
+            const uniqueSku = `SKU-${productId.slice(0, 8)}-${skuSuffix}-${Date.now()}-${variantIndex ?? 0}`;
+
             const variantData: CreateProductRequest = {
               name: variantName.trim() 
                 ? `${productName} ${variantName.trim()}` 
@@ -579,8 +594,9 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
               price: promoPrice ? parseFloat(promoPrice) : basePrice,
               originalPrice: promoPrice ? basePrice : undefined,
               category: productCategory,
-              categoryId: productCategoryId,
+              categoryId: resolvedCategoryId || undefined,
               stock: 999,
+              sku: uniqueSku,
               isActive: isActive,
               parentId: productId, // Vincular con el producto padre
             };
@@ -615,7 +631,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
           });
 
           // Actualizar o crear variantes (igual que en Form.tsx)
-          for (const variant of validVariants) {
+          for (const [variantIndex, variant] of validVariants.entries()) {
             try {
               const variantPrice = parseFloat(variant.price);
               if (isNaN(variantPrice) || variantPrice <= 0) {
@@ -628,7 +644,8 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
               const variantData = createVariantData(
                 variantName,
                 variantPrice,
-                variant.promotionPrice?.trim() || undefined
+                variant.promotionPrice?.trim() || undefined,
+                variantIndex
               );
 
               // Buscar si ya existe una variante con el mismo nombre

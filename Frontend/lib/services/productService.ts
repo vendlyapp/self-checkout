@@ -185,7 +185,16 @@ const makeRequest = async <T>(
     }
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      let backendError = `HTTP error! status: ${response.status}`;
+      try {
+        const errorPayload = await response.json();
+        if (errorPayload?.error) {
+          backendError = errorPayload.error;
+        }
+      } catch (_) {
+        // Keep generic HTTP error when response body is not JSON
+      }
+      throw new Error(backendError);
     }
 
     const data = await response.json();

@@ -1,5 +1,7 @@
 const { query } = require('../../lib/database');
 const globalPaymentMethodConfigService = require('./GlobalPaymentMethodConfigService');
+const AppError = require('../utils/AppError');
+const logger = require('../utils/logger');
 
 class PaymentMethodService {
 
@@ -27,8 +29,8 @@ class PaymentMethodService {
         isActive: true
       });
     } catch (err) {
-      if (!err.message || !err.message.includes('existiert bereits')) {
-        console.warn('[PaymentMethodService] ensureBargeldExistsForStore:', err.message);
+      if (!err.message || !err.message.includes('already exists')) {
+        logger.warn('[PaymentMethodService.ensureBargeldExistsForStore] Failed', { error: err.message });
       }
     }
   }
@@ -42,7 +44,7 @@ class PaymentMethodService {
    */
   async findByStoreId(storeId, options = {}) {
     if (!storeId || !storeId.trim()) {
-      throw new Error('Store-ID ist erforderlich');
+      throw new AppError('storeId is required', 400, 'VALIDATION_ERROR');
     }
 
     await this.ensureBargeldExistsForStore(storeId);
@@ -82,19 +84,21 @@ class PaymentMethodService {
       : 0;
     
     if (maxParamNumber > params.length) {
-      console.error('[PaymentMethodService.findByStoreId] Error: Query requiere más parámetros de los proporcionados');
-      console.error('Query completa:', selectQuery);
-      console.error('Params requeridos:', maxParamNumber);
-      console.error('Params proporcionados:', params.length);
-      console.error('Params:', params);
-      console.error('activeOnly:', activeOnly);
-      throw new Error(`Query requiere ${maxParamNumber} parámetros pero solo se proporcionaron ${params.length}`);
+      logger.error('[PaymentMethodService.findByStoreId] Query parameter mismatch', {
+        requiredParams: maxParamNumber,
+        providedParams: params.length,
+        params,
+        activeOnly,
+      });
+      throw new AppError(`Query requires ${maxParamNumber} parameters but ${params.length} were provided`, 500, 'INTERNAL_ERROR');
     }
     
     // Log para debugging
     if (activeOnly) {
-      console.log('[PaymentMethodService.findByStoreId] Query con activeOnly=true:', selectQuery.substring(0, 200) + '...');
-      console.log('[PaymentMethodService.findByStoreId] Params:', params);
+      logger.debug('[PaymentMethodService.findByStoreId] Query with activeOnly=true', {
+        queryPrefix: selectQuery.substring(0, 200),
+        params,
+      });
     }
     
     const result = await query(selectQuery, params);
@@ -105,7 +109,7 @@ class PaymentMethodService {
     try {
       disabledGlobalCodes = await globalPaymentMethodConfigService.getDisabledCodes();
     } catch (error) {
-      console.error('[PaymentMethodService.findByStoreId] Error verificando configuraciones globales:', error);
+      logger.warn('[PaymentMethodService.findByStoreId] Failed to verify global config', { error: error.message });
       // En caso de error, continuar sin filtrar (fail-safe)
     }
 
@@ -118,13 +122,15 @@ class PaymentMethodService {
           const methodCode = method.code?.toLowerCase() || '';
           const isDisabled = disabledGlobalCodes.includes(methodCode);
           if (isDisabled) {
-            console.log(`[PaymentMethodService] Filtrando método globalmente deshabilitado: ${method.code}`);
+            logger.debug('[PaymentMethodService.findByStoreId] Filtering globally disabled method', { code: method.code });
           }
           return !isDisabled;
         });
         const afterCount = methods.length;
         if (beforeCount !== afterCount) {
-          console.log(`[PaymentMethodService] Filtrados ${beforeCount - afterCount} métodos globalmente deshabilitados`);
+          logger.info('[PaymentMethodService.findByStoreId] Filtered globally disabled methods', {
+            filteredCount: beforeCount - afterCount,
+          });
         }
       }
     } else {
@@ -153,14 +159,14 @@ class PaymentMethodService {
    */
   async findById(id) {
     if (!id || !id.trim()) {
-      throw new Error('Zahlungsmethoden-ID ist erforderlich');
+      throw new AppError('Payment method id is required', 400, 'VALIDATION_ERROR');
     }
 
     const selectQuery = 'SELECT * FROM "PaymentMethod" WHERE id = $1';
     const result = await query(selectQuery, [id]);
 
     if (result.rows.length === 0) {
-      throw new Error('Zahlungsmethode nicht gefunden');
+      throw new AppError('Payment method not found', 404, 'PAYMENT_METHOD_NOT_FOUND');
     }
 
     return {
@@ -186,25 +192,25 @@ class PaymentMethodService {
   async create(methodData) {
     // Validaciones
     if (!methodData.storeId || !methodData.storeId.trim()) {
-      throw new Error('Store-ID ist erforderlich');
+      throw new AppError('storeId is required', 400, 'VALIDATION_ERROR');
     }
 
     if (!methodData.name || !methodData.name.trim()) {
-      throw new Error('Name der Zahlungsmethode ist erforderlich');
+      throw new AppError('Payment method name is required', 400, 'VALIDATION_ERROR');
     }
 
     if (!methodData.displayName || !methodData.displayName.trim()) {
-      throw new Error('Anzeigename ist erforderlich');
+      throw new AppError('Payment method displayName is required', 400, 'VALIDATION_ERROR');
     }
 
     if (!methodData.code || !methodData.code.trim()) {
-      throw new Error('Code der Zahlungsmethode ist erforderlich');
+      throw new AppError('Payment method code is required', 400, 'VALIDATION_ERROR');
     }
 
     // Verificar que el store existe
     const storeResult = await query('SELECT id FROM "Store" WHERE id = $1', [methodData.storeId.trim()]);
     if (storeResult.rows.length === 0) {
-      throw new Error('Geschäft nicht gefunden');
+      throw new AppError('Store not found', 404, 'STORE_NOT_FOUND');
     }
 
     // Verificar que el código no esté duplicado para este store
@@ -214,7 +220,7 @@ class PaymentMethodService {
     );
 
     if (existingMethod.rows.length > 0) {
-      throw new Error('Es existiert bereits eine Zahlungsmethode mit diesem Code für dieses Geschäft');
+      throw new AppError('A payment method with this code already exists for this store', 400, 'CONFLICT');
     }
 
     // Si no se proporciona sortOrder, obtener el siguiente valor
@@ -264,7 +270,7 @@ class PaymentMethodService {
     return {
       success: true,
       data: method,
-      message: 'Método de pago creado exitosamente'
+      message: 'Payment method created successfully'
     };
   }
 
@@ -278,7 +284,7 @@ class PaymentMethodService {
     // Verificar que el método existe
     const existingMethod = await this.findById(id);
     if (!existingMethod.success) {
-      throw new Error('Zahlungsmethode nicht gefunden');
+      throw new AppError('Payment method not found', 404, 'PAYMENT_METHOD_NOT_FOUND');
     }
 
     // Construir query de actualización dinámicamente
@@ -297,7 +303,7 @@ class PaymentMethodService {
         [existingMethod.data.storeId, methodData.code.trim(), id]
       );
       if (duplicateCheck.rows.length > 0) {
-        throw new Error('Es existiert bereits eine Zahlungsmethode mit diesem Code für dieses Geschäft');
+        throw new AppError('A payment method with this code already exists for this store', 400, 'CONFLICT');
       }
     }
 
@@ -317,7 +323,7 @@ class PaymentMethodService {
           value = Boolean(value);
           // Bargeld nunca puede ser inhabilitado por super admin
           if (existingMethod.success && existingMethod.data.code.toLowerCase() === 'bargeld' && value) {
-            throw new Error('Bargeld (Bargeld) kann nicht vom Super-Admin deaktiviert werden');
+            throw new AppError('Bargeld cannot be disabled by super admin', 400, 'VALIDATION_ERROR');
           }
         } else if (field === 'config') {
           // Si es config, convertir a JSON string para PostgreSQL JSONB
@@ -344,7 +350,7 @@ class PaymentMethodService {
     }
 
     if (updateFields.length === 0) {
-      throw new Error('No hay campos para actualizar');
+      throw new AppError('No fields to update', 400, 'VALIDATION_ERROR');
     }
 
     // Agregar ID como último parámetro
@@ -416,18 +422,19 @@ class PaymentMethodService {
           method.config = JSON.parse(method.config);
         } catch (e) {
           // Si no se puede parsear, dejarlo como está
-          console.warn('No se pudo parsear config:', e);
+          logger.warn('[PaymentMethodService.update] Failed to parse config', { error: e.message });
         }
       }
 
       return {
         success: true,
         data: method,
-        message: 'Zahlungsmethode erfolgreich aktualisiert'
+        message: 'Payment method updated successfully'
       };
     } catch (error) {
-      console.error('Error al actualizar método de pago:', error);
-      throw new Error(`Fehler beim Aktualisieren der Zahlungsmethode: ${error.message}`);
+      logger.error('[PaymentMethodService.update] Failed', { error: error.message });
+      if (error.isOperational) throw error;
+      throw new AppError(`Failed to update payment method: ${error.message}`, 500, 'INTERNAL_ERROR');
     }
   }
 
@@ -440,7 +447,7 @@ class PaymentMethodService {
     // Verificar que el método existe
     const existingMethod = await this.findById(id);
     if (!existingMethod.success) {
-      throw new Error('Zahlungsmethode nicht gefunden');
+      throw new AppError('Payment method not found', 404, 'PAYMENT_METHOD_NOT_FOUND');
     }
 
     const deleteQuery = 'DELETE FROM "PaymentMethod" WHERE id = $1';
@@ -448,7 +455,7 @@ class PaymentMethodService {
 
     return {
       success: true,
-      message: 'Método de pago eliminado exitosamente'
+      message: 'Payment method deleted successfully'
     };
   }
 
@@ -462,7 +469,7 @@ class PaymentMethodService {
     const storeResult = await query('SELECT "ownerId" FROM "Store" WHERE id = $1', [storeId]);
     
     if (storeResult.rows.length === 0) {
-      throw new Error('Geschäft nicht gefunden');
+      throw new AppError('Store not found', 404, 'STORE_NOT_FOUND');
     }
     
     return storeResult.rows[0].ownerId === userId;

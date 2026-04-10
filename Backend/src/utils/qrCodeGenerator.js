@@ -1,16 +1,16 @@
 const QRCode = require('qrcode');
+const logger = require('./logger');
 
 class QRCodeGenerator {
   /**
-   * Genera un QR code para un producto con URL completa
-   * @param {string} productId - ID del producto (UUID)
-   * @param {string} productName - Nombre del producto (opcional)
-   * @param {string} url - URL completa que debe contener el QR (opcional, si no se proporciona usa solo el ID)
-   * @returns {Promise<string>} Data URL del QR code
+   * Generate a QR code for a product as a Data URL.
+   * @param {string} productId - Product UUID
+   * @param {string} productName - Product name (optional)
+   * @param {string} url - Full URL to encode (falls back to productId)
+   * @returns {Promise<string>} QR code data URL
    */
   async generateQRCode(productId, productName, url = null) {
     try {
-      // Si se proporciona una URL, usarla. Si no, usar solo el productId (compatibilidad hacia atrás)
       const qrData = url || productId;
 
       const qrCodeDataURL = await QRCode.toDataURL(qrData, {
@@ -19,29 +19,25 @@ class QRCodeGenerator {
         quality: 0.92,
         margin: 1,
         width: 256,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
+        color: { dark: '#000000', light: '#FFFFFF' },
       });
 
       return qrCodeDataURL;
     } catch (error) {
-      console.error('Error generando código QR:', error);
-      throw new Error('Error al generar código QR');
+      logger.error('Failed to generate QR code', { error: error.message });
+      throw new Error('Failed to generate QR code');
     }
   }
 
   /**
-   * Genera un QR code buffer para un producto con URL completa
-   * @param {string} productId - ID del producto (UUID)
-   * @param {string} productName - Nombre del producto (opcional)
-   * @param {string} url - URL completa que debe contener el QR (opcional, si no se proporciona usa solo el ID)
-   * @returns {Promise<Buffer>} Buffer del QR code
+   * Generate a QR code for a product as a Buffer.
+   * @param {string} productId - Product UUID
+   * @param {string} productName - Product name (optional)
+   * @param {string} url - Full URL to encode (falls back to productId)
+   * @returns {Promise<Buffer>} QR code PNG buffer
    */
   async generateQRCodeBuffer(productId, productName, url = null) {
     try {
-      // Si se proporciona una URL, usarla. Si no, usar solo el productId (compatibilidad hacia atrás)
       const qrData = url || productId;
 
       const buffer = await QRCode.toBuffer(qrData, {
@@ -49,16 +45,15 @@ class QRCodeGenerator {
         type: 'png',
         quality: 0.92,
         margin: 1,
-        width: 256
+        width: 256,
       });
 
       return buffer;
     } catch (error) {
-      console.error('Error generando código QR buffer:', error);
-      throw new Error('Error al generar código QR');
+      logger.error('Failed to generate QR code buffer', { error: error.message });
+      throw new Error('Failed to generate QR code');
     }
   }
 }
 
 module.exports = new QRCodeGenerator();
-

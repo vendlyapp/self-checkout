@@ -1,103 +1,107 @@
-// src/middleware/errorHandler.js - Middleware centralizado para manejo de errores
+// src/middleware/errorHandler.js — Centralized error handling middleware
 
 const { HTTP_STATUS } = require('../types');
+const logger = require('../utils/logger');
 
 const errorHandler = (err, req, res, next) => {
-  // Log detallado del error
-  console.error('❌ Error capturado por errorHandler:', {
+  logger.error('Error caught by errorHandler', {
     message: err.message,
     code: err.code,
-    detail: err.detail,
+    statusCode: err.statusCode,
     name: err.name,
-    stack: err.stack,
     path: req.path,
-    method: req.method
+    method: req.method,
   });
 
-  // Error de validación
+  // AppError: known operational error with explicit status
+  if (err.isOperational) {
+    return res.status(err.statusCode).json({
+      success: false,
+      error: err.message,
+      ...(err.code && { code: err.code }),
+    });
+  }
+
+  // Validation error (Zod or custom)
+  if (err.name === 'ZodError') {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({
+      success: false,
+      error: 'Validation error',
+      details: err.errors || err.message,
+    });
+  }
+
   if (err.name === 'ValidationError') {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
-      error: 'Datos de entrada inválidos',
-      details: err.message
+      error: 'Invalid input data',
+      details: err.message,
     });
   }
 
-  // Error de PostgreSQL
+  // PostgreSQL errors
   if (err.code) {
-    // Errores de integridad (23xxx) y sintaxis (42xxx)
+    // Integrity / syntax errors (23xxx, 42xxx)
     if (err.code.startsWith('23') || err.code.startsWith('42')) {
-      console.error('❌ Error de integridad/sintaxis PostgreSQL:', {
+      logger.error('PostgreSQL integrity/syntax error', {
         code: err.code,
-        message: err.message,
-        detail: err.detail
+        detail: err.detail,
       });
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
-        error: 'Error de base de datos',
-        details: process.env.NODE_ENV === 'development' ? err.message : undefined
+        error: 'Database error',
+        details: process.env.NODE_ENV === 'development' ? err.message : undefined,
       });
     }
-    
-    // Error fatal de PostgreSQL (XX000) - Internal error
+
+    // Fatal PostgreSQL error (XX000) or admin shutdown (57P01)
     if (err.code === 'XX000' || err.code === '57P01') {
-      console.error('❌ Error fatal de PostgreSQL:', {
-        code: err.code,
-        message: err.message,
-        detail: err.detail
-      });
+      logger.error('Fatal PostgreSQL error', { code: err.code, detail: err.detail });
       return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
-        error: 'Error de conexión a la base de datos. Por favor, intente nuevamente.',
-        details: process.env.NODE_ENV === 'development' ? err.message : undefined
+        error: 'Database connection error. Please try again.',
+        details: process.env.NODE_ENV === 'development' ? err.message : undefined,
       });
     }
-    
-    // Error de conexión
+
+    // Connection refused / timeout
     if (err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT') {
-      console.error('❌ Error de conexión:', {
-        code: err.code,
-        message: err.message
-      });
+      logger.error('Database connection error', { code: err.code });
       return res.status(HTTP_STATUS.SERVICE_UNAVAILABLE).json({
         success: false,
-        error: 'Servicio de base de datos no disponible. Por favor, intente nuevamente más tarde.',
-        details: process.env.NODE_ENV === 'development' ? err.message : undefined
+        error: 'Database service unavailable. Please try again later.',
+        details: process.env.NODE_ENV === 'development' ? err.message : undefined,
       });
     }
   }
 
-  // Error de sintaxis JSON
+  // Malformed JSON body
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
-      error: 'JSON inválido en el cuerpo de la petición'
+      error: 'Invalid JSON in request body',
     });
   }
 
-  // Error por defecto
-  console.error('❌ Error no manejado específicamente:', {
-    message: err.message,
-    name: err.name,
-    stack: err.stack
-  });
-  
+  // Unhandled error — default 500
+  logger.error('Unhandled error', { message: err.message, stack: err.stack });
+
   res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
     success: false,
-    error: 'Error interno del servidor',
-    details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    error: 'Internal server error',
+    details: process.env.NODE_ENV === 'development' ? err.message : undefined,
   });
 };
 
 const notFoundHandler = (req, res) => {
   res.status(HTTP_STATUS.NOT_FOUND).json({
     success: false,
-    error: 'Ruta no encontrada',
-    path: req.originalUrl
+    error: 'Route not found',
+    path: req.originalUrl,
   });
 };
 
 module.exports = {
   errorHandler,
-  notFoundHandler
+  notFoundHandler,
 };

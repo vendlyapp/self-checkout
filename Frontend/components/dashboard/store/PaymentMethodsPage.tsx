@@ -8,6 +8,7 @@ import { useMyStore } from '@/hooks/queries/useMyStore'
 import { usePaymentMethods, PaymentMethod as ApiPaymentMethod } from '@/hooks/queries/usePaymentMethods'
 import { useUpdatePaymentMethod, useCreatePaymentMethod } from '@/hooks/mutations/usePaymentMethodMutations'
 import { Loader } from '@/components/ui/Loader'
+import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState'
 import { getPaymentMethodIcon, isSvgIcon } from '@/lib/utils/paymentMethodIcons'
 import Image from 'next/image'
 import { AVAILABLE_PAYMENT_METHODS, getAvailablePaymentMethod } from '@/lib/constants/paymentMethods'
@@ -329,11 +330,7 @@ const PaymentMethodsPage = () => {
   }
 
   if (storeLoading || methodsLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader size="lg" />
-      </div>
-    )
+    return <DashboardLoadingState mode="page" message="Wird geladen..." />
   }
 
   if (!store) {

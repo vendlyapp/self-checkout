@@ -2,296 +2,156 @@ const discountCodeService = require('../services/DiscountCodeService');
 const { HTTP_STATUS } = require('../types');
 
 /**
- * Controlador de códigos de descuento
- * Maneja todas las operaciones CRUD relacionadas con códigos promocionales
- * @class DiscountCodeController
+ * Discount code controller.
+ * Handles CRUD and validation for promotional discount codes.
  */
 class DiscountCodeController {
-  /**
-   * Obtiene todos los códigos de descuento del usuario
-   * @route GET /api/discount-codes
-   * @param {Object} req - Request object de Express
-   * @param {Object} req.user - Usuario autenticado
-   * @param {string} req.user.id - ID del usuario
-   * @param {Object} res - Response object de Express
-   * @returns {Promise<void>} JSON con lista de códigos
-   */
+  /** @route GET /api/discount-codes */
   async getAllDiscountCodes(req, res) {
     try {
       const ownerId = req.user?.userId || req.user?.id;
       if (!ownerId) {
         return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
-          error: 'Usuario no autenticado'
+          error: 'User not authenticated',
         });
       }
-
       const result = await discountCodeService.findAll(ownerId);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: error.message
-      });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message });
     }
   }
 
-  /**
-   * Obtiene un código de descuento por ID
-   * @route GET /api/discount-codes/:id
-   * @param {Object} req - Request object de Express
-   * @param {Object} req.params - Parámetros de ruta
-   * @param {string} req.params.id - ID del código
-   * @param {Object} req.user - Usuario autenticado
-   * @param {string} req.user.id - ID del usuario
-   * @param {Object} res - Response object de Express
-   * @returns {Promise<void>} JSON con los datos del código
-   */
+  /** @route GET /api/discount-codes/:id */
   async getDiscountCodeById(req, res) {
     try {
       const { id } = req.params;
       const ownerId = req.user?.userId || req.user?.id;
-      
       if (!ownerId) {
         return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
-          error: 'Usuario no autenticado'
+          error: 'User not authenticated',
         });
       }
-
       const result = await discountCodeService.findById(id, ownerId);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      const statusCode = error.message.includes('no encontrado')
-        ? HTTP_STATUS.NOT_FOUND
-        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
-
-      res.status(statusCode).json({
-        success: false,
-        error: error.message
-      });
+      const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({ success: false, error: error.message });
     }
   }
 
-  /**
-   * Busca un código de descuento por su código (string)
-   * @route GET /api/discount-codes/validate/:code
-   * @param {Object} req - Request object de Express
-   * @param {Object} req.params - Parámetros de ruta
-   * @param {string} req.params.code - Código a validar
-   * @param {Object} req.query - Query parameters
-   * @param {string} [req.query.storeId] - ID de la tienda para validar que el código pertenezca a esa tienda
-   * @param {Object} res - Response object de Express
-   * @returns {Promise<void>} JSON con los datos del código si es válido
-   */
+  /** @route GET /api/discount-codes/validate/:code */
   async validateDiscountCode(req, res) {
     try {
       const { code } = req.params;
       const { storeId } = req.query;
-      
+
       if (!code || !code.trim()) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          error: 'El código es requerido'
+          error: 'Code is required',
         });
       }
 
       const result = await discountCodeService.findByCode(code, storeId || null);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      const statusCode = error.message.includes('no encontrado') || 
-                         error.message.includes('no está activo') ||
-                         error.message.includes('no válido para esta tienda') ||
-                         error.message.includes('Tienda no encontrada')
-        ? HTTP_STATUS.BAD_REQUEST
-        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
-
-      res.status(statusCode).json({
-        success: false,
-        error: error.message
-      });
+      const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({ success: false, error: error.message });
     }
   }
 
-  /**
-   * Crea un nuevo código de descuento
-   * @route POST /api/discount-codes
-   * @param {Object} req - Request object de Express
-   * @param {Object} req.body - Datos del código a crear
-   * @param {string} req.body.code - Código del descuento
-   * @param {string} req.body.discountType - Tipo de descuento ('percentage' o 'fixed')
-   * @param {number} req.body.discountValue - Valor del descuento
-   * @param {number} req.body.maxRedemptions - Máximo de redenciones
-   * @param {string} req.body.validFrom - Fecha de inicio (ISO string)
-   * @param {string} [req.body.validUntil] - Fecha de caducidad (ISO string, opcional)
-   * @param {Object} req.user - Usuario autenticado
-   * @param {string} req.user.id - ID del usuario
-   * @param {Object} res - Response object de Express
-   * @returns {Promise<void>} JSON con el código creado
-   */
+  /** @route POST /api/discount-codes */
   async createDiscountCode(req, res) {
     try {
       const ownerId = req.user?.userId || req.user?.id;
-      
       if (!ownerId) {
         return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
-          error: 'Usuario no autenticado'
+          error: 'User not authenticated',
         });
       }
-
       const result = await discountCodeService.create(req.body, ownerId);
       res.status(HTTP_STATUS.CREATED).json(result);
     } catch (error) {
-      const statusCode = error.message.includes('ya existe') || 
-                        error.message.includes('requerido') ||
-                        error.message.includes('debe ser')
-        ? HTTP_STATUS.BAD_REQUEST
-        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
-
-      res.status(statusCode).json({
-        success: false,
-        error: error.message
-      });
+      const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({ success: false, error: error.message });
     }
   }
 
-  /**
-   * Actualiza un código de descuento existente
-   * @route PUT /api/discount-codes/:id
-   * @param {Object} req - Request object de Express
-   * @param {Object} req.params - Parámetros de ruta
-   * @param {string} req.params.id - ID del código
-   * @param {Object} req.body - Datos a actualizar
-   * @param {Object} req.user - Usuario autenticado
-   * @param {string} req.user.id - ID del usuario
-   * @param {Object} res - Response object de Express
-   * @returns {Promise<void>} JSON con el código actualizado
-   */
+  /** @route PUT /api/discount-codes/:id */
   async updateDiscountCode(req, res) {
     try {
       const { id } = req.params;
       const ownerId = req.user?.userId || req.user?.id;
-      
       if (!ownerId) {
         return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
-          error: 'Usuario no autenticado'
+          error: 'User not authenticated',
         });
       }
-
       const result = await discountCodeService.update(id, req.body, ownerId);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      const statusCode = error.message.includes('no encontrado')
-        ? HTTP_STATUS.NOT_FOUND
-        : error.message.includes('ya existe') || error.message.includes('debe ser')
-        ? HTTP_STATUS.BAD_REQUEST
-        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
-
-      res.status(statusCode).json({
-        success: false,
-        error: error.message
-      });
+      const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({ success: false, error: error.message });
     }
   }
 
-  /**
-   * Archiva un código de descuento (en lugar de eliminarlo)
-   * @route DELETE /api/discount-codes/:id
-   * @param {Object} req - Request object de Express
-   * @param {Object} req.params - Parámetros de ruta
-   * @param {string} req.params.id - ID del código a archivar
-   * @param {Object} req.user - Usuario autenticado
-   * @param {string} req.user.id - ID del usuario
-   * @param {Object} res - Response object de Express
-   * @returns {Promise<void>} JSON confirmando el archivado
-   */
+  /** @route DELETE /api/discount-codes/:id */
   async deleteDiscountCode(req, res) {
     try {
       const { id } = req.params;
       const ownerId = req.user?.userId || req.user?.id;
-      
       if (!ownerId) {
         return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
-          error: 'Usuario no autenticado'
+          error: 'User not authenticated',
         });
       }
-
       const result = await discountCodeService.archive(id, ownerId);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      const statusCode = error.message.includes('no encontrado')
-        ? HTTP_STATUS.NOT_FOUND
-        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
-
-      res.status(statusCode).json({
-        success: false,
-        error: error.message
-      });
+      const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({ success: false, error: error.message });
     }
   }
 
-  /**
-   * Obtiene todos los códigos archivados del usuario
-   * @route GET /api/discount-codes/archived
-   * @param {Object} req - Request object de Express
-   * @param {Object} req.user - Usuario autenticado
-   * @param {string} req.user.id - ID del usuario
-   * @param {Object} res - Response object de Express
-   * @returns {Promise<void>} JSON con lista de códigos archivados
-   */
+  /** @route GET /api/discount-codes/archived */
   async getArchivedDiscountCodes(req, res) {
     try {
       const ownerId = req.user?.userId || req.user?.id;
       if (!ownerId) {
         return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
-          error: 'Usuario no autenticado'
+          error: 'User not authenticated',
         });
       }
-
       const result = await discountCodeService.findArchived(ownerId);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: error.message
-      });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message });
     }
   }
 
-  /**
-   * Obtiene estadísticas de códigos de descuento
-   * @route GET /api/discount-codes/stats
-   * @param {Object} req - Request object de Express
-   * @param {Object} req.user - Usuario autenticado
-   * @param {string} req.user.id - ID del usuario
-   * @param {Object} res - Response object de Express
-   * @returns {Promise<void>} JSON con estadísticas
-   */
+  /** @route GET /api/discount-codes/stats */
   async getStats(req, res) {
     try {
       const ownerId = req.user?.userId || req.user?.id;
-      
       if (!ownerId) {
         return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
-          error: 'Usuario no autenticado'
+          error: 'User not authenticated',
         });
       }
-
       const result = await discountCodeService.getStats(ownerId);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: error.message
-      });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message });
     }
   }
 }
 
 module.exports = new DiscountCodeController();
-

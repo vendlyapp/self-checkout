@@ -11,7 +11,7 @@ import { toast } from 'sonner'
 import { formatCHF, formatDate } from '@/lib/invoice-utils'
 import { formatSwissPriceWithCHF } from '@/lib/utils'
 import Link from 'next/link'
-import { Loader } from '@/components/ui/Loader'
+import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState'
 import { devError } from '@/lib/utils/logger'
 
 export default function CustomerDetailPage() {
@@ -75,14 +75,7 @@ export default function CustomerDetailPage() {
   }
 
   if (storeLoading || isLoading) {
-    return (
-      <div className="w-full h-full flex items-center justify-center min-h-dvh bg-[#F2EDE8]">
-        <div className="text-center">
-          <Loader size="lg" className="mx-auto mb-4" />
-          <p className="text-gray-600">Wird geladen...</p>
-        </div>
-      </div>
-    )
+    return <DashboardLoadingState mode="page" message="Kundendaten werden geladen..." />
   }
 
   if (!customer) {

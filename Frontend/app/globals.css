@@ -1956,10 +1956,9 @@
 }
 
 /* =============================================================================
- * INVOICE PRINT STYLES
- * Architecture: InvoicePrintView (inv-p-*) is shown only in @media print.
- *               InvoiceTemplate screen view (.invoice-screen-view) is hidden.
- * This avoids the responsive Tailwind breakpoint problem in print contexts.
+ * INVOICE PRINT STYLES — Swiss invoice (Digitec/Galaxus style)
+ * Architecture: InvoicePrintView (inv-p-*) shown only in @media print.
+ *               InvoiceTemplate screen view (.invoice-screen-view) hidden.
  * ============================================================================= */
 
 /* ── Screen: hide print view, show screen view ── */
@@ -1974,7 +1973,7 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 12mm 12mm 10mm 12mm;
+    margin: 14mm 14mm 12mm 14mm;
   }
 
   html, body {
@@ -1994,7 +1993,6 @@
     display: none !important;
   }
 
-  /* Show the print container */
   .invoice-print-container {
     display: block !important;
     width: 100% !important;
@@ -2003,35 +2001,51 @@
     background: white !important;
   }
 
-  /* Hide screen view */
   .invoice-screen-view {
     display: none !important;
   }
 
-  /* Show print view */
   .invoice-print-view {
     display: block !important;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-size: 9.5pt;
+    font-size: 9pt;
     color: #111827;
     width: 100%;
     background: white;
   }
 
-  /* ── Header ── */
-  .inv-p-header {
+  /* ═══════════════════════════════════════════════════════════
+     PAGE HEADER — logo + store name + address + website
+     Appears on every page (page 1 and page 2)
+  ═══════════════════════════════════════════════════════════ */
+  .inv-p-page-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 20pt;
-    padding-bottom: 14pt;
-    border-bottom: 2pt solid #111827;
+    margin-bottom: 22pt;
+    padding-bottom: 10pt;
+    border-bottom: 0.5pt solid #e5e7eb;
+  }
+
+  .inv-p-page-header-left {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .inv-p-page-header-right {
+    text-align: right;
+    padding-top: 2pt;
+  }
+
+  .inv-p-website {
+    font-size: 8pt;
+    color: #6b7280;
   }
 
   .inv-p-logo {
     display: block;
-    width: 36pt;
-    height: 36pt;
+    max-width: 80pt;
+    max-height: 40pt;
     object-fit: contain;
     margin-bottom: 6pt;
   }
@@ -2040,11 +2054,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28pt;
-    height: 28pt;
+    width: 32pt;
+    height: 32pt;
     background-color: #25D076;
     color: white;
-    font-size: 13pt;
+    font-size: 14pt;
     font-weight: 700;
     border-radius: 4pt;
     margin-bottom: 6pt;
@@ -2053,45 +2067,65 @@
   }
 
   .inv-p-issuer-name {
-    font-size: 11pt;
+    font-size: 10pt;
     font-weight: 700;
     color: #111827;
-    margin-bottom: 2pt;
-  }
-
-  .inv-p-issuer-vat {
-    font-size: 7.5pt;
-    color: #9ca3af;
-    font-family: monospace;
-    letter-spacing: 0.05em;
-    margin-bottom: 4pt;
+    margin-bottom: 1pt;
   }
 
   .inv-p-issuer-addr {
-    font-size: 8.5pt;
+    font-size: 8pt;
     color: #6b7280;
     line-height: 1.5;
-    margin-bottom: 4pt;
   }
 
   .inv-p-issuer-contact {
-    font-size: 8pt;
+    font-size: 7.5pt;
     color: #9ca3af;
-    margin-top: 4pt;
+    margin-top: 2pt;
   }
 
+  /* ═══════════════════════════════════════════════════════════
+     DOC BLOCK — recipient address (left) + Rechnung XXXX (right)
+  ═══════════════════════════════════════════════════════════ */
+  .inv-p-doc-block {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20pt;
+  }
+
+  .inv-p-recipient-block {
+    flex: 1;
+  }
+
+  .inv-p-recipient-name {
+    font-size: 10pt;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 1pt;
+  }
+
+  .inv-p-recipient-addr {
+    font-size: 8.5pt;
+    color: #374151;
+    line-height: 1.5;
+  }
+
+  /* ── Title block (right side) ── */
   .inv-p-title-block {
-    text-align: right;
     flex-shrink: 0;
+    text-align: right;
+    max-width: 200pt;
   }
 
   .inv-p-doc-type {
-    font-size: 24pt;
-    font-weight: 200;
+    font-size: 20pt;
+    font-weight: 300;
     color: #111827;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.02em;
     line-height: 1;
-    margin-bottom: 10pt;
+    margin-bottom: 8pt;
   }
 
   .inv-p-meta-table {
@@ -2100,16 +2134,16 @@
   }
 
   .inv-p-meta-table td {
-    padding: 1pt 0;
+    padding: 1.5pt 0;
     font-size: 8pt;
     border: none;
+    vertical-align: top;
   }
 
   .inv-p-meta-label {
     color: #9ca3af;
-    padding-right: 10pt !important;
-    text-align: right;
-    min-width: 40pt;
+    padding-right: 8pt !important;
+    white-space: nowrap;
   }
 
   .inv-p-meta-value {
@@ -2123,58 +2157,27 @@
     font-weight: 700 !important;
   }
 
-  /* ── Recipient ── */
-  .inv-p-recipient-section {
-    margin-bottom: 18pt;
-  }
-
-  .inv-p-section-label {
-    font-size: 7pt;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: #d1d5db;
-    margin-bottom: 4pt;
-  }
-
-  .inv-p-recipient-name {
-    font-size: 10.5pt;
-    font-weight: 600;
-    color: #111827;
-    margin-bottom: 2pt;
-  }
-
-  .inv-p-recipient-addr {
-    font-size: 8.5pt;
-    color: #6b7280;
-    line-height: 1.5;
-  }
-
-  .inv-p-recipient-contact {
-    font-size: 8pt;
-    color: #9ca3af;
-    margin-top: 2pt;
-  }
-
-  /* ── Line items table ── */
+  /* ═══════════════════════════════════════════════════════════
+     LINE ITEMS TABLE
+  ═══════════════════════════════════════════════════════════ */
   .inv-p-items-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 14pt;
+    margin-bottom: 12pt;
   }
 
   .inv-p-items-table thead tr {
-    border-top: 2pt solid #111827;
-    border-bottom: 2pt solid #111827;
+    border-top: 1pt solid #d1d5db;
+    border-bottom: 1pt solid #d1d5db;
   }
 
   .inv-p-th {
     font-size: 7pt;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     color: #9ca3af;
-    padding: 5pt 4pt;
+    padding: 4pt 4pt;
     text-align: left;
   }
 
@@ -2183,177 +2186,268 @@
   }
 
   .inv-p-item-row:last-child {
-    border-bottom: none;
+    border-bottom: 1pt solid #d1d5db;
   }
 
   .inv-p-td {
-    font-size: 9pt;
+    font-size: 8.5pt;
     color: #1f2937;
-    padding: 6pt 4pt;
+    padding: 5pt 4pt;
     vertical-align: top;
   }
 
   .inv-p-item-name {
     font-weight: 500;
-    line-height: 1.3;
+    line-height: 1.35;
   }
 
   .inv-p-item-detail {
-    font-size: 7.5pt;
+    font-size: 7pt;
     color: #9ca3af;
-    margin-top: 1.5pt;
+    margin-top: 1pt;
+    line-height: 1.4;
   }
 
-  /* Column widths */
-  .inv-p-col-pos   { width: 24pt; }
+  /* Column widths — Digitec style */
   .inv-p-col-desc  { width: auto; }
-  .inv-p-col-qty   { width: 28pt; }
-  .inv-p-col-price { width: 54pt; }
-  .inv-p-col-mwst  { width: 30pt; }
-  .inv-p-col-total { width: 50pt; }
+  .inv-p-col-qty   { width: 26pt; }
+  .inv-p-col-mwst  { width: 36pt; }
+  .inv-p-col-price { width: 52pt; }
+  .inv-p-col-total { width: 52pt; }
 
   /* Alignment helpers */
-  .inv-p-td-right   { text-align: right !important; }
-  .inv-p-td-center  { text-align: center !important; }
-  .inv-p-td-muted   { color: #6b7280 !important; }
-  .inv-p-td-bold    { font-weight: 600 !important; }
+  .inv-p-td-right  { text-align: right !important; }
+  .inv-p-td-center { text-align: center !important; }
+  .inv-p-td-muted  { color: #6b7280 !important; }
+  .inv-p-td-bold   { font-weight: 600 !important; }
 
-  /* MwSt badge (A / B) */
-  .inv-p-mwst-badge {
-    display: inline-block;
-    width: 14pt;
-    height: 12pt;
-    line-height: 12pt;
-    text-align: center;
-    font-size: 7.5pt;
-    font-weight: 700;
-    color: #374151;
-    background-color: #f3f4f6;
-    border: 0.5pt solid #d1d5db;
-    border-radius: 2pt;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  /* ── Totals ── */
+  /* ═══════════════════════════════════════════════════════════
+     TOTALS — Digitec style (2-col: exkl. / inkl.)
+  ═══════════════════════════════════════════════════════════ */
   .inv-p-totals-section {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
     margin-bottom: 14pt;
   }
 
-  .inv-p-total-row {
+  .inv-p-totals-header-row,
+  .inv-p-totals-data-row {
     display: flex;
-    justify-content: space-between;
-    width: 180pt;
-    padding: 2pt 0;
+    justify-content: flex-end;
+    gap: 0;
     font-size: 8.5pt;
     color: #374151;
+    padding: 2pt 0;
   }
 
-  .inv-p-total-row.inv-p-total-muted {
-    color: #9ca3af;
-  }
-
-  .inv-p-total-label {
-    color: inherit;
-  }
-
-  .inv-p-total-amount {
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .inv-p-total-divider {
-    width: 180pt;
-    border-top: 2pt solid #111827;
-    margin: 5pt 0;
-  }
-
-  .inv-p-total-grand {
-    display: flex;
-    justify-content: space-between;
-    width: 180pt;
-    font-size: 8pt;
-    font-weight: 700;
-    color: #111827;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  .inv-p-total-grand span:last-child {
-    font-size: 14pt;
-    letter-spacing: -0.02em;
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* ── MwSt summary table ── */
-  .inv-p-mwst-section {
-    margin-bottom: 14pt;
-    padding: 8pt 10pt;
-    background-color: #f9fafb;
-    border-radius: 4pt;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .inv-p-mwst-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 5pt;
-  }
-
-  .inv-p-mwst-th {
+  .inv-p-totals-header-row {
     font-size: 7pt;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: #9ca3af;
-    padding: 3pt 4pt;
-    border-bottom: 0.5pt solid #e5e7eb;
+    border-bottom: 0.5pt solid #d1d5db;
+    padding-bottom: 3pt;
+    margin-bottom: 2pt;
   }
 
-  .inv-p-mwst-td {
-    font-size: 8.5pt;
+  .inv-p-totals-header-row span,
+  .inv-p-totals-data-row span {
+    min-width: 70pt;
+    text-align: right;
+  }
+
+  .inv-p-totals-header-row span:first-child,
+  .inv-p-totals-data-row span:first-child {
+    flex: 1;
+    text-align: left;
+    min-width: 0;
+  }
+
+  .inv-p-totals-col-label {
+    min-width: 70pt !important;
+    text-align: right !important;
+  }
+
+  .inv-p-total-label {
+    flex: 1;
     color: #374151;
-    padding: 3pt 4pt;
   }
 
-  .inv-p-mwst-total-row td {
-    border-top: 0.5pt solid #d1d5db;
-    padding-top: 4pt;
+  .inv-p-total-amount {
+    min-width: 70pt;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
   }
 
-  /* ── Notes ── */
-  .inv-p-notes {
-    font-size: 8pt;
+  /* MwSt breakdown lines */
+  .inv-p-totals-mwst-label {
+    font-size: 7.5pt;
     color: #9ca3af;
+    margin-top: 6pt;
+    margin-bottom: 2pt;
+    text-align: right;
+  }
+
+  .inv-p-totals-mwst-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12pt;
+    font-size: 8pt;
+    color: #6b7280;
+    padding: 1pt 0;
+  }
+
+  .inv-p-totals-mwst-row span:first-child {
+    text-align: right;
+  }
+
+  .inv-p-totals-mwst-row span:last-child {
+    min-width: 50pt;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Grand total */
+  .inv-p-total-divider {
+    border-top: 1pt solid #d1d5db;
+    margin: 6pt 0 4pt 0;
+  }
+
+  .inv-p-total-grand-row,
+  .inv-p-total-rechnung-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 8.5pt;
+    color: #111827;
+    padding: 2pt 0;
+  }
+
+  .inv-p-total-grand-row {
+    font-weight: 600;
+    border-top: 1pt solid #111827;
+    border-bottom: 1pt solid #111827;
+    padding: 4pt 0;
+    margin-bottom: 2pt;
+  }
+
+  .inv-p-total-rechnung-row {
+    font-weight: 700;
+    font-size: 9pt;
+  }
+
+  .inv-p-total-grand-amount {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    font-size: 10pt;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     NOTES
+  ═══════════════════════════════════════════════════════════ */
+  .inv-p-notes {
+    font-size: 7.5pt;
+    color: #6b7280;
     line-height: 1.5;
+    margin-top: 10pt;
     margin-bottom: 10pt;
   }
 
-  /* ── Footer ── */
+  /* ═══════════════════════════════════════════════════════════
+     PAGE FOOTER — bottom of each page
+  ═══════════════════════════════════════════════════════════ */
   .inv-p-footer {
-    font-size: 7.5pt;
-    color: #6b7280;
+    font-size: 7pt;
+    color: #9ca3af;
     border-top: 0.5pt solid #e5e7eb;
-    padding-top: 6pt;
-    margin-top: 10pt;
+    padding-top: 5pt;
+    margin-top: 14pt;
   }
 
-  /* ── QR Bill / Zahlschein ── */
+  /* ═══════════════════════════════════════════════════════════
+     PAGE 2 — Payment page (QR-Rechnung only)
+  ═══════════════════════════════════════════════════════════ */
+  .inv-p-payment-page {
+    page-break-before: always;
+    break-before: page;
+  }
+
+  .inv-p-payment-intro {
+    font-size: 9pt;
+    color: #374151;
+    margin-bottom: 14pt;
+    font-weight: 500;
+  }
+
+  /* Bank info block */
+  .inv-p-bank-block {
+    margin-bottom: 18pt;
+    padding: 10pt 12pt;
+    border: 0.5pt solid #e5e7eb;
+    border-radius: 3pt;
+  }
+
+  .inv-p-bank-title {
+    font-size: 10pt;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 4pt;
+  }
+
+  .inv-p-bank-desc {
+    font-size: 7.5pt;
+    color: #6b7280;
+    line-height: 1.5;
+    margin-bottom: 8pt;
+  }
+
+  .inv-p-bank-table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  .inv-p-bank-table td {
+    padding: 2pt 0;
+    font-size: 8.5pt;
+    vertical-align: top;
+    border: none;
+  }
+
+  .inv-p-bank-label {
+    color: #9ca3af;
+    width: 90pt;
+    padding-right: 8pt !important;
+    white-space: nowrap;
+  }
+
+  .inv-p-bank-value {
+    color: #111827;
+    font-weight: 500;
+  }
+
+  .inv-p-bank-mono {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.04em;
+  }
+
+  .inv-p-bank-bold {
+    font-weight: 700 !important;
+    font-size: 9.5pt !important;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     QR BILL (Zahlschein) — 210×105mm, bottom of page 2
+  ═══════════════════════════════════════════════════════════ */
   .inv-p-qr-section {
     page-break-inside: avoid;
     break-inside: avoid;
-    margin-top: 10pt;
+    margin-top: 14pt;
   }
 
   .inv-p-cutline {
     display: flex;
     align-items: center;
     gap: 6pt;
-    margin: 8pt 0;
+    margin: 6pt 0;
     color: #d1d5db;
     font-size: 9pt;
   }
@@ -2365,17 +2459,11 @@
 
   .inv-p-cutline-dashes {
     flex: 1;
-    border-top: 1.5pt dashed #d1d5db;
+    border-top: 1pt dashed #d1d5db;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
-  /*
-   * El Zahlschein (QR Bill) es un SVG de 210×105mm (landscape, ratio 2:1).
-   * En A4 portrait con márgenes de 12mm, el área útil es 186mm de ancho.
-   * width: 100% escala el SVG al ancho completo del área imprimible.
-   * El browser mantiene la proporción 2:1 → altura visual ~93mm.
-   */
   .inv-p-qr-img {
     display: block;
     width: 100%;

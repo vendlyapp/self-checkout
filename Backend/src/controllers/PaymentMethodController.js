@@ -1,6 +1,8 @@
 const paymentMethodService = require('../services/PaymentMethodService');
 const QRBillService = require('../services/QRBillService');
 const { HTTP_STATUS } = require('../types');
+const AppError = require('../utils/AppError');
+const logger = require('../utils/logger');
 
 /**
  * Controlador de métodos de pago
@@ -8,6 +10,20 @@ const { HTTP_STATUS } = require('../types');
  * @class PaymentMethodController
  */
 class PaymentMethodController {
+  handleError(res, error, fallbackMessage = 'Internal server error') {
+    logger.error('[PaymentMethodController] Request failed', { error: error.message });
+    if (error.isOperational) {
+      return res.status(error.statusCode).json({
+        success: false,
+        error: error.message,
+        ...(error.code && { code: error.code }),
+      });
+    }
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      error: fallbackMessage,
+    });
+  }
   /**
    * Obtiene todos los métodos de pago de un store
    * @route GET /api/stores/:storeId/payment-methods
@@ -28,10 +44,7 @@ class PaymentMethodController {
       // Validar que storeId sea un UUID válido
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       if (!storeId || !uuidRegex.test(storeId)) {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json({
-          success: false,
-          error: 'El storeId debe ser un UUID válido'
-        });
+        throw new AppError('storeId must be a valid UUID', 400, 'VALIDATION_ERROR');
       }
       
       const options = {
@@ -41,10 +54,7 @@ class PaymentMethodController {
       const result = await paymentMethodService.findByStoreId(storeId, options);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: error.message
-      });
+      return this.handleError(res, error);
     }
   }
 
@@ -66,10 +76,7 @@ class PaymentMethodController {
       const userRole = req.user?.role;
 
       if (!userId) {
-        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-          success: false,
-          error: 'Usuario no autenticado',
-        });
+        throw new AppError('User not authenticated', 401, 'UNAUTHORIZED');
       }
 
       const result = await paymentMethodService.findById(id);
@@ -78,23 +85,13 @@ class PaymentMethodController {
       if (userRole !== 'SUPER_ADMIN') {
         const isOwner = await paymentMethodService.verifyStoreOwner(storeId, userId);
         if (!isOwner) {
-          return res.status(HTTP_STATUS.NOT_FOUND).json({
-            success: false,
-            error: 'Método de pago no encontrado',
-          });
+          throw new AppError('Payment method not found', 404, 'PAYMENT_METHOD_NOT_FOUND');
         }
       }
 
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      const statusCode = error.message.includes('no encontrado')
-        ? HTTP_STATUS.NOT_FOUND
-        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
-
-      res.status(statusCode).json({
-        success: false,
-        error: error.message
-      });
+      return this.handleError(res, error);
     }
   }
 
@@ -122,17 +119,11 @@ class PaymentMethodController {
       // Validar que storeId sea un UUID válido
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       if (!storeId || !uuidRegex.test(storeId)) {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json({
-          success: false,
-          error: 'El storeId debe ser un UUID válido'
-        });
+        throw new AppError('storeId must be a valid UUID', 400, 'VALIDATION_ERROR');
       }
 
       if (!userId) {
-        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-          success: false,
-          error: 'Usuario no autenticado'
-        });
+        throw new AppError('User not authenticated', 401, 'UNAUTHORIZED');
       }
 
       // Si el usuario es SUPER_ADMIN, permitir la creación sin verificar propiedad
@@ -140,10 +131,7 @@ class PaymentMethodController {
         // Verificar que el usuario sea propietario del store
         const isOwner = await paymentMethodService.verifyStoreOwner(storeId, userId);
         if (!isOwner) {
-          return res.status(HTTP_STATUS.FORBIDDEN).json({
-            success: false,
-            error: 'No tienes permiso para crear métodos de pago en este store'
-          });
+          throw new AppError('You do not have permission to create payment methods for this store', 403, 'FORBIDDEN');
         }
       }
 
@@ -156,24 +144,14 @@ class PaymentMethodController {
       if (methodData.code === 'qr-rechnung' && methodData.config?.qrIban) {
         const validation = QRBillService.validateQRIBAN(methodData.config.qrIban);
         if (!validation.valid) {
-          return res.status(HTTP_STATUS.BAD_REQUEST).json({
-            success: false,
-            error: `QR-IBAN ungültig: ${validation.error}`,
-          });
+          throw new AppError(`Invalid QR-IBAN: ${validation.error}`, 400, 'VALIDATION_ERROR');
         }
       }
 
       const result = await paymentMethodService.create(methodData);
       res.status(HTTP_STATUS.CREATED).json(result);
     } catch (error) {
-      const statusCode = error.message.includes('ya existe') || error.message.includes('requerido')
-        ? HTTP_STATUS.BAD_REQUEST
-        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
-
-      res.status(statusCode).json({
-        success: false,
-        error: error.message
-      });
+      return this.handleError(res, error);
     }
   }
 
@@ -199,10 +177,7 @@ class PaymentMethodController {
       const userRole = req.user?.role;
 
       if (!userId) {
-        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-          success: false,
-          error: 'Usuario no autenticado'
-        });
+        throw new AppError('User not authenticated', 401, 'UNAUTHORIZED');
       }
 
       // Obtener el método para verificar el storeId
@@ -214,10 +189,7 @@ class PaymentMethodController {
         // Verificar que el usuario sea propietario del store
         const isOwner = await paymentMethodService.verifyStoreOwner(storeId, userId);
         if (!isOwner) {
-          return res.status(HTTP_STATUS.FORBIDDEN).json({
-            success: false,
-            error: 'No tienes permiso para actualizar métodos de pago de este store'
-          });
+          throw new AppError('You do not have permission to update payment methods for this store', 403, 'FORBIDDEN');
         }
       }
 
@@ -225,27 +197,14 @@ class PaymentMethodController {
       if (req.body.config?.qrIban) {
         const validation = QRBillService.validateQRIBAN(req.body.config.qrIban);
         if (!validation.valid) {
-          return res.status(HTTP_STATUS.BAD_REQUEST).json({
-            success: false,
-            error: `QR-IBAN ungültig: ${validation.error}`,
-          });
+          throw new AppError(`Invalid QR-IBAN: ${validation.error}`, 400, 'VALIDATION_ERROR');
         }
       }
 
       const result = await paymentMethodService.update(id, req.body);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      console.error('Error en updatePaymentMethod:', error);
-      const statusCode = error.message.includes('no encontrado')
-        ? HTTP_STATUS.NOT_FOUND
-        : error.message.includes('ya existe')
-        ? HTTP_STATUS.BAD_REQUEST
-        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
-
-      res.status(statusCode).json({
-        success: false,
-        error: error.message || 'Error al actualizar método de pago'
-      });
+      return this.handleError(res, error, 'Failed to update payment method');
     }
   }
 
@@ -270,10 +229,7 @@ class PaymentMethodController {
       const userRole = req.user?.role;
 
       if (!userId) {
-        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-          success: false,
-          error: 'Usuario no autenticado'
-        });
+        throw new AppError('User not authenticated', 401, 'UNAUTHORIZED');
       }
 
       // Obtener el método para verificar el storeId
@@ -285,24 +241,14 @@ class PaymentMethodController {
         // Verificar que el usuario sea propietario del store
         const isOwner = await paymentMethodService.verifyStoreOwner(storeId, userId);
         if (!isOwner) {
-          return res.status(HTTP_STATUS.FORBIDDEN).json({
-            success: false,
-            error: 'No tienes permiso para eliminar métodos de pago de este store'
-          });
+          throw new AppError('You do not have permission to delete payment methods for this store', 403, 'FORBIDDEN');
         }
       }
 
       const result = await paymentMethodService.delete(id);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      const statusCode = error.message.includes('no encontrado')
-        ? HTTP_STATUS.NOT_FOUND
-        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
-
-      res.status(statusCode).json({
-        success: false,
-        error: error.message
-      });
+      return this.handleError(res, error);
     }
   }
 }

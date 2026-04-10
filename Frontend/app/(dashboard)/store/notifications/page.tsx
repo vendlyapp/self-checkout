@@ -4,6 +4,7 @@ import { useResponsive } from '@/hooks'
 import { Bell, CheckCheck, Loader, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useNotifications } from '@/hooks/queries/useNotifications'
+import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState'
 
 function formatNotificationTime(createdAt: string): string {
   try {
@@ -87,12 +88,7 @@ export default function NotificationsPage() {
               </div>
             )}
 
-            {isLoading && (
-              <div className="flex flex-col items-center justify-center py-16">
-                <Loader className="w-10 h-10 animate-spin text-brand-500" />
-                <p className="mt-4 text-[15px] font-medium text-gray-500">Wird geladen…</p>
-              </div>
-            )}
+            {isLoading && <DashboardLoadingState mode="section" message="Benachrichtigungen werden geladen..." />}
 
             {error && (
               <div className="rounded-2xl bg-white p-5 shadow-sm">
@@ -192,12 +188,7 @@ export default function NotificationsPage() {
               </div>
             )}
 
-            {isLoading && (
-              <div className="flex flex-col items-center justify-center py-20">
-                <Loader className="w-10 h-10 animate-spin text-brand-500" />
-                <p className="mt-4 text-gray-500">Wird geladen…</p>
-              </div>
-            )}
+            {isLoading && <DashboardLoadingState mode="section" message="Benachrichtigungen werden geladen..." />}
 
             {error && (
               <div className="rounded-2xl bg-white p-5 shadow-sm">

@@ -9,7 +9,7 @@ import { CustomerService, type Customer } from '@/lib/services/customerService'
 import { Users, Search, Mail, Phone, MapPin, ShoppingBag, TrendingUp, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatCHF } from '@/lib/invoice-utils'
-import { Loader } from '@/components/ui/Loader'
+import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState'
 
 export default function CustomersPage() {
   const { isMobile } = useResponsive()
@@ -51,14 +51,7 @@ export default function CustomersPage() {
   const isLoading = storeLoading || customersLoading
 
   if (isLoading) {
-    return (
-      <div className="w-full h-full flex items-center justify-center min-h-dvh bg-[#F2EDE8]">
-        <div className="text-center">
-          <Loader size="lg" className="mx-auto mb-4" />
-          <p className="text-gray-600">Wird geladen...</p>
-        </div>
-      </div>
-    )
+    return <DashboardLoadingState mode="page" message="Wird geladen..." />
   }
 
   return (

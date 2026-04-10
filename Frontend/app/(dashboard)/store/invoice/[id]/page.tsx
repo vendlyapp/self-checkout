@@ -6,7 +6,7 @@ import { useResponsive } from '@/hooks';
 import { useInvoice } from '@/hooks/queries/useInvoice';
 import { AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { Loader } from '@/components/ui/Loader';
+import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState';
 import { useEffect } from 'react';
 
 export default function InvoicePage() {
@@ -30,12 +30,7 @@ export default function InvoicePage() {
   const error = queryError instanceof Error ? queryError.message : queryError ? String(queryError) : null;
 
   if (loading && !invoice) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-dvh p-4">
-        <Loader size="lg" />
-        <p className="text-gray-600 font-medium mt-4">Rechnung wird geladen...</p>
-      </div>
-    );
+    return <DashboardLoadingState mode="page" message="Rechnung wird geladen..." />;
   }
 
   if (error && !invoice) {

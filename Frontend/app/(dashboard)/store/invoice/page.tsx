@@ -6,7 +6,7 @@ import { InvoiceService, Invoice } from '@/lib/services/invoiceService';
 import { useMyStore } from '@/hooks/queries/useMyStore';
 import { useResponsive } from '@/hooks';
 import { FileText, Search, Calendar, Banknote, User, ChevronRight } from 'lucide-react';
-import { Loader } from '@/components/ui/Loader';
+import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 import Link from 'next/link';
 
@@ -81,14 +81,7 @@ export default function StoreInvoicesPage() {
   };
 
   if (storeLoading || loading) {
-    return (
-      <div className="w-full h-full overflow-auto min-w-0">
-        <div className="flex flex-col items-center justify-center min-h-dvh p-4">
-          <Loader size="lg" />
-          <p className="text-gray-600 font-medium mt-4">Rechnungen werden geladen...</p>
-        </div>
-      </div>
-    );
+    return <DashboardLoadingState mode="page" message="Rechnungen werden geladen..." />;
   }
 
   if (error) {

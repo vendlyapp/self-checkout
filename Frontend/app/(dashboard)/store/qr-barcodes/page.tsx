@@ -2,7 +2,7 @@
 
 import { useProducts } from '@/hooks/queries/useProducts'
 import { useResponsive } from '@/hooks'
-import { Loader } from '@/components/ui/Loader'
+import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState'
 import { QrCode, Download } from 'lucide-react'
 import type { Product } from '@/components/dashboard/products_list/data/mockProducts'
 
@@ -175,11 +175,7 @@ export default function QRBarcodesPage() {
   })
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[280px] w-full">
-        <Loader size="md" />
-      </div>
-    )
+    return <DashboardLoadingState mode="page" message="Wird geladen..." />
   }
 
   if (error) {
@@ -198,7 +194,7 @@ export default function QRBarcodesPage() {
   const hasProducts = list.length > 0
 
   return (
-    <div className="w-full min-w-0 h-full overflow-auto min-w-0">
+    <div className="w-full min-w-0 h-full overflow-auto">
       <div className="p-4 md:px-6 md:pt-10 md:pb-8 lg:p-8 max-w-5xl mx-auto min-w-0">
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">

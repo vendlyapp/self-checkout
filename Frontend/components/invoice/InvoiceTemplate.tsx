@@ -21,6 +21,8 @@ import {
   getStatusConfig,
   getPaymentMethodDisplay,
   isDeferredPaymentMethod,
+  isSwissQRBillPaymentMethod,
+  shouldShowSwissQRBillOnInvoice,
   type Invoice as SwissInvoice,
   type MwStGroup,
   type InvoiceParty,
@@ -30,6 +32,7 @@ import {
 import { Invoice as ServiceInvoice, InvoiceItem, InvoiceService } from '@/lib/services/invoiceService';
 import { getDefaultStoreName } from '@/lib/config/brand';
 import { devError } from '@/lib/utils/logger';
+import { usePortraitViewport } from '@/hooks';
 
 // =============================================================================
 // Swiss Invoice Template
@@ -113,7 +116,7 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
 
   // For QR-Rechnung: use creditor snapshot data for the payment slip section
   const qrSnapshot = serviceInvoice.qrCreditorSnapshot;
-  const isQRRechnung = (serviceInvoice as { paymentMethod?: string }).paymentMethod === 'qr-rechnung';
+  const isQRRechnung = isSwissQRBillPaymentMethod((serviceInvoice as { paymentMethod?: string }).paymentMethod);
 
   const issuer: InvoiceParty = {
     name: (isQRRechnung && qrSnapshot?.creditorName) ? qrSnapshot.creditorName : (storeName || getDefaultStoreName()),
@@ -191,7 +194,7 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
     const unitPriceBrutto = item.price || (totalBrutto / quantity);
     
     // Build detail string with SKU if available
-    const detail = productSku ? `SKU: ${productSku}` : undefined;
+    const detail = productSku ? String(productSku).trim() : undefined;
     
     return {
       id: item.productId || `product-${index}`,
@@ -248,9 +251,10 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
     dueDate.setTime(issuedDate.getTime() + 30 * 24 * 60 * 60 * 1000);
   }
 
-  // Document type: Rechnung (QR with due) vs Quittung/Beleg (immediate)
+  // Document type: Rechnung (Zahlung später / auf Rechnung) vs Quittung (sofort bezahlt)
   const documentType = deferred ? 'Rechnung' : 'Quittung';
-  const showQRSection = deferred;
+  // Swiss QR-Bill nur wie Referenz-PDF (77759389): Endstück mit QR — nicht bei jeder „Rechnung“
+  const showQRSection = shouldShowSwissQRBillOnInvoice(paymentMethod, serviceInvoice.qrrReference);
 
   // Calculate totals using Swiss formula
   // totalBrutto is already the total including VAT
@@ -473,14 +477,15 @@ export default function InvoiceTemplate({
   onDownload,
   onPrint,
 }: InvoiceTemplateProps) {
+  const isPortraitViewport = usePortraitViewport();
   const printRef = useRef<HTMLDivElement>(null);
   const [qrBillSvg, setQrBillSvg] = useState<string | null>(null);
   const [qrSvg, setQrSvg] = useState<string | null>(null);
   const [qrFullscreen, setQrFullscreen] = useState(false);
 
-  // Fetch real QR Bill SVG when invoice uses QR-Rechnung payment
+  // QR-Bill-SVG nur laden, wenn die Rechnung wirklich einen Zahlschein anzeigen soll
   useEffect(() => {
-    if (serviceInvoice.paymentMethod !== 'qr-rechnung' || !serviceInvoice.qrrReference) return;
+    if (!shouldShowSwissQRBillOnInvoice(serviceInvoice.paymentMethod, serviceInvoice.qrrReference)) return;
     const controller = new AbortController();
     InvoiceService.getQRCode(serviceInvoice.id, { signal: controller.signal }).then((res) => {
       if (res.success && res.data) {
@@ -580,39 +585,14 @@ export default function InvoiceTemplate({
       onDownload();
       return;
     }
-
-    // Usar window.print() que es más confiable y evita problemas con html2canvas
-    // El usuario puede guardar como PDF desde el diálogo de impresión
     try {
-      // Ocultar elementos que no deben aparecer al imprimir
-      const footer = document.querySelector('[class*="InvoiceActionsFooter"]');
-      const headerNav = document.querySelector('[class*="HeaderNav"]');
-      const responsiveHeader = document.querySelector('[class*="ResponsiveHeader"]');
-      
-      const originalFooterDisplay = footer ? (footer as HTMLElement).style.display : '';
-      const originalHeaderNavDisplay = headerNav ? (headerNav as HTMLElement).style.display : '';
-      const originalResponsiveHeaderDisplay = responsiveHeader ? (responsiveHeader as HTMLElement).style.display : '';
-      
-      if (footer) (footer as HTMLElement).style.display = 'none';
-      if (headerNav) (headerNav as HTMLElement).style.display = 'none';
-      if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = 'none';
-      
-      // Pequeño delay para asegurar que los elementos se oculten
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Usar window.print() que respetará los estilos @media print
-      // El navegador mostrará el diálogo donde el usuario puede guardar como PDF
-      window.print();
-      
-      // Restaurar elementos después de imprimir
-      setTimeout(() => {
-        if (footer) (footer as HTMLElement).style.display = originalFooterDisplay;
-        if (headerNav) (headerNav as HTMLElement).style.display = originalHeaderNavDisplay;
-        if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = originalResponsiveHeaderDisplay;
-      }, 1000);
+      const filename = serviceInvoice.invoiceNumber
+        ? `Rechnung-${serviceInvoice.invoiceNumber}`
+        : `Rechnung-${serviceInvoice.id.slice(0, 8)}`;
+      await InvoiceService.downloadPDF(serviceInvoice.id, filename);
     } catch (error) {
-      devError('Error printing:', error);
-      toast.error('Fehler beim Drucken');
+      devError('Error downloading PDF:', error);
+      toast.error('Fehler beim Herunterladen der Rechnung');
     }
   };
 
@@ -889,9 +869,11 @@ export default function InvoiceTemplate({
                 </div>
               )}
 
-              {/* MwSt code */}
+              {/* MwSt rate */}
               <div className={`${isMobile ? 'col-span-2' : 'col-span-1'} flex justify-center pt-0.5`}>
-                <MwStCodeBadge code={item.mwstCode} rate={item.mwstRate} />
+                <span className="text-[11px] text-gray-500 tabular-nums">
+                  {formatMwStRate(item.mwstRate)}
+                </span>
               </div>
 
               {/* Total */}
@@ -916,16 +898,18 @@ export default function InvoiceTemplate({
                 </span>
               </div>
 
-              {/* MwSt lines */}
-              {breakdown.map((g) => (
-                <div key={g.code} className="flex justify-between items-center py-1 text-[12px]">
-                  <span className="flex items-center gap-1.5 text-gray-400">
-                    <MwStCodeBadge code={g.code} rate={g.rate} />
-                    <span>MwSt {formatMwStRate(g.rate)}</span>
-                  </span>
-                  <span className="text-gray-500 tabular-nums">{formatCHF(g.mwst)}</span>
+              {/* Included VAT summary (minimal style) */}
+              <div className="flex justify-between py-1.5 text-[12px]">
+                <span className="text-gray-400">Enthaltene MwSt</span>
+                <span className="text-gray-600 font-medium tabular-nums">
+                  {formatCHF(totalMwst)}
+                </span>
+              </div>
+              {breakdown.length > 1 && (
+                <div className="pb-1 text-right text-[10px] text-gray-400">
+                  {breakdown.map((g) => formatMwStRate(g.rate)).join(' · ')}
                 </div>
-              ))}
+              )}
 
               {/* Descuento aplicado */}
               {discountAmount > 0 && (
@@ -943,7 +927,7 @@ export default function InvoiceTemplate({
               {/* Grand total */}
               <div className="flex justify-between items-baseline">
                 <span className="text-[10px] uppercase tracking-[0.12em] text-gray-400 font-semibold">
-                  Gesamtbetrag {invoice.waehrung || 'CHF'}
+                  Total {invoice.waehrung || 'CHF'}
                 </span>
                 <span
                   className="text-xl md:text-2xl font-bold text-gray-900 tabular-nums"
@@ -956,44 +940,6 @@ export default function InvoiceTemplate({
           </div>
         </div>
 
-        {/* ═══ MWST SUMMARY TABLE ═══ */}
-        {breakdown.length > 0 && (
-          <div className={`${px} pb-4`}>
-            <div className="bg-gray-50 rounded-lg p-4 md:p-5">
-              <SectionLabel>MwSt-Zusammenfassung</SectionLabel>
-              <div className="grid grid-cols-5 gap-3 text-[9px] md:text-[10px] text-gray-400 font-semibold uppercase tracking-[0.1em] pb-2 border-b border-gray-200">
-                <div>Code</div>
-                <div>Satz</div>
-                <div className="text-right">Brutto</div>
-                <div className="text-right">Netto</div>
-                <div className="text-right">MwSt</div>
-              </div>
-              {breakdown.map((g) => (
-                <div
-                  key={g.code}
-                  className="grid grid-cols-5 gap-3 text-[11px] md:text-[12px] py-1.5"
-                >
-                  <div>
-                    <MwStCodeBadge code={g.code} rate={g.rate} />
-                  </div>
-                  <div className="text-gray-500 tabular-nums">{formatMwStRate(g.rate)}</div>
-                  <div className="text-right text-gray-500 tabular-nums">{formatCHF(g.brutto)}</div>
-                  <div className="text-right text-gray-500 tabular-nums">{formatCHF(g.netto)}</div>
-                  <div className="text-right text-gray-800 font-semibold tabular-nums">
-                    {formatCHF(g.mwst)}
-                  </div>
-                </div>
-              ))}
-              <div className="grid grid-cols-5 gap-3 text-[11px] md:text-[12px] pt-2 border-t border-gray-200 font-semibold text-gray-800">
-                <div className="col-span-2">Total</div>
-                <div className="text-right tabular-nums">{formatCHF(totalBrutto)}</div>
-                <div className="text-right tabular-nums">{formatCHF(totalNetto)}</div>
-                <div className="text-right tabular-nums">{formatCHF(totalMwst)}</div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* ═══ NOTES ═══ */}
         {invoice.notes && (
           <div className={`${px} pb-4`}>
@@ -1001,8 +947,8 @@ export default function InvoiceTemplate({
           </div>
         )}
 
-        {/* ═══ QR-RECHNUNG (ZAHLSCHEIN) — solo para pago diferido ═══ */}
-        {invoice.showQRSection && (issuer.iban || serviceInvoice.qrrReference) && (
+        {/* ═══ QR-RECHNUNG (ZAHLSCHEIN) — nur Swiss QR-Bill (Zahlungsart qr-rechnung + QRR) ═══ */}
+        {invoice.showQRSection && (
           <>
             <div className={`${px}`}>
               <CutLine />
@@ -1084,7 +1030,10 @@ export default function InvoiceTemplate({
 
                 {/* Fullscreen portal — mismo patrón que el kiosko */}
                 {qrFullscreen && qrBillSvg && createPortal(
-                  <div className="fixed inset-0 z-[100000] bg-[#F2F2F7] flex flex-col">
+                  <div
+                    className="fixed inset-0 z-[100000] bg-[#F2F2F7] flex flex-col"
+                    style={{ ['--qr-inv-fs-chrome' as string]: '80px' }}
+                  >
                     <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white border-b border-gray-100 shrink-0">
                       <button
                         onClick={() => setQrFullscreen(false)}
@@ -1098,15 +1047,35 @@ export default function InvoiceTemplate({
                       </div>
                       <div className="w-10" />
                     </div>
-                    <div className="flex-1 overflow-hidden flex items-center justify-center">
-                      <div className="shrink-0" style={{ transform: 'rotate(90deg)', width: 'calc(100dvh - 72px)', maxWidth: 'calc(100dvh - 72px)' }}>
-                        <img
-                          src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrBillSvg)}`}
-                          alt="QR-Rechnung Zahlschein"
-                          className="w-full block rounded-sm shadow-md"
-                          draggable={false}
-                        />
-                      </div>
+                    <div className="flex-1 min-h-0 overflow-hidden flex items-center justify-center p-2">
+                      {isPortraitViewport ? (
+                        <div
+                          className="shrink-0"
+                          style={{
+                            transform: 'rotate(90deg)',
+                            width:
+                              'calc(min(calc(100dvh - var(--qr-inv-fs-chrome, 80px) - 20px), calc(2 * (100dvw - 28px))) * 0.9)',
+                            maxWidth:
+                              'calc(min(calc(100dvh - var(--qr-inv-fs-chrome, 80px) - 20px), calc(2 * (100dvw - 28px))) * 0.9)',
+                          }}
+                        >
+                          <img
+                            src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrBillSvg)}`}
+                            alt="QR-Rechnung Zahlschein"
+                            className="w-full h-auto block rounded-sm shadow-md"
+                            draggable={false}
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-full min-h-0 max-h-full px-1 flex items-center justify-center overflow-auto">
+                          <img
+                            src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrBillSvg)}`}
+                            alt="QR-Rechnung Zahlschein"
+                            className="h-auto w-auto max-w-[min(calc(100dvw-1.5rem),calc(2*(100dvh-var(--qr-inv-fs-chrome,80px)-16px)),520px)] max-h-[calc(100dvh-var(--qr-inv-fs-chrome,80px)-12px)] object-contain rounded-sm shadow-md"
+                            draggable={false}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>,
                   document.body
@@ -1121,7 +1090,7 @@ export default function InvoiceTemplate({
                     <img
                       src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrBillSvg)}`}
                       alt="QR-Rechnung Zahlschein"
-                      className="qr-bill-img w-full max-w-[680px] block rounded-xl shadow-md border border-gray-100 print:max-w-none print:rounded-none print:shadow-none print:border-0"
+                      className="qr-bill-img w-full max-w-[min(680px,92vw)] mx-auto block rounded-xl shadow-md border border-gray-100 print:max-w-none print:rounded-none print:shadow-none print:border-0"
                       draggable={false}
                     />
                   ) : (

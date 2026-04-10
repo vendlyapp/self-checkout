@@ -4,6 +4,8 @@ const productService = require('./ProductService');
 const orderService = require('./OrderService');
 const categoryService = require('./CategoryService');
 const discountCodeService = require('./DiscountCodeService');
+const AppError = require('../utils/AppError');
+const logger = require('../utils/logger');
 
 class SuperAdminService {
   /**
@@ -162,7 +164,7 @@ class SuperAdminService {
       // Verify store exists
       const storeResult = await this.getStoreDetails(storeId);
       if (!storeResult.success || !storeResult.data) {
-        throw new Error('Store not found');
+        throw new AppError('Store not found', 404, 'STORE_NOT_FOUND');
       }
 
       const { name, slug, logo, isActive, isOpen } = storeData;
@@ -173,7 +175,7 @@ class SuperAdminService {
       // Validate and add fields
       if (name !== undefined) {
         if (!name || !name.trim()) {
-          throw new Error('El nombre de la tienda es requerido');
+          throw new AppError('Store name is required', 400, 'VALIDATION_ERROR');
         }
         paramCount++;
         updateFields.push(`name = $${paramCount}`);
@@ -182,20 +184,20 @@ class SuperAdminService {
 
       if (slug !== undefined) {
         if (!slug || !slug.trim()) {
-          throw new Error('El slug es requerido');
+          throw new AppError('Store slug is required', 400, 'VALIDATION_ERROR');
         }
         // Validate slug format (lowercase, alphanumeric, hyphens only)
         const slugRegex = /^[a-z0-9-]+$/;
         const normalizedSlug = slug.trim().toLowerCase();
         if (!slugRegex.test(normalizedSlug)) {
-          throw new Error('El slug solo puede contener letras minúsculas, números y guiones');
+          throw new AppError('Store slug can only contain lowercase letters, numbers, and hyphens', 400, 'VALIDATION_ERROR');
         }
         
         // Check if slug is already taken by another store
         const slugCheckQuery = 'SELECT id FROM "Store" WHERE slug = $1 AND id != $2';
         const slugCheckResult = await query(slugCheckQuery, [normalizedSlug, storeId]);
         if (slugCheckResult.rows.length > 0) {
-          throw new Error('Este slug ya está en uso por otra tienda');
+          throw new AppError('This slug is already in use by another store', 400, 'CONFLICT');
         }
 
         paramCount++;
@@ -222,7 +224,7 @@ class SuperAdminService {
       }
 
       if (updateFields.length === 0) {
-        throw new Error('No hay campos para actualizar');
+        throw new AppError('No fields to update', 400, 'VALIDATION_ERROR');
       }
 
       // Add storeId and updatedAt
@@ -239,7 +241,7 @@ class SuperAdminService {
       const result = await query(updateQuery, values);
 
       if (result.rows.length === 0) {
-        throw new Error('Error al actualizar la tienda');
+        throw new AppError('Failed to update store', 500, 'INTERNAL_ERROR');
       }
 
       const updatedStore = result.rows[0];
@@ -264,7 +266,7 @@ class SuperAdminService {
         data: updatedStore
       };
     } catch (error) {
-      console.error('Error updating store:', error);
+      logger.error('[SuperAdminService.updateStore] Failed', { error: error.message });
       throw error;
     }
   }
@@ -283,7 +285,7 @@ class SuperAdminService {
     const result = await query(updateQuery, [isActive, storeId]);
 
     if (result.rows.length === 0) {
-      throw new Error('Store not found');
+      throw new AppError('Store not found', 404, 'STORE_NOT_FOUND');
     }
 
     return {
@@ -336,7 +338,7 @@ class SuperAdminService {
     const result = await query(selectQuery, [storeId]);
 
     if (result.rows.length === 0) {
-      throw new Error('Store not found');
+      throw new AppError('Store not found', 404, 'STORE_NOT_FOUND');
     }
 
     return {
@@ -413,14 +415,14 @@ class SuperAdminService {
       // Get store details first to get ownerId
       const storeResult = await this.getStoreDetails(storeId);
       if (!storeResult.success || !storeResult.data) {
-        throw new Error('Store not found');
+        throw new AppError('Store not found', 404, 'STORE_NOT_FOUND');
       }
       
       const store = storeResult.data;
       const ownerId = store.ownerId || store.ownerid; // Handle case sensitivity
 
       if (!ownerId) {
-        throw new Error(`Store ownerId not found. Store data: ${JSON.stringify(store)}`);
+        throw new AppError('Store ownerId not found', 500, 'INTERNAL_ERROR');
       }
 
       // Calculate date range based on period
@@ -450,16 +452,16 @@ class SuperAdminService {
 
       // Validate startDate
       if (!startDate || isNaN(startDate.getTime())) {
-        throw new Error('Invalid startDate calculated');
+        throw new AppError('Invalid startDate calculated', 500, 'INTERNAL_ERROR');
       }
 
       const startDateISO = startDate.toISOString();
       if (!startDateISO) {
-        throw new Error('Failed to convert startDate to ISO string');
+        throw new AppError('Failed to convert startDate to ISO string', 500, 'INTERNAL_ERROR');
       }
 
       // Debug: Log parameters to verify they are correct
-      console.log('[getStoreAnalytics] Parameters:', {
+      logger.debug('[SuperAdminService.getStoreAnalytics] Parameters', {
         storeId,
         ownerId,
         startDateISO,
@@ -541,7 +543,7 @@ class SuperAdminService {
       ]);
 
       // Debug: Log categories result
-      console.log('[getStoreAnalytics] Categories query result:', {
+      logger.debug('[SuperAdminService.getStoreAnalytics] Categories query result', {
         rowCount: categoriesResult.rows.length,
         rows: categoriesResult.rows
       });
@@ -620,7 +622,7 @@ class SuperAdminService {
       });
 
       // Debug: Log processed categories
-      console.log('[getStoreAnalytics] Processed categories:', {
+      logger.debug('[SuperAdminService.getStoreAnalytics] Processed categories', {
         totalProducts,
         categoriesCount: categoriesData.length,
         categories: categoriesData
@@ -677,7 +679,7 @@ class SuperAdminService {
         }
       };
     } catch (error) {
-      console.error('Error getting store analytics:', error);
+      logger.error('[SuperAdminService.getStoreAnalytics] Failed', { error: error.message });
       throw error;
     }
   }
@@ -700,7 +702,7 @@ class SuperAdminService {
       );
       return result.rows[0] || null;
     } catch (error) {
-      console.error('Error getting product stats:', error);
+      logger.warn('[SuperAdminService.getStoreProductStats] Failed', { error: error.message });
       return null;
     }
   }
@@ -722,7 +724,7 @@ class SuperAdminService {
       );
       return result.rows[0] || null;
     } catch (error) {
-      console.error('Error getting category stats:', error);
+      logger.warn('[SuperAdminService.getStoreCategoryStats] Failed', { error: error.message });
       return null;
     }
   }
@@ -737,7 +739,7 @@ class SuperAdminService {
       // Get store details first to get ownerId
       const storeResult = await this.getStoreDetails(storeId);
       if (!storeResult.success || !storeResult.data) {
-        throw new Error('Store not found');
+        throw new AppError('Store not found', 404, 'STORE_NOT_FOUND');
       }
       
       const store = storeResult.data;
@@ -808,7 +810,7 @@ class SuperAdminService {
         total: total
       };
     } catch (error) {
-      console.error('Error getting store orders:', error);
+      logger.error('[SuperAdminService.getStoreOrders] Failed', { error: error.message });
       throw error;
     }
   }
@@ -822,7 +824,7 @@ class SuperAdminService {
       const storeResult = await this.getStoreDetails(storeId);
       
       if (!storeResult.success || !storeResult.data) {
-        throw new Error('Store not found');
+        throw new AppError('Store not found', 404, 'STORE_NOT_FOUND');
       }
 
       const store = storeResult.data;
@@ -836,16 +838,16 @@ class SuperAdminService {
       const result = await query(updateQuery, [qrCode, storeId]);
 
       if (result.rows.length === 0) {
-        throw new Error('Error al actualizar el QR code');
+        throw new AppError('Failed to update QR code', 500, 'INTERNAL_ERROR');
       }
 
       return {
         success: true,
         data: result.rows[0],
-        message: 'QR code regenerado exitosamente'
+        message: 'QR code regenerated successfully'
       };
     } catch (error) {
-      console.error('Error regenerating QR code:', error);
+      logger.error('[SuperAdminService.regenerateQRCode] Failed', { error: error.message });
       throw error;
     }
   }

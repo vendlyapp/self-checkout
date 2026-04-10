@@ -5,18 +5,20 @@ const storeService = require('./StoreService');
 const customerService = require('./CustomerService');
 const notificationService = require('./NotificationService');
 const QRBillService = require('./QRBillService');
+const AppError = require('../utils/AppError');
+const logger = require('../utils/logger');
 
 class OrderService {
 
   async create(userId, orderPayload = {}) {
     const sanitizedUserId = typeof userId === 'string' ? userId.trim() : '';
     if (!sanitizedUserId) {
-      throw new Error('El ID del usuario es requerido');
+      throw new AppError('User id is required', 400, 'VALIDATION_ERROR');
     }
 
     const itemsPayload = orderPayload.items;
     if (!Array.isArray(itemsPayload) || itemsPayload.length === 0) {
-      throw new Error('Los items de la orden son requeridos');
+      throw new AppError('Order items are required', 400, 'VALIDATION_ERROR');
     }
 
     const normalizedItems = [];
@@ -27,11 +29,11 @@ class OrderService {
       const quantity = Number(rawItem.quantity);
 
       if (!productId) {
-        throw new Error('Jede Position muss eine productId enthalten');
+        throw new AppError('Each item must contain a productId', 400, 'VALIDATION_ERROR');
       }
 
       if (!Number.isFinite(quantity) || quantity <= 0) {
-        throw new Error('Die Menge jeder Position muss eine Zahl grösser als null sein');
+        throw new AppError('Each item quantity must be greater than zero', 400, 'VALIDATION_ERROR');
       }
 
       uniqueProductIds.add(productId);
@@ -52,7 +54,7 @@ class OrderService {
     );
 
     if (productsResult.rows.length !== uniqueProductIds.size) {
-      throw new Error('Ein oder mehrere Produkte der Bestellung existieren nicht');
+      throw new AppError('One or more products in the order do not exist', 404, 'PRODUCT_NOT_FOUND');
     }
 
     const productCatalog = new Map(
@@ -70,11 +72,11 @@ class OrderService {
     for (const item of normalizedItems) {
       const product = productCatalog.get(item.productId);
       if (!product) {
-        throw new Error(`Produkt ${item.productId} nicht gefunden`);
+        throw new AppError(`Product ${item.productId} not found`, 404, 'PRODUCT_NOT_FOUND');
       }
 
       if (product.stock < item.quantity) {
-        throw new Error(`Unzureichender Lagerbestand für Produkt ${item.productId}`);
+        throw new AppError(`Insufficient stock for product ${item.productId}`, 400, 'INSUFFICIENT_STOCK');
       }
 
       const resolvedPrice =
@@ -83,7 +85,7 @@ class OrderService {
           : product.price;
 
       if (!Number.isFinite(resolvedPrice) || resolvedPrice < 0) {
-        throw new Error(`Ungültiger Preis für Produkt ${item.productId}`);
+        throw new AppError(`Invalid price for product ${item.productId}`, 400, 'VALIDATION_ERROR');
       }
 
       item.price = resolvedPrice;
@@ -163,7 +165,7 @@ class OrderService {
           );
           order.metadata = { ...(order.metadata || {}), ...qrrUpdate };
         } catch (qrrError) {
-          console.error('Error generating QRR reference:', qrrError);
+          logger.error('[OrderService.create] Failed to generate QRR reference', { error: qrrError.message });
         }
       }
 
@@ -180,7 +182,7 @@ class OrderService {
         const stockResult = await client.query(updateStockQuery, [item.quantity, item.productId]);
 
         if (stockResult.rowCount === 0) {
-          throw new Error(`Unzureichender Lagerbestand für Produkt ${item.productId}`);
+          throw new AppError(`Insufficient stock for product ${item.productId}`, 400, 'INSUFFICIENT_STOCK');
         }
 
         const itemInsertQuery = `
@@ -215,8 +217,8 @@ class OrderService {
             );
           }
         } catch (discountError) {
-          // No fallar la orden si hay error con el código de descuento
-          console.error('Error al incrementar usos del código de descuento:', discountError);
+      // Do not fail order creation if promo code usage update fails
+          logger.warn('[OrderService.create] Failed to increment promo code redemptions', { error: discountError.message });
         }
       }
 
@@ -224,7 +226,7 @@ class OrderService {
     });
 
     // Crear factura automáticamente después de crear la orden
-    console.log('🚀 [OrderService.create] Bestellung erfolgreich erstellt. Starte automatische Rechnungserstellung...', {
+    logger.info('[OrderService.create] Order created successfully', {
       orderId: result.order.id,
       itemsCount: result.items.length,
       storeId: storeId,
@@ -268,7 +270,7 @@ class OrderService {
             storeInfo = storeResult.data;
           }
         } catch (storeError) {
-          console.error('Error al obtener datos de la tienda para la factura:', storeError);
+          logger.warn('[OrderService.create] Failed to fetch store data for invoice context', { error: storeError.message });
         }
       }
 
@@ -281,7 +283,7 @@ class OrderService {
           parsedMetadata = result.order.metadata;
         }
       } catch (parseError) {
-        console.error('Error al parsear metadata:', parseError);
+        logger.warn('[OrderService.create] Failed to parse order metadata', { error: parseError.message });
       }
 
       // Calcular totales desde metadata si están disponibles
@@ -293,31 +295,32 @@ class OrderService {
       // Preparar datos del cliente desde metadata
       const customerData = parsedMetadata.customer || parsedMetadata.customerData || {};
       
-      console.log('📋 [OrderService.create] Datos del cliente extraídos:', {
+      logger.debug('[OrderService.create] Extracted customer data from metadata', {
         hasCustomerData: !!customerData && Object.keys(customerData).length > 0,
-        customerName: customerData.name || 'No proporcionado',
-        customerEmail: customerData.email || 'No proporcionado',
+        customerName: customerData.name || 'Not provided',
+        customerEmail: customerData.email || 'Not provided',
         parsedMetadataKeys: Object.keys(parsedMetadata),
       });
 
       // NO crear la factura automáticamente aquí
       // La factura se creará desde el frontend después de que el usuario decida sobre sus datos
-      console.log('ℹ️ [OrderService.create] Factura se creará desde el frontend después de que el usuario decida sobre sus datos');
+      logger.info('[OrderService.create] Invoice creation is delegated to frontend after customer data choice');
       
       // Mantener invoiceData como null para indicar que no se creó automáticamente
       invoiceData = null;
     } catch (invoiceError) {
-      // No fallar la orden si hay error al crear la factura
-      console.error('❌ [OrderService.create] Error al crear factura automáticamente:', invoiceError);
-      console.error('❌ [OrderService.create] Mensaje de error:', invoiceError.message);
-      console.error('❌ [OrderService.create] Stack trace:', invoiceError.stack);
+      // Do not fail order creation if invoice post-processing fails
+      logger.error('[OrderService.create] Invoice post-processing failed', {
+        error: invoiceError.message,
+        stack: invoiceError.stack,
+      });
       if (invoiceData) {
-        console.error('❌ [OrderService.create] Datos de factura que causaron el error:', JSON.stringify({
+        logger.error('[OrderService.create] Invoice payload that triggered error', {
           orderId: invoiceData.orderId,
           storeId: invoiceData.storeId,
           customerName: invoiceData.customerName,
           itemsCount: invoiceData.items?.length,
-        }, null, 2));
+        });
       }
     }
 
@@ -333,7 +336,7 @@ class OrderService {
           payload: { orderId: result.order.id, total: finalTotal, paymentMethod: paymentMethod || null },
         });
       } catch (notifError) {
-        console.error('❌ [OrderService.create] Error al crear notificación:', notifError.message);
+        logger.warn('[OrderService.create] Failed to create store notification', { error: notifError.message });
       }
     }
 
@@ -346,7 +349,7 @@ class OrderService {
         invoiceNumber: createdInvoice?.invoiceNumber || null,
         invoiceShareToken: createdInvoice?.shareToken || null, // Agregar shareToken para acceso público
       },
-      message: 'Bestellung erfolgreich erstellt',
+      message: 'Order created successfully',
     };
   }
 
@@ -466,7 +469,7 @@ class OrderService {
     ]);
 
     if (result.rows.length === 0) {
-      throw new Error('Bestellung nicht gefunden');
+      throw new AppError('Order not found', 404, 'ORDER_NOT_FOUND');
     }
 
     const order = result.rows[0];
@@ -475,7 +478,7 @@ class OrderService {
     // Debug: verificar que los items tengan productName
     const itemsWithoutName = order.items.filter(item => !item.productName);
     if (itemsWithoutName.length > 0) {
-      console.warn('⚠️ [OrderService.findById] Items sin productName:', {
+      logger.warn('[OrderService.findById] Items without productName', {
         orderId: id,
         itemsWithoutName: itemsWithoutName.map(i => ({ productId: i.productId, hasProductName: !!i.productName })),
       });
@@ -513,7 +516,7 @@ class OrderService {
     // Verificar que la orden existe
     const existingOrder = await this.findById(id);
     if (!existingOrder.success) {
-      throw new Error('Bestellung nicht gefunden');
+      throw new AppError('Order not found', 404, 'ORDER_NOT_FOUND');
     }
 
     // Construir query de actualización dinámicamente
@@ -531,7 +534,7 @@ class OrderService {
           // Validar status
           const validStatuses = ['pending', 'processing', 'completed', 'cancelled'];
           if (!validStatuses.includes(orderData[field])) {
-            throw new Error(`Ungültiger Status. Muss einer von sein: ${validStatuses.join(', ')}`);
+            throw new AppError(`Invalid status. Must be one of: ${validStatuses.join(', ')}`, 400, 'VALIDATION_ERROR');
           }
           updateFields.push(`"${field}" = $${paramCount}`);
           values.push(orderData[field]);
@@ -543,7 +546,7 @@ class OrderService {
     }
 
     if (updateFields.length === 0) {
-      throw new Error('Keine Felder zum Aktualisieren');
+      throw new AppError('No fields to update', 400, 'VALIDATION_ERROR');
     }
 
     // Agregar ID como último parámetro
@@ -569,7 +572,7 @@ class OrderService {
           [id]
         );
       } catch (error) {
-        console.error('Error al cancelar facturas asociadas:', error);
+        logger.warn('[OrderService.update] Failed to cancel related invoices', { error: error.message });
       }
       // Notificación para el admin de la tienda
       if (order.storeId) {
@@ -582,7 +585,7 @@ class OrderService {
             payload: { orderId: id, status: 'cancelled' },
           });
         } catch (notifError) {
-          console.error('Error al crear notificación order_cancelled:', notifError.message);
+          logger.warn('[OrderService.update] Failed to create order_cancelled notification', { error: notifError.message });
         }
       }
     }
@@ -590,7 +593,7 @@ class OrderService {
     return {
       success: true,
       data: order,
-      message: 'Bestellung erfolgreich aktualisiert'
+      message: 'Order updated successfully'
     };
   }
 
@@ -621,7 +624,7 @@ class OrderService {
 
     const orderResult = await this.findById(orderId);
     if (!orderResult.success || !orderResult.data) {
-      return { success: false, error: 'Bestellung nicht gefunden' };
+      return { success: false, error: 'Order not found' };
     }
 
     const order = orderResult.data;
@@ -659,7 +662,7 @@ class OrderService {
     // Verificar que la orden existe
     const existingOrder = await this.findById(id);
     if (!existingOrder.success) {
-      throw new Error('Bestellung nicht gefunden');
+      throw new AppError('Order not found', 404, 'ORDER_NOT_FOUND');
     }
 
     // Eliminar usando transacción
@@ -672,7 +675,7 @@ class OrderService {
 
     return {
       success: true,
-      message: 'Bestellung erfolgreich gelöscht'
+      message: 'Order deleted successfully'
     };
   }
 
@@ -1010,11 +1013,11 @@ class OrderService {
   async createOrderSimple(orderData) {
     // Validaciones
     if (!orderData.userId || !orderData.userId.trim()) {
-      throw new Error('El ID del usuario es requerido');
+      throw new AppError('User id is required', 400, 'VALIDATION_ERROR');
     }
 
     if (!orderData.items || !Array.isArray(orderData.items) || orderData.items.length === 0) {
-      throw new Error('Los items de la orden son requeridos');
+      throw new AppError('Order items are required', 400, 'VALIDATION_ERROR');
     }
 
     // Validar y normalizar items
@@ -1023,11 +1026,11 @@ class OrderService {
 
     for (const item of orderData.items) {
       if (!item.productId || !item.quantity) {
-        throw new Error('Jede Position muss productId und quantity haben');
+        throw new AppError('Each item must contain productId and quantity', 400, 'VALIDATION_ERROR');
       }
       const qty = parseInt(item.quantity);
       if (!Number.isFinite(qty) || qty <= 0) {
-        throw new Error('Die Menge jeder Position muss eine Zahl grösser als null sein');
+        throw new AppError('Each item quantity must be greater than zero', 400, 'VALIDATION_ERROR');
       }
       uniqueProductIds.add(item.productId);
       normalizedItems.push({ productId: item.productId, quantity: qty });
@@ -1040,7 +1043,7 @@ class OrderService {
     );
 
     if (productsResult.rows.length !== uniqueProductIds.size) {
-      throw new Error('Ein oder mehrere Produkte der Bestellung existieren nicht');
+      throw new AppError('One or more products in the order do not exist', 404, 'PRODUCT_NOT_FOUND');
     }
 
     const productCatalog = new Map(
@@ -1054,7 +1057,7 @@ class OrderService {
     for (const item of normalizedItems) {
       const product = productCatalog.get(item.productId);
       if (product.stock < item.quantity) {
-        throw new Error(`Unzureichender Lagerbestand für Produkt ${item.productId}`);
+        throw new AppError(`Insufficient stock for product ${item.productId}`, 400, 'INSUFFICIENT_STOCK');
       }
       total += product.price * item.quantity;
       itemsWithPrices.push({ productId: item.productId, quantity: item.quantity, price: product.price });
@@ -1126,7 +1129,7 @@ class OrderService {
         const stockResult = await client.query(updateStockQuery, [item.quantity, item.productId]);
 
         if (stockResult.rowCount === 0) {
-          throw new Error(`Unzureichender Lagerbestand für Produkt ${item.productId}`);
+          throw new AppError(`Insufficient stock for product ${item.productId}`, 400, 'INSUFFICIENT_STOCK');
         }
 
         const itemQuery = `
@@ -1159,8 +1162,8 @@ class OrderService {
             );
           }
         } catch (discountError) {
-          // No fallar la orden si hay error con el código de descuento
-          console.error('Error al incrementar usos del código de descuento:', discountError);
+          // Do not fail order creation if promo code usage update fails
+          logger.warn('[OrderService.createOrderSimple] Failed to increment promo code redemptions', { error: discountError.message });
         }
       }
 
@@ -1187,8 +1190,8 @@ class OrderService {
           await customerService.updateStats(customer.id);
         }
       } catch (customerError) {
-        // No fallar la orden si hay error al crear/actualizar el cliente
-        console.error('Error al crear/actualizar cliente:', customerError);
+        // Do not fail order creation if customer upsert fails
+        logger.warn('[OrderService.createOrderSimple] Failed to upsert customer', { error: customerError.message });
       }
     }
 
@@ -1238,7 +1241,7 @@ class OrderService {
             storeInfo = storeResult.data;
           }
         } catch (storeError) {
-          console.error('Error al obtener datos de la tienda para la factura:', storeError);
+          logger.warn('[OrderService.createOrderSimple] Failed to fetch store data for invoice context', { error: storeError.message });
         }
       }
 
@@ -1282,13 +1285,13 @@ class OrderService {
 
       // NO crear la factura automáticamente aquí
       // La factura se creará desde el frontend después de que el usuario decida sobre sus datos
-      console.log('ℹ️ [OrderService.createSimple] Factura se creará desde el frontend después de que el usuario decida sobre sus datos');
+      logger.info('[OrderService.createOrderSimple] Invoice creation is delegated to frontend after customer data choice');
       
       // Mantener invoiceData como null para indicar que no se creó automáticamente
       invoiceData = null;
     } catch (invoiceError) {
-      // No fallar la orden si hay error al crear la factura
-      console.error('❌ [OrderService.createSimple] Error:', invoiceError);
+      // Do not fail order creation if invoice post-processing fails
+      logger.error('[OrderService.createOrderSimple] Invoice post-processing failed', { error: invoiceError.message });
     }
 
     return {
@@ -1300,7 +1303,7 @@ class OrderService {
         invoiceNumber: createdInvoice?.invoiceNumber || null,
         invoiceShareToken: createdInvoice?.shareToken || null, // Agregar shareToken para acceso público
       },
-      message: 'Orden creada exitosamente'
+      message: 'Order created successfully'
     };
   }
 }

@@ -23,7 +23,7 @@ import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { formatSwissPriceWithCHF } from "@/lib/utils";
-import { usePromoLogic } from "@/hooks";
+import { usePromoLogic, usePortraitViewport } from "@/hooks";
 import { useCreateOrder } from "@/hooks/mutations";
 import { createPortal } from "react-dom";
 import { usePaymentMethods } from "@/hooks/queries/usePaymentMethods";
@@ -103,6 +103,7 @@ interface PaymentModalProps {
   onConfirmQRPayment?: () => void;
   isPreOrderMode?: boolean;
   onPreCollectData?: () => void;
+  isOpeningInvoice?: boolean;
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -139,7 +140,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   onConfirmQRPayment,
   isPreOrderMode = false,
   onPreCollectData,
+  isOpeningInvoice = false,
 }) => {
+  const isPortraitViewport = usePortraitViewport();
   const [modalContainer, setModalContainer] = useState<HTMLElement | null>(null);
   const [qrFullscreen, setQrFullscreen] = useState(false);
   const [invoiceOption, setInvoiceOption] = useState<'none' | 'print' | 'email' | 'phone' | 'full'>('none');
@@ -436,61 +439,82 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           <>
             {/* ── Fullscreen: QR Bill completo rotado para llenar pantalla portrait ── */}
             {qrFullscreen && qrCodeData && createPortal(
-              <div className="fixed inset-0 z-[100000] bg-[#F2F2F7] flex flex-col">
-                {/* Header */}
-                <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white border-b border-gray-100 shrink-0">
+              <div
+                className="fixed inset-0 z-[100000] bg-[#F2F2F7] flex flex-col"
+                style={{ ['--qr-fs-chrome' as string]: '132px' }}
+              >
+                {/* Header — compacto para maximizar área del Zahlschein */}
+                <div className="flex items-center justify-between px-3 pb-2 bg-white border-b border-gray-100 shrink-0 pt-[max(0.5rem,env(safe-area-inset-top,0px))]">
                   <button
+                    type="button"
                     onClick={() => setQrFullscreen(false)}
-                    className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 active:bg-gray-200 transition-colors"
+                    className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 active:bg-gray-200 transition-colors"
+                    aria-label="Schliessen"
                   >
-                    <X className="w-5 h-5 text-gray-700" />
+                    <X className="w-[18px] h-[18px] text-gray-700" />
                   </button>
-                  <div className="text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400">Zahlschein</p>
-                    <p className="text-[17px] font-bold text-gray-900 tabular-nums">CHF {qrCodeData.amount?.toFixed(2)}</p>
+                  <div className="text-center min-w-0 px-1">
+                    <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-gray-400 leading-none">Zahlschein</p>
+                    <p className="text-[15px] font-bold text-gray-900 tabular-nums leading-tight mt-0.5">
+                      CHF {qrCodeData.amount?.toFixed(2)}
+                    </p>
                   </div>
-                  <div className="w-10" />
+                  <div className="w-9 shrink-0" aria-hidden />
                 </div>
 
-                {/* Contenido: mobile portrait → rotado 90°; desktop/landscape → natural centrado */}
-                <div className="flex-1 overflow-hidden md:overflow-auto flex items-center justify-center p-4 md:p-8">
-                  {/* Mobile portrait (< md): rotado para llenar alto disponible */}
-                  <div
-                    className="block md:hidden shrink-0"
-                    style={{
-                      transform: 'rotate(90deg)',
-                      width: 'calc(100dvh - 210px)',
-                      maxWidth: 'calc(100dvh - 210px)',
-                    }}
-                  >
+                {/* Contenido: Zahlschein 2:1 — escala acotada para portrait (rotado) y landscape */}
+                <div className="flex-1 min-h-0 overflow-hidden md:overflow-auto flex items-center justify-center p-2 md:p-8">
+                  {isPortraitViewport ? (
+                    <div
+                      className="block md:hidden shrink-0"
+                      style={{
+                        transform: 'rotate(90deg)',
+                        /* Ancho del SVG = eje largo del bill; tras 90° debe caber en dvw (×2) y en dvh */
+                        width:
+                          'calc(min(calc(100dvh - var(--qr-fs-chrome, 132px) - 20px), calc(2 * (100dvw - 28px))) * 0.9)',
+                        maxWidth:
+                          'calc(min(calc(100dvh - var(--qr-fs-chrome, 132px) - 20px), calc(2 * (100dvw - 28px))) * 0.9)',
+                      }}
+                    >
+                      <img
+                        src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrCodeData.billSvg)}`}
+                        alt="QR-Rechnung Zahlschein"
+                        className="w-full h-auto block rounded-sm shadow-md"
+                        draggable={false}
+                      />
+                    </div>
+                  ) : (
+                    <div className="block md:hidden w-full min-h-0 max-h-full flex items-center justify-center overflow-auto px-1">
+                      <img
+                        src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrCodeData.billSvg)}`}
+                        alt="QR-Rechnung Zahlschein"
+                        className="h-auto w-auto max-w-[min(calc(100dvw-1.5rem),calc(2*(100dvh-var(--qr-fs-chrome,132px)-16px)),520px)] max-h-[calc(100dvh-var(--qr-fs-chrome,132px)-12px)] object-contain rounded-sm shadow-md"
+                        draggable={false}
+                      />
+                    </div>
+                  )}
+                  {/* Desktop / tablet (≥ md): un poco más contenido en pantallas no enormes */}
+                  <div className="hidden md:block w-full max-w-[min(680px,90vw)] mx-auto">
                     <img
                       src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrCodeData.billSvg)}`}
                       alt="QR-Rechnung Zahlschein"
-                      className="w-full block rounded-sm shadow-md"
-                      draggable={false}
-                    />
-                  </div>
-                  {/* Desktop / tablet (≥ md): orientación natural, max 680px de ancho */}
-                  <div className="hidden md:block w-full max-w-[680px]">
-                    <img
-                      src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrCodeData.billSvg)}`}
-                      alt="QR-Rechnung Zahlschein"
-                      className="w-full block rounded-xl shadow-lg"
+                      className="w-full h-auto block rounded-xl shadow-lg"
                       draggable={false}
                     />
                   </div>
                 </div>
 
-                {/* Footer */}
-                <div className="bg-white border-t border-gray-100 px-4 pt-3 pb-7 shrink-0">
-                  <p className="text-[11px] text-gray-400 text-center mb-3">
+                {/* Footer — compacto */}
+                <div className="bg-white border-t border-gray-100 px-3 pt-1.5 shrink-0 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
+                  <p className="text-[9px] text-gray-400 text-center leading-tight mb-1.5 px-1">
                     UBS · ZKB · Raiffeisen · PostFinance · und alle Schweizer Banking-Apps
                   </p>
                   <div className="max-w-md mx-auto">
                     <button
+                      type="button"
                       onClick={onConfirmQRPayment}
                       disabled={isConfirmingPayment}
-                      className="w-full py-[15px] bg-[#25D076] text-white font-semibold text-[16px] rounded-2xl active:scale-[0.98] transition-transform shadow-lg shadow-[#25D076]/30 disabled:opacity-60 flex items-center justify-center gap-2"
+                      className="w-full py-2.5 bg-[#25D076] text-white font-semibold text-[14px] rounded-xl active:scale-[0.98] transition-transform shadow-md shadow-[#25D076]/25 disabled:opacity-60 flex items-center justify-center gap-2"
                     >
                       {isConfirmingPayment ? (
                         <>
@@ -527,9 +551,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   onClick={() => setQrFullscreen(true)}
                   className="relative rounded-[20px] bg-white active:scale-[0.97] transition-transform"
                   style={{
-                    /* Mobile: hasta 72vw pero máx 290px. Desktop (modal ~448px): fijo 300px */
-                    width: 'min(72vw, 300px)',
-                    height: 'min(72vw, 300px)',
+                    /* QR-Vorschau etwas kleiner — besser Proportionen auf schmalen Phones */
+                    width: 'min(64vw, 260px)',
+                    height: 'min(64vw, 260px)',
                     boxShadow: '0 4px 24px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04)',
                   }}
                 >
@@ -550,7 +574,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               ) : (
                 <div
                   className="rounded-[20px] bg-gray-50 border border-gray-200 flex flex-col items-center justify-center gap-3"
-                  style={{ width: 'min(72vw, 300px)', height: 'min(72vw, 300px)' }}
+                  style={{ width: 'min(64vw, 260px)', height: 'min(64vw, 260px)' }}
                 >
                   <QrCode className="w-12 h-12 text-gray-200" />
                   <span className="text-[13px] text-gray-400">QR wird geladen...</span>
@@ -890,14 +914,14 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               <div className="w-full max-w-xs space-y-3">
                 <button
                   onClick={onViewInvoice}
-                  disabled={!createdInvoiceShareToken && !createdInvoiceId}
+                  disabled={isOpeningInvoice}
                   className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-2xl py-4 text-base transition-colors shadow-lg shadow-[#25D076]/25 active:scale-[0.97] active:shadow-md touch-target disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   style={{ minHeight: '56px' }}
                 >
-                  {(!createdInvoiceShareToken && !createdInvoiceId) ? (
+                  {isOpeningInvoice ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Rechnung wird vorbereitet...
+                      Rechnung wird geöffnet...
                     </>
                   ) : (
                     'Rechnung anzeigen'
@@ -1012,6 +1036,7 @@ export default function PaymentP() {
   const [isConfirmingPayment, setIsConfirmingPayment] = useState(false);
   const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
   const [createdInvoiceShareToken, setCreatedInvoiceShareToken] = useState<string | null>(null);
+  const [isOpeningInvoice, setIsOpeningInvoice] = useState(false);
   const router = useRouter();
   
   // Usar mutation de React Query para crear órdenes
@@ -1361,37 +1386,63 @@ export default function PaymentP() {
   };
 
   const handleViewInvoice = async () => {
-    let token = createdInvoiceShareToken;
+    if (isOpeningInvoice) return;
+    setIsOpeningInvoice(true);
+    try {
+      let token = createdInvoiceShareToken;
+      let invoiceId = createdInvoiceId;
 
-    if (!token && createdInvoiceId) {
-      const fetchToken = async (retries = 2): Promise<string | null> => {
-        for (let attempt = 0; attempt <= retries; attempt++) {
-          if (attempt > 0) {
-            await new Promise((r) => setTimeout(r, 600));
-          }
-          try {
-            const result = await InvoiceService.getInvoiceById(createdInvoiceId);
-            if (result.success && result.data?.shareToken) {
-              return result.data.shareToken;
-            }
-          } catch (err) {
-            if (attempt === retries) devError('Error fetching shareToken:', err);
+      if (!invoiceId && createdOrderId) {
+        const createResult = await InvoiceService.createInvoice({
+          orderId: createdOrderId,
+          customerName: personalData.name || undefined,
+          customerEmail: personalData.email || undefined,
+          customerAddress: personalData.address || undefined,
+          customerPhone: personalData.phone || undefined,
+        });
+
+        if (createResult.success && createResult.data) {
+          invoiceId = createResult.data.id;
+          token = createResult.data.shareToken || token;
+          setCreatedInvoiceId(createResult.data.id);
+          if (createResult.data.shareToken) {
+            setCreatedInvoiceShareToken(createResult.data.shareToken);
           }
         }
-        return null;
-      };
-      token = await fetchToken();
-      if (token) setCreatedInvoiceShareToken(token);
-    }
+      }
 
-    if (token) {
-      router.push(`/invoice/public/${token}`);
-      setTimeout(() => {
-        setIsModalOpen(false);
-        clearCart();
-      }, 300);
-    } else {
-      toast.error('Rechnung konnte nicht geladen werden');
+      if (!token && invoiceId) {
+        const fetchToken = async (retries = 2): Promise<string | null> => {
+          for (let attempt = 0; attempt <= retries; attempt++) {
+            if (attempt > 0) {
+              await new Promise((r) => setTimeout(r, 600));
+            }
+            try {
+              const result = await InvoiceService.getInvoiceById(invoiceId);
+              if (result.success && result.data?.shareToken) {
+                return result.data.shareToken;
+              }
+            } catch (err) {
+              if (attempt === retries) devError('Error fetching shareToken:', err);
+            }
+          }
+          return null;
+        };
+        token = await fetchToken();
+        if (token) setCreatedInvoiceShareToken(token);
+      }
+
+      if (token) {
+        router.push(`/invoice/public/${token}`);
+        setTimeout(() => {
+          setIsModalOpen(false);
+          clearCart();
+        }, 300);
+      } else {
+        toast.error('Rechnung konnte nicht geladen werden');
+      }
+    } finally {
+      setIsOpeningInvoice(false);
     }
   };
 
@@ -1856,6 +1907,7 @@ export default function PaymentP() {
         onConfirmQRPayment={handleConfirmQRPayment}
         isPreOrderMode={isPreOrderMode}
         onPreCollectData={handlePreCollectData}
+        isOpeningInvoice={isOpeningInvoice}
       />
     </div>
   );

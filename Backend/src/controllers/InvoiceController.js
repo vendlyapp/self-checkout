@@ -4,7 +4,9 @@ const orderService = require('../services/OrderService');
 const storeService = require('../services/StoreService');
 const userService = require('../services/UserService');
 const QRBillService = require('../services/QRBillService');
+const { generateInvoicePDF } = require('../services/InvoicePDFService');
 const { HTTP_STATUS } = require('../types');
+const logger = require('../utils/logger');
 
 class InvoiceController {
   /**
@@ -27,7 +29,7 @@ class InvoiceController {
       if (!orderId) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          error: 'El ID de la orden es requerido',
+          error: 'orderId is required',
         });
       }
 
@@ -38,14 +40,14 @@ class InvoiceController {
         if (!orderResult.success || !orderResult.data) {
           return res.status(HTTP_STATUS.NOT_FOUND).json({
             success: false,
-            error: 'Orden no encontrada',
+            error: 'Order not found',
           });
         }
         order = orderResult.data;
       } catch (error) {
         return res.status(HTTP_STATUS.NOT_FOUND).json({
           success: false,
-          error: 'Orden no encontrada',
+          error: 'Order not found',
         });
       }
 
@@ -74,12 +76,12 @@ class InvoiceController {
           taxRateByProduct.set(row.id, Number.isFinite(val) && val >= 0 ? val : 0.026);
         }
       } catch (taxErr) {
-        console.warn('⚠️ [InvoiceController] Error al obtener taxRate de productos, usando 2.6% por defecto:', taxErr.message);
+        logger.warn('[InvoiceController.createInvoice] Failed to fetch product taxRate, using 2.6% fallback', { error: taxErr.message });
       }
 
       const invoiceItems = order.items.map((item) => {
         if (!item.productName) {
-          console.warn('⚠️ [InvoiceController] Item sin productName:', {
+          logger.warn('[InvoiceController.createInvoice] Item without productName', {
             productId: item.productId,
             hasProductName: !!item.productName,
             itemKeys: Object.keys(item),
@@ -88,7 +90,7 @@ class InvoiceController {
         const taxRate = taxRateByProduct.get(item.productId) ?? 0.026;
         return {
           productId: item.productId,
-          productName: item.productName || 'Producto',
+          productName: item.productName || 'Product',
           productSku: item.productSku || '',
           quantity: item.quantity,
           price: Number(item.price),
@@ -98,11 +100,10 @@ class InvoiceController {
         };
       });
       
-      // Debug: verificar items antes de crear invoice
-      console.log('📋 [InvoiceController] Items preparados para invoice:', {
+      logger.debug('[InvoiceController.createInvoice] Prepared invoice items', {
         itemsCount: invoiceItems.length,
-        itemsWithNames: invoiceItems.filter(i => i.productName && i.productName !== 'Producto').length,
-        itemsWithoutNames: invoiceItems.filter(i => !i.productName || i.productName === 'Producto').length,
+        itemsWithNames: invoiceItems.filter(i => i.productName && i.productName !== 'Product').length,
+        itemsWithoutNames: invoiceItems.filter(i => !i.productName || i.productName === 'Product').length,
         sampleItem: invoiceItems[0],
       });
 
@@ -173,16 +174,16 @@ class InvoiceController {
             await userService.update(order.userId, { name: customerName.trim() });
           }
         } catch (updateErr) {
-          console.warn('InvoiceController: no se pudo actualizar orden/usuario con datos del cliente:', updateErr.message);
+          logger.warn('[InvoiceController.createInvoice] Failed to sync customer data into order/user', { error: updateErr.message });
         }
       }
 
       res.status(HTTP_STATUS.CREATED).json(result);
     } catch (error) {
-      console.error('Error al crear factura:', error);
+      logger.error('[InvoiceController.createInvoice] Failed to create invoice', { error: error.message });
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
-        error: error.message || 'Error al crear la factura',
+        error: error.message || 'Failed to create invoice',
       });
     }
   }
@@ -202,10 +203,10 @@ class InvoiceController {
 
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      console.error('Error al obtener factura:', error);
+      logger.error('[InvoiceController.getInvoiceById] Failed to fetch invoice', { error: error.message });
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
-        error: error.message || 'Error al obtener la factura',
+        error: error.message || 'Failed to fetch invoice',
       });
     }
   }
@@ -225,10 +226,10 @@ class InvoiceController {
 
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      console.error('Error al obtener factura:', error);
+      logger.error('[InvoiceController.getInvoiceByNumber] Failed to fetch invoice', { error: error.message });
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
-        error: error.message || 'Error al obtener la factura',
+        error: error.message || 'Failed to fetch invoice',
       });
     }
   }
@@ -244,10 +245,10 @@ class InvoiceController {
 
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      console.error('Error al obtener facturas:', error);
+      logger.error('[InvoiceController.getInvoicesByOrderId] Failed to fetch invoices', { error: error.message });
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
-        error: error.message || 'Error al obtener las facturas',
+        error: error.message || 'Failed to fetch invoices',
       });
     }
   }
@@ -268,10 +269,10 @@ class InvoiceController {
 
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      console.error('Error al obtener facturas:', error);
+      logger.error('[InvoiceController.getInvoicesByCustomerEmail] Failed to fetch invoices', { error: error.message });
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
-        error: error.message || 'Error al obtener las facturas',
+        error: error.message || 'Failed to fetch invoices',
       });
     }
   }
@@ -287,7 +288,7 @@ class InvoiceController {
       if (!shareToken) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          error: 'El token de compartir es requerido',
+          error: 'shareToken is required',
         });
       }
 
@@ -299,10 +300,10 @@ class InvoiceController {
 
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      console.error('Error al obtener factura por token:', error);
+      logger.error('[InvoiceController.getInvoiceByShareToken] Failed to fetch invoice', { error: error.message });
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
-        error: error.message || 'Error al obtener la factura',
+        error: error.message || 'Failed to fetch invoice',
       });
     }
   }
@@ -323,10 +324,10 @@ class InvoiceController {
 
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      console.error('Error al obtener facturas por tienda:', error);
+      logger.error('[InvoiceController.getInvoicesByStoreId] Failed to fetch invoices', { error: error.message });
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
-        error: error.message || 'Error al obtener las facturas',
+        error: error.message || 'Failed to fetch invoices',
       });
     }
   }
@@ -363,16 +364,16 @@ class InvoiceController {
             }
           }
         } catch (updateErr) {
-          console.warn('InvoiceController.updateInvoice: no se pudo actualizar orden/usuario:', updateErr.message);
+          logger.warn('[InvoiceController.updateInvoice] Failed to sync customer data into order/user', { error: updateErr.message });
         }
       }
 
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
-      console.error('Error al actualizar factura:', error);
+      logger.error('[InvoiceController.updateInvoice] Failed to update invoice', { error: error.message });
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
-        error: error.message || 'Error al actualizar la factura',
+        error: error.message || 'Failed to update invoice',
       });
     }
   }
@@ -388,13 +389,13 @@ class InvoiceController {
 
       const invoiceResult = await invoiceService.findById(id);
       if (!invoiceResult.success || !invoiceResult.data) {
-        return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, error: 'Factura no encontrada' });
+        return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, error: 'Invoice not found' });
       }
 
       const invoice = invoiceResult.data;
 
       if (invoice.paymentMethod !== 'qr-rechnung') {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, error: 'Esta factura no es de tipo QR-Rechnung' });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, error: 'This invoice is not a QR-Rechnung invoice' });
       }
 
       const qrrReference = invoice.qrrReference;
@@ -403,7 +404,7 @@ class InvoiceController {
       if (!qrrReference || !creditorConfig) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          error: 'Faltan datos QR (qrrReference o qrCreditorSnapshot). Verifica que el método QR-Rechnung esté correctamente configurado.',
+          error: 'Missing QR data (qrrReference or qrCreditorSnapshot). Verify that QR-Rechnung payment method is configured.',
         });
       }
 
@@ -454,10 +455,153 @@ class InvoiceController {
         },
       });
     } catch (error) {
-      console.error('Error al generar QR Code:', error);
+      logger.error('[InvoiceController.getQRCode] Failed to generate QR code', { error: error.message });
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
-        error: error.message || 'Error al generar el QR Code',
+        error: error.message || 'Failed to generate QR code',
+      });
+    }
+  }
+  /**
+   * Genera y devuelve el PDF de una factura.
+   * Para QR-Rechnung incluye el Zahlschein en la página 2.
+   * Accesible con auth (admin/store) o con shareToken como query param (cliente público).
+   * @route GET /api/invoices/:id/pdf
+   * @route GET /api/invoices/public/:shareToken/pdf
+   */
+  async downloadPDF(req, res) {
+    try {
+      const { id, shareToken: shareTokenParam } = req.params;
+      const shareToken = req.query.shareToken || shareTokenParam;
+
+      // Resolve invoice — by ID (authenticated) or shareToken (public)
+      let invoiceResult;
+      if (id) {
+        invoiceResult = await invoiceService.findById(id);
+      } else if (shareToken) {
+        invoiceResult = await invoiceService.findByShareToken(shareToken);
+      } else {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, error: 'id or shareToken is required' });
+      }
+
+      if (!invoiceResult.success || !invoiceResult.data) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, error: 'Invoice not found' });
+      }
+
+      const inv = invoiceResult.data;
+
+      // Build the invoice shape expected by InvoicePDFService
+      const isQR = inv.paymentMethod === 'qr-rechnung';
+      const creditorConfig = isQR ? (inv.qrCreditorSnapshot || null) : null;
+
+      // Resolve store website from metadata if stored
+      const meta = inv.metadata || {};
+      const storeWebsite = meta.storeWebsite || null;
+
+      // Build issuer
+      const issuer = {
+        name: inv.storeName || 'Vendly',
+        street: inv.storeAddress || undefined,
+        zip: undefined,
+        city: undefined,
+        email: inv.storeEmail || undefined,
+        phone: inv.storePhone || undefined,
+        mwstNummer: meta.storeVatNumber || undefined,
+        iban: isQR && creditorConfig ? creditorConfig.qrIban : undefined,
+        website: storeWebsite || undefined,
+      };
+
+      // Parse store address
+      if (inv.storeAddress) {
+        const m = inv.storeAddress.match(/^(.+?),?\s*(\d{4})\s+(.+)$/);
+        if (m) { issuer.street = m[1].trim(); issuer.zip = m[2]; issuer.city = m[3].trim(); }
+      }
+      if (isQR && creditorConfig) {
+        if (creditorConfig.creditorStreet) issuer.street = `${creditorConfig.creditorStreet}${creditorConfig.creditorHouseNo ? ' ' + creditorConfig.creditorHouseNo : ''}`;
+        if (creditorConfig.creditorZip) issuer.zip = creditorConfig.creditorZip;
+        if (creditorConfig.creditorCity) issuer.city = creditorConfig.creditorCity;
+        if (creditorConfig.creditorName) issuer.name = creditorConfig.creditorName;
+      }
+
+      // Build recipient
+      const recipient = {
+        name: inv.customerName || 'Kunde',
+        street: inv.customerAddress || undefined,
+        zip: inv.customerPostalCode || undefined,
+        city: inv.customerCity || undefined,
+        country: 'Schweiz',
+        email: inv.customerEmail || undefined,
+      };
+
+      // Build items
+      const items = (inv.items || []).map((item, i) => {
+        const taxRate = item.taxRate ?? (item.metadata?.taxRate) ?? 0.026;
+        const rate = typeof taxRate === 'number' ? taxRate : parseFloat(taxRate) || 0.026;
+        const mwstCode = rate >= 0.075 ? 'A' : 'B';
+        const totalBrutto = item.subtotal || (item.price * item.quantity) || 0;
+        const unitPrice = item.price || (totalBrutto / (item.quantity || 1));
+        return {
+          id: item.productId || `item-${i}`,
+          description: item.productName || `Produkt ${i + 1}`,
+          detail: item.productSku ? String(item.productSku).trim() : undefined,
+          quantity: item.quantity || 1,
+          unitPrice: Math.round(unitPrice * 100) / 100,
+          totalBrutto: Math.round(totalBrutto * 100) / 100,
+          mwstRate: rate,
+          mwstCode,
+        };
+      });
+
+      const totalBrutto = inv.total || 0;
+      const isDeferred = ['qr-rechnung', 'qr', 'rechnung'].includes((inv.paymentMethod || '').toLowerCase());
+
+      const issuedDate = inv.issuedAt ? new Date(inv.issuedAt) : new Date();
+      const dueDate = new Date(issuedDate);
+      if (isDeferred) dueDate.setDate(dueDate.getDate() + 30);
+
+      const PAYMENT_LABELS = {
+        bargeld: 'Bargeld', twint: 'TWINT', 'debit-credit': 'Debit-/Kreditkarte',
+        debit: 'Debitkarte', card: 'Karte', karte: 'Karte',
+        'qr-rechnung': 'QR-Rechnung', qr: 'QR-Rechnung', rechnung: 'Rechnung',
+        'apple-pay': 'Apple Pay',
+      };
+      const paymentDisplay = PAYMENT_LABELS[(inv.paymentMethod || '').toLowerCase()] || inv.paymentMethod || '—';
+
+      const invoiceShape = {
+        id: inv.id,
+        nummer: inv.invoiceNumber || inv.id,
+        datum: issuedDate.toISOString(),
+        leistungsDatum: (inv.orderDate || issuedDate).toString(),
+        faelligkeitsDatum: dueDate.toISOString(),
+        zahlungsfrist: isDeferred ? 30 : 0,
+        waehrung: 'CHF',
+        referenz: inv.qrrReference || inv.invoiceNumber || inv.id,
+        documentType: isDeferred ? 'Rechnung' : 'Quittung',
+        paymentMethodDisplay: paymentDisplay,
+        isDeferredPayment: isDeferred,
+        showQRSection: isQR && !!inv.qrrReference && !!creditorConfig,
+        discountAmount: inv.discountAmount || 0,
+        totalBrutto: Math.round(totalBrutto * 100) / 100,
+        orderId: inv.orderId || undefined,
+        storeLogo: inv.storeLogo || undefined,
+        notes: meta.notes || undefined,
+        issuer,
+        recipient,
+        items,
+      };
+
+      const pdfBuffer = await generateInvoicePDF(invoiceShape, creditorConfig);
+
+      const filename = `${invoiceShape.documentType}-${invoiceShape.nummer}.pdf`;
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Length', pdfBuffer.length);
+      res.end(pdfBuffer);
+    } catch (error) {
+      logger.error('[InvoiceController.downloadPDF] Failed to generate PDF', { error: error.message });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: error.message || 'Failed to generate PDF',
       });
     }
   }

@@ -7,7 +7,7 @@ import { useArchivedDiscountCodes } from '@/hooks/queries/useDiscountCodes'
 import { DiscountCode } from '@/components/dashboard/discounts/types'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { Loader } from '@/components/ui/Loader'
+import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState'
 
 export default function ArchivedDiscountsPage() {
   const { isDesktop } = useResponsive()
@@ -19,11 +19,7 @@ export default function ArchivedDiscountsPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="w-full h-full flex items-center justify-center">
-        <Loader size="md" />
-      </div>
-    )
+    return <DashboardLoadingState mode="page" message="Archivierte Codes werden geladen..." />
   }
 
   return (

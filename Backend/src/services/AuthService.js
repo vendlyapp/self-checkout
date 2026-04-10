@@ -1,333 +1,252 @@
 const { supabase } = require('../../lib/supabase');
 const { query } = require('../../lib/database');
 const storeService = require('./StoreService');
+const AppError = require('../utils/AppError');
+const logger = require('../utils/logger');
 
 class AuthService {
-  /**
-   * Registrar un nuevo usuario usando Supabase Auth
-   */
+  /** Register a new user via Supabase Auth */
   async register(userData) {
     const { email, password, name, role = 'ADMIN' } = userData;
 
-    try {
-      // Validar datos requeridos
-      if (!email || !password || !name) {
-        throw new Error('Email, password y nombre son requeridos');
-      }
-
-      // Validar formato de email
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        throw new Error('Formato de email inválido');
-      }
-
-      // Validar longitud de password
-      if (password.length < 6) {
-        throw new Error('La contraseña debe tener al menos 6 caracteres');
-      }
-
-      // Registrar usuario en Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-            role
-          }
-        }
-      });
-
-      if (authError) {
-        throw new Error(authError.message);
-      }
-
-      if (!authData.user) {
-        throw new Error('Error al crear el usuario');
-      }
-
-      // Insertar información adicional en la tabla User
-      try {
-        await query(
-          `INSERT INTO "User" (id, email, name, role, password) 
-           VALUES ($1, $2, $3, $4, $5) 
-           ON CONFLICT (id) DO UPDATE SET name = $3, role = $4`,
-          [authData.user.id, email, name, role, 'supabase-auth'] // Password manejado por Supabase
-        );
-
-        // Si es ADMIN, crear tienda automáticamente
-        if (role === 'ADMIN') {
-          const storeName = `${name}'s Store`;
-          await storeService.create(authData.user.id, { 
-            name: storeName,
-            logo: null 
-          });
-        }
-      } catch (dbError) {
-        console.error('Error al guardar en tabla User:', dbError.message);
-        // Continuar aunque falle, el usuario ya está en Auth
-      }
-
-      return {
-        success: true,
-        message: 'Usuario registrado exitosamente',
-        data: {
-          user: {
-            id: authData.user.id,
-            email: authData.user.email,
-            name,
-            role,
-            emailConfirmed: authData.user.email_confirmed_at ? true : false
-          },
-          session: authData.session,
-          needsEmailConfirmation: !authData.session // Si no hay sesión, necesita confirmar email
-        }
-      };
-    } catch (error) {
-      throw error;
+    if (!email || !password || !name) {
+      throw new AppError('Email, password and name are required', 400, 'MISSING_FIELDS');
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new AppError('Invalid email format', 400, 'INVALID_EMAIL');
+    }
+
+    if (password.length < 6) {
+      throw new AppError('Password must be at least 6 characters', 400, 'WEAK_PASSWORD');
+    }
+
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name, role } },
+    });
+
+    if (authError) {
+      throw new AppError(authError.message, 400, 'AUTH_SIGNUP_FAILED');
+    }
+
+    if (!authData.user) {
+      throw new AppError('Failed to create user', 500, 'USER_CREATION_FAILED');
+    }
+
+    // Insert into local User table
+    try {
+      await query(
+        `INSERT INTO "User" (id, email, name, role, password)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (id) DO UPDATE SET name = $3, role = $4`,
+        [authData.user.id, email, name, role, 'supabase-auth']
+      );
+
+      if (role === 'ADMIN') {
+        await storeService.create(authData.user.id, {
+          name: `${name}'s Store`,
+          logo: null,
+        });
+      }
+    } catch (dbError) {
+      logger.error('Failed to save user to local DB', { error: dbError.message });
+      // Continue — user already exists in Auth
+    }
+
+    return {
+      success: true,
+      message: 'User registered successfully',
+      data: {
+        user: {
+          id: authData.user.id,
+          email: authData.user.email,
+          name,
+          role,
+          emailConfirmed: !!authData.user.email_confirmed_at,
+        },
+        session: authData.session,
+        needsEmailConfirmation: !authData.session,
+      },
+    };
   }
 
-  /**
-   * Login usando Supabase Auth
-   */
+  /** Login via Supabase Auth */
   async login(credentials) {
     const { email, password } = credentials;
 
-    try {
-      // Validar datos requeridos
-      if (!email || !password) {
-        throw new Error('Email y password son requeridos');
-      }
-
-      // Login con Supabase Auth
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        throw new Error('Credenciales inválidas');
-      }
-
-      if (!data.user || !data.session) {
-        throw new Error('Error al iniciar sesión');
-      }
-
-      // Obtener información adicional de la tabla User
-      let userRole = 'CUSTOMER';
-      let userName = data.user.email;
-
-      try {
-        const userResult = await query(
-          'SELECT name, role FROM "User" WHERE id = $1',
-          [data.user.id]
-        );
-
-        if (userResult.rows.length > 0) {
-          userName = userResult.rows[0].name;
-          userRole = userResult.rows[0].role;
-        }
-      } catch (dbError) {
-        console.error('Error al obtener datos del usuario:', dbError.message);
-      }
-
-      return {
-        success: true,
-        message: 'Login exitoso',
-        data: {
-          user: {
-            id: data.user.id,
-            email: data.user.email,
-            name: userName,
-            role: userRole,
-            emailConfirmed: data.user.email_confirmed_at ? true : false
-          },
-          session: {
-            access_token: data.session.access_token,
-            refresh_token: data.session.refresh_token,
-            expires_at: data.session.expires_at,
-            expires_in: data.session.expires_in
-          }
-        }
-      };
-    } catch (error) {
-      throw error;
+    if (!email || !password) {
+      throw new AppError('Email and password are required', 400, 'MISSING_FIELDS');
     }
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      throw new AppError('Invalid credentials', 401, 'INVALID_CREDENTIALS');
+    }
+
+    if (!data.user || !data.session) {
+      throw new AppError('Login failed', 500, 'LOGIN_FAILED');
+    }
+
+    // Get additional user info from local DB
+    let userRole = 'CUSTOMER';
+    let userName = data.user.email;
+
+    try {
+      const userResult = await query(
+        'SELECT name, role FROM "User" WHERE id = $1',
+        [data.user.id]
+      );
+      if (userResult.rows.length > 0) {
+        userName = userResult.rows[0].name;
+        userRole = userResult.rows[0].role;
+      }
+    } catch (dbError) {
+      logger.error('Failed to fetch user data from DB', { error: dbError.message });
+    }
+
+    return {
+      success: true,
+      message: 'Login successful',
+      data: {
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          name: userName,
+          role: userRole,
+          emailConfirmed: !!data.user.email_confirmed_at,
+        },
+        session: {
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+          expires_at: data.session.expires_at,
+          expires_in: data.session.expires_in,
+        },
+      },
+    };
   }
 
-  /**
-   * Verificar token de Supabase
-   */
+  /** Verify a Supabase token */
   async verifyToken(token) {
-    try {
-      if (!token) {
-        throw new Error('Token no proporcionado');
-      }
-
-      // Verificar token con Supabase
-      const { data, error } = await supabase.auth.getUser(token);
-
-      if (error || !data.user) {
-        throw new Error('Token inválido o expirado');
-      }
-
-      // Obtener información adicional
-      let userRole = 'CUSTOMER';
-      let userName = data.user.email;
-
-      try {
-        const userResult = await query(
-          'SELECT name, role FROM "User" WHERE id = $1',
-          [data.user.id]
-        );
-
-        if (userResult.rows.length > 0) {
-          userName = userResult.rows[0].name;
-          userRole = userResult.rows[0].role;
-        }
-      } catch (dbError) {
-        console.error('Error al obtener datos del usuario:', dbError.message);
-      }
-
-      return {
-        success: true,
-        data: {
-          user: {
-            id: data.user.id,
-            email: data.user.email,
-            name: userName,
-            role: userRole,
-            emailConfirmed: data.user.email_confirmed_at ? true : false
-          }
-        }
-      };
-    } catch (error) {
-      throw error;
+    if (!token) {
+      throw new AppError('Token not provided', 401, 'MISSING_TOKEN');
     }
+
+    const { data, error } = await supabase.auth.getUser(token);
+
+    if (error || !data.user) {
+      throw new AppError('Invalid or expired token', 401, 'INVALID_TOKEN');
+    }
+
+    let userRole = 'CUSTOMER';
+    let userName = data.user.email;
+
+    try {
+      const userResult = await query(
+        'SELECT name, role FROM "User" WHERE id = $1',
+        [data.user.id]
+      );
+      if (userResult.rows.length > 0) {
+        userName = userResult.rows[0].name;
+        userRole = userResult.rows[0].role;
+      }
+    } catch (dbError) {
+      logger.error('Failed to fetch user data during token verification', { error: dbError.message });
+    }
+
+    return {
+      success: true,
+      data: {
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          name: userName,
+          role: userRole,
+          emailConfirmed: !!data.user.email_confirmed_at,
+        },
+      },
+    };
   }
 
-  /**
-   * Obtener perfil del usuario
-   */
+  /** Get user profile from local DB */
   async getProfile(userId) {
-    try {
-      console.log(`🔍 Buscando perfil en BD para userId: ${userId}`);
-      const result = await query(
-        'SELECT id, email, name, role, "createdAt", "updatedAt" FROM "User" WHERE id = $1',
-        [userId]
-      );
+    const result = await query(
+      'SELECT id, email, name, role, "createdAt", "updatedAt" FROM "User" WHERE id = $1',
+      [userId]
+    );
 
-      if (result.rows.length === 0) {
-        console.error(`❌ Usuario no encontrado en BD: ${userId}`);
-        throw new Error('Usuario no encontrado');
-      }
-
-      const user = result.rows[0];
-      console.log(`✅ Usuario encontrado en BD: ${user.email}, role: ${user.role}`);
-
-      return {
-        success: true,
-        data: {
-          user: {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt
-          }
-        }
-      };
-    } catch (error) {
-      console.error('❌ Error en getProfile service:', {
-        message: error.message,
-        code: error.code,
-        userId: userId,
-        stack: error.stack
-      });
-      throw error;
+    if (result.rows.length === 0) {
+      throw new AppError('User not found', 404, 'USER_NOT_FOUND');
     }
+
+    const user = result.rows[0];
+
+    return {
+      success: true,
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+        },
+      },
+    };
   }
 
-  /**
-   * Cambiar contraseña usando Supabase Auth
-   */
+  /** Change password via Supabase Auth */
   async changePassword(token, newPassword) {
-    try {
-      // Validar nueva contraseña
-      if (!newPassword || newPassword.length < 6) {
-        throw new Error('La nueva contraseña debe tener al menos 6 caracteres');
-      }
-
-      // Actualizar contraseña en Supabase Auth
-      const { data, error } = await supabase.auth.updateUser(
-        { password: newPassword },
-        { access_token: token }
-      );
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      if (!data.user) {
-        throw new Error('Error al actualizar la contraseña');
-      }
-
-      return {
-        success: true,
-        message: 'Contraseña actualizada exitosamente'
-      };
-    } catch (error) {
-      throw error;
+    if (!newPassword || newPassword.length < 6) {
+      throw new AppError('New password must be at least 6 characters', 400, 'WEAK_PASSWORD');
     }
+
+    const { data, error } = await supabase.auth.updateUser(
+      { password: newPassword },
+      { access_token: token }
+    );
+
+    if (error) {
+      throw new AppError(error.message, 400, 'PASSWORD_UPDATE_FAILED');
+    }
+
+    if (!data.user) {
+      throw new AppError('Failed to update password', 500, 'PASSWORD_UPDATE_FAILED');
+    }
+
+    return { success: true, message: 'Password updated successfully' };
   }
 
-  /**
-   * Logout usando Supabase Auth
-   */
+  /** Logout (best-effort, never fails) */
   async logout(token) {
     try {
       const { error } = await supabase.auth.admin.signOut(token);
-
       if (error) {
-        console.error('Error al hacer logout:', error.message);
+        logger.error('Logout error', { error: error.message });
       }
-
-      return {
-        success: true,
-        message: 'Logout exitoso'
-      };
-    } catch (error) {
-      // El logout es best-effort, no fallar
-      return {
-        success: true,
-        message: 'Logout exitoso'
-      };
+    } catch (_) {
+      // Best-effort — always succeed
     }
+
+    return { success: true, message: 'Logout successful' };
   }
 
-  /**
-   * Solicitar reseteo de contraseña
-   */
+  /** Request password reset email */
   async requestPasswordReset(email) {
-    try {
-      const frontendUrl = process.env.FRONTEND_URL || 'https://self-checkout-kappa.vercel.app';
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${frontendUrl}/reset-password`
-      });
+    const frontendUrl = process.env.FRONTEND_URL || 'https://self-checkout-kappa.vercel.app';
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${frontendUrl}/reset-password`,
+    });
 
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return {
-        success: true,
-        message: 'Email de recuperación enviado'
-      };
-    } catch (error) {
-      throw error;
+    if (error) {
+      throw new AppError(error.message, 400, 'RESET_REQUEST_FAILED');
     }
+
+    return { success: true, message: 'Recovery email sent' };
   }
 }
 

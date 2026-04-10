@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { DiscountCode } from './types'
+import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState'
 
 interface CreateDiscountModalProps {
   isOpen: boolean
@@ -11,6 +12,7 @@ interface CreateDiscountModalProps {
   onCreate: (data: DiscountFormData) => void
   editingCode?: DiscountCode | null
   onUpdate?: (id: string, data: DiscountFormData) => void
+  isSubmitting?: boolean
 }
 
 export interface DiscountFormData {
@@ -28,6 +30,7 @@ export default function CreateDiscountModal({
   onCreate,
   editingCode,
   onUpdate,
+  isSubmitting = false,
 }: CreateDiscountModalProps) {
   const [modalContainer, setModalContainer] = useState<HTMLElement | null>(null)
   const isEditing = !!editingCode
@@ -151,6 +154,7 @@ export default function CreateDiscountModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSubmitting) return
     if (formData.code.trim() && formData.discountValue > 0 && formData.validFrom) {
       if (isEditing && editingCode && onUpdate) {
         onUpdate(editingCode.id, formData)
@@ -186,6 +190,13 @@ export default function CreateDiscountModal({
           willChange: 'transform',
         }}
       >
+        {isSubmitting && (
+          <DashboardLoadingState
+            mode="overlay"
+            message={isEditing ? 'Rabattcode wird gespeichert...' : 'Rabattcode wird erstellt...'}
+          />
+        )}
+
         {/* Handle bar - Draggable area */}
         <div
           className="flex justify-center pt-4 pb-3 cursor-grab active:cursor-grabbing touch-manipulation select-none"
@@ -203,6 +214,7 @@ export default function CreateDiscountModal({
           </h2>
           <button
             onClick={onClose}
+            disabled={isSubmitting}
             className="p-2 rounded-full hover:bg-gray-100 transition-colors"
             aria-label="Schliessen"
           >
@@ -364,15 +376,19 @@ export default function CreateDiscountModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 active:bg-gray-100 transition-all touch-manipulation active:scale-95"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 active:bg-gray-100 transition-all touch-manipulation active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
             >
               Abbrechen
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-3 bg-[#25D076] text-white rounded-xl font-medium hover:bg-[#20B866] active:bg-[#1DA55A] transition-all touch-manipulation active:scale-95 shadow-lg shadow-[#25D076]/20"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-3 bg-[#25D076] text-white rounded-xl font-medium hover:bg-[#20B866] active:bg-[#1DA55A] transition-all touch-manipulation active:scale-95 shadow-lg shadow-[#25D076]/20 disabled:opacity-80 disabled:pointer-events-none"
             >
-              {isEditing ? 'Speichern' : 'Erstellen'}
+              {isSubmitting
+                ? (isEditing ? 'Speichern...' : 'Erstellen...')
+                : (isEditing ? 'Speichern' : 'Erstellen')}
             </button>
           </div>
         </form>

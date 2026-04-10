@@ -1,49 +1,52 @@
 require("dotenv").config();
 const app = require("./app");
 const http = require("http");
-const { testConnection } = require("./lib/database");
+const { testConnection, closePool } = require("./lib/database");
+const logger = require("./src/utils/logger");
 
 const port = process.env.PORT || 3000;
 const server = http.createServer(app);
 
 async function startServer() {
   try {
-    console.log('🔄 Iniciando servidor...');
-    console.log('🔄 Verificando conexión a la base de datos...');
-    
-    const dbConnected = await testConnection(5, 2000); // 5 reintentos, 2 segundos entre cada uno
+    logger.info('Starting server...');
+    logger.info('Checking database connection...');
+
+    const dbConnected = await testConnection(5, 2000);
     if (!dbConnected) {
-      console.error("❌ No se pudo establecer conexión con la base de datos después de múltiples intentos");
-      console.error("💡 El servidor no se iniciará. Verifica:");
-      console.error("   1. Que tu proyecto de Supabase esté activo");
-      console.error("   2. Que DATABASE_URL en .env sea correcto");
-      console.error("   3. Que tu conexión a internet funcione");
-      console.error("   4. Ejecuta: node scripts/diagnose-db-connection.js para más detalles");
+      logger.error("Failed to connect to database after multiple attempts");
+      logger.error("Server will not start. Please verify:");
+      logger.error("  1. Your Supabase project is active");
+      logger.error("  2. DATABASE_URL in .env is correct");
+      logger.error("  3. Your internet connection is working");
+      logger.error("  4. Run: node scripts/diagnose-db-connection.js for details");
       process.exit(1);
     }
 
     server.listen(port, "0.0.0.0", () => {
-      console.log(`✅ Server running on port ${port}`);
-      console.log(`📚 API Documentation: http://0.0.0.0:${port}/api-docs`);
+      logger.info(`Server running on port ${port}`);
+      logger.info(`API Documentation: http://0.0.0.0:${port}/api-docs`);
     });
   } catch (error) {
-    console.error("❌ Server startup error:", error.message);
-    console.error("   Stack:", error.stack);
+    logger.error("Server startup error", { message: error.message, stack: error.stack });
     process.exit(1);
   }
 }
 
 server.on("error", (error) => {
   if (error.code === "EADDRINUSE") {
-    console.error(`Port ${port} is already in use`);
+    logger.error(`Port ${port} is already in use`);
   } else {
-    console.error("Server error:", error);
+    logger.error("Server error", { error });
   }
   process.exit(1);
 });
 
+// Single graceful shutdown handler (pool cleanup included)
 const gracefulShutdown = () => {
-  server.close(() => {
+  logger.info('Shutting down gracefully...');
+  server.close(async () => {
+    await closePool();
     process.exit(0);
   });
 };
