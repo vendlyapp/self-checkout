@@ -128,7 +128,6 @@ export default function SalesInvoiceDetailPage() {
   return (
     <div className="invoice-print-container w-full h-full">
       <div className={isMobile ? 'px-4 py-4' : 'px-6 py-6 max-w-4xl mx-auto'}>
-        {/* Invoice Template */}
         <InvoiceTemplate
           invoice={invoice}
           showActions={!isMobile}

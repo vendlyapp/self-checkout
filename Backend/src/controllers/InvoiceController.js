@@ -7,6 +7,48 @@ const QRBillService = require('../services/QRBillService');
 const { generateInvoicePDF } = require('../services/InvoicePDFService');
 const { HTTP_STATUS } = require('../types');
 const logger = require('../utils/logger');
+const { normalizeSwissMwStRate } = require('../utils/swissMwSt');
+
+/**
+ * MwSt für eine Rechnungszeile beim Erstellen der Rechnung:
+ * 1) aktueller Katalog (Product.taxRate) — OrderItem kann 2.6 %-Default aus der Vergangenheit haben,
+ * 2) Katalog per SKU,
+ * 3) Snapshot aus Order (lineTaxRate / OrderItem.taxRate / Join),
+ * 4) 2.6 %-Fallback.
+ */
+function resolveInvoiceLineMwStRate(orderItem, taxRateByProduct, taxRateBySku) {
+  const pid = orderItem.productId ?? orderItem.productid ?? orderItem.product_id;
+  const pidStr = pid != null && String(pid).trim() !== '' ? String(pid).trim() : null;
+
+  if (pidStr && taxRateByProduct && taxRateByProduct.size > 0) {
+    const fromId = taxRateByProduct.get(pidStr) ?? taxRateByProduct.get(pid);
+    if (fromId !== undefined && fromId !== null) {
+      return normalizeSwissMwStRate(fromId);
+    }
+  }
+
+  const skuRaw = orderItem.productSku ?? orderItem.productsku ?? orderItem.product_sku;
+  const sku = skuRaw != null && String(skuRaw).trim() !== '' ? String(skuRaw).trim() : null;
+  if (sku && taxRateBySku && taxRateBySku.size > 0 && taxRateBySku.has(sku)) {
+    return normalizeSwissMwStRate(taxRateBySku.get(sku));
+  }
+
+  const lineCandidates = [
+    orderItem.lineTaxRate,
+    orderItem.linetaxrate,
+    orderItem.taxRate,
+    orderItem.taxrate,
+    orderItem.itemTaxRate,
+    orderItem.itemtaxrate,
+  ];
+  for (const c of lineCandidates) {
+    if (c != null && c !== '') {
+      const n = typeof c === 'number' ? c : parseFloat(String(c).replace(',', '.'));
+      if (Number.isFinite(n) && n >= 0) return normalizeSwissMwStRate(n);
+    }
+  }
+  return normalizeSwissMwStRate(0.026);
+}
 
 class InvoiceController {
   /**
@@ -60,23 +102,63 @@ class InvoiceController {
         }
       }
 
-      // Obtener taxRate de cada producto directamente desde Product
-      const productIds = [...new Set(order.items.map((it) => it.productId))];
+      // taxRate pro Produkt (Fallback), falls Join auf der Order keine Zeile liefert
+      const productIds = [
+        ...new Set(
+          order.items
+            .map((it) => it.productId ?? it.productid ?? it.product_id)
+            .filter((id) => id != null && String(id).trim() !== ''),
+        ),
+      ].map((id) => String(id).trim());
       const taxRateByProduct = new Map();
-      try {
-        const productsTaxQuery = await query(
-          'SELECT id, "taxRate" FROM "Product" WHERE id = ANY($1)',
-          [productIds]
-        );
-        for (const row of productsTaxQuery.rows) {
-          const tr = row.taxRate ?? row.taxrate;
-          const val = tr != null && tr !== ''
-            ? (typeof tr === 'number' ? tr : parseFloat(tr))
-            : 0.026;
-          taxRateByProduct.set(row.id, Number.isFinite(val) && val >= 0 ? val : 0.026);
+      const taxRateBySku = new Map();
+      const skuList = [
+        ...new Set(
+          order.items
+            .map((it) => it.productSku ?? it.productsku ?? it.product_sku)
+            .filter((s) => s != null && String(s).trim() !== '')
+            .map((s) => String(s).trim()),
+        ),
+      ];
+      if (productIds.length > 0) {
+        try {
+          const productsTaxQuery = await query(
+            'SELECT id::text AS id, "taxRate" FROM "Product" WHERE id::text = ANY($1)',
+            [productIds],
+          );
+          for (const row of productsTaxQuery.rows) {
+            const tr = row.taxRate ?? row.taxrate;
+            if (tr === null || tr === undefined || tr === '') continue;
+            const n =
+              typeof tr === 'number' ? tr : parseFloat(String(tr).replace(',', '.'));
+            if (!Number.isFinite(n) || n < 0) continue;
+            taxRateByProduct.set(String(row.id), normalizeSwissMwStRate(n));
+          }
+        } catch (taxErr) {
+          logger.warn('[InvoiceController.createInvoice] Failed to fetch product taxRate, using 2.6% fallback', { error: taxErr.message });
         }
-      } catch (taxErr) {
-        logger.warn('[InvoiceController.createInvoice] Failed to fetch product taxRate, using 2.6% fallback', { error: taxErr.message });
+      }
+      if (skuList.length > 0) {
+        try {
+          const skuTaxQuery = await query(
+            'SELECT sku, "taxRate" FROM "Product" WHERE sku = ANY($1)',
+            [skuList],
+          );
+          for (const row of skuTaxQuery.rows) {
+            const key = row.sku != null ? String(row.sku).trim() : '';
+            if (!key) continue;
+            const tr = row.taxRate ?? row.taxrate;
+            if (tr === null || tr === undefined || tr === '') continue;
+            const n =
+              typeof tr === 'number' ? tr : parseFloat(String(tr).replace(',', '.'));
+            if (!Number.isFinite(n) || n < 0) continue;
+            taxRateBySku.set(key, normalizeSwissMwStRate(n));
+          }
+        } catch (skuErr) {
+          logger.warn('[InvoiceController.createInvoice] Failed to fetch product taxRate by SKU', {
+            error: skuErr.message,
+          });
+        }
       }
 
       const invoiceItems = order.items.map((item) => {
@@ -87,9 +169,10 @@ class InvoiceController {
             itemKeys: Object.keys(item),
           });
         }
-        const taxRate = taxRateByProduct.get(item.productId) ?? 0.026;
+        const taxRate = resolveInvoiceLineMwStRate(item, taxRateByProduct, taxRateBySku);
+        const linePid = item.productId ?? item.productid ?? item.product_id;
         return {
-          productId: item.productId,
+          productId: linePid != null ? String(linePid).trim() : item.productId,
           productName: item.productName || 'Product',
           productSku: item.productSku || '',
           quantity: item.quantity,
@@ -533,11 +616,13 @@ class InvoiceController {
         email: inv.customerEmail || undefined,
       };
 
+      const { normalizeSwissMwStRate, mwstCodeForSwissRate } = require('../utils/swissMwSt');
+
       // Build items
       const items = (inv.items || []).map((item, i) => {
-        const taxRate = item.taxRate ?? (item.metadata?.taxRate) ?? 0.026;
-        const rate = typeof taxRate === 'number' ? taxRate : parseFloat(taxRate) || 0.026;
-        const mwstCode = rate >= 0.075 ? 'A' : 'B';
+        const raw = item.taxRate ?? item.metadata?.taxRate ?? item.metadata?.tax_rate;
+        const rate = normalizeSwissMwStRate(raw);
+        const mwstCode = mwstCodeForSwissRate(rate);
         const totalBrutto = item.subtotal || (item.price * item.quantity) || 0;
         const unitPrice = item.price || (totalBrutto / (item.quantity || 1));
         return {
@@ -578,6 +663,7 @@ class InvoiceController {
         referenz: inv.qrrReference || inv.invoiceNumber || inv.id,
         documentType: isDeferred ? 'Rechnung' : 'Quittung',
         paymentMethodDisplay: paymentDisplay,
+        paymentMethodCode: (inv.paymentMethod || '').toLowerCase(),
         isDeferredPayment: isDeferred,
         showQRSection: isQR && !!inv.qrrReference && !!creditorConfig,
         discountAmount: inv.discountAmount || 0,

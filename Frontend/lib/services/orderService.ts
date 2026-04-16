@@ -367,6 +367,48 @@ export const OrderService = {
   },
 
   /**
+   * QR-Rechnung: confirmación desde el kiosco (sin sesión de comercio).
+   * Requiere el token devuelto en order.metadata.qrPaymentConfirmToken al crear la orden.
+   */
+  confirmQRPaymentGuest: async (
+    orderId: string,
+    confirmToken: string,
+    requestOptions?: { signal?: AbortSignal }
+  ): Promise<ApiResponse<{ orderId: string; status: string; confirmedAt: string }>> => {
+    const { buildApiUrl } = await import('@/lib/config/api');
+    const url = buildApiUrl(`${API_CONFIG.ENDPOINTS.ORDERS}/${orderId}/confirm-payment-guest`);
+    const controller = requestOptions?.signal ? null : new AbortController();
+    const timeoutId = controller ? setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT) : null;
+    const signal = requestOptions?.signal ?? controller?.signal;
+
+    try {
+      const response = await fetch(url, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmToken }),
+        signal,
+      });
+      const data = (await response.json()) as ApiResponse<{
+        orderId: string;
+        status: string;
+        confirmedAt: string;
+      }>;
+      if (timeoutId) clearTimeout(timeoutId);
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || data.message || `HTTP ${response.status}`,
+        };
+      }
+      return data;
+    } catch (e) {
+      if (timeoutId) clearTimeout(timeoutId);
+      const message = e instanceof Error ? e.message : 'Network error';
+      return { success: false, error: message };
+    }
+  },
+
+  /**
    * Actualizar el estado de una orden
    * @param orderId - ID de la orden
    * @param status - Nuevo estado (pending, processing, completed, cancelled)

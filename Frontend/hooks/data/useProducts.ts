@@ -37,7 +37,7 @@ export const useProducts = (): UseProductsReturn => {
   return {
     data: data ?? null,
     loading,
-    error: error ? (error instanceof Error ? error.message : 'Error al cargar datos de productos') : null,
+    error: error ? (error instanceof Error ? error.message : 'Fehler beim Laden der Produktdaten') : null,
     refresh
   };
 };

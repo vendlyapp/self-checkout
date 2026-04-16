@@ -7,6 +7,7 @@ const notificationService = require('./NotificationService');
 const QRBillService = require('./QRBillService');
 const AppError = require('../utils/AppError');
 const logger = require('../utils/logger');
+const { normalizeSwissMwStRate } = require('../utils/swissMwSt');
 
 class OrderService {
 
@@ -46,7 +47,7 @@ class OrderService {
 
     const productsResult = await query(
       `
-        SELECT id, price, stock
+        SELECT id, price, stock, "taxRate"
         FROM "Product"
         WHERE id = ANY($1)
       `,
@@ -58,13 +59,24 @@ class OrderService {
     }
 
     const productCatalog = new Map(
-      productsResult.rows.map((product) => [
-        product.id,
-        {
-          price: Number(product.price),
-          stock: Number(product.stock),
-        },
-      ]),
+      productsResult.rows.map((product) => {
+        const tr = product.taxRate ?? product.taxrate;
+        const raw =
+          tr != null && tr !== ''
+            ? (typeof tr === 'number' ? tr : parseFloat(tr))
+            : null;
+        const taxRate = normalizeSwissMwStRate(
+          raw != null && Number.isFinite(raw) && raw >= 0 ? raw : 0.026,
+        );
+        return [
+          product.id,
+          {
+            price: Number(product.price),
+            stock: Number(product.stock),
+            taxRate,
+          },
+        ];
+      }),
     );
 
     let total = 0;
@@ -145,6 +157,9 @@ class OrderService {
       // Usamos timestamp + random para garantizar unicidad (max 20 dígitos → cabe en los 26 dígitos del QRR).
       if (isQRRechnung) {
         try {
+          const { randomUUID } = require('crypto');
+          /** Token shown only to the kiosk/browser that created the order — allows guest to confirm payment without store-admin auth. */
+          const qrPaymentConfirmToken = randomUUID();
           const qrrNumericId = String(Date.now()) + String(Math.floor(Math.random() * 999999) + 1).padStart(6, '0');
           const qrrReference = QRBillService.generateQRReference(qrrNumericId);
 
@@ -156,7 +171,7 @@ class OrderService {
           );
           const qrCreditorSnapshot = pmSnapshot.rows[0]?.config || null;
 
-          const qrrUpdate = { qrrReference };
+          const qrrUpdate = { qrrReference, qrPaymentConfirmToken };
           if (qrCreditorSnapshot) qrrUpdate.qrCreditorSnapshot = qrCreditorSnapshot;
 
           await client.query(
@@ -185,9 +200,11 @@ class OrderService {
           throw new AppError(`Insufficient stock for product ${item.productId}`, 400, 'INSUFFICIENT_STOCK');
         }
 
+        const lineTaxRate = productCatalog.get(item.productId).taxRate;
+
         const itemInsertQuery = `
-          INSERT INTO "OrderItem" ("orderId", "productId", "quantity", "price")
-          VALUES ($1, $2, $3, $4)
+          INSERT INTO "OrderItem" ("orderId", "productId", "quantity", "price", "taxRate")
+          VALUES ($1, $2, $3, $4, $5)
           RETURNING *
         `;
 
@@ -196,6 +213,7 @@ class OrderService {
           item.productId,
           item.quantity,
           item.price,
+          lineTaxRate,
         ]);
 
         orderItems.push(itemResult.rows[0]);
@@ -457,9 +475,10 @@ class OrderService {
 
     // Fire both queries in parallel — they are independent
     const itemsQuery = `
-      SELECT oi.*, p.name as "productName", p.sku as "productSku", p."taxRate" as "itemTaxRate"
+      SELECT oi.*, p.name as "productName", p.sku as "productSku", p."taxRate" as "itemTaxRate",
+        COALESCE(oi."taxRate", p."taxRate") as "lineTaxRate"
       FROM "OrderItem" oi
-      LEFT JOIN "Product" p ON oi."productId" = p.id
+      LEFT JOIN "Product" p ON oi."productId"::text = p.id::text
       WHERE oi."orderId" = $1
     `;
 
@@ -967,9 +986,10 @@ class OrderService {
     if (!orders || orders.length === 0) return;
     const orderIds = orders.map((o) => o.id);
     const itemsResult = await query(
-      `SELECT oi.*, p.name as "productName", p.sku as "productSku", p."taxRate" as "itemTaxRate"
+      `SELECT oi.*, p.name as "productName", p.sku as "productSku", p."taxRate" as "itemTaxRate",
+        COALESCE(oi."taxRate", p."taxRate") as "lineTaxRate"
        FROM "OrderItem" oi
-       LEFT JOIN "Product" p ON oi."productId" = p.id
+       LEFT JOIN "Product" p ON oi."productId"::text = p.id::text
        WHERE oi."orderId" = ANY($1)`,
       [orderIds]
     );
@@ -985,7 +1005,8 @@ class OrderService {
   }
 
   /**
-   * Si la orden muestra "Invitado de X" pero existe una factura con nombre real, usar ese nombre.
+   * Si la orden muestra un placeholder de invitado ("Invitado..." o "Gast...")
+   * pero existe una factura con nombre real, usar ese nombre.
    */
   async _applyInvoiceCustomerNameFallback(orders) {
     if (!orders || orders.length === 0) return;
@@ -1003,8 +1024,8 @@ class OrderService {
       const meta = order.metadata && typeof order.metadata === 'object' ? order.metadata : {};
       const hasCustomerName = (meta.customer && meta.customer.name) || (meta.customerData && meta.customerData.name);
       const userName = order.userName || '';
-      const isInvitado = /^Invitado(\s|$)/i.test(userName);
-      if (!hasCustomerName && isInvitado && nameByOrderId[order.id]) {
+      const isGuestPlaceholder = /^(Invitado|Gast)(\s|$)/i.test(userName);
+      if (!hasCustomerName && isGuestPlaceholder && nameByOrderId[order.id]) {
         order.userName = nameByOrderId[order.id];
       }
     }
@@ -1038,7 +1059,7 @@ class OrderService {
 
     // Batch: obtener precio y stock de todos los productos en UNA sola query
     const productsResult = await query(
-      'SELECT id, price, stock FROM "Product" WHERE id = ANY($1)',
+      'SELECT id, price, stock, "taxRate" FROM "Product" WHERE id = ANY($1)',
       [[...uniqueProductIds]]
     );
 
@@ -1047,7 +1068,17 @@ class OrderService {
     }
 
     const productCatalog = new Map(
-      productsResult.rows.map((p) => [p.id, { price: parseFloat(p.price), stock: parseInt(p.stock) }])
+      productsResult.rows.map((p) => {
+        const tr = p.taxRate ?? p.taxrate;
+        const raw =
+          tr != null && tr !== ''
+            ? (typeof tr === 'number' ? tr : parseFloat(tr))
+            : null;
+        const taxRate = normalizeSwissMwStRate(
+          raw != null && Number.isFinite(raw) && raw >= 0 ? raw : 0.026,
+        );
+        return [p.id, { price: parseFloat(p.price), stock: parseInt(p.stock), taxRate }];
+      }),
     );
 
     // Calcular total y validar stock
@@ -1060,7 +1091,12 @@ class OrderService {
         throw new AppError(`Insufficient stock for product ${item.productId}`, 400, 'INSUFFICIENT_STOCK');
       }
       total += product.price * item.quantity;
-      itemsWithPrices.push({ productId: item.productId, quantity: item.quantity, price: product.price });
+      itemsWithPrices.push({
+        productId: item.productId,
+        quantity: item.quantity,
+        price: product.price,
+        taxRate: product.taxRate,
+      });
     }
 
     // Usar el total del orderData si viene (ya incluye descuentos), sino calcularlo
@@ -1133,15 +1169,16 @@ class OrderService {
         }
 
         const itemQuery = `
-          INSERT INTO "OrderItem" ("orderId", "productId", "quantity", "price")
-          VALUES ($1, $2, $3, $4)
+          INSERT INTO "OrderItem" ("orderId", "productId", "quantity", "price", "taxRate")
+          VALUES ($1, $2, $3, $4, $5)
           RETURNING *
         `;
         const itemResult = await client.query(itemQuery, [
           order.id,
           item.productId,
           item.quantity,
-          item.price
+          item.price,
+          item.taxRate,
         ]);
         orderItems.push(itemResult.rows[0]);
       }
@@ -1208,17 +1245,32 @@ class OrderService {
       `;
       const productsResult = await query(productsQuery, [productIds]);
       const productsMap = new Map(
-        productsResult.rows.map(p => [p.id, { 
-          name: p.name, 
-          sku: p.sku, 
-          price: Number(p.price),
-          taxRate: p.taxRate !== null ? Number(p.taxRate) : 0.026 // Default 2.6% if null
-        }])
+        productsResult.rows.map((p) => {
+          const tr = p.taxRate ?? p.taxrate;
+          const raw =
+            tr != null && tr !== ''
+              ? (typeof tr === 'number' ? tr : parseFloat(tr))
+              : null;
+          const taxRate =
+            raw != null && Number.isFinite(raw) && raw >= 0
+              ? normalizeSwissMwStRate(raw)
+              : normalizeSwissMwStRate(0.026);
+          return [
+            p.id,
+            {
+              name: p.name,
+              sku: p.sku,
+              price: Number(p.price),
+              taxRate,
+            },
+          ];
+        }),
       );
 
       // Preparar items de la factura
       const invoiceItems = result.items.map(item => {
         const product = productsMap.get(item.productId);
+        const lineTr = product?.taxRate ?? normalizeSwissMwStRate(0.026);
         return {
           productId: item.productId,
           productName: product?.name || 'Producto',
@@ -1227,8 +1279,8 @@ class OrderService {
           price: Number(item.price),
           subtotal: Number(item.price) * item.quantity,
           metadata: {
-            taxRate: product?.taxRate || 0.026 // Include taxRate in metadata
-          }
+            taxRate: lineTr,
+          },
         };
       });
 

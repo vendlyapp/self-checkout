@@ -444,6 +444,7 @@ export default function Form({ isDesktop = false }: FormProps) {
     productImages,
     queryClient,
     variants,
+    vatRate,
   ]);
 
   const handleModalClose = useCallback(() => {

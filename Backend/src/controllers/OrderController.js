@@ -1,4 +1,5 @@
-const { randomUUID } = require('crypto');
+const crypto = require('crypto');
+const { randomUUID } = crypto;
 const { query: dbQuery } = require('../../lib/database');
 const orderService = require('../services/OrderService');
 const storeService = require('../services/StoreService');
@@ -45,6 +46,7 @@ class OrderController {
   constructor() {
     this.createOrderSimple = this.createOrderSimple.bind(this);
     this.confirmPayment = this.confirmPayment.bind(this);
+    this.confirmPaymentGuest = this.confirmPaymentGuest.bind(this);
     this.getQRCode = this.getQRCode.bind(this);
   }
 
@@ -500,6 +502,103 @@ class OrderController {
     }
   }
 
+  /**
+   * Confirms QR-Rechnung payment from the self-checkout browser (guest).
+   * Requires the one-time token issued in order.metadata when the pending QR order was created.
+   * @route PATCH /api/orders/:id/confirm-payment-guest
+   */
+  async confirmPaymentGuest(req, res) {
+    try {
+      const { id } = req.params;
+      const confirmToken =
+        typeof req.body?.confirmToken === 'string' ? req.body.confirmToken.trim() : '';
+
+      if (!confirmToken) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: 'confirmToken is required',
+        });
+      }
+
+      const orderResult = await orderService.findById(id);
+      if (!orderResult.success || !orderResult.data) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, error: 'Order not found' });
+      }
+
+      const order = orderResult.data;
+      if (order.paymentMethod !== 'qr-rechnung') {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: 'Guest confirmation is only available for QR-Rechnung orders',
+        });
+      }
+
+      if (order.status !== 'pending') {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: `Order is already in '${order.status}' status. Only 'pending' orders can be confirmed.`,
+        });
+      }
+
+      let meta = order.metadata;
+      if (typeof meta === 'string') {
+        try {
+          meta = JSON.parse(meta);
+        } catch {
+          meta = {};
+        }
+      }
+      if (!meta || typeof meta !== 'object') meta = {};
+
+      const expected = meta.qrPaymentConfirmToken;
+      if (typeof expected !== 'string' || !expected) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: 'This order cannot be confirmed from the kiosk (missing token). Ask the merchant to confirm.',
+        });
+      }
+
+      const a = Buffer.from(confirmToken, 'utf8');
+      const b = Buffer.from(expected, 'utf8');
+      if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({ success: false, error: 'Invalid confirmation token' });
+      }
+
+      const confirmedAt = new Date().toISOString();
+
+      await dbQuery(
+        `UPDATE "Order"
+         SET status = 'completed',
+             metadata = metadata || $1::jsonb,
+             "updatedAt" = CURRENT_TIMESTAMP
+         WHERE id = $2`,
+        [JSON.stringify({ confirmedAt, confirmedBy: 'guest_kiosk' }), id]
+      );
+
+      await dbQuery(
+        `UPDATE "Invoice"
+         SET status = 'paid',
+             "paidAt" = CURRENT_TIMESTAMP,
+             "updatedAt" = CURRENT_TIMESTAMP
+         WHERE "orderId" = $1`,
+        [id]
+      );
+
+      res.status(HTTP_STATUS.OK).json({
+        success: true,
+        data: { orderId: id, status: 'completed', confirmedAt },
+        message: 'Payment successfully confirmed',
+      });
+    } catch (error) {
+      logger.error('Error confirming guest payment', { error: error.message });
+      const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({
+        success: false,
+        error: error.message || 'Error confirming payment',
+      });
+    }
+  }
+
   async resolveGuestUserId(context = {}) {
     const { storeSlug, storeId, customer } = context;
 
@@ -516,12 +615,12 @@ class OrderController {
       // If there is an email but no name, use the part before @
       displayName = normalizedEmail.split('@')[0];
     } else {
-      // If there is NO form data (customer chose "Weiter ohne Daten"), use "Guest of X store"
+      // If there is NO form data (customer chose "Weiter ohne Daten"), use "Gast von X"
       const store = await this.findStore(storeSlug, storeId);
       if (store?.name) {
-        displayName = `Invitado de ${store.name}`;
+        displayName = `Gast von ${store.name}`;
       } else {
-        displayName = 'Invitado';
+        displayName = 'Gast';
       }
     }
 

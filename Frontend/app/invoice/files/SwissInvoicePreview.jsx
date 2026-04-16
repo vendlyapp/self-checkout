@@ -16,13 +16,14 @@ const fmtPct = (r) => (r * 100).toFixed(1) + "%";
 const calcBreakdown = (items) => {
   const g = {};
   items.forEach((i) => {
-    if (!g[i.mwstCode]) g[i.mwstCode] = { code: i.mwstCode, rate: i.mwstRate, brutto: 0 };
-    g[i.mwstCode].brutto += i.totalBrutto;
+    const key = `r_${Number(i.mwstRate).toFixed(4)}`;
+    if (!g[key]) g[key] = { code: i.mwstCode, rate: i.mwstRate, brutto: 0 };
+    g[key].brutto += i.totalBrutto;
   });
   return Object.values(g).map((x) => ({
     ...x,
-    netto: x.brutto / (1 + x.rate),
-    mwst: x.brutto - x.brutto / (1 + x.rate),
+    netto: x.rate === 0 ? x.brutto : x.brutto / (1 + x.rate),
+    mwst: x.rate === 0 ? 0 : x.brutto - x.brutto / (1 + x.rate),
   }));
 };
 
@@ -83,7 +84,12 @@ const StatusBadge = ({ status }) => {
 };
 
 const MwStBadge = ({ code, rate }) => {
-  const cl = rate <= 0.026 ? "bg-sky-50 text-sky-600 ring-sky-200" : rate === 0.038 ? "bg-amber-50 text-amber-600 ring-amber-200" : rate === 0 ? "bg-emerald-50 text-emerald-600 ring-emerald-200" : "bg-gray-100 text-gray-500 ring-gray-200";
+  const cl =
+    rate === 0
+      ? "bg-emerald-50 text-emerald-600 ring-emerald-200"
+      : rate <= 0.026
+        ? "bg-sky-50 text-sky-600 ring-sky-200"
+        : "bg-gray-100 text-gray-700 ring-gray-300";
   return <span className={`inline-flex items-center justify-center w-6 h-5 rounded text-[10px] font-bold ring-1 ${cl}`}>{code}</span>;
 };
 
@@ -154,12 +160,11 @@ export default function SwissInvoicePreview() {
             <div className="p-8">
               <h2 className="text-xl font-light text-gray-900 mb-6" style={{ letterSpacing: "-0.02em" }}>Datenstruktur — Swiss Invoice (Art. 26 MWSTG)</h2>
               {/* Rate cards */}
-              <div className="grid grid-cols-4 gap-3 mb-8">
+              <div className="grid grid-cols-3 gap-3 mb-8">
                 {[
-                  { rate: "8.1%", label: "Normalsatz", bg: "bg-gray-900", desc: "Services, Restaurants, Alkohol" },
-                  { rate: "2.6%", label: "Reduziert", bg: "bg-sky-600", desc: "Lebensmittel, Bücher, Medikamente" },
-                  { rate: "3.8%", label: "Sondersatz", bg: "bg-amber-500", desc: "Hotels / Beherbergung" },
-                  { rate: "0%", label: "Befreit", bg: "bg-emerald-600", desc: "Exporte, Luftfahrt" },
+                  { rate: "8.1%", label: "Normalsatz", bg: "bg-gray-900", desc: "Standardsteuersatz" },
+                  { rate: "2.6%", label: "Reduziert", bg: "bg-sky-600", desc: "z. B. Lebensmittel" },
+                  { rate: "0%", label: "Befreit", bg: "bg-emerald-600", desc: "steuerfreie Lieferungen" },
                 ].map(r => (
                   <div key={r.rate} className={`${r.bg} text-white rounded-xl p-4`}>
                     <div className="text-2xl font-bold" style={{ letterSpacing: "-0.02em" }}>{r.rate}</div>

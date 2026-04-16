@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { InvoiceService, Invoice } from '@/lib/services/invoiceService';
 import InvoiceTemplate from '@/components/invoice/InvoiceTemplate';
-import { Loader2, AlertCircle, Download, Printer, Share2, Store } from 'lucide-react';
+import { Loader2, AlertCircle, Download, Share2, Store } from 'lucide-react';
 import { toast } from 'sonner';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
 import { getDefaultStoreName } from '@/lib/config/brand';
@@ -164,24 +164,12 @@ export default function PublicInvoicePage() {
               <button
                 onClick={handleBackToStore}
                 className="flex flex-col items-center justify-center gap-1.5 flex-1 min-w-0 touch-target active:scale-95 transition-transform"
-                aria-label="Zurück zum Shop"
+                aria-label="Shop"
               >
                 <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center active:bg-gray-100 transition-colors">
                   <Store className="w-6 h-6 text-gray-700" strokeWidth={2} />
                 </div>
-                <span className="text-xs font-medium text-gray-700">Zurück zum Shop</span>
-              </button>
-
-              {/* Botón Drucken */}
-              <button
-                onClick={handlePrint}
-                className="flex flex-col items-center justify-center gap-1.5 flex-1 min-w-0 touch-target active:scale-95 transition-transform"
-                aria-label="Drucken"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center active:bg-gray-100 transition-colors">
-                  <Printer className="w-6 h-6 text-gray-700" strokeWidth={2} />
-                </div>
-                <span className="text-xs font-medium text-gray-700">Drucken</span>
+                <span className="text-xs font-medium text-gray-700">Shop</span>
               </button>
 
               {/* Botón Teilen */}

@@ -170,6 +170,21 @@ export default function EditProductModal({ product, isOpen, onClose, onSuccess }
         setHasVariants(false);
         setVariants([]);
       }
+
+      const tr = (product as Product & { taxRate?: number | string }).taxRate;
+      if (tr !== undefined && tr !== null && tr !== '') {
+        const raw = typeof tr === 'number' ? tr : parseFloat(String(tr).replace(',', '.'));
+        // Acepta decimal (0.026, 0.081, 0.08) y porcentaje (2.6, 8.1, 8)
+        const dec = Number.isFinite(raw)
+          ? (raw > 0.2 ? raw / 100 : raw)
+          : NaN;
+        if (!Number.isFinite(dec)) setVatRate('2.6');
+        else if (dec < 0.001) setVatRate('0');
+        else if (dec >= 0.07) setVatRate('8.1');   // 0.08, 0.081, 0.077 — todos Normalsatz
+        else setVatRate('2.6');                     // 0.026, 0.03, 0.025 — Reduziert
+      } else {
+        setVatRate('2.6');
+      }
     }
   }, [isOpen, existingProduct, backendCategories, originalProductData]);
 
@@ -273,6 +288,7 @@ export default function EditProductModal({ product, isOpen, onClose, onSuccess }
         isActive,
         image: productImages[0] || undefined,
         images: productImages.length > 0 ? productImages : undefined,
+        taxRate: parseFloat(vatRate) / 100,
       };
 
       // Actualizar producto principal
@@ -302,6 +318,7 @@ export default function EditProductModal({ product, isOpen, onClose, onSuccess }
             isActive,
             parentId: product.id,
             image: productImages[0] || undefined,
+            taxRate: parseFloat(vatRate) / 100,
           };
 
           if (variant.id) {
@@ -335,7 +352,7 @@ export default function EditProductModal({ product, isOpen, onClose, onSuccess }
       }, 2000);
     } catch (error) {
       devError('Error updating product:', error);
-      setErrors({ productName: 'Error al actualizar el producto' });
+      setErrors({ productName: 'Fehler beim Aktualisieren des Produkts' });
     } finally {
       setIsSaving(false);
     }
@@ -352,6 +369,7 @@ export default function EditProductModal({ product, isOpen, onClose, onSuccess }
     promotionPrice,
     hasVariants,
     variants,
+    vatRate,
     productImages,
     allProducts,
     updateProductMutation,

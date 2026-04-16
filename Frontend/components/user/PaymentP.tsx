@@ -1032,11 +1032,14 @@ export default function PaymentP() {
   const [personalData, setPersonalData] = useState(loadSavedCustomerData());
   const [isPreOrderMode, setIsPreOrderMode] = useState(false);
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
+  /** One-time token from backend (QR-Rechnung) so the kiosk can confirm payment without merchant auth */
+  const [qrPaymentConfirmToken, setQrPaymentConfirmToken] = useState<string | null>(null);
   const [qrCodeData, setQrCodeData] = useState<{ qrSvg: string; billSvg: string; amount: number; qrrReference: string } | null>(null);
   const [isConfirmingPayment, setIsConfirmingPayment] = useState(false);
   const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
   const [createdInvoiceShareToken, setCreatedInvoiceShareToken] = useState<string | null>(null);
   const [isOpeningInvoice, setIsOpeningInvoice] = useState(false);
+  const [navigatingToInvoice, setNavigatingToInvoice] = useState(false);
   const router = useRouter();
   
   // Usar mutation de React Query para crear órdenes
@@ -1177,6 +1180,12 @@ export default function PaymentP() {
       if (orderResult?.id) {
         setCreatedOrderId(orderResult.id);
       }
+      const meta = orderResult?.metadata as Record<string, unknown> | undefined;
+      const confirmTok =
+        meta && typeof meta.qrPaymentConfirmToken === 'string'
+          ? meta.qrPaymentConfirmToken
+          : null;
+      setQrPaymentConfirmToken(confirmTok);
       // NO guardar invoiceId ni invoiceShareToken aquí - se crearán después
       setIsPreOrderMode(false);
 
@@ -1433,6 +1442,7 @@ export default function PaymentP() {
       }
 
       if (token) {
+        setNavigatingToInvoice(true);
         router.push(`/invoice/public/${token}`);
         setTimeout(() => {
           setIsModalOpen(false);
@@ -1532,14 +1542,21 @@ export default function PaymentP() {
     setIsConfirmingPayment(true);
     try {
       const { OrderService } = await import('@/lib/services/orderService');
-      const res = await OrderService.confirmQRPayment(createdOrderId);
+      let res;
+      if (qrPaymentConfirmToken) {
+        res = await OrderService.confirmQRPaymentGuest(createdOrderId, qrPaymentConfirmToken);
+      } else {
+        res = await OrderService.confirmQRPayment(createdOrderId);
+      }
       if (!res.success || !res.data) {
         throw new Error(res.error || 'Zahlung konnte nicht bestätigt werden');
       }
-      // Ir directo a ver la factura — los datos ya fueron recopilados antes del QR
       setPaymentStep('viewInvoice');
     } catch (error) {
       devError('Error confirming QR payment:', error);
+      const msg =
+        error instanceof Error ? error.message : 'Zahlung konnte nicht bestätigt werden';
+      toast.error(msg);
     } finally {
       setIsConfirmingPayment(false);
     }
@@ -1562,7 +1579,10 @@ export default function PaymentP() {
     clearCart();
     setSelectedPaymentMethod("");
     setOrderError(null);
-    
+    setCreatedOrderId(null);
+    setQrPaymentConfirmToken(null);
+    setQrCodeData(null);
+
     // Cerrar el modal con una transición suave
     setIsModalOpen(false);
     setPaymentStep("confirm");
@@ -1626,8 +1646,9 @@ export default function PaymentP() {
   }) || [];
 
   // Redirigir automáticamente si el carrito está vacío (después de completar compra)
+  // No redirigir si estamos navegando a la factura
   useEffect(() => {
-    if (mounted && totalItems === 0 && store?.slug) {
+    if (mounted && totalItems === 0 && store?.slug && !navigatingToInvoice) {
       // Pequeño delay para evitar redirección inmediata durante la transición
       const redirectTimer = setTimeout(() => {
         router.push(`/store/${store.slug}`);
@@ -1635,7 +1656,7 @@ export default function PaymentP() {
 
       return () => clearTimeout(redirectTimer);
     }
-  }, [mounted, totalItems, store?.slug, router]);
+  }, [mounted, totalItems, store?.slug, router, navigatingToInvoice]);
 
   // Mostrar mensaje amigable si el carrito está vacío (solo después de montar para evitar hydration mismatch)
   if (mounted && totalItems === 0) {

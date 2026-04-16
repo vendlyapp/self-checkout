@@ -52,17 +52,16 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function MwStCodeBadge({ code, rate }: { code: string; rate: number }) {
-  // Color scheme based on rate type
-  const isReduced = rate <= 0.026;
-  const isSpecial = rate === 0.038;
   const isExempt = rate === 0;
+  const isReduced = !isExempt && Math.abs(rate - 0.026) < 0.0005;
+  const isNormal = !isExempt && rate >= 0.0795;
 
   const colorClass = isExempt
     ? 'bg-emerald-50 text-emerald-600 ring-emerald-200'
     : isReduced
     ? 'bg-sky-50 text-sky-600 ring-sky-200'
-    : isSpecial
-    ? 'bg-amber-50 text-amber-600 ring-amber-200'
+    : isNormal
+    ? 'bg-gray-100 text-gray-700 ring-gray-300'
     : 'bg-gray-100 text-gray-500 ring-gray-200';
 
   return (

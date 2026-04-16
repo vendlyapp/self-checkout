@@ -5,8 +5,8 @@
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-/** Valid Swiss MwSt rates since 01.01.2024 */
-export type MwStRate = 0.081 | 0.026 | 0.038 | 0.0;
+/** MwSt in dieser App: nur 0%, 2.6%, 8.1% (als Dezimal 0, 0.026, 0.081). */
+export type MwStRate = 0.081 | 0.026 | 0.0;
 
 export type InvoiceStatus = 'draft' | 'open' | 'paid' | 'overdue' | 'cancelled';
 
@@ -152,19 +152,65 @@ export function formatDate(dateStr: string | undefined): string {
   });
 }
 
+/**
+ * Normalize tax values: decimals (0.026), percent-style (2.6, 8.1, 0), legacy 0.03/0.038 → 2.6%.
+ */
+export function normalizeSwissMwStRate(raw: unknown): number {
+  if (raw === null || raw === undefined || raw === '') return 0.026;
+  const n =
+    typeof raw === 'string'
+      ? parseFloat(String(raw).replace(',', '.'))
+      : Number(raw);
+  if (!Number.isFinite(n)) return 0.026;
+  if (n === 0) return 0;
+  if (n > 0 && n <= 0.2) {
+    if (n >= 0.0795 && n <= 0.0815) return 0.081;
+    if (Math.abs(n - 0.026) < 0.0005) return 0.026;
+    if (Math.abs(n - 0.038) < 0.0005) return 0.026;
+    if (n < 0.001) return 0;
+    if (Math.abs(n - 0.03) < 0.0005) return 0.026;
+    const known = [0.026, 0.081];
+    let best = 0.026;
+    let bestD = Infinity;
+    for (const k of known) {
+      const d = Math.abs(n - k);
+      if (d < bestD) {
+        bestD = d;
+        best = k;
+      }
+    }
+    return bestD < 0.002 ? best : Math.round(n * 10000) / 10000;
+  }
+  if (n > 0.2 && n <= 100) {
+    return normalizeSwissMwStRate(n / 100);
+  }
+  return 0.026;
+}
+
+export function mwstCodeForSwissRate(rate: number): string {
+  const r = normalizeSwissMwStRate(rate);
+  if (r === 0) return 'Z';
+  if (Math.abs(r - 0.081) < 0.0005) return 'A';
+  if (Math.abs(r - 0.026) < 0.0005) return 'B';
+  return 'B';
+}
+
 /** Format MwSt rate as percentage string. Normal rate (8% or 8.1%) always shows as 8.1%. */
 export function formatMwStRate(rate: number): string {
-  if (rate >= 0.0795 && rate <= 0.0815) return '8.1%';
-  return (rate * 100).toFixed(1) + '%';
+  const r = normalizeSwissMwStRate(rate);
+  if (r === 0) return '0%';
+  if (r >= 0.0795 && r <= 0.0815) return '8.1%';
+  if (Math.abs(r - 0.026) < 0.0005) return '2.6%';
+  return (r * 100).toFixed(1) + '%';
 }
 
 /** Get label for MwSt rate */
 export function getMwStLabel(rate: number): string {
-  if (rate === 0.081 || (rate >= 0.0795 && rate <= 0.0815)) return 'Normalsatz';
-  if (rate === 0.026) return 'Reduziert';
-  if (rate === 0.038) return 'Beherbergung';
-  if (rate === 0) return 'Befreit';
-  return formatMwStRate(rate);
+  const r = normalizeSwissMwStRate(rate);
+  if (r === 0) return 'Befreit';
+  if (r === 0.081 || (r >= 0.0795 && r <= 0.0815)) return 'Normalsatz';
+  if (r === 0.026) return 'Reduziert';
+  return formatMwStRate(r);
 }
 
 // ─── VAT Calculations ────────────────────────────────────────────────────────
@@ -183,38 +229,35 @@ export function getMwStLabel(rate: number): string {
 //   MwSt:   100 - 92.51 = 7.49 CHF
 //   Verification: 92.51 × 0.081 = 7.49 ✓
 
-/** Calculate MwSt breakdown grouped by code using correct Swiss formula */
+/** Calculate MwSt breakdown grouped by normalized rate (not only A/B code — avoids merging 0% with 2.6%). */
 export function calculateMwStBreakdown(items: InvoiceLineItem[]): MwStGroup[] {
   const groups: Record<string, MwStGroup> = {};
 
   items.forEach((item) => {
-    const key = item.mwstCode;
+    const rate = normalizeSwissMwStRate(item.mwstRate);
+    const key = `r_${rate.toFixed(4)}`;
     if (!groups[key]) {
       groups[key] = {
-        code: key,
-        rate: item.mwstRate,
+        code: mwstCodeForSwissRate(rate),
+        rate,
         brutto: 0,
         netto: 0,
         mwst: 0,
       };
     }
-    // item.totalBrutto already includes VAT (Swiss standard)
     groups[key].brutto += item.totalBrutto;
   });
 
-  return Object.values(groups).map((g) => {
-    // Swiss formula: Netto = Brutto ÷ (1 + rate)
-    // This extracts VAT from the price, not adds it
-    const netto = g.brutto / (1 + g.rate);
-    
-    // Swiss formula: MwSt = Brutto - Netto
-    // This is the correct way to calculate VAT in Switzerland
-    return {
-      ...g,
-      netto,
-      mwst: g.brutto - netto,
-    };
-  });
+  return Object.values(groups)
+    .map((g) => {
+      const netto = g.rate === 0 ? g.brutto : g.brutto / (1 + g.rate);
+      return {
+        ...g,
+        netto,
+        mwst: g.brutto - netto,
+      };
+    })
+    .sort((a, b) => b.rate - a.rate);
 }
 
 /** Calculate invoice totals using correct Swiss formula */

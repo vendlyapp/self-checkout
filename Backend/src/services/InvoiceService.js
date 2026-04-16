@@ -2,6 +2,7 @@ const { query, transaction } = require('../../lib/database');
 const crypto = require('crypto');
 const customerService = require('./CustomerService');
 const logger = require('../utils/logger');
+const { normalizeSwissMwStRate } = require('../utils/swissMwSt');
 
 class InvoiceService {
   /**
@@ -239,42 +240,208 @@ class InvoiceService {
     return invoice;
   }
 
+  /** productId en camelCase / snake_case / JSON legacy */
+  _lineProductId(it) {
+    if (!it || typeof it !== 'object') return null;
+    const v = it.productId ?? it.productid ?? it.product_id;
+    return v != null && String(v).trim() !== '' ? String(v).trim() : null;
+  }
+
+  _lineProductSku(it) {
+    if (!it || typeof it !== 'object') return null;
+    const v = it.productSku ?? it.productsku ?? it.product_sku;
+    return v != null && String(v).trim() !== '' ? String(v).trim() : null;
+  }
+
   /**
-   * Enriquece los items de una factura con taxRate desde Product cuando falta
-   * (facturas antiguas no tenían taxRate guardado por producto)
+   * Líneas de pedido con MwSt efectivo (snapshot en OrderItem si existe, si no Product).
+   */
+  async _loadOrderLinesByOrderIds(orderIds) {
+    const map = new Map();
+    if (!orderIds || orderIds.length === 0) return map;
+    try {
+      const result = await query(
+        `SELECT oi."orderId" AS "orderId", oi."productId" AS "productId", oi.quantity, oi.price,
+                COALESCE(oi."taxRate", p."taxRate") AS "lineTaxRate"
+         FROM "OrderItem" oi
+         LEFT JOIN "Product" p ON oi."productId"::text = p.id::text
+         WHERE oi."orderId" = ANY($1::text[])
+         ORDER BY oi."orderId" ASC, oi."createdAt" ASC NULLS LAST, oi.id ASC`,
+        [orderIds],
+      );
+      for (const row of result.rows) {
+        const oid = row.orderId ?? row.orderid;
+        if (!oid) continue;
+        if (!map.has(oid)) map.set(oid, []);
+        map.get(oid).push(row);
+      }
+    } catch (e) {
+      logger.warn('[InvoiceService._loadOrderLinesByOrderIds]', { message: e.message });
+    }
+    return map;
+  }
+
+  /** Si la línea de factura no trae productId, copiarlo del OrderItem por índice o coincidencia */
+  _hydrateInvoiceProductIdsFromOrder(invoice, orderLines) {
+    if (!invoice?.items?.length || !orderLines?.length) return;
+    invoice.items = invoice.items.map((it, idx) => {
+      let pid = this._lineProductId(it);
+      if (pid) return { ...it, productId: pid };
+      const oli = orderLines[idx];
+      const oid = oli ? oli.productId ?? oli.productid : null;
+      if (oid) return { ...it, productId: String(oid) };
+      return it;
+    });
+  }
+
+  /**
+   * Mapa productId → MwSt normalizado (0, 0.026, 0.081) desde la tabla Product (oficial).
+   */
+  async _buildProductTaxRateMap(productIds) {
+    const taxMap = new Map();
+    if (!productIds || productIds.length === 0) return taxMap;
+    try {
+      const taxResult = await query(
+        'SELECT id::text AS id, "taxRate" FROM "Product" WHERE id::text = ANY($1::text[])',
+        [productIds],
+      );
+      for (const row of taxResult.rows) {
+        const tr = row.taxRate ?? row.taxrate;
+        // NUNCA inventar 2.6 % aquí: si taxRate es NULL en BD, no entrar en el mapa
+        // (si no, taxMap.has(id) sería true para todos y bloquearía otros fallbacks).
+        if (tr === null || tr === undefined || tr === '') continue;
+        const n = typeof tr === 'number' ? tr : parseFloat(String(tr).replace(',', '.'));
+        if (!Number.isFinite(n) || n < 0) continue;
+        taxMap.set(String(row.id), normalizeSwissMwStRate(n));
+      }
+    } catch (e) {
+      logger.warn('[InvoiceService._buildProductTaxRateMap] Product tax lookup failed', {
+        message: e.message,
+      });
+    }
+    return taxMap;
+  }
+
+  /** Respaldo: buscar MwSt por SKU cuando el mapa por id no tiene fila (p. ej. taxRate NULL en Product). */
+  async _buildProductTaxRateBySkuMap(skus) {
+    const m = new Map();
+    const unique = [...new Set((skus || []).filter((s) => s && String(s).trim() !== '').map((s) => String(s).trim()))];
+    if (unique.length === 0) return m;
+    try {
+      const r = await query(
+        'SELECT sku, "taxRate" FROM "Product" WHERE sku = ANY($1::text[])',
+        [unique],
+      );
+      for (const row of r.rows) {
+        const sku = row.sku != null ? String(row.sku).trim() : '';
+        if (!sku) continue;
+        const tr = row.taxRate ?? row.taxrate;
+        if (tr === null || tr === undefined || tr === '') continue;
+        const n = typeof tr === 'number' ? tr : parseFloat(String(tr).replace(',', '.'));
+        if (!Number.isFinite(n) || n < 0) continue;
+        m.set(sku, normalizeSwissMwStRate(n));
+      }
+    } catch (e) {
+      logger.warn('[InvoiceService._buildProductTaxRateBySkuMap]', { message: e.message });
+    }
+    return m;
+  }
+
+  /**
+   * Prioridad: 1) Product por id, 2) join pedido→Product, 3) Product por SKU, 4) JSON factura.
+   */
+  _applyOfficialTaxFromProductAndOrder(invoice, orderLines, taxMap, skuTaxMap) {
+    if (!invoice?.items?.length) return;
+    const lines = orderLines || [];
+    const skuMap = skuTaxMap || new Map();
+    invoice.items = invoice.items.map((it, idx) => {
+      const pid = this._lineProductId(it);
+      const sku = this._lineProductSku(it);
+      let oli = null;
+      if (pid && lines.length) {
+        oli = lines.find((l) => String(l.productId ?? l.productid) === pid) || null;
+      }
+      if (!oli && lines[idx]) oli = lines[idx];
+
+      let pickedRate = null;
+      if (pid && taxMap && taxMap.has(pid)) {
+        pickedRate = taxMap.get(pid);
+      }
+      if (pickedRate == null && oli) {
+        const raw = oli.lineTaxRate ?? oli.linetaxrate ?? oli.itemTaxRate ?? oli.itemtaxrate;
+        if (raw != null && raw !== '') {
+          const n = typeof raw === 'number' ? raw : parseFloat(String(raw).replace(',', '.'));
+          if (Number.isFinite(n) && n >= 0) pickedRate = normalizeSwissMwStRate(n);
+        }
+      }
+      if (pickedRate == null && sku && skuMap.has(sku)) {
+        pickedRate = skuMap.get(sku);
+      }
+      if (pickedRate == null) {
+        const raw = it.taxRate ?? it.metadata?.taxRate ?? it.metadata?.tax_rate;
+        pickedRate = normalizeSwissMwStRate(raw);
+      }
+      return {
+        ...it,
+        ...(pid ? { productId: pid } : {}),
+        taxRate: pickedRate,
+        metadata: { ...(it.metadata || {}), taxRate: pickedRate },
+      };
+    });
+  }
+
+  /**
+   * Sincroniza taxRate/MwSt por línea con Product + respaldo desde OrderItem.
    */
   async _enrichItemsWithProductTaxRate(invoice) {
     if (!invoice?.items?.length) return invoice;
-    const needsEnrichment = invoice.items.some((it) => {
-      const tr = it.taxRate ?? it.metadata?.taxRate ?? it.metadata?.tax_rate;
-      return tr == null || tr === '' || (typeof tr === 'number' && Number.isNaN(tr));
-    });
-    if (!needsEnrichment) return invoice;
-
-    const productIds = [...new Set(invoice.items.map((it) => it.productId).filter(Boolean))];
-    if (productIds.length === 0) return invoice;
-
-    const taxResult = await query('SELECT id, "taxRate" FROM "Product" WHERE id = ANY($1)', [productIds]);
-    const taxMap = new Map();
-    for (const row of taxResult.rows) {
-      const tr = row.taxRate ?? row.taxrate;
-      const val = tr != null && tr !== '' ? (typeof tr === 'number' ? tr : parseFloat(tr)) : 0.026;
-      taxMap.set(row.id, Number.isFinite(val) && val >= 0 ? val : 0.026);
+    let orderLines = [];
+    if (invoice.orderId) {
+      const m = await this._loadOrderLinesByOrderIds([invoice.orderId]);
+      orderLines = m.get(invoice.orderId) || [];
     }
-
-    invoice.items = invoice.items.map((it) => {
-      const existing = it.taxRate ?? it.metadata?.taxRate ?? it.metadata?.tax_rate;
-      if (existing != null && existing !== '' && (typeof existing === 'number' ? !Number.isNaN(existing) : !Number.isNaN(parseFloat(existing)))) {
-        return it;
-      }
-      const taxRate = taxMap.get(it.productId) ?? 0.026;
-      return {
-        ...it,
-        taxRate,
-        metadata: { ...(it.metadata || {}), taxRate },
-      };
-    });
+    this._hydrateInvoiceProductIdsFromOrder(invoice, orderLines);
+    const productIds = [...new Set(invoice.items.map((it) => this._lineProductId(it)).filter(Boolean))];
+    const skus = invoice.items.map((it) => this._lineProductSku(it)).filter(Boolean);
+    const [taxMap, skuTaxMap] = await Promise.all([
+      this._buildProductTaxRateMap(productIds),
+      this._buildProductTaxRateBySkuMap(skus),
+    ]);
+    this._applyOfficialTaxFromProductAndOrder(invoice, orderLines, taxMap, skuTaxMap);
     return invoice;
+  }
+
+  /**
+   * Igual que _enrichItemsWithProductTaxRate: una query OrderItem + una query Product para N facturas.
+   */
+  async _enrichManyInvoicesItemsWithProductTaxRate(invoices) {
+    if (!invoices || invoices.length === 0) return;
+    const orderIds = [...new Set(invoices.map((i) => i.orderId).filter(Boolean))];
+    const linesByOrder = orderIds.length ? await this._loadOrderLinesByOrderIds(orderIds) : new Map();
+
+    const allPids = new Set();
+    const allSkus = [];
+    for (const inv of invoices) {
+      if (!inv?.items?.length) continue;
+      const lines = inv.orderId ? linesByOrder.get(inv.orderId) || [] : [];
+      this._hydrateInvoiceProductIdsFromOrder(inv, lines);
+      for (const it of inv.items) {
+        const pid = this._lineProductId(it);
+        if (pid) allPids.add(pid);
+        const sku = this._lineProductSku(it);
+        if (sku) allSkus.push(sku);
+      }
+    }
+    const [taxMap, skuTaxMap] = await Promise.all([
+      this._buildProductTaxRateMap([...allPids]),
+      this._buildProductTaxRateBySkuMap(allSkus),
+    ]);
+
+    for (const inv of invoices) {
+      if (!inv?.items?.length) continue;
+      const lines = inv.orderId ? linesByOrder.get(inv.orderId) || [] : [];
+      this._applyOfficialTaxFromProductAndOrder(inv, lines, taxMap, skuTaxMap);
+    }
   }
 
   /**
@@ -442,6 +609,8 @@ class InvoiceService {
       return invoice;
     });
 
+    await this._enrichManyInvoicesItemsWithProductTaxRate(invoices);
+
     return {
       success: true,
       data: invoices,
@@ -484,6 +653,8 @@ class InvoiceService {
       return invoice;
     });
 
+    await this._enrichManyInvoicesItemsWithProductTaxRate(invoices);
+
     return {
       success: true,
       data: invoices,
@@ -525,6 +696,8 @@ class InvoiceService {
       }
       return invoice;
     });
+
+    await this._enrichManyInvoicesItemsWithProductTaxRate(invoices);
 
     return {
       success: true,
@@ -625,6 +798,9 @@ class InvoiceService {
       invoice.metadata = JSON.parse(invoice.metadata);
     }
 
+    await this._enrichItemsWithProductTaxRate(invoice);
+    await this._enrichInvoiceWithStoreData(invoice);
+
     return {
       success: true,
       data: invoice,
@@ -674,11 +850,21 @@ class InvoiceService {
       invoice.metadata = JSON.parse(invoice.metadata);
     }
 
+    await this._enrichItemsWithProductTaxRate(invoice);
+    await this._enrichInvoiceWithStoreData(invoice);
+
     return {
       success: true,
       data: invoice,
       message: 'Invoice status updated successfully',
     };
+  }
+
+  /**
+   * API pública para otros servicios (p. ej. CustomerService): MwSt por línea desde Product.
+   */
+  async enrichInvoiceListItemsWithProductTaxRates(invoices) {
+    await this._enrichManyInvoicesItemsWithProductTaxRate(invoices);
   }
 }
 

@@ -217,8 +217,8 @@
     /* Optimizaciones PWA iOS - Comportamiento nativo */
     overscroll-behavior: none; /* Evita bounce/refresh en iOS */
     -webkit-overflow-scrolling: touch;
-    /* Prevenir scroll horizontal */
-    overflow-x: hidden;
+    /* CRÍTICO: Prevenir TODO scroll en body - el scroll ocurre SOLO en el <main> del AdminLayout */
+    overflow: hidden;
     /* Scroll instantáneo para navegación (como apps nativas) */
     scroll-behavior: auto;
     /* iOS Safari optimizations */
@@ -1472,6 +1472,9 @@
     viewport-fit: cover;
     /* Color de fondo verde para safe areas de iPhone */
     background-color: #25D076;
+    /* CRÍTICO: Prevenir scroll en html - el scroll ocurre SOLO en el <main> del AdminLayout */
+    overflow: hidden;
+    overscroll-behavior: none;
   }
 
   body {

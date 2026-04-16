@@ -143,16 +143,29 @@ async function query(text, params = [], retries = 1) {
         let formattedText = text;
         const paramPlaceholders = [];
 
+        // $N::foo[] + JS-Array: der Code unten matcht nur $N::foo (Regex \w stoppt vor '[').
+        // Dann entsteht z. B. ANY(%L::foo[]) → pg-format liefert ANY('a','b'::text[]) oder
+        // ANY('uuid'::text[]) → Postgres: syntax error / malformed array literal.
+        // Lösung: expliziten Array-Cast am Placeholder entfernen; Array-Zweig setzt ARRAY[...]::text[].
+        for (let i = params.length; i >= 1; i--) {
+          if (Array.isArray(params[i - 1])) {
+            formattedText = formattedText.replace(
+              new RegExp(`\\$${i}::\\w+\\[\\]`, 'g'),
+              `$${i}`,
+            );
+          }
+        }
+
         for (let i = 1; i <= params.length; i++) {
           const paramValue = params[i - 1];
           const placeholderPattern = `\\$${i}(::\\w+)?\\b`;
           const placeholderRegex = new RegExp(placeholderPattern, 'g');
 
-          const matches = text.match(new RegExp(placeholderPattern, 'g'));
+          const matches = formattedText.match(new RegExp(placeholderPattern, 'g'));
           if (!matches || matches.length === 0) continue;
 
           const occurrences = matches.length;
-          const firstMatch = text.match(new RegExp(placeholderPattern));
+          const firstMatch = formattedText.match(new RegExp(placeholderPattern));
           const hasCasting = firstMatch && firstMatch[0] && firstMatch[0].includes('::');
 
           if (hasCasting) {

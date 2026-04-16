@@ -5,9 +5,7 @@ import { createPortal } from 'react-dom';
 import { InvoicePrintView } from './InvoicePrintView';
 import {
   Download,
-  Printer,
   Mail,
-  Copy,
   Scissors,
   X,
   Maximize2,
@@ -18,6 +16,9 @@ import {
   formatDate,
   formatMwStRate,
   calculateMwStBreakdown,
+  calculateTotals,
+  normalizeSwissMwStRate,
+  mwstCodeForSwissRate,
   getStatusConfig,
   getPaymentMethodDisplay,
   isDeferredPaymentMethod,
@@ -148,26 +149,11 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
   // Formula: Netto = Brutto ÷ (1 + rate), MwSt = Brutto - Netto
   // NEVER do: Brutto × rate (that's incorrect in Switzerland)
   
-  // Helper function to determine MwSt rate and code from item metadata or defaults
-  const getMwStRateAndCode = (item: InvoiceItem, index: number): { rate: number; code: string } => {
-    // taxRate del producto (Product.taxRate) — cada producto tiene su propio IVA
+  const getMwStRateAndCode = (item: InvoiceItem): { rate: number; code: string } => {
     const itemMetadata = (item.metadata || {}) as { taxRate?: number; tax_rate?: number };
-    const taxRate = item.taxRate ?? itemMetadata.taxRate ?? itemMetadata.tax_rate;
-    
-    if (taxRate !== undefined && taxRate !== null) {
-      const rate = typeof taxRate === 'number' 
-        ? taxRate 
-        : typeof taxRate === 'string' 
-        ? parseFloat(taxRate) 
-        : 0.026;
-      // Map rate to Swiss MwSt code; solo 2.6% (B) y 8.1% (A)
-      if (rate >= 0.075 || rate === 0.081) return { rate: 0.081, code: 'A' }; // Normalsatz 8.1%
-      return { rate: 0.026, code: 'B' }; // Reduziert 2.6%
-    }
-    
-    // Default: use reduced Swiss VAT rate (2.6% Reduziert) for food products
-    // This is appropriate for self-checkout of farm products (milk, cheese, eggs, fruits, etc.)
-    return { rate: 0.026, code: 'B' };
+    const raw = item.taxRate ?? itemMetadata.taxRate ?? itemMetadata.tax_rate;
+    const rate = normalizeSwissMwStRate(raw);
+    return { rate, code: mwstCodeForSwissRate(rate) };
   };
   
   const items: InvoiceLineItem[] = serviceInvoice.items.map((item: InvoiceItem, index: number) => {
@@ -178,11 +164,11 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
     const totalBrutto = item.subtotal || 0; // Already includes VAT
     
     // Get MwSt rate and code (variable per item if available in metadata)
-    const { rate: mwstRate, code: mwstCode } = getMwStRateAndCode(item, index);
+    const { rate: mwstRate, code: mwstCode } = getMwStRateAndCode(item);
     
     // Calculate netto using Swiss formula: Netto = Brutto ÷ (1 + rate)
     // This extracts the VAT from the price, not adds it
-    const netto = totalBrutto / (1 + mwstRate);
+    const netto = mwstRate === 0 ? totalBrutto : totalBrutto / (1 + mwstRate);
     
     // Calculate MwSt: MwSt = Brutto - Netto
     // This is the correct way in Switzerland
@@ -256,26 +242,17 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
   // Swiss QR-Bill nur wie Referenz-PDF (77759389): Endstück mit QR — nicht bei jeder „Rechnung“
   const showQRSection = shouldShowSwissQRBillOnInvoice(paymentMethod, serviceInvoice.qrrReference);
 
-  // Calculate totals using Swiss formula
-  // totalBrutto is already the total including VAT
-  const totalBrutto = serviceInvoice.total; // Already includes VAT
-  
-  // If taxAmount is provided, use it (it should be calculated correctly)
-  // Otherwise, calculate from items breakdown (which uses variable rates per item)
-  let totalMwst: number;
-  let totalNetto: number;
-  
-  if (serviceInvoice.taxAmount && serviceInvoice.taxAmount > 0) {
-    // Use provided taxAmount if available
-    totalMwst = serviceInvoice.taxAmount;
-    totalNetto = totalBrutto - totalMwst;
-    } else {
-    // Calculate from items (which may have different rates)
-    // This will be recalculated correctly in the component using calculateMwStBreakdown
-    // For now, use a default calculation as fallback
-    const defaultRate = 0.026; // Default to reduced rate for food products if no items
-    totalNetto = totalBrutto / (1 + defaultRate);
-    totalMwst = totalBrutto - totalNetto;
+  const totalBrutto = serviceInvoice.total;
+  let totalNettoOut: number;
+  let totalMwstOut: number;
+  if (items.length > 0) {
+    const totalsFromLines = calculateTotals(items);
+    totalNettoOut = totalsFromLines.totalNetto;
+    totalMwstOut = totalsFromLines.totalMwst;
+  } else {
+    const ta = Number(serviceInvoice.taxAmount);
+    totalMwstOut = Number.isFinite(ta) && ta > 0 ? ta : 0;
+    totalNettoOut = totalBrutto - totalMwstOut;
   }
 
   return {
@@ -299,8 +276,8 @@ function transformInvoice(serviceInvoice: ServiceInvoice): SwissInvoice {
     showQRSection,
     discountAmount: serviceInvoice.discountAmount || 0,
     totalBrutto: Math.round(totalBrutto * 100) / 100,
-    totalNetto: Math.round(totalNetto * 100) / 100,
-    totalMwst: Math.round(totalMwst * 100) / 100,
+    totalNetto: Math.round(totalNettoOut * 100) / 100,
+    totalMwst: Math.round(totalMwstOut * 100) / 100,
     storeLogo: storeLogoVal || undefined,
   };
 }
@@ -394,57 +371,32 @@ function CutLine() {
 
 // ─── Action Buttons ──────────────────────────────────────────────────────────
 
-function ActionBar({ 
-  onPrint, 
-  onDownload 
-}: { 
-  onPrint: () => void;
-  onDownload?: () => void;
-}) {
-  const handleDownload = () => {
-    if (onDownload) {
-      onDownload();
-    }
-  };
+function ActionBar({ onDownload }: { onDownload?: () => void }) {
+  const handleDownload = () => onDownload?.();
 
   const handleShare = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: 'Rechnung',
-          text: 'Rechnung teilen',
-          url: window.location.href,
-        });
+        await navigator.share({ title: 'Rechnung', url: window.location.href });
         toast.success('Rechnung geteilt');
-      } catch (error) {
-        // Usuario canceló
+      } catch (_) {
+        // usuario canceló
       }
     } else {
       try {
         await navigator.clipboard.writeText(window.location.href);
-        toast.success('Link zur Rechnung wurde in die Zwischenablage kopiert');
-      } catch (err) {
+        toast.success('Link in die Zwischenablage kopiert');
+      } catch (_) {
         toast.error('Fehler beim Kopieren');
       }
-    }
-  };
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      toast.success('Link zur Rechnung wurde in die Zwischenablage kopiert');
-    } catch (err) {
-      toast.error('Fehler beim Kopieren');
     }
   };
 
   return (
     <div className="flex items-center gap-1.5 print:hidden">
       {[
-        { icon: Printer, label: 'Drucken', onClick: onPrint },
         { icon: Download, label: 'PDF', onClick: handleDownload },
-        { icon: Mail, label: 'Senden', onClick: handleShare },
-        { icon: Copy, label: 'Kopieren', onClick: handleCopy },
+        { icon: Mail, label: 'Teilen', onClick: handleShare },
       ].map(({ icon: Icon, label, onClick }) => (
         <button
           key={label}
@@ -522,14 +474,10 @@ export default function InvoiceTemplate({
     // Calcular breakdown de MwSt desde los items
     const groups = calculateMwStBreakdown(invoice.items);
     // Suma de todos los items (esto es el subtotal brutto antes del descuento)
-    const bruttoFromItems = invoice.items.reduce((s, i) => s + i.totalBrutto, 0);
     const mwstFromItems = groups.reduce((s, g) => s + g.mwst, 0);
-    const nettoFromItems = bruttoFromItems - mwstFromItems;
-    
-    // El total final (después del descuento) viene del serviceInvoice.total
-    // que ya tiene el descuento aplicado
+
     const finalBrutto = serviceInvoice.total;
-    const finalMwst = serviceInvoice.taxAmount || mwstFromItems;
+    const finalMwst = mwstFromItems;
     const finalNetto = finalBrutto - finalMwst;
     
     return {
@@ -608,7 +556,7 @@ export default function InvoiceTemplate({
       {showActions && (
         <div className={`flex items-center justify-between mb-4 print:hidden ${isMobile ? 'px-4' : ''}`}>
           <StatusBadge status={invoice.status} />
-          <ActionBar onPrint={handlePrint} onDownload={handleDownload} />
+          <ActionBar onDownload={handleDownload} />
         </div>
       )}
 
@@ -898,18 +846,33 @@ export default function InvoiceTemplate({
                 </span>
               </div>
 
-              {/* Included VAT summary (minimal style) */}
-              <div className="flex justify-between py-1.5 text-[12px]">
-                <span className="text-gray-400">Enthaltene MwSt</span>
-                <span className="text-gray-600 font-medium tabular-nums">
-                  {formatCHF(totalMwst)}
-                </span>
+              {/* MwSt nach Steuersatz (wie PDF / Druckansicht) */}
+              <div className="pt-0.5 pb-1">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-gray-400 font-semibold mb-1">
+                  Enthaltene MwSt
+                </p>
+                {breakdown.length === 0 ? (
+                  <div className="flex justify-between text-[12px]">
+                    <span className="text-gray-400">—</span>
+                    <span className="text-gray-600 font-medium tabular-nums">{formatCHF(totalMwst)}</span>
+                  </div>
+                ) : (
+                  breakdown.map((g) => (
+                    <div key={`${g.rate}-${g.code}`} className="flex justify-between py-1 text-[12px]">
+                      <span className="text-gray-500">
+                        MwSt. {formatMwStRate(g.rate)}
+                      </span>
+                      <span className="text-gray-700 font-medium tabular-nums">{formatCHF(g.mwst)}</span>
+                    </div>
+                  ))
+                )}
+                {breakdown.length > 1 && (
+                  <div className="flex justify-between pt-1.5 mt-1 border-t border-gray-100 text-[12px]">
+                    <span className="text-gray-500 font-medium">MwSt. gesamt</span>
+                    <span className="text-gray-900 font-semibold tabular-nums">{formatCHF(totalMwst)}</span>
+                  </div>
+                )}
               </div>
-              {breakdown.length > 1 && (
-                <div className="pb-1 text-right text-[10px] text-gray-400">
-                  {breakdown.map((g) => formatMwStRate(g.rate)).join(' · ')}
-                </div>
-              )}
 
               {/* Descuento aplicado */}
               {discountAmount > 0 && (

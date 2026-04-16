@@ -9,6 +9,7 @@ import {
   formatCHF,
   formatDate,
   formatMwStRate,
+  normalizeSwissMwStRate,
   type Invoice,
   type MwStGroup,
 } from '@/lib/invoice-utils';
@@ -185,7 +186,8 @@ export function InvoicePrintView({
         </thead>
         <tbody>
           {items?.map((item) => {
-            const nettoUnit = item.unitPrice / (1 + item.mwstRate);
+            const r = normalizeSwissMwStRate(item.mwstRate);
+            const nettoUnit = r === 0 ? item.unitPrice : item.unitPrice / (1 + r);
             return (
               <tr key={item.id} className="inv-p-item-row">
                 <td className="inv-p-td inv-p-col-desc">
@@ -231,7 +233,7 @@ export function InvoicePrintView({
           Gesamtbetrag enthält folgende Mehrwertsteuer:
         </div>
         {breakdown.map((g) => (
-          <div key={g.code} className="inv-p-totals-mwst-row">
+          <div key={`${g.rate}-${g.code}`} className="inv-p-totals-mwst-row">
             <span>MwSt. {formatMwStRate(g.rate)}</span>
             <span className="inv-p-total-amount">{formatCHF(g.mwst)}</span>
           </div>

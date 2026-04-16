@@ -76,11 +76,11 @@ export const useStoreData = (
         setStore(storeData);
         setError(null);
       } else {
-        setError(result.error || 'Error al cargar la tienda');
+        setError(result.error || 'Fehler beim Laden des Geschäfts');
       }
     } catch (err) {
       devError('Error loading store:', err);
-      setError('Error al cargar la tienda');
+      setError('Fehler beim Laden des Geschäfts');
     } finally {
       setIsLoading(false);
     }

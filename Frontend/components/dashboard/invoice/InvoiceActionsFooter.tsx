@@ -2,11 +2,12 @@
 
 import { usePathname } from 'next/navigation';
 import { useInvoice } from '@/hooks/queries/useInvoice';
-import { Download, Share2, Printer } from 'lucide-react';
+import { Download, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
 import { getDefaultStoreName } from '@/lib/config/brand';
 import { devError } from '@/lib/utils/logger';
+import { InvoiceService } from '@/lib/services/invoiceService';
 
 export default function InvoiceActionsFooter() {
   const pathname = usePathname();
@@ -17,34 +18,6 @@ export default function InvoiceActionsFooter() {
 
   // Usar React Query hook para obtener invoice con cache (evita múltiples peticiones)
   const { data: invoice, isLoading: loading } = useInvoice(invoiceId);
-
-  const handlePrint = (e: React.MouseEvent<HTMLButtonElement>) => {
-    lightFeedback(e.currentTarget);
-    
-    // Ocultar elementos que no deben imprimirse
-    const footer = document.querySelector('[class*="InvoiceActionsFooter"]');
-    const headerNav = document.querySelector('[class*="HeaderNav"]');
-    const responsiveHeader = document.querySelector('[class*="ResponsiveHeader"]');
-    const sidebar = document.querySelector('[class*="Sidebar"]');
-    
-    if (footer) (footer as HTMLElement).style.display = 'none';
-    if (headerNav) (headerNav as HTMLElement).style.display = 'none';
-    if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = 'none';
-    if (sidebar) (sidebar as HTMLElement).style.display = 'none';
-    
-    // Esperar un momento para que los cambios se apliquen
-    setTimeout(() => {
-      window.print();
-      
-      // Restaurar elementos después de imprimir
-      setTimeout(() => {
-        if (footer) (footer as HTMLElement).style.display = '';
-        if (headerNav) (headerNav as HTMLElement).style.display = '';
-        if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = '';
-        if (sidebar) (sidebar as HTMLElement).style.display = '';
-      }, 500);
-    }, 100);
-  };
 
   const handleShare = async (e: React.MouseEvent<HTMLButtonElement>) => {
     lightFeedback(e.currentTarget);
@@ -98,37 +71,20 @@ export default function InvoiceActionsFooter() {
 
   const handleDownload = async (e: React.MouseEvent<HTMLButtonElement>) => {
     lightFeedback(e.currentTarget);
-    
+
+    if (!invoice?.id) {
+      toast.error('Rechnung nicht gefunden');
+      return;
+    }
+
     try {
-      // Ocultar elementos que no deben aparecer al imprimir
-      const footer = document.querySelector('[class*="InvoiceActionsFooter"]');
-      const headerNav = document.querySelector('[class*="HeaderNav"]');
-      const responsiveHeader = document.querySelector('[class*="ResponsiveHeader"]');
-      
-      const originalFooterDisplay = footer ? (footer as HTMLElement).style.display : '';
-      const originalHeaderNavDisplay = headerNav ? (headerNav as HTMLElement).style.display : '';
-      const originalResponsiveHeaderDisplay = responsiveHeader ? (responsiveHeader as HTMLElement).style.display : '';
-      
-      if (footer) (footer as HTMLElement).style.display = 'none';
-      if (headerNav) (headerNav as HTMLElement).style.display = 'none';
-      if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = 'none';
-      
-      // Pequeño delay para asegurar que los elementos se oculten
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Usar window.print() que respetará los estilos @media print
-      // El navegador mostrará el diálogo donde el usuario puede guardar como PDF
-      window.print();
-      
-      // Restaurar elementos después de imprimir
-      setTimeout(() => {
-        if (footer) (footer as HTMLElement).style.display = originalFooterDisplay;
-        if (headerNav) (headerNav as HTMLElement).style.display = originalHeaderNavDisplay;
-        if (responsiveHeader) (responsiveHeader as HTMLElement).style.display = originalResponsiveHeaderDisplay;
-      }, 1000);
+      const filename = invoice.invoiceNumber
+        ? `Rechnung-${invoice.invoiceNumber}`
+        : `Rechnung-${invoice.id.slice(0, 8)}`;
+      await InvoiceService.downloadPDF(invoice.id, filename);
     } catch (error) {
-      devError('Error printing:', error);
-      toast.error('Fehler beim Drucken');
+      devError('Error downloading PDF:', error);
+      toast.error('Fehler beim Herunterladen der Rechnung');
     }
   };
 
@@ -143,18 +99,6 @@ export default function InvoiceActionsFooter() {
       <div className="rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.12)] bg-white overflow-hidden">
         <div className="bg-white rounded-t-3xl border-t border-[#E5E6F8]" style={{ borderTopWidth: '0.5px' }}>
           <div className="flex items-center justify-around w-full px-6 max-w-[430px] mx-auto pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] gap-3">
-            {/* Botón Drucken */}
-            <button
-              onClick={handlePrint}
-              className="flex flex-col items-center justify-center gap-1.5 flex-1 min-w-0 touch-target active:scale-95 transition-transform"
-              aria-label="Drucken"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center active:bg-gray-100 transition-colors">
-                <Printer className="w-6 h-6 text-gray-700" strokeWidth={2} />
-              </div>
-              <span className="text-xs font-medium text-gray-700">Drucken</span>
-            </button>
-
             {/* Botón Teilen */}
             <button
               onClick={handleShare}

@@ -112,9 +112,9 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
         const tr = (originalProductData as Product & { taxRate?: number }).taxRate;
         if (tr === undefined || tr === null) return "2.6";
         const rate = typeof tr === 'number' ? tr : parseFloat(String(tr));
-        if (rate === 0) return "0";
+        if (!Number.isFinite(rate)) return "2.6";
+        if (rate === 0 || Math.abs(rate) < 0.0005) return "0";
         if (rate >= 0.079) return "8.1";
-        if (rate >= 0.035) return "3.8";
         return "2.6";
       })() ||
       isActive !== (originalProductData.isActive ?? true) ||
@@ -312,11 +312,13 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
         }
       }
       
-      // Cargar taxRate del producto (decimal → porcentaje string para el select; solo 2.6 y 8.1)
+      // taxRate en DB como decimal (0, 0.026, 0.081) → select en %
       const tr = (product as Product & { taxRate?: number }).taxRate;
       if (tr !== undefined && tr !== null) {
         const rate = typeof tr === 'number' ? tr : parseFloat(String(tr));
-        if (rate >= 0.079) setVatRate("8.1");
+        if (!Number.isFinite(rate)) setVatRate("2.6");
+        else if (rate === 0 || Math.abs(rate) < 0.0005) setVatRate("0");
+        else if (rate >= 0.079) setVatRate("8.1");
         else setVatRate("2.6");
       } else {
         setVatRate("2.6");
@@ -686,7 +688,7 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
 
           // Si hay errores en las variantes, mostrar al usuario
           if (variantErrors.length > 0) {
-            const errorMessage = `Error al guardar algunas variantes:\n${variantErrors.join('\n')}`;
+            const errorMessage = `Fehler beim Speichern einiger Varianten:\n${variantErrors.join('\n')}`;
             devError('[EditForm] Errores al guardar variantes:', variantErrors);
             alert(errorMessage);
           }

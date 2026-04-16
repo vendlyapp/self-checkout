@@ -332,4 +332,12 @@ router.get('/:id/qr-code', optionalAuth, validateUUID('id'), orderController.get
 // Confirmar pago de una orden QR-Rechnung pendiente (solo admin de la tienda)
 router.patch('/:id/confirm-payment', authMiddleware, validateUUID('id'), orderController.confirmPayment);
 
+// Confirmar pago QR-Rechnung desde el kiosco (comprador) con token emitido al crear la orden
+router.patch(
+  '/:id/confirm-payment-guest',
+  checkoutLimiter,
+  validateUUID('id'),
+  orderController.confirmPaymentGuest
+);
+
 module.exports = router;

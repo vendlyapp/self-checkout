@@ -53,7 +53,7 @@ export const AuthGuard = ({ children, allowedRoles }: AuthGuardProps) => {
 
   // Mostrar loading mientras verifica, pero solo si no se ha forzado el render
   if (loading && !forceRender) {
-    return <Loader variant="fullscreen" message="Cargando..." />;
+    return <Loader variant="fullscreen" message="Wird geladen..." />;
   }
 
   // Si no está autenticado y no se ha forzado el render, no mostrar contenido

@@ -3,6 +3,7 @@ const qrCodeGenerator = require('../utils/qrCodeGenerator');
 const barcodeGenerator = require('../utils/barcodeGenerator');
 const storeService = require('./StoreService');
 const categoryService = require('./CategoryService');
+const { normalizeSwissMwStRate } = require('../utils/swissMwSt');
 
 // ─── Column sets ─────────────────────────────────────────────────────────────
 // LIST_COLS excludes qrCode and barcodeImage — each can be 5-50 KB of base64.
@@ -112,6 +113,14 @@ class ProductService {
     // dimensions es jsonb - convertir a JSON string
     const dimensionsObj = productData.dimensions && typeof productData.dimensions === 'object' ? productData.dimensions : null;
 
+    const resolvedTaxRate = (() => {
+      const tr = productData.taxRate;
+      if (tr === undefined || tr === null || tr === '') return normalizeSwissMwStRate(0.026);
+      const n = typeof tr === 'number' ? tr : parseFloat(tr);
+      if (!Number.isFinite(n)) return normalizeSwissMwStRate(0.026);
+      return normalizeSwissMwStRate(n);
+    })();
+
     const values = [
       ownerId, // $1
       productData.name.trim(), // $2
@@ -149,7 +158,7 @@ class ProductService {
       productData.supplier?.trim() || null, // $34
       productData.costPrice ? parseFloat(productData.costPrice) : null, // $35
       productData.margin ? parseFloat(productData.margin) : null, // $36
-      productData.taxRate ? parseFloat(productData.taxRate) : 0.026, // $37 - Default 2.6% for food products
+      resolvedTaxRate, // $37 — 0, 0.026, 0.081 (0% muss nicht durch truthy-Fallback verloren gehen)
       productData.expiryDate ? new Date(productData.expiryDate).toISOString() : null, // $38
       productData.location?.trim() || null, // $39
       productData.notes?.trim() || null, // $40
@@ -353,6 +362,9 @@ class ProductService {
         let value = productData[field];
         if (numericFields.includes(field)) {
           value = parseFloat(value);
+          if (field === 'taxRate' && Number.isFinite(value)) {
+            value = normalizeSwissMwStRate(value);
+          }
         } else if (integerFields.includes(field)) {
           value = parseInt(value);
         } else if (field === 'isActive') {

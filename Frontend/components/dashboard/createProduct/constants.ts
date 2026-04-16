@@ -7,10 +7,11 @@ export const CATEGORIES: Category[] = [
   { value: "Alle", color: "bg-gray-50 text-gray-700" },
 ];
 
-// VAT rates data (solo 2.6% y 8.1% según normativa suiza aplicable)
+// MwSt-Sätze: nur 0%, 2.6% und 8.1% (Auswahl pro Produkt, Werte als % im Formular → DB als Dezimal)
 export const VAT_RATES: VatRate[] = [
-  { value: "2.6", label: "2.6% (Reduziert)", color: "text-[#25D076]" },
-  { value: "8.1", label: "8.1% (Normalsatz)", color: "text-blue-600" },
+  { value: "0", label: "0%", color: "text-gray-600" },
+  { value: "2.6", label: "2.6%", color: "text-[#25D076]" },
+  { value: "8.1", label: "8.1%", color: "text-blue-600" },
 ];
 
 // Progress steps for save simulation

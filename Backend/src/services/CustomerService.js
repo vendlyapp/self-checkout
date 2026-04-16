@@ -358,6 +358,9 @@ class CustomerService {
       return invoice;
     });
 
+    const invoiceSvc = require('./InvoiceService');
+    await invoiceSvc.enrichInvoiceListItemsWithProductTaxRates(invoices);
+
     return {
       success: true,
       data: invoices,

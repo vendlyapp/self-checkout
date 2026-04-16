@@ -78,7 +78,7 @@ export const useStoreState = create<StoreState>()(
 
           if (!response.ok) {
             // Intentar obtener el mensaje de error de la respuesta
-            let errorMessage = 'Error al obtener el estado de la tienda';
+            let errorMessage = 'Fehler beim Abrufen des Geschäftsstatus';
             
             try {
               const errorData = await response.json();
@@ -179,7 +179,7 @@ export const useStoreState = create<StoreState>()(
           // Revertir cambio si hay error
           set({
             isStoreOpen: !newStatus,
-            error: error instanceof Error ? error.message : 'Error al cambiar estado de la tienda',
+            error: error instanceof Error ? error.message : 'Fehler beim Ändern des Geschäftsstatus',
           });
         } finally {
           set({ isLoading: false });
@@ -200,7 +200,7 @@ export const useStoreState = create<StoreState>()(
           await updateStoreStatusInBackend(isOpen);
         } catch (error) {
           set({
-            error: error instanceof Error ? error.message : 'Error al establecer estado de la tienda',
+            error: error instanceof Error ? error.message : 'Fehler beim Setzen des Geschäftsstatus',
           });
         } finally {
           set({ isLoading: false });
