@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useInvoice } from '@/hooks/queries/useInvoice';
 import { Download, Share2 } from 'lucide-react';
@@ -8,9 +9,11 @@ import { lightFeedback } from '@/lib/utils/safeFeedback';
 import { getDefaultStoreName } from '@/lib/config/brand';
 import { devError } from '@/lib/utils/logger';
 import { InvoiceService } from '@/lib/services/invoiceService';
+import { Loader } from '@/components/ui/Loader';
 
 export default function InvoiceActionsFooter() {
   const pathname = usePathname();
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   // Extraer invoiceId del pathname (soporta ambas rutas: /store/invoice/abc123 o /sales/invoices/abc123)
   const invoiceId = pathname?.match(/\/store\/invoice\/([^\/]+)/)?.[1] || 
@@ -70,6 +73,7 @@ export default function InvoiceActionsFooter() {
   };
 
   const handleDownload = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (isDownloadingPdf) return;
     lightFeedback(e.currentTarget);
 
     if (!invoice?.id) {
@@ -78,6 +82,7 @@ export default function InvoiceActionsFooter() {
     }
 
     try {
+      setIsDownloadingPdf(true);
       const filename = invoice.invoiceNumber
         ? `Rechnung-${invoice.invoiceNumber}`
         : `Rechnung-${invoice.id.slice(0, 8)}`;
@@ -85,6 +90,8 @@ export default function InvoiceActionsFooter() {
     } catch (error) {
       devError('Error downloading PDF:', error);
       toast.error('Fehler beim Herunterladen der Rechnung');
+    } finally {
+      setIsDownloadingPdf(false);
     }
   };
 
@@ -94,36 +101,46 @@ export default function InvoiceActionsFooter() {
   }
 
   return (
-    <nav
-      className="nav-container safe-area-bottom"
-      style={{ zIndex: 9999 }}
-      aria-label="Rechnungsaktionen"
-    >
-      <div className="flex items-center justify-around h-full px-4 max-w-[430px] mx-auto pb-[env(safe-area-inset-bottom)]">
+    <>
+      {isDownloadingPdf && (
+        <div className="fixed inset-0 bg-black/45 backdrop-blur-sm z-[100000] flex items-center justify-center p-6">
+          <div className="w-full max-w-xs bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 flex flex-col items-center text-center">
+            <Loader size="lg" />
+            <p className="mt-4 text-base font-semibold text-gray-900">PDF wird vorbereitet...</p>
+            <p className="mt-1 text-sm text-gray-500">Bitte einen Moment Geduld</p>
+          </div>
+        </div>
+      )}
+
+      <nav
+        className="nav-container safe-area-bottom"
+        style={{ zIndex: 9999 }}
+        aria-label="Rechnungsaktionen"
+      >
+        <div className="flex items-center gap-3 h-full px-4 max-w-[430px] mx-auto pt-3 pb-[env(safe-area-inset-bottom)]">
         {/* Botón Teilen */}
         <button
           onClick={handleShare}
-          className="flex flex-col items-center justify-center gap-1.5 flex-1 min-w-0 touch-target active:scale-95 transition-transform"
+          disabled={isDownloadingPdf}
+          className="flex items-center justify-center gap-2 flex-1 min-w-0 h-11 px-3 rounded-xl bg-gray-50 border border-gray-200 touch-target active:scale-95 active:bg-gray-100 transition-all disabled:opacity-60"
           aria-label="Teilen"
         >
-          <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center active:bg-gray-100 transition-colors">
-            <Share2 className="w-6 h-6 text-gray-700" strokeWidth={2} />
-          </div>
-          <span className="text-xs font-medium text-gray-700">Teilen</span>
+          <Share2 className="w-4.5 h-4.5 text-gray-700" strokeWidth={2} />
+          <span className="text-[12px] leading-none font-semibold text-gray-700 whitespace-nowrap">Teilen</span>
         </button>
 
         {/* Botón PDF (destacado) */}
         <button
           onClick={handleDownload}
-          className="flex flex-col items-center justify-center gap-1.5 flex-1 min-w-0 touch-target active:scale-95 transition-transform"
+          disabled={isDownloadingPdf}
+          className="flex items-center justify-center gap-2 flex-1 min-w-0 h-11 px-3 rounded-xl bg-[#25D076] touch-target active:scale-95 active:bg-[#20B865] transition-all shadow-sm disabled:opacity-60"
           aria-label="PDF herunterladen"
         >
-          <div className="w-12 h-12 rounded-2xl bg-[#25D076] flex items-center justify-center active:bg-[#20B865] transition-colors shadow-sm">
-            <Download className="w-6 h-6 text-white" strokeWidth={2.5} />
-          </div>
-          <span className="text-xs font-semibold text-[#25D076]">PDF</span>
+          <Download className="w-4.5 h-4.5 text-white" strokeWidth={2.3} />
+          <span className="text-[12px] leading-none font-semibold text-white whitespace-nowrap">PDF herunterladen</span>
         </button>
-      </div>
-    </nav>
+        </div>
+      </nav>
+    </>
   );
 }
