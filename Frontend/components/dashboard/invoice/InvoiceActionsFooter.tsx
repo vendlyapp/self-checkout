@@ -94,7 +94,7 @@ export default function InvoiceActionsFooter() {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[9999] safe-area-bottom">
+    <div className="fixed bottom-0 left-0 right-0 z-[9999] safe-area-bottom bg-white">
       {/* Contenedor con bordes redondeados superiores y sombra elegante */}
       <div className="rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.12)] bg-white overflow-hidden">
         <div className="bg-white rounded-t-3xl border-t border-[#E5E6F8]" style={{ borderTopWidth: '0.5px' }}>

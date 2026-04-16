@@ -113,7 +113,8 @@ export const SwissAddressInput = ({
     [parts, onChange]
   )
 
-  const inputBase = `min-h-[2.75rem] border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent ${inputClassName}`
+  // text-base (16px) + ios-input-fix: verhindert iOS-Safari-Autozoom beim Fokus
+  const inputBase = `min-h-[2.75rem] border border-gray-200 rounded-xl text-base ios-input-fix focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent ${inputClassName}`
 
   return (
     <div className={`space-y-2 ${className}`}>
