@@ -94,37 +94,36 @@ export default function InvoiceActionsFooter() {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[9999] safe-area-bottom bg-white">
-      {/* Contenedor con bordes redondeados superiores y sombra elegante */}
-      <div className="rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.12)] bg-white overflow-hidden">
-        <div className="bg-white rounded-t-3xl border-t border-[#E5E6F8]" style={{ borderTopWidth: '0.5px' }}>
-          <div className="flex items-center justify-around w-full px-6 max-w-[430px] mx-auto pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] gap-3">
-            {/* Botón Teilen */}
-            <button
-              onClick={handleShare}
-              className="flex flex-col items-center justify-center gap-1.5 flex-1 min-w-0 touch-target active:scale-95 transition-transform"
-              aria-label="Teilen"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center active:bg-gray-100 transition-colors">
-                <Share2 className="w-6 h-6 text-gray-700" strokeWidth={2} />
-              </div>
-              <span className="text-xs font-medium text-gray-700">Teilen</span>
-            </button>
-
-            {/* Botón PDF (destacado) */}
-            <button
-              onClick={handleDownload}
-              className="flex flex-col items-center justify-center gap-1.5 flex-1 min-w-0 touch-target active:scale-95 transition-transform"
-              aria-label="PDF herunterladen"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-[#25D076] flex items-center justify-center active:bg-[#20B865] transition-colors shadow-sm">
-                <Download className="w-6 h-6 text-white" strokeWidth={2.5} />
-              </div>
-              <span className="text-xs font-semibold text-[#25D076]">PDF</span>
-            </button>
+    <nav
+      className="nav-container safe-area-bottom"
+      style={{ zIndex: 9999 }}
+      aria-label="Rechnungsaktionen"
+    >
+      <div className="flex items-center justify-around h-full px-4 max-w-[430px] mx-auto pb-[env(safe-area-inset-bottom)]">
+        {/* Botón Teilen */}
+        <button
+          onClick={handleShare}
+          className="flex flex-col items-center justify-center gap-1.5 flex-1 min-w-0 touch-target active:scale-95 transition-transform"
+          aria-label="Teilen"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center active:bg-gray-100 transition-colors">
+            <Share2 className="w-6 h-6 text-gray-700" strokeWidth={2} />
           </div>
-        </div>
+          <span className="text-xs font-medium text-gray-700">Teilen</span>
+        </button>
+
+        {/* Botón PDF (destacado) */}
+        <button
+          onClick={handleDownload}
+          className="flex flex-col items-center justify-center gap-1.5 flex-1 min-w-0 touch-target active:scale-95 transition-transform"
+          aria-label="PDF herunterladen"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-[#25D076] flex items-center justify-center active:bg-[#20B865] transition-colors shadow-sm">
+            <Download className="w-6 h-6 text-white" strokeWidth={2.5} />
+          </div>
+          <span className="text-xs font-semibold text-[#25D076]">PDF</span>
+        </button>
       </div>
-    </div>
+    </nav>
   );
 }
