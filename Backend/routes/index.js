@@ -49,23 +49,7 @@ router.get('/', (req, res) => {
     message: 'Vendly Checkout API',
     version: '2.0.0',
     status: 'active',
-    description: 'API para el sistema de checkout de Vendly con SQL directo',
-    endpoints: {
-      products: '/api/products',
-      categories: '/api/categories',
-      users: '/api/users',
-      orders: '/api/orders',
-      health: '/health',
-      docs: '/api-docs'
-    },
-    features: [
-      'SQL directo para máximo rendimiento',
-      'CRUD completo para productos, usuarios, órdenes y categorías',
-      'Validación robusta de datos',
-      'Documentación Swagger integrada',
-      'Soporte para Supabase PostgreSQL'
-    ],
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
