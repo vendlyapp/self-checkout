@@ -132,8 +132,8 @@ router.get('/stats', authMiddleware, productController.getStats);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-// Ruta para clientes - solo productos disponibles
-router.get('/available', productController.getAvailableProducts);
+// Ruta para clientes - solo productos disponibles (requiere auth para aislar por tienda)
+router.get('/available', authMiddleware, productController.getAvailableProducts);
 
 /**
  * @swagger
