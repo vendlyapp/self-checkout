@@ -80,6 +80,13 @@ const validateOrder = (req, res, next) => {
     });
   }
 
+  if (items.length > 50) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({
+      success: false,
+      error: 'Order cannot contain more than 50 items',
+    });
+  }
+
   for (const item of items) {
     if (!item.productId || !item.quantity) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({

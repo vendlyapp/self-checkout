@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/AuthController');
 const { authMiddleware } = require('../middleware/authMiddleware');
+const { authLimiter, passwordResetLimiter } = require('../middleware/rateLimiter');
 
 /**
  * @swagger
@@ -33,7 +34,7 @@ const { authMiddleware } = require('../middleware/authMiddleware');
  *                 enum: [ADMIN, CUSTOMER]
  *                 default: ADMIN
  */
-router.post('/register', authController.register);
+router.post('/register', authLimiter, authController.register);
 
 /**
  * @swagger
@@ -57,7 +58,7 @@ router.post('/register', authController.register);
  *               password:
  *                 type: string
  */
-router.post('/login', authController.login);
+router.post('/login', authLimiter, authController.login);
 
 /**
  * @swagger
@@ -138,7 +139,7 @@ router.post('/logout', authMiddleware, authController.logout);
  *                 format: email
  *                 example: admin@vendly.ch
  */
-router.post('/forgot-password', authController.requestPasswordReset);
+router.post('/forgot-password', passwordResetLimiter, authController.requestPasswordReset);
 
 module.exports = router;
 

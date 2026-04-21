@@ -47,8 +47,32 @@ const globalLimiter = rateLimit({
   handler: rateLimitHandler,
 });
 
+// ─── Auth endpoints limiter ───────────────────────────────────────────────────
+// Login, register, forgot-password: strict limit to block brute-force and
+// account enumeration. 10 attempts per 15 min per IP.
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,  // 15 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: rateLimitHandler,
+});
+
+// ─── Password reset limiter ───────────────────────────────────────────────────
+// Prevents email spam and user enumeration via forgot-password.
+// 5 attempts per hour per IP.
+const passwordResetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,  // 1 hour
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: rateLimitHandler,
+});
+
 module.exports = {
   checkoutLimiter,
   discountValidationLimiter,
   globalLimiter,
+  authLimiter,
+  passwordResetLimiter,
 };

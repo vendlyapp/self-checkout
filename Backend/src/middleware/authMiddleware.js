@@ -8,7 +8,9 @@ const logger = require('../utils/logger');
 // Caches the DB user-lookup result (name, role, storeId) keyed by Supabase userId.
 // TTL of 60 seconds — eliminates 2-3 DB queries on every authenticated request
 // while still reflecting role/store changes within 1 minute.
+// Max 1000 entries to prevent unbounded memory growth under heavy concurrent load.
 const USER_CACHE_TTL_MS = 60 * 1000;
+const USER_CACHE_MAX_SIZE = 1000;
 const userCache = new Map();
 
 const getCachedUser = (userId) => {
@@ -22,6 +24,11 @@ const getCachedUser = (userId) => {
 };
 
 const setCachedUser = (userId, payload) => {
+  // Evict oldest entry if at capacity to enforce max size
+  if (userCache.size >= USER_CACHE_MAX_SIZE) {
+    const oldestKey = userCache.keys().next().value;
+    userCache.delete(oldestKey);
+  }
   userCache.set(userId, { payload, expiresAt: Date.now() + USER_CACHE_TTL_MS });
 };
 
@@ -81,8 +88,10 @@ async function resolveUser(supabaseUser) {
     userRole = userResult.rows[0].role;
     resolvedStoreId = userResult.rows[0].storeId || null;
   } else {
-    // First login — auto-create user record
-    const metadataRole = user_metadata?.role || 'ADMIN';
+    // First login — auto-create user record.
+    // Role is always ADMIN for self-registered users; SUPER_ADMIN can only be
+    // assigned directly in the database to prevent privilege escalation via metadata.
+    const metadataRole = 'ADMIN';
     if (!userName || userName.trim() === '') {
       userName = email.split('@')[0] || 'User';
     }
@@ -219,7 +228,7 @@ const requireRole = (...roles) => {
     if (!roles.includes(req.user.role)) {
       return res.status(HTTP_STATUS.FORBIDDEN).json({
         success: false,
-        error: `Access denied. Allowed roles: ${roles.join(', ')}`,
+        error: 'Access denied',
       });
     }
 

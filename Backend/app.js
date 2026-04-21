@@ -25,11 +25,23 @@ const notificationRoutes = require("./src/routes/notificationRoutes");
 
 const app = express();
 
+// Trust the first hop reverse proxy (Fly.io, Render, Vercel) so rate limiters
+// and Morgan use the real client IP from X-Forwarded-For, not the proxy IP.
+app.set('trust proxy', 1);
+
 // Security headers — sets X-Content-Type-Options, X-Frame-Options, HSTS,
 // Content-Security-Policy, removes X-Powered-By, and more.
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' }, // allow image/font serving cross-origin
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
   contentSecurityPolicy: false, // CSP managed at the frontend (Next.js) layer
+  permissionsPolicy: {
+    features: {
+      geolocation: [],
+      camera: [],
+      microphone: [],
+      payment: [],
+    },
+  },
 }));
 
 // Compress all responses — reduces payload size by 60-80% for JSON responses
@@ -39,17 +51,36 @@ app.use(compression({ level: 6, threshold: 1024 }));
 app.use(globalLimiter);
 
 app.use(morgan("combined"));
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || "http://localhost:3000",
-  credentials: true
-}));
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'Vendly Checkout API Documentation'
+// CORS — fail-fast in production if CORS_ORIGIN is not explicitly configured.
+// Supports comma-separated list for multiple allowed origins.
+const rawCorsOrigin = process.env.CORS_ORIGIN;
+if (!rawCorsOrigin && process.env.NODE_ENV === 'production') {
+  throw new Error('CORS_ORIGIN env variable must be set in production');
+}
+const allowedOrigins = rawCorsOrigin
+  ? rawCorsOrigin.split(',').map((o) => o.trim())
+  : ['http://localhost:3000'];
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl in dev)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`Origin ${origin} not allowed by CORS`));
+  },
+  credentials: true,
 }));
+
+app.use(express.json({ limit: "100kb" }));
+app.use(express.urlencoded({ extended: true, limit: "100kb" }));
+
+// Swagger docs disabled in production — exposes full API surface to attackers.
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'Vendly Checkout API Documentation',
+  }));
+}
 
 app.use("/", indexRoutes);
 app.use("/api/auth", authRoutes);
@@ -94,7 +125,6 @@ app.get("/health", (req, res) => {
   res.json({
     status: "OK",
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
   });
 });
 

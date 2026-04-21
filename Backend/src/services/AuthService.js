@@ -18,8 +18,13 @@ class AuthService {
       throw new AppError('Invalid email format', 400, 'INVALID_EMAIL');
     }
 
-    if (password.length < 6) {
-      throw new AppError('Password must be at least 6 characters', 400, 'WEAK_PASSWORD');
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[0-9]).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      throw new AppError(
+        'Password must be at least 8 characters and include one uppercase letter and one number',
+        400,
+        'WEAK_PASSWORD'
+      );
     }
 
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -201,8 +206,13 @@ class AuthService {
 
   /** Change password via Supabase Auth */
   async changePassword(token, newPassword) {
-    if (!newPassword || newPassword.length < 6) {
-      throw new AppError('New password must be at least 6 characters', 400, 'WEAK_PASSWORD');
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[0-9]).{8,}$/;
+    if (!newPassword || !passwordRegex.test(newPassword)) {
+      throw new AppError(
+        'New password must be at least 8 characters and include one uppercase letter and one number',
+        400,
+        'WEAK_PASSWORD'
+      );
     }
 
     const { data, error } = await supabase.auth.updateUser(
@@ -238,15 +248,13 @@ class AuthService {
   /** Request password reset email */
   async requestPasswordReset(email) {
     const frontendUrl = process.env.FRONTEND_URL || 'https://self-checkout-kappa.vercel.app';
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    // Always return the same generic message regardless of whether the email
+    // exists — prevents user enumeration via timing or response differences.
+    await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${frontendUrl}/reset-password`,
     });
 
-    if (error) {
-      throw new AppError(error.message, 400, 'RESET_REQUEST_FAILED');
-    }
-
-    return { success: true, message: 'Recovery email sent' };
+    return { success: true, message: 'If that email is registered, you will receive a reset link shortly' };
   }
 }
 
