@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 
-const BUCKET = 'product';
+const BUCKET = process.env.NEXT_PUBLIC_STORAGE_BUCKET_PRODUCTS ?? 'product';
 const MAX_SIZE_MB = 5;
 
 /**

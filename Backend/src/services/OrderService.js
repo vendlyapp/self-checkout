@@ -388,13 +388,16 @@ class OrderService {
       queryParams.push(limit, offset);
 
       const selectQuery = `
-        SELECT DISTINCT o.*, u.name as "userName", u.email as "userEmail"
+        SELECT o.*, u.name as "userName", u.email as "userEmail"
         FROM "Order" o
-        INNER JOIN "OrderItem" oi ON o.id = oi."orderId"
-        INNER JOIN "Product" p ON oi."productId" = p.id
-        INNER JOIN "Store" s ON s."ownerId" = p."ownerId" AND s.id = $1
         LEFT JOIN "User" u ON o."userId" = u.id
-        ${status ? `WHERE o.status = $2` : ''}
+        WHERE EXISTS (
+          SELECT 1 FROM "OrderItem" oi
+          JOIN "Product" p ON oi."productId" = p.id
+          JOIN "Store" s ON s."ownerId" = p."ownerId" AND s.id = $1
+          WHERE oi."orderId" = o.id
+        )
+        ${status ? `AND o.status = $2` : ''}
         ORDER BY o."createdAt" DESC
         LIMIT $${status ? 3 : 2} OFFSET $${status ? 4 : 3}
       `;
@@ -410,12 +413,15 @@ class OrderService {
         countParams.push(status);
       }
       const countQuery = `
-        SELECT COUNT(DISTINCT o.id) as total
+        SELECT COUNT(*) as total
         FROM "Order" o
-        INNER JOIN "OrderItem" oi ON o.id = oi."orderId"
-        INNER JOIN "Product" p ON oi."productId" = p.id
-        INNER JOIN "Store" s ON s."ownerId" = p."ownerId" AND s.id = $1
-        ${status ? `WHERE o.status = $2` : ''}
+        WHERE EXISTS (
+          SELECT 1 FROM "OrderItem" oi
+          JOIN "Product" p ON oi."productId" = p.id
+          JOIN "Store" s ON s."ownerId" = p."ownerId" AND s.id = $1
+          WHERE oi."orderId" = o.id
+        )
+        ${status ? `AND o.status = $2` : ''}
       `;
       const countResult = await query(countQuery, countParams);
       const total = parseInt(countResult.rows[0].total);
@@ -722,9 +728,11 @@ class OrderService {
         WITH orders_of_owner AS (
           SELECT DISTINCT o.id, o.total, o."userId", o."createdAt"
           FROM "Order" o
-          INNER JOIN "OrderItem" oi ON o.id = oi."orderId"
-          INNER JOIN "Product" p ON oi."productId" = p.id
-          WHERE p."ownerId" = $1
+          WHERE EXISTS (
+            SELECT 1 FROM "OrderItem" oi
+            JOIN "Product" p ON oi."productId" = p.id
+            WHERE oi."orderId" = o.id AND p."ownerId" = $1
+          )
           AND (o.status IS NULL OR o.status != 'cancelled')
           ${dateFilter}
         )
@@ -894,14 +902,14 @@ class OrderService {
 
     // Si tenemos ownerId, filtrar órdenes por productos de ese owner
     if (ownerId) {
-      let whereClause = 'WHERE p."ownerId" = $1';
       const params = [ownerId];
       let paramCount = 1;
 
       // Filtrar por status si se proporciona
+      let statusClause = '';
       if (status) {
         paramCount++;
-        whereClause += ` AND o.status = $${paramCount}`;
+        statusClause = ` AND o.status = $${paramCount}`;
         params.push(status);
       }
 
@@ -909,12 +917,14 @@ class OrderService {
       params.push(limit);
 
       const selectQuery = `
-        SELECT DISTINCT o.*, u.name as "userName", u.email as "userEmail"
+        SELECT o.*, u.name as "userName", u.email as "userEmail"
         FROM "Order" o
-        INNER JOIN "OrderItem" oi ON o.id = oi."orderId"
-        INNER JOIN "Product" p ON oi."productId" = p.id
         LEFT JOIN "User" u ON o."userId" = u.id
-        ${whereClause}
+        WHERE EXISTS (
+          SELECT 1 FROM "OrderItem" oi
+          JOIN "Product" p ON oi."productId" = p.id
+          WHERE oi."orderId" = o.id AND p."ownerId" = $1
+        )${statusClause}
         ORDER BY o."createdAt" DESC
         LIMIT $${paramCount}
       `;

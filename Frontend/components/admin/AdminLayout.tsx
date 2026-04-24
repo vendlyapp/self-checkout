@@ -499,7 +499,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             isProductsListAddProductPage ||
             isProductsListViewProductRoute ||
             headerNavTitleForStoreSales !== null;
-          const isStoreSectionRoute = pathname?.startsWith('/store/') && headerNavTitleForStoreSales !== null;
+          // /store/* con HeaderNav + rutas /sales/ que solo tienen HeaderNav (sin filter bars)
+          const isStoreSectionRoute = (pathname?.startsWith('/store/') || isInvoicesListRoute || isVerkaufeListRoute) && headerNavTitleForStoreSales !== null;
           // Bestseller tiene su propio FilterSlider sticky — solo necesita el alto del HeaderNav (60px),
           // no el MAIN_PT_HEADER_NAV_ONLY_PX completo (140px) que incluye el alto del ResponsiveHeader ya en flujo.
           const mainPtPx = needsFilterBarsPt
@@ -525,7 +526,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               )}
               style={
                 mainPtPx != null
-                  ? { paddingTop: `calc(${mainPtPx}px + env(safe-area-inset-top))` }
+                  ? {
+                      paddingTop: (isProductsListAddProductPage || isProductsListViewProductRoute || isMyQRRoute)
+                        ? '100px'
+                        : `calc(${mainPtPx}px + env(safe-area-inset-top))`
+                    }
                   : undefined
               }
             >

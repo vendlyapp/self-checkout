@@ -6,7 +6,7 @@ import { useResponsive } from '@/hooks';
 import { useInvoice } from '@/hooks/queries/useInvoice';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import { Loader } from '@/components/ui/Loader';
+import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState';
 import { useEffect } from 'react';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
 import { devError } from '@/lib/utils/logger';
@@ -45,14 +45,7 @@ export default function SalesInvoiceDetailPage() {
   // ─── Loading State ─────────────────────────────────────────────────────────
 
   if (loading && !invoice) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
-        <Loader size="lg" />
-        <p className="text-sm text-gray-500 font-medium mt-4 tracking-wide">
-          Rechnung wird geladen…
-        </p>
-      </div>
-    );
+    return <DashboardLoadingState mode="page" message="Rechnung wird geladen…" />;
   }
 
   // ─── Error State ───────────────────────────────────────────────────────────

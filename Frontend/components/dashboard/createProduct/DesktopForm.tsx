@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import React, { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -177,14 +178,12 @@ export default function DesktopForm(props: SharedFormProps) {
                       style={{ aspectRatio: "1/1" }}
                     >
                       {image ? (
-                        <img
+                        <Image
                           src={image}
                           alt={`Product image ${index + 1}`}
+                          width={128}
+                          height={128}
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                          }}
                         />
                       ) : null}
                       <div className={`w-full h-full flex items-center justify-center ${image ? 'hidden' : ''}`}>
@@ -728,10 +727,12 @@ function ProductAdditionalInfo({ product }: { product: {
           </div>
           <div className="flex justify-center bg-gray-50 rounded-xl p-4 md:p-5 lg:p-6">
             <div className="text-center">
-              <img 
-                src={product.qrCode} 
+              <Image
+                src={product.qrCode}
                 alt={`QR-Code für ${product.name}`}
-                className="w-64 h-64 mx-auto rounded-lg"
+                width={256}
+                height={256}
+                className="mx-auto rounded-lg"
               />
               <p className="text-sm text-gray-600 mt-4">
                 Scannen Sie diesen Code zur Produktidentifikation
@@ -759,10 +760,12 @@ function ProductAdditionalInfo({ product }: { product: {
           </div>
           <div className="flex justify-center bg-gray-50 rounded-xl p-4 md:p-5 lg:p-6">
             <div className="text-center">
-              <img 
-                src={product.barcodeImage} 
+              <Image
+                src={product.barcodeImage}
                 alt={`Strichcode für ${product.name}`}
-                className="max-w-full h-auto mx-auto rounded-lg bg-white p-4"
+                width={256}
+                height={128}
+                className="mx-auto rounded-lg bg-white p-4"
               />
               <p className="text-sm text-gray-600 mt-4">
                 Scannen Sie diesen Strichcode zur Produktidentifikation

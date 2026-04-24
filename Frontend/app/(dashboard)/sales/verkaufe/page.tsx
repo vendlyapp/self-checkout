@@ -7,7 +7,7 @@ import { useOrders } from '@/hooks/queries/useOrders';
 import { ShoppingCart, Search, Calendar, Banknote, User, ChevronRight } from 'lucide-react';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 import Link from 'next/link';
-import { Loader } from '@/components/ui/Loader';
+import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState';
 
 export default function SalesVerkaufePage() {
   const router = useRouter();
@@ -51,14 +51,7 @@ export default function SalesVerkaufePage() {
   const error = queryError instanceof Error ? queryError.message : queryError ? String(queryError) : null;
 
   if (loading && orders.length === 0) {
-    return (
-      <div className="w-full h-full flex items-center justify-center p-4">
-        <div className="flex flex-col items-center gap-3">
-          <Loader size="lg" />
-          <p className="text-muted-foreground font-medium">Verkäufe werden geladen...</p>
-        </div>
-      </div>
-    );
+    return <DashboardLoadingState mode="page" message="Verkäufe werden geladen..." />;
   }
 
   if (error && orders.length === 0) {

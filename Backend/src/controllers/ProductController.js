@@ -208,6 +208,22 @@ class ProductController {
       res.status(status).json({ success: false, error: error.message });
     }
   }
+
+  /**
+   * Get public products for a store (cached, no auth required).
+   * @route GET /api/products/public/:ownerId
+   */
+  async getPublicProducts(req, res) {
+    try {
+      const { ownerId } = req.params;
+      const limit = Math.min(parseInt(req.query.limit, 10) || 100, 500);
+      const result = await productService.findByOwnerPublic(ownerId, limit);
+      res.status(HTTP_STATUS.OK).json(result);
+    } catch (error) {
+      const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      res.status(status).json({ success: false, error: error.message });
+    }
+  }
 }
 
 module.exports = new ProductController();

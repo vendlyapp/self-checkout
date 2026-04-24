@@ -7,6 +7,7 @@ import { useInvoicesByOrderId } from '@/hooks/queries/useInvoicesByOrderId';
 import { AlertCircle, ShoppingCart, FileText, Calendar, User, Package, XCircle, ExternalLink, CheckCircle, Clock, Trash2, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 import { Loader } from '@/components/ui/Loader';
+import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 import { getAvailablePaymentMethod } from '@/lib/constants/paymentMethods';
 import Link from 'next/link';
@@ -141,12 +142,7 @@ export default function SalesOrderDetailPage() {
   };
 
   if (loading && !order) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-dvh p-4">
-        <Loader size="lg" />
-        <p className="text-gray-600 font-medium mt-4">Bestellung wird geladen...</p>
-      </div>
-    );
+    return <DashboardLoadingState mode="page" message="Bestellung wird geladen..." />;
   }
 
   if (error && !order) {

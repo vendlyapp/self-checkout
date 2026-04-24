@@ -1,4 +1,7 @@
 const { query } = require('../../lib/database');
+const SimpleCache = require('../utils/simpleCache');
+
+const categoryCache = new SimpleCache(15 * 60 * 1000); // 15 min TTL
 
 class CategoryService {
 
@@ -26,17 +29,32 @@ class CategoryService {
    */
   async findAll(storeId = null) {
     if (storeId) {
+      const cacheKey = `categories:${storeId}`;
+      const cached = categoryCache.get(cacheKey);
+      if (cached) return cached;
+
       await this.ensureDefaultCategoryForStore(storeId);
-    }
-    let selectQuery = 'SELECT * FROM "ProductCategory"';
-    const params = [];
-    if (storeId) {
+      let selectQuery = 'SELECT * FROM "ProductCategory"';
+      const params = [storeId];
       selectQuery += ' WHERE "storeId" = $1';
-      params.push(storeId);
+      selectQuery += ' ORDER BY name ASC';
+
+      const result = await query(selectQuery, params);
+      const categories = result.rows;
+
+      const response = {
+        success: true,
+        data: categories,
+        count: categories.length
+      };
+      categoryCache.set(cacheKey, response);
+      return response;
     }
+
+    let selectQuery = 'SELECT * FROM "ProductCategory"';
     selectQuery += ' ORDER BY name ASC';
 
-    const result = await query(selectQuery, params);
+    const result = await query(selectQuery, []);
     const categories = result.rows;
 
     return {
@@ -95,6 +113,7 @@ class CategoryService {
       categoryData.isActive !== undefined ? categoryData.isActive : true
     ]);
     const category = result.rows[0];
+    categoryCache.del(`categories:${storeId}`);
 
     return {
       success: true,
@@ -178,6 +197,9 @@ class CategoryService {
 
     const result = await query(updateQuery, values);
     const category = result.rows[0];
+    if (storeId) {
+      categoryCache.del(`categories:${storeId}`);
+    }
 
     return {
       success: true,
@@ -231,6 +253,9 @@ class CategoryService {
     }
 
     await query('DELETE FROM "ProductCategory" WHERE id = $1', [id]);
+    if (storeId) {
+      categoryCache.del(`categories:${storeId}`);
+    }
 
     return {
       success: true,

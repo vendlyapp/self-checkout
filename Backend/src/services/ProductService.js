@@ -3,7 +3,11 @@ const qrCodeGenerator = require('../utils/qrCodeGenerator');
 const barcodeGenerator = require('../utils/barcodeGenerator');
 const storeService = require('./StoreService');
 const categoryService = require('./CategoryService');
+const SimpleCache = require('../utils/simpleCache');
 const { normalizeSwissMwStRate } = require('../utils/swissMwSt');
+
+// In-memory cache para catálogo público — TTL 5 minutos
+const publicProductCache = new SimpleCache(5 * 60 * 1000);
 
 // ─── Column sets ─────────────────────────────────────────────────────────────
 // LIST_COLS excludes qrCode and barcodeImage — each can be 5-50 KB of base64.
@@ -185,6 +189,10 @@ class ProductService {
     const updateCodesQuery = 'UPDATE "Product" SET "qrCode" = $1, "barcodeImage" = $2 WHERE "id" = $3 RETURNING *';
     const updatedResult = await query(updateCodesQuery, [qrCode, barcodeImage, product.id]);
     const productWithCodes = updatedResult.rows[0];
+
+    // Invalidar cache al crear producto
+    publicProductCache.del(`${ownerId}:100`);
+    publicProductCache.del(`${ownerId}:200`);
 
     return {
       success: true,
@@ -396,6 +404,10 @@ class ProductService {
     const result = await query(updateQuery, values);
     const product = result.rows[0];
 
+    const ownerId = product.ownerId;
+    publicProductCache.del(`${ownerId}:100`);
+    publicProductCache.del(`${ownerId}:200`);
+
     return {
       success: true,
       data: product,
@@ -409,7 +421,11 @@ class ProductService {
       throw new Error('Producto no encontrado');
     }
 
+    const ownerId = existingProduct.data.ownerId;
     await query('DELETE FROM "Product" WHERE "id" = $1', [id]);
+
+    publicProductCache.del(`${ownerId}:100`);
+    publicProductCache.del(`${ownerId}:200`);
 
     return {
       success: true,
@@ -543,6 +559,14 @@ class ProductService {
       return { success: true, data: [], count: 0 };
     }
     const sanitizedLimit = Math.min(Math.max(parseInt(limit, 10) || 100, 1), 200);
+
+    // Cache key: ownerId:limit
+    const cacheKey = `${ownerId}:${sanitizedLimit}`;
+    const cached = publicProductCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     const result = await query(
       `
         SELECT ${PRODUCT_LIST_COLS}
@@ -553,11 +577,16 @@ class ProductService {
       `,
       [ownerId, sanitizedLimit]
     );
-    return {
+
+    const response = {
       success: true,
       data: result.rows,
       count: result.rows.length,
     };
+
+    // Cache para 5 minutos
+    publicProductCache.set(cacheKey, response);
+    return response;
   }
 
   async updateStock(id, stock) {

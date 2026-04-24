@@ -38,7 +38,7 @@ export function DashboardLoadingState({
   }
 
   return (
-    <div className={`w-full min-h-dvh bg-[#F2EDE8] flex items-center justify-center ${className}`}>
+    <div className={`fixed inset-0 z-[9999] bg-[#F2EDE8] flex items-center justify-center ${className}`}>
       <div className="text-center">
         <Loader size="lg" className="mx-auto mb-4" />
         <p className="text-sm text-gray-600">{message}</p>

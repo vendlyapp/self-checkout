@@ -136,6 +136,28 @@ const indexes = [
     sql: 'CREATE INDEX IF NOT EXISTS idx_order_storeid_createdat ON "Order" ("storeId", "createdAt" DESC)',
     description: 'Order.(storeId, createdAt DESC) — Kunden-heute / Listen nach Tag',
   },
+
+  // ─── Additional indexes (T2 optimization) ──────────────────────────────────
+  {
+    name: 'idx_discountcode_owner_id',
+    sql: 'CREATE INDEX IF NOT EXISTS idx_discountcode_owner_id ON "DiscountCode" ("owner_id")',
+    description: 'DiscountCode.owner_id — filtro por tienda en listado y validación',
+  },
+  {
+    name: 'idx_notification_storeid_createdat',
+    sql: 'CREATE INDEX IF NOT EXISTS idx_notification_storeid_createdat ON "Notification" ("storeId", "createdAt" DESC)',
+    description: 'Notification.(storeId, createdAt DESC) — listado de notificaciones por tienda ordenado',
+  },
+  {
+    name: 'idx_product_ownerid_isactive',
+    sql: 'CREATE INDEX IF NOT EXISTS idx_product_ownerid_isactive ON "Product" ("ownerId", "isActive")',
+    description: 'Product.(ownerId, isActive) — hot path: tienda + activos (composite)',
+  },
+  {
+    name: 'idx_order_storeid_status',
+    sql: 'CREATE INDEX IF NOT EXISTS idx_order_storeid_status ON "Order" ("storeId", "status")',
+    description: 'Order.(storeId, status) — filtros por tienda + status (órdenes pendientes, etc)',
+  },
 ];
 
 async function addPerformanceIndexes() {

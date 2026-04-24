@@ -218,6 +218,33 @@ router.get('/qr/:qrCode', productController.getProductByQR);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
+
+/**
+ * @swagger
+ * /api/products/public/{ownerId}:
+ *   get:
+ *     summary: Obtener productos públicos de una tienda
+ *     description: Retorna lista de productos activos públicos (sin autenticación) para catálogo
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: ownerId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del propietario/tienda
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 100
+ *         description: Número máximo de productos a retornar
+ *     responses:
+ *       200:
+ *         description: Lista de productos públicos obtenida exitosamente (con cache)
+ */
+router.get('/public/:ownerId', productController.getPublicProducts);
+
 router.get('/:id', authMiddleware, validateUUID('id'), productController.getProductById);
 
 /**

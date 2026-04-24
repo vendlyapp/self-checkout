@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronRight, Package, ChevronDown, Trash2 } from 'lucide-react'
@@ -318,15 +319,16 @@ export default function ProductCardList({ product, onClick }: ProductCardListPro
                         transition-interactive gpu-accelerated
                         group-hover:scale-110">
           {product.image || (product.images && product.images.length > 0) ? (
-            <img
-              src={product.image || product.images?.[0]}
+            <Image
+              src={product.image || product.images?.[0] || ''}
               alt={currentProduct.name}
+              width={64}
+              height={64}
               className="w-full h-full object-cover transition-interactive gpu-accelerated
                          group-hover:scale-110"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                if (fallback) fallback.classList.remove('hidden');
+              onError={() => {
+                // Image component handles fallback differently than <img>
+                // Next.js Image shows error state automatically
               }}
             />
           ) : null}

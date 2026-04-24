@@ -35,7 +35,7 @@ export const MAIN_PT_HEADER_NAV_ONLY_PX = TOP_HEADER_NAV_PX + HEADER_NAV_BAR_HEI
 export const MAIN_PT_STORE_SECTION_PX = 80;
 
 /** Espacio entre la segunda barra de filtros y el inicio del contenido — menor = lista más arriba */
-export const MAIN_GAP_BELOW_FILTER_BARS_PX = -50;
+export const MAIN_GAP_BELOW_FILTER_BARS_PX = -100;
 
 /** Padding-top del main cuando hay HeaderNav + Filter_Busqueda (products_list) o OrderFilters (orders) */
 export const MAIN_PT_WITH_FILTER_BARS_PX = TOP_FILTER_SLIDER_BAR_PX + MAIN_GAP_BELOW_FILTER_BARS_PX;

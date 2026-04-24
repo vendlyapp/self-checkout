@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { useMyStore } from '@/hooks/queries'
 import { useUpdateStore, useRegenerateQR } from '@/hooks/mutations'
 import { Loader } from '@/components/ui/Loader'
+import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState'
 
 export default function MyQRPage() {
   const { data: store, isLoading: loading, error } = useMyStore()
@@ -90,11 +91,7 @@ export default function MyQRPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-dvh">
-        <Loader size="md" />
-      </div>
-    )
+    return <DashboardLoadingState mode="page" message="Wird geladen..." />
   }
 
   if (error || !store) {

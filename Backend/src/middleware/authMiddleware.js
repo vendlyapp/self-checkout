@@ -4,6 +4,13 @@ const { HTTP_STATUS } = require('../types');
 const storeService = require('../services/StoreService');
 const logger = require('../utils/logger');
 
+// ─── JWT Architecture & Token Refresh ────────────────────────────────────────
+// This backend is STATELESS for JWT management. The refresh token lifecycle is
+// entirely managed by the Supabase SDK on the frontend via @supabase/ssr.
+// Backend responsibility: verify the access token via supabaseAdmin.auth.getUser()
+// Frontend responsibility: handle token refresh when access token expires
+// Result: no /api/auth/refresh endpoint needed, no refresh token storage in DB
+
 // ─── In-memory user cache ─────────────────────────────────────────────────────
 // Caches the DB user-lookup result (name, role, storeId) keyed by Supabase userId.
 // TTL of 60 seconds — eliminates 2-3 DB queries on every authenticated request

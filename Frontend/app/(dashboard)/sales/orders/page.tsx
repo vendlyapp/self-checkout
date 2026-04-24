@@ -18,6 +18,7 @@ import {
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 import Link from 'next/link';
 import { Loader } from '@/components/ui/Loader';
+import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState';
 import { useCancelOrder } from '@/hooks/mutations/useOrderMutations';
 import CancelOrderModal from '@/components/orders/CancelOrderModal';
 import { OrdersProvider, useOrdersContext } from '@/components/dashboard/orders/OrdersContext';
@@ -189,14 +190,7 @@ function SalesOrdersPageContent() {
   const error = queryError instanceof Error ? queryError.message : queryError ? String(queryError) : null;
 
   if (loading && orders.length === 0) {
-    return (
-      <div className="w-full h-full flex items-center justify-center p-4">
-        <div className="flex flex-col items-center gap-3">
-          <Loader size="lg" />
-          <p className="text-muted-foreground font-medium">Bestellungen werden geladen...</p>
-        </div>
-      </div>
-    );
+    return <DashboardLoadingState mode="page" message="Bestellungen werden geladen..." />;
   }
 
   if (error && orders.length === 0) {

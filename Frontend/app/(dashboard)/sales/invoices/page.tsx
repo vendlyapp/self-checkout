@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 import Link from 'next/link';
-import { Loader } from '@/components/ui/Loader';
+import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState';
 
 export default function SalesInvoicesPage() {
   const router = useRouter();
@@ -68,14 +68,7 @@ export default function SalesInvoicesPage() {
   const error = queryError instanceof Error ? queryError.message : queryError ? String(queryError) : null;
 
   if (loading && invoices.length === 0) {
-    return (
-      <div className="w-full h-full flex items-center justify-center p-4">
-        <div className="flex flex-col items-center gap-3">
-          <Loader size="lg" />
-          <p className="text-muted-foreground font-medium">Rechnungen werden geladen...</p>
-        </div>
-      </div>
-    );
+    return <DashboardLoadingState mode="page" message="Rechnungen werden geladen..." />;
   }
 
   if (error && invoices.length === 0) {

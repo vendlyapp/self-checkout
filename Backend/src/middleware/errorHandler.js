@@ -3,6 +3,16 @@
 const { HTTP_STATUS } = require('../types');
 const logger = require('../utils/logger');
 
+// Sanitize error message for client — remove internal details
+const sanitizeErrorMessage = (message) => {
+  // Remove SQL, file paths, stack traces from error message
+  const suspicious = /SELECT|INSERT|UPDATE|DELETE|\/home\/|\/app\/|__dirname|Error:/gi;
+  if (suspicious.test(message)) {
+    return 'Ein Fehler ist aufgetreten'; // Generic message in German
+  }
+  return message;
+};
+
 const errorHandler = (err, req, res, next) => {
   logger.error('Error caught by errorHandler', {
     message: err.message,
@@ -17,7 +27,7 @@ const errorHandler = (err, req, res, next) => {
   if (err.isOperational) {
     return res.status(err.statusCode).json({
       success: false,
-      error: err.message,
+      error: process.env.NODE_ENV === 'production' ? sanitizeErrorMessage(err.message) : err.message,
       ...(err.code && { code: err.code }),
     });
   }

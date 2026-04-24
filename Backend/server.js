@@ -1,4 +1,5 @@
 require("dotenv").config();
+require("./src/config/validateEnv")();
 const app = require("./app");
 const http = require("http");
 const { testConnection, closePool } = require("./lib/database");
