@@ -11,6 +11,12 @@ class CustomerController {
   async getCustomersByStore(req, res) {
     try {
       const { storeId } = req.params;
+      const { role, storeId: userStoreId } = req.user;
+
+      if (role !== 'SUPER_ADMIN' && userStoreId !== storeId) {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({ success: false, error: 'Access denied' });
+      }
+
       const { limit, offset, search } = req.query;
 
       const result = await customerService.getByStoreId(storeId, {
@@ -53,6 +59,12 @@ class CustomerController {
   async getCustomerByEmail(req, res) {
     try {
       const { storeId, email } = req.params;
+      const { role, storeId: userStoreId } = req.user;
+
+      if (role !== 'SUPER_ADMIN' && userStoreId !== storeId) {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({ success: false, error: 'Access denied' });
+      }
+
       const result = await customerService.getByEmail(storeId, email);
 
       if (!result.success) {
@@ -73,6 +85,12 @@ class CustomerController {
   async createOrUpdateCustomer(req, res) {
     try {
       const { storeId } = req.params;
+      const { role, storeId: userStoreId } = req.user;
+
+      if (role !== 'SUPER_ADMIN' && userStoreId !== storeId) {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({ success: false, error: 'Access denied' });
+      }
+
       const result = await customerService.createOrUpdate(storeId, req.body);
       res.status(result.isNew ? HTTP_STATUS.CREATED : HTTP_STATUS.OK).json(result);
     } catch (error) {
@@ -88,6 +106,11 @@ class CustomerController {
   async getCustomerOrders(req, res) {
     try {
       const { id, storeId } = req.params;
+      const { role, storeId: userStoreId } = req.user;
+
+      if (role !== 'SUPER_ADMIN' && userStoreId !== storeId) {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({ success: false, error: 'Access denied' });
+      }
 
       if (!storeId) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -111,6 +134,11 @@ class CustomerController {
   async getCustomerInvoices(req, res) {
     try {
       const { id, storeId } = req.params;
+      const { role, storeId: userStoreId } = req.user;
+
+      if (role !== 'SUPER_ADMIN' && userStoreId !== storeId) {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({ success: false, error: 'Access denied' });
+      }
 
       if (!storeId) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({

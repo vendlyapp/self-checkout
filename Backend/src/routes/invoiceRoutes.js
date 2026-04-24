@@ -77,7 +77,7 @@ router.post('/', optionalAuth, validateBody(createInvoiceSchema), invoiceControl
  *       404:
  *         description: Factura no encontrada
  */
-router.get('/number/:invoiceNumber', invoiceController.getInvoiceByNumber);
+router.get('/number/:invoiceNumber', authMiddleware, invoiceController.getInvoiceByNumber);
 
 /**
  * @swagger
@@ -97,7 +97,7 @@ router.get('/number/:invoiceNumber', invoiceController.getInvoiceByNumber);
  *       200:
  *         description: Lista de facturas
  */
-router.get('/order/:orderId', validateUUID('orderId'), invoiceController.getInvoicesByOrderId);
+router.get('/order/:orderId', authMiddleware, validateUUID('orderId'), invoiceController.getInvoicesByOrderId);
 
 /**
  * @swagger
