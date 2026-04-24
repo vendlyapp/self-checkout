@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 import Link from 'next/link';
-import { Loader } from '@/components/ui/Loader';
 import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState';
 import { useCancelOrder } from '@/hooks/mutations/useOrderMutations';
 import CancelOrderModal from '@/components/orders/CancelOrderModal';
