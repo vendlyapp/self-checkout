@@ -10,7 +10,7 @@ import { StoreSettingsHeaderProvider } from "@/lib/contexts/StoreSettingsHeaderC
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <AuthGuard allowedRoles={['ADMIN', 'CUSTOMER']}>
+    <AuthGuard allowedRoles={['ADMIN']}>
       <StoreOnboardingGuard>
         <LoadingProductsModalProvider>
           <StoreSettingsHeaderProvider>

@@ -14,6 +14,7 @@ interface HeaderUserProps {
 export default function HeaderUser({ isDarkMode = false }: HeaderUserProps) {
   const { store } = useScannedStoreStore();
   const [storeLogo, setStoreLogo] = useState<string | null>(null);
+  const storeHomeHref = store?.slug ? `/store/${store.slug}` : '/';
   const headerBgClass = isDarkMode ? "bg-[#191F2D]" : "bg-background-cream";
   const borderClass = isDarkMode ? "border-slate-700" : "border-white";
 
@@ -32,30 +33,32 @@ export default function HeaderUser({ isDarkMode = false }: HeaderUserProps) {
         <div className={`dashboard-header-content ${headerBgClass} h-[80px] w-full flex items-center px-4`}>
            {/* Logo de la tienda - 50% izquierda */}
           <div className="w-1/2 flex items-center justify-start p-2 rounded">
-            {storeLogo ? (
-              <div className="relative max-w-[160px] sm:max-w-[180px] h-[65px] sm:h-[75px] flex items-center justify-center rounded-xl overflow-hidden">
-                <img
-                  src={storeLogo}
-                  alt={store?.name || "Store Logo"}
-                  className="max-w-full max-h-full w-auto h-auto object-contain p-1.5"
-                  style={{ 
-                    imageRendering: '-webkit-optimize-contrast'
-                  }}
-                  onError={() => {
-                    // Si falla la carga, usar icono por defecto
-                    setStoreLogo(null);
-                  }}
-                />
-              </div>
-            ) : (
-              <div className="w-[120px] sm:w-[160px] h-[65px] sm:h-[75px] bg-gray-100 rounded-xl flex items-center justify-center p-2 border border-gray-200">
-                <Store className="w-7 h-7 sm:w-8 sm:h-8 text-gray-400" />
-              </div>
-            )}
+            <Link href={storeHomeHref} className="touch-target tap-highlight-transparent" aria-label="Zur Startseite des Geschäfts">
+              {storeLogo ? (
+                <div className="relative max-w-[160px] sm:max-w-[180px] h-[65px] sm:h-[75px] flex items-center justify-center rounded-xl overflow-hidden">
+                  <img
+                    src={storeLogo}
+                    alt={store?.name || "Store Logo"}
+                    className="max-w-full max-h-full w-auto h-auto object-contain p-1.5"
+                    style={{ 
+                      imageRendering: '-webkit-optimize-contrast'
+                    }}
+                    onError={() => {
+                      // Si falla la carga, usar icono por defecto
+                      setStoreLogo(null);
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="w-[120px] sm:w-[160px] h-[65px] sm:h-[75px] bg-gray-100 rounded-xl flex items-center justify-center p-2 border border-gray-200">
+                  <Store className="w-7 h-7 sm:w-8 sm:h-8 text-gray-400" />
+                </div>
+              )}
+            </Link>
           </div>
           {/* Logo de checkout - 50% derecha */}
           <div className="w-1/2 flex items-center justify-end p-2 rounded">
-            <Link href="/dashboard" className="dashboard-logo touch-target tap-highlight-transparent">
+            <div className="dashboard-logo touch-target tap-highlight-transparent" aria-hidden="true">
               <Image
                 src={isDarkMode ? "/logo-b.svg" : "/logo.svg"}
                 alt="Self-Checkout Logo"
@@ -64,7 +67,7 @@ export default function HeaderUser({ isDarkMode = false }: HeaderUserProps) {
                 priority
                 className="h-[23px] w-auto"
               />
-            </Link>
+            </div>
           </div>
         </div>
       </header>

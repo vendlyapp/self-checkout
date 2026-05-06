@@ -232,9 +232,9 @@ export default function FooterNav() {
             );
           }
 
-          // Items regulares — Warenkorb: si carrito vacío, ir a lista de productos
+          // Items regulares — Warenkorb siempre navega a la vista de carrito
           const isCartItem = item.id === "cart";
-          const cartHref = hasValidCartItems ? `${baseRoute}/cart` : baseRoute;
+          const cartHref = `${baseRoute}/cart`;
           return (
             <Link
               key={item.id}

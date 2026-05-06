@@ -8,7 +8,7 @@ import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore"
 import { LoadingProductsModalProvider } from "@/lib/contexts/LoadingProductsModalContext"
 import { useParams, useRouter, usePathname } from "next/navigation"
 import { useStoreData } from "@/hooks/data/useStoreData"
-import { InitialLoadingScreen } from "@/components/ui"
+import { DashboardLoadingState } from "@/components/ui/DashboardLoadingState"
 import { StoreProvider, useStoreContext } from "./StoreContext"
 import StoreFixedHeader from "@/components/user/StoreFixedHeader"
 import StoreInfoHeader from "@/components/user/StoreInfoHeader"
@@ -112,7 +112,13 @@ function StoreLayoutContent({ children }: StoreLayoutContentProps) {
   return (
     <LoadingProductsModalProvider>
       {/* Pantalla de carga inicial - solo en recarga completa, no en navegación */}
-      {showInitialLoading && <InitialLoadingScreen message="Wird geladen..." />}
+      {showInitialLoading && (
+        <DashboardLoadingState
+          mode="page"
+          message="Wird geladen..."
+          className="animate-page-enter"
+        />
+      )}
       
       <div className={`flex flex-col flex-1 min-h-0 h-full w-full ${containerBgClass} relative overflow-hidden`}>
         {/* Contenedor unificado de todos los headers fijos — bg-background-cream cubre los espacios entre componentes */}

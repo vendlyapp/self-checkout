@@ -6,14 +6,15 @@ import ProductsList from '@/components/dashboard/charge/ProductsList'
 import { Product } from '@/components/dashboard/products_list/data/mockProducts'
 import { useCallback } from 'react'
 import { useCartStore } from '@/lib/stores/cartStore'
-import { Percent, Store } from 'lucide-react'
+import { Percent } from 'lucide-react'
 import { useStoreData } from '@/hooks/data/useStoreData'
 import { useStorePromotions } from '@/hooks/queries/useStorePromotions'
+import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState'
 
 export default function StorePromotionPage() {
   const params = useParams()
   const slug = params.slug as string
-  const { store } = useStoreData({ slug, autoLoad: true })
+  const { store, isLoading: storeLoading } = useStoreData({ slug, autoLoad: true })
   const { data: products = [], isLoading: productsLoading, isFetching: productsFetching } = useStorePromotions({ 
     slug: store?.slug || '', 
     enabled: !!store?.slug 
@@ -22,22 +23,22 @@ export default function StorePromotionPage() {
 
   const loading = productsLoading || productsFetching
 
+  if (storeLoading || !store || loading) {
+    return (
+      <DashboardLoadingState
+        mode="page"
+        message="Aktionen werden geladen..."
+        className="animate-page-enter"
+      />
+    )
+  }
+
   const handleAddToCart = useCallback(
     (product: Product, quantity: number) => {
       addToCart(product, quantity)
     },
     [addToCart]
   )
-
-  if (!store) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <Store className="w-16 h-16 text-gray-300 mb-4" />
-        <p className="text-gray-600 font-medium">Kein Geschäft ausgewählt</p>
-        <p className="text-gray-400 text-sm mt-2">Scannen Sie einen QR-Code</p>
-      </div>
-    )
-  }
 
   return (
     <div className="w-full">
