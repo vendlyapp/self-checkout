@@ -20,6 +20,12 @@ export default function StorePromotionPage() {
     enabled: !!store?.slug 
   })
   const { addToCart } = useCartStore()
+  const handleAddToCart = useCallback(
+    (product: Product, quantity: number) => {
+      addToCart(product, quantity)
+    },
+    [addToCart]
+  )
 
   const loading = productsLoading || productsFetching
 
@@ -32,13 +38,6 @@ export default function StorePromotionPage() {
       />
     )
   }
-
-  const handleAddToCart = useCallback(
-    (product: Product, quantity: number) => {
-      addToCart(product, quantity)
-    },
-    [addToCart]
-  )
 
   return (
     <div className="w-full">
