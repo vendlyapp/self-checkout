@@ -2,572 +2,301 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, Minus, ChevronDown, Package, Percent } from 'lucide-react'
-import { Product } from '../products_list/data/mockProducts';
-import Image from 'next/image';
-import { useCartStore } from '@/lib/stores/cartStore';
+import { Plus, Minus, ChevronDown, Package } from 'lucide-react'
+import { Product } from '../products_list/data/mockProducts'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useCartStore } from '@/lib/stores/cartStore'
+import { useParams } from 'next/navigation'
+import { toast } from 'sonner'
 
 interface ProductCardProps {
   product: Product
   onAddToCart: (product: Product, quantity: number) => void
-  isCartView?: boolean // Versión simplificada para el carrito
+  isCartView?: boolean
 }
 
 const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCartView = false }: ProductCardProps) {
   const { cartItems } = useCartStore()
+  const params = useParams()
+  const slug = params?.slug as string | undefined
   const [showVariantOptions, setShowVariantOptions] = useState(false)
-  // Inicializar con la primera variante si existen (igual que ProductCardList) para evitar selector vacío
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(
     product.variants && product.variants.length > 0 ? product.variants[0].id : null
   )
 
-  // Actualizar selectedVariantId cuando cambian las variantes del producto o el producto mismo
   useEffect(() => {
     if (product.variants && product.variants.length > 0) {
-      // Si la variante seleccionada ya no existe, volver al padre (null)
       if (selectedVariantId) {
         const variantExists = product.variants.some(v => v.id === selectedVariantId)
-        if (!variantExists) {
-          setSelectedVariantId(null)
-        }
+        if (!variantExists) setSelectedVariantId(null)
       }
     } else {
       setSelectedVariantId(null)
     }
   }, [product.variants, product.id, selectedVariantId])
 
-  // Obtener el producto/variante actualmente seleccionado para el precio
-  // Si selectedVariantId es null, usar el producto padre
   const currentProduct = useMemo(() => {
     if (selectedVariantId && product.variants) {
       return product.variants.find(v => v.id === selectedVariantId) || product
     }
-    return product // Producto padre por defecto
+    return product
   }, [selectedVariantId, product])
 
-  // Calcular cantidad inicial basándose en la variante seleccionada
   const currentQuantity = useMemo(() => {
     const cartItem = cartItems.find(item => item.product.id === currentProduct.id)
     return cartItem?.quantity || 0
   }, [cartItems, currentProduct.id])
 
-  // Obtener el nombre base del producto (sin la parte de la variante)
   const getBaseProductName = useMemo(() => {
     if (!product.name) return ''
-    
-    // Si no hay variantes, retornar el nombre completo
-    if (!product.variants || product.variants.length === 0) {
-      return product.name
-    }
-    
-    // Si hay variantes, encontrar el nombre base común
+    if (!product.variants || product.variants.length === 0) return product.name
     const firstVariant = product.variants[0]
     if (firstVariant.name && product.name) {
-      // Encontrar el prefijo común entre el producto padre y la primera variante
       const productWords = product.name.split(' ')
       const variantWords = firstVariant.name.split(' ')
-      
-      // Encontrar palabras comunes al inicio (el nombre base del producto)
       let commonPrefix = ''
       const minLength = Math.min(productWords.length, variantWords.length)
       for (let i = 0; i < minLength; i++) {
-        if (productWords[i] === variantWords[i]) {
-          commonPrefix += (commonPrefix ? ' ' : '') + productWords[i]
-        } else {
-          break
-        }
+        if (productWords[i] === variantWords[i]) commonPrefix += (commonPrefix ? ' ' : '') + productWords[i]
+        else break
       }
-      
-      // Si encontramos un prefijo común, usar ese como nombre base
-      if (commonPrefix) {
-        return commonPrefix
-      }
+      if (commonPrefix) return commonPrefix
     }
-    
-    // Si no se puede extraer, retornar el nombre completo
     return product.name
   }, [product.name, product.variants])
 
-  // Extraer el nombre de la variante del nombre completo (ej: "Coca Cola 500g" -> "500g")
   const getVariantName = (variant: Product | null): string => {
     if (!variant) {
-      // Si es null, es el producto padre - extraer el nombre de la variante del nombre del producto
-      // Si el producto NO tiene variantes, retornar cadena vacía (no mostrar nada)
-      if (!product.variants || product.variants.length === 0) {
-        return ''
-      }
-      
+      if (!product.variants || product.variants.length === 0) return ''
       if (!product.name) return ''
-      
-      // Extraer la parte de la variante del nombre del producto padre
       if (getBaseProductName && product.name.startsWith(getBaseProductName)) {
-        const variantPart = product.name.substring(getBaseProductName.length).trim()
-        return variantPart || ''
+        return product.name.substring(getBaseProductName.length).trim()
       }
-      
       return ''
     }
-    
     if (!variant.name) return ''
-    
-    // Si el nombre de la variante contiene el nombre base, extraer solo la parte de la variante
     if (getBaseProductName && variant.name.startsWith(getBaseProductName)) {
       return variant.name.substring(getBaseProductName.length).trim()
     }
-    
-    // Si el nombre de la variante contiene el nombre completo del producto padre, extraer solo la parte de la variante
     if (product.name && variant.name.startsWith(product.name)) {
       return variant.name.substring(product.name.length).trim()
     }
-    
     return variant.name
   }
 
-  // Texto del selector: evita vacío usando fallback unit (igual que ProductCardList)
   const getSelectorText = (): string => {
-    if (!product.variants || product.variants.length === 0) return ''
+    if (!product.variants || product.variants.length === 0) return currentProduct.unit || ''
     if (selectedVariantId) {
       const variant = product.variants.find(v => v.id === selectedVariantId)
       if (variant) return getVariantName(variant) || variant.unit || ''
     }
-    return getVariantName(null) || ''
+    return getVariantName(null) || currentProduct.unit || ''
   }
 
   const handleQuantityChange = (newQuantity: number) => {
-    if (newQuantity >= 0 && newQuantity <= currentProduct.stock) {
-      onAddToCart(currentProduct, newQuantity)
+    if (newQuantity < 0 || newQuantity > currentProduct.stock) return
+    const prev = currentQuantity
+    onAddToCart(currentProduct, newQuantity)
+    if (newQuantity === 1 && prev === 0) {
+      toast.success(`Zum Warenkorb hinzugefügt`, {
+        description: getBaseProductName,
+        duration: 2200,
+      })
+    } else if (newQuantity === 0) {
+      toast(`Entfernt`, {
+        description: getBaseProductName,
+        duration: 1800,
+      })
     }
   }
 
-  // Refs para los botones y dropdowns
-  const buttonRefMobile = useRef<HTMLButtonElement>(null)
-  const buttonRefDesktop = useRef<HTMLButtonElement>(null)
-  const dropdownRefMobile = useRef<HTMLDivElement>(null)
-  const dropdownRefDesktop = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null)
-  const [isMobile, setIsMobile] = useState(false)
 
-  // Detectar si es móvil
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024)
-    }
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-
-  // Calcular posición del dropdown cuando se abre
-  useEffect(() => {
-    if (showVariantOptions) {
-      const button = isMobile ? buttonRefMobile.current : buttonRefDesktop.current
-      if (button) {
-        const rect = button.getBoundingClientRect()
-        // Ancho mínimo más grande para mejor legibilidad
-        const minWidth = isMobile ? 200 : 220
-        const calculatedWidth = Math.max(rect.width, minWidth)
-        setDropdownPosition({
-          top: isMobile ? rect.bottom + window.scrollY + 8 : rect.top + window.scrollY - 8,
-          left: rect.left + window.scrollX,
-          width: calculatedWidth
-        })
-      }
+    if (showVariantOptions && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX,
+        width: Math.max(rect.width, 200)
+      })
     } else {
       setDropdownPosition(null)
     }
-  }, [showVariantOptions, isMobile])
-  
-  // Cerrar dropdown al hacer click fuera
+  }, [showVariantOptions])
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node
-      const isInsideButton = buttonRefMobile.current?.contains(target) || buttonRefDesktop.current?.contains(target)
-      const isInsideDropdown = dropdownRefMobile.current?.contains(target) || dropdownRefDesktop.current?.contains(target)
-      
-      // Solo cerrar si el click está fuera del botón y del dropdown
-      if (!isInsideButton && !isInsideDropdown) {
+      if (!buttonRef.current?.contains(target) && !dropdownRef.current?.contains(target)) {
         setShowVariantOptions(false)
       }
     }
-
     if (showVariantOptions) {
-      const timeoutId = setTimeout(() => {
-        document.addEventListener('mousedown', handleClickOutside, true)
-      }, 10)
-      
-      return () => {
-        clearTimeout(timeoutId)
-        document.removeEventListener('mousedown', handleClickOutside, true)
-      }
+      const id = setTimeout(() => document.addEventListener('mousedown', handleClickOutside, true), 10)
+      return () => { clearTimeout(id); document.removeEventListener('mousedown', handleClickOutside, true) }
     }
   }, [showVariantOptions])
 
   const formatPrice = (price: number | string | undefined | null) => {
-    // Convertir a número si es string o undefined
-    const numPrice = typeof price === 'string' ? parseFloat(price) : (price || 0);
-    if (isNaN(numPrice)) return '0.–';
-    // Formato suizo: .– cuando es exacto, .45 cuando tiene decimales
-    const rounded = Math.round(numPrice * 100) / 100;
-    const hasDecimals = rounded % 1 !== 0;
-    
-    if (!hasDecimals) {
-      return `${Math.round(rounded)}.–`;
-    }
-    return `${rounded.toFixed(2)}`
+    const numPrice = typeof price === 'string' ? parseFloat(price) : (price || 0)
+    if (isNaN(numPrice)) return '0.–'
+    const rounded = Math.round(numPrice * 100) / 100
+    return rounded % 1 !== 0 ? rounded.toFixed(2) : `${Math.round(rounded)}.–`
   }
 
-  // Versión simplificada para el carrito (sin selector de variantes)
-  if (isCartView) {
-    // En el carrito, el producto ya tiene la variante seleccionada
-    const cartProduct = product;
-    const cartQuantity = cartItems.find(item => item.product.id === cartProduct.id)?.quantity || 0;
-    
-    // Si el producto tiene variantes, intentar extraer nombre base y variante
-    // Si no tiene variantes, mostrar el nombre completo
-    let productBaseName = cartProduct.name || '';
-    let variantDisplayName = '';
-    
-    if (product.variants && product.variants.length > 0) {
-      // Si el producto en el carrito es una variante (coincide con alguna variante)
-      const matchingVariant = product.variants.find(v => v.id === cartProduct.id);
-      if (matchingVariant) {
-        // Es una variante, usar el nombre del producto padre como base
-        productBaseName = product.name || '';
-        // Extraer la parte de la variante del nombre
-        if (matchingVariant.name && product.name && matchingVariant.name.startsWith(product.name)) {
-          variantDisplayName = matchingVariant.name.substring(product.name.length).trim();
-        } else if (matchingVariant.name) {
-          variantDisplayName = matchingVariant.name;
-        }
-      } else {
-        // No es una variante, es el producto padre
-        productBaseName = product.name || cartProduct.name || '';
-      }
-    } else if (cartProduct.parentId) {
-      // El producto en el carrito es una variante pero no tenemos acceso al padre
-      // Mostrar el nombre completo tal como está
-      productBaseName = cartProduct.name || '';
-    }
+  const onSale = !!currentProduct.originalPrice && currentProduct.originalPrice > currentProduct.price
 
-    return (
-      <div className="bg-white rounded-xl p-3 flex items-center gap-3 shadow-sm transition-ios hover:shadow-md active:scale-[0.98]">
-        {/* Imagen del producto */}
-        <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-lg overflow-hidden bg-gray-50 flex-shrink-0">
-          {product.image ? (
-            <Image
-              src={product.image}
-              alt={cartProduct.name || 'Product'}
-              width={80}
-              height={80}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Package className="w-8 h-8 text-gray-300" />
-            </div>
-          )}
-        </div>
+  const detailHref = slug ? `/store/${slug}/product/${product.id}` : null
 
-        {/* Contenido principal */}
-        <div className="flex-1 min-w-0">
-          {/* Nombre del producto */}
-          <div className="mb-1">
-            <h3 className="text-gray-900 text-[15px] font-medium leading-tight">
-              {productBaseName}
-            </h3>
-            {variantDisplayName && (
-              <p className="text-gray-600 text-[13px] leading-tight">
-                {variantDisplayName}
-              </p>
-            )}
-          </div>
-          {/* Precio */}
-          <p className="text-gray-900 text-[16px] font-bold">
-            <span className="font-bold">CHF {formatPrice(cartProduct.price)}</span>
-          </p>
-        </div>
-
-        {/* Controles de cantidad */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <button
-            onClick={() => handleQuantityChange(cartQuantity - 1)}
-            className="w-8 h-8 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-white flex items-center justify-center transition-ios-fast active:scale-90"
-            disabled={cartQuantity <= 0}
-          >
-            <Minus className="w-4 h-4" strokeWidth={3.5} />
-          </button>
-          <span className="text-[16px] font-bold text-gray-900 min-w-[24px] text-center">
-            {cartQuantity}
-          </span>
-          <button
-            onClick={() => handleQuantityChange(cartQuantity + 1)}
-            disabled={cartQuantity >= cartProduct.stock}
-            className="w-9 h-9 rounded-full bg-[#25D076] hover:bg-[#25D076]/80 disabled:bg-[#25D076]/50 disabled:cursor-not-allowed text-white flex items-center justify-center transition-ios-fast active:scale-90"
-          >
-            <Plus className="w-5 h-5" strokeWidth={3.5} />
-          </button>
-        </div>
-      </div>
-    );
-  }
-
+  // Diseño horizontal (1 columna) — igual para vista normal y carrito
   return (
-    <div className="bg-white rounded-[20px] lg:rounded-xl h-[130px] lg:h-[140px] p-4 lg:p-4 relative 
-                    shadow-sm lg:border lg:border-gray-100 transition-ios hover:shadow-md active:scale-[0.98]">
-      {/* Badge de precio - usar currentProduct para mostrar precio de la variante seleccionada */}
-      <div className="absolute top-3 right-3 lg:top-3 lg:right-3">
-        {currentProduct.originalPrice ? (
-          <div className="flex flex-col items-end gap-1">
-            {/* Precio nuevo en rojo */}
-            <span className="text-[15px] lg:text-[14px] bg-[#F2EDE8] rounded-lg px-2 py-1 lg:px-2.5 lg:py-1 font-bold text-red-600">
-              <span className="text-[10px] font-semibold">CHF</span> {formatPrice(currentProduct.price)}
-            </span>
-            {/* Precio original tachado */}
-            <span className="text-[12px] text-gray-500 line-through">
-            <span className="text-[10px] font-semibold">CHF</span> {formatPrice(currentProduct.originalPrice)}
-            </span>
-          </div>
+    <article className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-card">
+      {/* Imagen — tappable al detalle */}
+      <div className="relative flex-shrink-0">
+        {detailHref ? (
+          <Link href={detailHref} className="block h-20 w-20 overflow-hidden rounded-xl bg-gray-100 active:opacity-80 transition-opacity">
+            {product.image ? (
+              <Image src={product.image} alt={getBaseProductName} width={80} height={80} className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <Package className="h-8 w-8 text-gray-300" />
+              </div>
+            )}
+          </Link>
         ) : (
-          <span className="text-[15px] lg:text-[14px] bg-[#F2EDE8] rounded-lg px-2 py-1 lg:px-2.5 lg:py-1 font-bold text-gray-800">
-            <span className="text-[10px] font-semibold">CHF</span> {formatPrice(currentProduct.price)}
+          <div className="h-20 w-20 overflow-hidden rounded-xl bg-gray-100">
+            {product.image ? (
+              <Image src={product.image} alt={getBaseProductName} width={80} height={80} className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <Package className="h-8 w-8 text-gray-300" />
+              </div>
+            )}
+          </div>
+        )}
+        {/* Badge descuento */}
+        {(currentProduct.discountPercentage || onSale) && (
+          <span className="absolute -left-1.5 -top-1.5 grid h-7 w-7 place-items-center rounded-full bg-red-500 text-white shadow-soft">
+            <span className="text-[10px] font-bold">%</span>
+          </span>
+        )}
+        {/* Badge cantidad */}
+        {currentQuantity > 0 && (
+          <span className="absolute -right-1.5 -top-1.5 grid h-7 min-w-7 place-items-center rounded-full bg-[#25D076] px-1.5 text-xs font-extrabold text-white shadow-soft ring-2 ring-white">
+            ×{currentQuantity}
           </span>
         )}
       </div>
 
-      {/* Badge de descuento - usar currentProduct para mostrar descuento de la variante seleccionada */}
-      {currentProduct.discountPercentage && (
-        <div className="absolute top-3 left-3 lg:top-3 lg:left-3 bg-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-md z-10">
-          <div className="flex items-center justify-center">
-            <Percent className="w-4 h-4 text-white" strokeWidth={3} />
-          </div>
-        </div>
-      )}
-
-      {/* Mobile: Layout horizontal */}
-      <div className="flex lg:hidden items-start gap-4 mt-2">
-        {/* Icono del producto - siempre mostrar imagen del padre */}
-        <div className='flex items-center gap-2 w-[80px] h-[80px] lg:w-[100px] lg:h-[100px] rounded-[16px] lg:rounded-2xl overflow-hidden mr-4'>
-            {product.image ? (
-            <Image
-              src={product.image}
-              alt={currentProduct.name}
-              width={100}
-              height={100}
-              className="rounded-[16px] lg:rounded-2xl object-cover w-full h-full"
-            />
+      {/* Info — tappable al detalle */}
+      <div className="min-w-0 flex-1">
+        {detailHref ? (
+          <Link href={detailHref} className="block active:opacity-70 transition-opacity">
+            <p className="truncate text-sm font-bold leading-tight text-gray-900">{getBaseProductName}</p>
+          </Link>
         ) : (
-          <div className="w-[80px] h-[80px] lg:w-[100px] lg:h-[100px] rounded-[16px] lg:rounded-2xl bg-gray-100 flex items-center justify-center">
-            <Package className="w-10 h-10 lg:w-12 lg:h-12 text-gray-400" />
+          <p className="truncate text-sm font-bold leading-tight text-gray-900">{getBaseProductName}</p>
+        )}
+
+        {/* Variante / unidad */}
+        {product.variants && product.variants.length > 0 ? (
+          <button
+            ref={buttonRef}
+            onClick={(e) => { e.stopPropagation(); setShowVariantOptions(!showVariantOptions) }}
+            className="mt-1 inline-flex items-center gap-0.5 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[11px] font-medium text-gray-600 shadow-soft active:scale-95 transition-all"
+          >
+            <span className="max-w-[80px] truncate">{getSelectorText()}</span>
+            <ChevronDown className={`h-3 w-3 flex-shrink-0 text-gray-400 transition-transform duration-150 ${showVariantOptions ? 'rotate-180' : ''}`} />
+          </button>
+        ) : (
+          <p className="mt-0.5 truncate text-xs text-gray-400">{currentProduct.unit || ''}</p>
+        )}
+      </div>
+
+      {/* Precio + controles — columna derecha */}
+      <div className="flex flex-shrink-0 flex-col items-end gap-2">
+        {/* Precio */}
+        <div className="text-right leading-none">
+          {onSale ? (
+            <>
+              <p className="text-sm font-bold text-red-600">CHF {formatPrice(currentProduct.price)}</p>
+              <p className="text-[11px] text-gray-400 line-through">CHF {formatPrice(currentProduct.originalPrice)}</p>
+            </>
+          ) : (
+            <p className="text-sm font-bold text-gray-900">CHF {formatPrice(currentProduct.price)}</p>
+          )}
+        </div>
+
+        {/* Controles */}
+        {currentQuantity === 0 ? (
+          <button
+            onClick={() => handleQuantityChange(1)}
+            disabled={currentProduct.stock <= 0}
+            className="grid h-9 w-9 place-items-center rounded-full bg-[#25D076] text-white shadow-soft disabled:opacity-40 disabled:cursor-not-allowed active:scale-90 transition-transform"
+            aria-label={`${getBaseProductName} hinzufügen`}
+          >
+            <Plus className="h-4 w-4" strokeWidth={2.5} />
+          </button>
+        ) : (
+          <div className="flex h-9 items-center gap-0.5 rounded-full border border-gray-200 bg-gray-50 px-1">
+            <button
+              onClick={() => handleQuantityChange(currentQuantity - 1)}
+              className="grid h-7 w-7 place-items-center rounded-full bg-white text-gray-700 shadow-soft active:scale-95"
+              aria-label="Weniger"
+            >
+              <Minus className="h-3.5 w-3.5" strokeWidth={2.5} />
+            </button>
+            <span className="min-w-6 text-center text-sm font-extrabold text-gray-900">{currentQuantity}</span>
+            <button
+              onClick={() => handleQuantityChange(currentQuantity + 1)}
+              disabled={currentQuantity >= currentProduct.stock}
+              className="grid h-7 w-7 place-items-center rounded-full bg-[#25D076] text-white disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+              aria-label="Mehr"
+            >
+              <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+            </button>
           </div>
         )}
       </div>
 
-        {/* Contenido principal */}
-        <div className="flex-1 flex flex-col justify-between min-h-[80px] lg:min-h-[100px]">
-          {/* Título del producto - siempre mostrar nombre base del producto */}
-          <div className="pr-20 lg:pr-24 mb-4">
-            <h3 className="text-gray-900 text-[16px] lg:text-[18px] leading-[1.3] w-[90%] tracking-tight font-semibold">
-              {getBaseProductName}
-            </h3>
-          </div>
-
-          {/* Controles en la parte inferior */}
-          <div className="flex items-center justify-between h-[25px] lg:h-[30px]">
-            {/* Selector de variantes - solo si tiene variantes, o espacio invisible para mantener layout */}
-            {product.variants && product.variants.length > 0 ? (
-              <div className="relative bg-[#F7F4F1] rounded-lg text-center min-w-[70px] h-[30px] lg:min-w-[80px] lg:h-[35px] flex items-center justify-center px-2">
-                <button
-                  ref={buttonRefMobile}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowVariantOptions(!showVariantOptions)
-                  }}
-                  className="flex items-center gap-1.5 text-[14px] lg:text-[15px] text-gray-700 hover:text-gray-900 transition-colors py-1 w-full justify-center"
-                >
-                  <span className="font-medium truncate">
-                    {getSelectorText()}
-                  </span>
-                  <ChevronDown className={`w-4 h-4 lg:w-5 lg:h-5 text-gray-500 transition-transform flex-shrink-0 ${showVariantOptions ? 'rotate-180' : ''}`} />
-                </button>
-              </div>
-            ) : (
-              <div className="min-w-[70px] lg:min-w-[80px]"></div>
-            )}
-
-            {/* Controles de cantidad */}
-            <div className="flex items-center h-full pt-4 ml-auto">
-              {currentQuantity > 0 && (
-                <>
-                  <button
-                    onClick={() => handleQuantityChange(currentQuantity - 1)}
-                    className="w-8 h-8 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-white flex items-center justify-center transition-ios"
-                    disabled={currentQuantity <= 0}
-                  >
-                    <Minus className="w-4 h-4" strokeWidth={3.5} />
-                  </button>
-                  <span className="text-[16px] font-bold text-gray-900 min-w-[24px] text-center select-none">
-                    {currentQuantity}
-                  </span>
-                </>
-              )}
-              <button
-                onClick={() => handleQuantityChange(currentQuantity + 1)}
-                disabled={currentQuantity >= currentProduct.stock}
-                className="w-9 h-9 rounded-full bg-[#25D076] hover:bg-[#25D076]/80 disabled:bg-[#25D076]/50 disabled:cursor-not-allowed text-white flex items-center justify-center transition-ios shadow-sm"
-              >
-                <Plus className="w-5 h-5 text-white font-bold" strokeWidth={3.5} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Desktop/Tablet: Layout horizontal compacto */}
-      <div className="hidden lg:flex items-start gap-4">
-        {/* Imagen del producto - izquierda más pequeña - siempre mostrar imagen del padre */}
-        <div className="w-[100px] h-[100px] rounded-xl overflow-hidden bg-gray-50 flex-shrink-0">
-          {product.image ? (
-            <Image
-              src={product.image}
-              alt={currentProduct.name}
-              width={100}
-              height={100}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Package className="w-10 h-10 text-gray-300" />
-            </div>
-          )}
-        </div>
-
-        {/* Contenido - derecha */}
-        <div className="flex-1 flex flex-col justify-between min-h-[100px]">
-          {/* Título del producto - siempre mostrar nombre base del producto */}
-          <div className="pr-20">
-            <h3 className="text-gray-900 text-[15px] leading-tight tracking-tight font-semibold line-clamp-2">
-              {getBaseProductName}
-            </h3>
-          </div>
-
-          {/* Controles en la parte inferior */}
-          <div className="flex items-center justify-between">
-            {/* Selector de variantes - solo si tiene variantes, o espacio invisible para mantener layout */}
-            {product.variants && product.variants.length > 0 ? (
-              <div className="relative bg-gray-50 rounded-lg min-w-[75px] h-[32px] flex items-center justify-center px-2">
-                <button
-                  ref={buttonRefDesktop}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowVariantOptions(!showVariantOptions)
-                  }}
-                  className="flex items-center gap-1 text-[14px] text-gray-700 hover:text-gray-900 transition-colors w-full justify-center"
-                >
-                  <span className="font-medium truncate">
-                    {getSelectorText()}
-                  </span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform flex-shrink-0 ${showVariantOptions ? 'rotate-180' : ''}`} />
-                </button>
-              </div>
-            ) : (
-              <div className="min-w-[75px]"></div>
-            )}
-
-            {/* Controles de cantidad */}
-            <div className="flex items-center gap-2 ml-auto">
-              {currentQuantity > 0 && (
-                <>
-                  <button
-                    onClick={() => handleQuantityChange(currentQuantity - 1)}
-                    className="w-8 h-8 rounded-full bg-[#d1d1d1] hover:bg-[#c0c0c0] text-white flex items-center justify-center transition-ios-fast active:scale-90"
-                    disabled={currentQuantity <= 0}
-                  >
-                    <Minus className="w-4 h-4" strokeWidth={3.5} />
-                  </button>
-                  <span className="text-[16px] font-bold text-gray-900 min-w-[24px] text-center select-none">
-                    {currentQuantity}
-                  </span>
-                </>
-              )}
-              <button
-                onClick={() => handleQuantityChange(currentQuantity + 1)}
-                disabled={currentQuantity >= currentProduct.stock}
-                className="w-9 h-9 rounded-full bg-[#25D076] hover:bg-[#25D076]/80 disabled:bg-[#25D076]/50 disabled:cursor-not-allowed text-white flex items-center justify-center transition-ios-fast active:scale-90 shadow-sm"
-              >
-                <Plus className="w-5 h-5 text-white font-bold" strokeWidth={3.5} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Dropdown renderizado con Portal para que esté por encima de todo */}
+      {/* Dropdown variantes — Portal */}
       {showVariantOptions && dropdownPosition && typeof window !== 'undefined' && createPortal(
         <div
-          ref={isMobile ? dropdownRefMobile : dropdownRefDesktop}
-          className="fixed bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-[99999] min-w-[200px] max-w-[280px] lg:min-w-[220px] lg:max-w-[300px] max-h-48 overflow-y-auto animate-scale-in"
-          style={{
-            top: isMobile ? `${dropdownPosition.top}px` : `${dropdownPosition.top}px`,
-            left: `${dropdownPosition.left}px`,
-            width: `${dropdownPosition.width}px`,
-            zIndex: 99999
-          }}
+          ref={dropdownRef}
+          className="fixed z-[99999] overflow-hidden rounded-2xl bg-white shadow-card border border-gray-100 py-1"
+          style={{ top: `${dropdownPosition.top}px`, left: `${dropdownPosition.left}px`, width: `${Math.max(dropdownPosition.width, 180)}px` }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Opción del producto padre — solo si tiene nombre de variante propio (igual que ProductCardList) */}
           {getVariantName(null) !== '' && (
             <button
               type="button"
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                setSelectedVariantId(null)
-                setShowVariantOptions(false)
-              }}
-              className={`block w-full text-left px-4 py-2 text-[14px] lg:text-[15px] font-medium transition-colors ${
-                selectedVariantId === null 
-                  ? 'bg-brand-50 text-brand-700' 
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedVariantId(null); setShowVariantOptions(false) }}
+              className={`flex w-full items-center justify-between px-3 py-2 text-xs font-medium transition-colors ${selectedVariantId === null ? 'bg-[#25D076]/8 text-[#25D076]' : 'text-gray-700 hover:bg-gray-50'}`}
             >
-              <div className="flex items-center justify-between gap-3">
-                <span className="flex-1 break-words">{getVariantName(null)}</span>
-                <span className="text-gray-500 font-medium text-sm flex-shrink-0">
-                  CHF {formatPrice(product.price)}
-                </span>
-              </div>
+              <span>{getVariantName(null)}</span>
+              <span className={`tabular-nums ${selectedVariantId === null ? 'text-[#25D076]/70' : 'text-gray-400'}`}>CHF {formatPrice(product.price)}</span>
             </button>
           )}
-          {/* Variantes */}
           {product.variants && product.variants.map((variant) => (
             <button
               key={variant.id}
               type="button"
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                setSelectedVariantId(variant.id)
-                setShowVariantOptions(false)
-              }}
-              className={`block w-full text-left px-4 py-2 text-[14px] lg:text-[15px] font-medium transition-colors ${
-                selectedVariantId === variant.id 
-                  ? 'bg-brand-50 text-brand-700' 
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedVariantId(variant.id); setShowVariantOptions(false) }}
+              className={`flex w-full items-center justify-between px-3 py-2 text-xs font-medium transition-colors ${selectedVariantId === variant.id ? 'bg-[#25D076]/8 text-[#25D076]' : 'text-gray-700 hover:bg-gray-50'}`}
             >
-              <div className="flex items-center justify-between gap-3">
-                <span className="flex-1 break-words">{getVariantName(variant) || variant.unit || ''}</span>
-                <span className="text-gray-500 font-medium text-sm flex-shrink-0">
-                  CHF {formatPrice(variant.price)}
-                </span>
-              </div>
+              <span>{getVariantName(variant) || variant.unit || ''}</span>
+              <span className={`tabular-nums ${selectedVariantId === variant.id ? 'text-[#25D076]/70' : 'text-gray-400'}`}>CHF {formatPrice(variant.price)}</span>
             </button>
           ))}
         </div>,
         document.body
       )}
-    </div>
+    </article>
   )
-});
+})
 
-export default ProductCard;
+export default ProductCard

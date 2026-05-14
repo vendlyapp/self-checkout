@@ -65,6 +65,8 @@
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
     0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-soft: 0 1px 2px rgba(17, 24, 39, 0.05);
+  --shadow-card: 0 1px 3px rgba(17, 24, 39, 0.08);
 }
 
 @theme inline {
@@ -240,6 +242,11 @@
 }
 
 /* Utilidades Mobile-First */
+@layer utilities {
+  .shadow-soft { box-shadow: var(--shadow-soft); }
+  .shadow-card { box-shadow: var(--shadow-card); }
+}
+
 @layer utilities {
   /* Safe areas para iOS - Mejoradas */
   .safe-top {
@@ -1947,14 +1954,50 @@
     min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   }
 
-  /* Scanner container improvements */
-  #qr-reader-scanner {
-    border-radius: 1.5rem;
+  /* Scanner — fullscreen, ocultar toda la UI de html5-qrcode */
+  #qr-reader-scanner,
+  #qr-reader-scanner > * {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 
-  #qr-reader-scanner video {
-    border-radius: 1.5rem;
-    object-fit: cover;
+  /* Ocultar todo excepto el scan_region (que contiene el video) */
+  #qr-reader-scanner > *:not([id*="scan_region"]) {
+    display: none !important;
+  }
+
+  /* El scan_region y su video también fullscreen */
+  #qr-reader-scanner [id*="scan_region"] {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  #qr-reader-scanner video,
+  #qr-reader-scanner [id*="scan_region"] video {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 0 !important;
+  }
+
+  /* Ocultar el shading/overlay que pone html5-qrcode alrededor del QR box */
+  #qr-reader-scanner [id*="scan_region"] img,
+  #qr-reader-scanner canvas {
+    display: none !important;
   }
 }
 
@@ -2803,4 +2846,15 @@
     #f0f0f0 100%
   );
   background-size: 1000px 100%;
+}
+
+@keyframes scan-line {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(calc(100vh * 0.3)); opacity: 0.6; }
+}
+
+@keyframes scanline {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(280px); }
+  100% { transform: translateY(0); }
 }

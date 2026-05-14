@@ -1,11 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "sonner";
 import { UserProvider } from "@/lib/contexts/UserContext";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import { QueryProvider } from "@/lib/providers/QueryProvider";
-import { SessionTimeoutManager } from "@/components/auth/SessionTimeoutManager";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -68,7 +66,6 @@ export default function RootLayout({
             <UserProvider>
               {/* Un solo flex column bajo body: evita hermanos sueltos y asegura flex-1 */}
               <div className="flex flex-1 flex-col min-h-0 w-full">
-                <SessionTimeoutManager />
                 {/* Sin overflow-y global: scroll en main (AdminLayout / store) o layouts dedicados */}
                 <div className="flex flex-1 flex-col min-h-0 w-full fixed inset-0 bg-[#25D076] overflow-hidden">
                   <div
@@ -83,16 +80,6 @@ export default function RootLayout({
                     {children}
                   </div>
                 </div>
-                <Toaster
-                  position="top-center"
-                  toastOptions={{
-                    style: {
-                      maxWidth: "380px",
-                      fontSize: "14px",
-                      marginTop: "env(safe-area-inset-top, 0px)",
-                    },
-                  }}
-                />
               </div>
             </UserProvider>
           </AuthProvider>

@@ -31,6 +31,7 @@ import { lightHaptic, mediumHaptic, successHaptic, errorHaptic } from "@/lib/uti
 import { InvoiceService } from "@/lib/services/invoiceService";
 import { toast } from "sonner";
 import { Loader } from "@/components/ui/Loader";
+import { DashboardLoadingState } from "@/components/ui/DashboardLoadingState";
 import { SwissAddressInput } from "@/components/ui/SwissAddressInput";
 import { devError } from "@/lib/utils/logger";
 
@@ -1700,185 +1701,142 @@ export default function PaymentP() {
   // Show loading state during hydration
   if (!mounted) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] bg-[#F9F6F4]">
-        <div className="text-center">
-          <p className="text-xl font-semibold text-[#373F49] mb-4">
-            Wird geladen...
-          </p>
-        </div>
-      </div>
+      <DashboardLoadingState mode="page" message="Bezahlung wird geladen..." className="animate-page-enter" />
     );
   }
 
   return (
-    <div>
-      {/* Header with real cart information */}
-      <div className="flex flex-col gap-2 justify-center items-center bg-[#F9F6F4] w-full p-2 border-b border-[#E5E5E5]">
-        <p className="text-xl pt-4 font-semibold text-[#373F49]">
-          {store?.name ?? "Gastbestellung"}
-        </p>
-        <p className="text-5xl font-bold">
+    <div className="flex flex-col gap-4 px-4 pt-4 pb-36 max-w-lg mx-auto">
+
+      {/* Hero total card */}
+      <div className="relative overflow-hidden rounded-3xl bg-[#25D076] px-6 py-7 text-white shadow-[0_8px_32px_rgba(37,208,118,0.3)]">
+        <p className="text-sm font-semibold opacity-80">{store?.name ?? 'Gastbestellung'}</p>
+        <p className="mt-1 text-5xl font-extrabold leading-none tabular-nums tracking-tight">
           {formatSwissPriceWithCHF(payableTotal)}
         </p>
-        <p className="text-lg font-semibold text-[#373F49]">
-          inkl. MwSt • {totalItems} {totalItems === 1 ? "Artikel" : "Artikel"}
+        <p className="mt-2 text-sm font-medium opacity-75">
+          {totalItems} {totalItems === 1 ? 'Artikel' : 'Artikel'} · inkl. MwSt.
         </p>
-        
+        {promoApplied && discountAmount > 0 && (
+          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-bold">
+            Du sparst {formatSwissPriceWithCHF(discountAmount)}
+          </div>
+        )}
+        {/* Decoración */}
+        <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
+        <div className="pointer-events-none absolute -bottom-10 -right-4 h-24 w-24 rounded-full bg-white/10" />
       </div>
 
-      {/* Promotional code */}
-      <div className="pt-4 pl-12">
+      {/* Promo code */}
+      <div className="rounded-2xl bg-white px-4 py-3 shadow-sm border border-gray-100">
         {!promoApplied ? (
-          <>
+          !showPromoInput ? (
             <button
-              onClick={() => setShowPromoInput(!showPromoInput)}
-              className="text-[#25D076] text-[15px] font-semibold cursor-pointer hover:underline"
+              onClick={() => setShowPromoInput(true)}
+              className="flex w-full items-center gap-2 text-sm font-semibold text-[#25D076]"
             >
-              Promo Code?
+              <FileText className="h-4 w-4" /> Gutscheincode einlösen
             </button>
-            {showPromoInput && (
-              <div className="flex flex-col gap-1 mt-1 pr-12">
-                <div className="flex gap-2">
-                  <input
-                    id="promo"
-                    type="text"
-                    autoCapitalize="characters"
-                    maxLength={10}
-                    value={localPromoCode}
-                    onChange={(e) =>
-                      setLocalPromoCode(e.target.value.toUpperCase())
-                    }
-                    placeholder="Gib deinen Code ein"
-                    className="block w-[60%] rounded-lg border-2 uppercase bg-white px-3 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    aria-label="Promo Code"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleApplyPromo();
-                      }
-                    }}
-                    autoFocus
-                  />
-                  <button
-                    onClick={handleApplyPromo}
-                    className="bg-brand-500 justify-center items-center flex hover:bg-brand-600 text-white font-semibold rounded-lg px-4 py-3  
-                             touch-target tap-highlight-transparent 
-                             active:scale-95 hover:scale-105"
-                    aria-label="Promo anwenden"
-                    style={{ minHeight: "44px" }}
-                  >
-                    <span className="text-white font-semibold text-base mobile-base text-[15px] truncate">
-                      Anwenden
-                    </span>
-                  </button>
-                </div>
-                {promoError && (
-                  <span className="text-red-600 text-[14px] font-medium mt-1">
-                    {promoError}
-                  </span>
-                )}
+          ) : (
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                <input
+                  id="promo"
+                  type="text"
+                  autoCapitalize="characters"
+                  maxLength={10}
+                  value={localPromoCode}
+                  onChange={(e) => setLocalPromoCode(e.target.value.toUpperCase())}
+                  placeholder="z.B. SUNNE10"
+                  className="h-10 flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 text-sm font-bold uppercase tracking-wide outline-none focus:border-[#25D076]"
+                  aria-label="Promo Code"
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleApplyPromo() }}
+                  autoFocus
+                />
+                <button
+                  onClick={handleApplyPromo}
+                  disabled={localPromoCode.trim().length < 3}
+                  className="h-10 rounded-xl bg-[#25D076] px-4 text-sm font-bold text-white disabled:opacity-50 active:scale-95"
+                  aria-label="Promo anwenden"
+                >
+                  Einlösen
+                </button>
               </div>
-            )}
-          </>
+              {promoError && (
+                <p className="mt-1 text-xs font-semibold text-red-500">{promoError}</p>
+              )}
+            </div>
+          )
         ) : (
-          <div className="flex items-center bg-[#F2FDF5] rounded-xl px-4 py-3 mt-2 mb-2 shadow-sm border border-brand-200 mr-12">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="text-[#3C7E44] font-semibold text-[15px] leading-tight">
-                  Code: {localPromoCode}
-                </div>
-              </div>
-              <div className="text-[#3C7E44] text-[14px] leading-tight">
-                {promoInfo?.discountType === 'percentage' 
-                  ? `${Math.round(promoInfo.discountValue)}% Rabatt auf deine Produkte`
-                  : promoInfo?.description 
-                  ? promoInfo.description
-                  : 'Rabatt'
-                } - {formatSwissPriceWithCHF(discountAmount || 0)}
+          <div className="flex items-center justify-between gap-2 rounded-xl bg-[#25D076]/10 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-[#25D076]" />
+              <div>
+                <p className="text-sm font-bold text-[#25D076]">{localPromoCode}</p>
+                <p className="text-xs text-[#25D076]/70">
+                  {promoInfo?.discountType === 'percentage'
+                    ? `−${Math.round(promoInfo.discountValue)}% · `
+                    : ''}{formatSwissPriceWithCHF(discountAmount || 0)} gespart
+                </p>
               </div>
             </div>
-            <button
-              onClick={handleRemovePromo}
-              className="ml-2 p-2 rounded-full justify-center items-center flex hover:bg-brand-200 focus:outline-none touch-target tap-highlight-transparent active:scale-95"
-              aria-label="Promo entfernen"
-              tabIndex={0}
-              style={{ minHeight: "44px", minWidth: "44px" }}
-            >
-              <X className="w-5 h-5 text-brand-700" />
+            <button onClick={handleRemovePromo} className="grid h-8 w-8 place-items-center rounded-full text-[#25D076]/60 hover:bg-[#25D076]/10 active:scale-95" aria-label="Promo entfernen">
+              <X className="h-4 w-4" />
             </button>
           </div>
         )}
       </div>
 
       {/* Métodos de pago */}
-      <div className="flex flex-col gap-2 justify-center items-center bg-[#F2EDE8] w-full p-4">
-        <p className="text-lg font-semibold text-[#373F49] text-center">
-          Zahlungsmethode wählen:
-        </p>
+      <div className="rounded-2xl bg-white p-4 shadow-sm border border-gray-100">
+        <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">Zahlungsmethode</p>
 
         {paymentMethodsLoading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="relative w-8 h-8">
-              <div className="absolute inset-0 rounded-full border-2 border-gray-200"></div>
-              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#25D076] animate-spin"></div>
+            <div className="relative h-8 w-8">
+              <div className="absolute inset-0 rounded-full border-2 border-gray-200" />
+              <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-[#25D076]" />
             </div>
           </div>
         ) : paymentMethods.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-[#6E7996]">Keine Zahlungsmethoden verfügbar</p>
+          <div className="py-8 text-center">
+            <p className="text-sm text-gray-400">Keine Zahlungsmethoden verfügbar</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {paymentMethods.map((method) => {
-            const isSelected = selectedPaymentMethod === method.id;
-            
-            return (
-              <button
-                key={method.id}
-                onClick={() => handlePaymentMethodSelect(method.id)}
-                className={`
-                  px-4 py-4 w-[345px] h-[50px] text-sm rounded-full
-                  flex items-center justify-center gap-2
-                  ${isSelected ? "ring-4 ring-brand-300 ring-opacity-50 shadow-lg scale-105" : "shadow-md"}
-                  hover:opacity-90 active:scale-[0.97] touch-target tap-highlight-transparent
-                  relative transition-ios
-                `}
-                style={{ 
-                  backgroundColor: method.bgColor, // Usar color directamente desde la DB
-                  color: method.textColor, // Usar color de texto directamente desde la DB
-                  minHeight: "50px"
-                }}
-                aria-label={`${method.name} auswählen`}
-              >
-                {React.createElement(method.icon, { 
-                  className: "w-5 h-5",
-                  color: method.textColor
-                } as React.ComponentProps<typeof method.icon>)}
-                <span className="font-medium" style={{ color: method.textColor }}>{method.name}</span>
-                {isSelected && (
-                  <div className="absolute right-4">
-                    <Eclipse className="w-4 h-4" color={method.textColor} />
-                  </div>
-                )}
-              </button>
-            );
-          })}
+              const isSelected = selectedPaymentMethod === method.id
+              return (
+                <button
+                  key={method.id}
+                  onClick={() => handlePaymentMethodSelect(method.id)}
+                  className={`relative flex w-full items-center gap-3 rounded-2xl px-4 py-4 text-sm font-semibold transition-all active:scale-[0.98] ${isSelected ? 'ring-2 ring-offset-1' : ''}`}
+                  style={{
+                    backgroundColor: method.bgColor,
+                    color: method.textColor,
+                  }}
+                  aria-label={`${method.name} auswählen`}
+                >
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/20">
+                    {React.createElement(method.icon, { className: 'w-5 h-5', color: method.textColor } as React.ComponentProps<typeof method.icon>)}
+                  </span>
+                  <span className="flex-1 text-left text-base font-bold" style={{ color: method.textColor }}>{method.name}</span>
+                  {isSelected && (
+                    <span className="grid h-6 w-6 place-items-center rounded-full bg-white/30">
+                      <CheckCircle className="h-4 w-4" style={{ color: method.textColor }} />
+                    </span>
+                  )}
+                </button>
+              )
+            })}
           </div>
         )}
       </div>
 
-      {/* Footer de seguridad */}
-      <div className="flex flex-col justify-center items-center bg-[#F9F6F4] w-full p-2 border-t border-[#E5E5E5]">
-        <div className="flex flex-row gap-2 justify-center items-center w-full p-2">
-          <Eclipse className="w-4 h-4 mt-3 text-[#25D076] bg-[#25D076] rounded-full" />
-          <p className="text-sm pt-4 font-semibold text-center text-[#373F49]">
-            256-BIT SSL VERSCHLÜSSELUNG
-          </p>
-          <Lock className="w-4 h-6 mt-3" />
-        </div>
-        <p className="text-sm w-[80%] text-center text-[#6E7996]">
-          Ihre Daten werden sicher in ISO-zertifizierten Rechenzentren
-          verarbeitet
-        </p>
+      {/* Footer seguridad */}
+      <div className="flex items-center justify-center gap-2 py-2 text-xs text-gray-400">
+        <Lock className="h-3.5 w-3.5" />
+        <span>256-Bit SSL · ISO-zertifiziert</span>
       </div>
 
       {/* Modal de pago */}

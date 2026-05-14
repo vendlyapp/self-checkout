@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 230 50" width="230" height="50">
+  <rect x="2" y="9" rx="16" ry="16" width="62" height="32" fill="#25D076"/>
+  <text x="33" y="31" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="17" font-weight="800" fill="#ffffff" font-style="italic">Self</text>
+  <text x="70" y="38" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="32" font-weight="900" fill="#111827">Checkout</text>
+</svg>

@@ -1,197 +1,132 @@
 'use client'
 
-import { ReactNode, useState, useEffect } from "react"
+import React, { ReactNode, useState, useEffect, useCallback } from "react"
 import FooterNavUser from "@/components/navigation/user/FooterNavUser"
 import HeaderUser from "@/components/navigation/user/HeaderUser"
+import { CategoryChips } from "@/components/user/CategoryChips"
 import { useScrollReset } from "@/hooks"
 import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore"
 import { LoadingProductsModalProvider } from "@/lib/contexts/LoadingProductsModalContext"
 import { useParams, useRouter, usePathname } from "next/navigation"
 import { useStoreData } from "@/hooks/data/useStoreData"
+import { useStoreProducts } from "@/hooks/queries/useStoreProducts"
 import { DashboardLoadingState } from "@/components/ui/DashboardLoadingState"
 import { StoreProvider, useStoreContext } from "./StoreContext"
-import StoreFixedHeader from "@/components/user/StoreFixedHeader"
-import StoreInfoHeader from "@/components/user/StoreInfoHeader"
-import HeaderNav from "@/components/navigation/HeaderNav"
+import { Toaster } from "sonner"
 
-interface StoreLayoutContentProps {
-  children: ReactNode
-}
-
-function StoreLayoutContent({ children }: StoreLayoutContentProps) {
+function StoreLayoutContent({ children }: { children: ReactNode }) {
   const { scrollContainerRef } = useScrollReset()
+  const [scrollEl, setScrollEl] = useState<HTMLElement | null>(null)
+  const mainRef = useCallback((el: HTMLElement | null) => {
+    ;(scrollContainerRef as React.MutableRefObject<HTMLElement | null>).current = el
+    setScrollEl(el)
+  }, [scrollContainerRef])
   const { store } = useScannedStoreStore()
   const params = useParams()
   const router = useRouter()
   const pathname = usePathname()
   const slug = params.slug as string
   const { isLoading: isStoreLoading } = useStoreData({ slug, autoLoad: true })
-  const [modalContainer, setModalContainer] = useState<HTMLDivElement | null>(null)
+  // Prefetch productos en layout — cuando page.tsx pida datos ya están en cache
+  useStoreProducts({ slug, enabled: !!slug })
 
   const storeContext = useStoreContext()
-  
-  // Determinar si estamos en la página principal de productos (no en cart, payment, etc.)
+
   const isMainProductsPage = pathname === `/store/${slug}` || pathname === `/store/${slug}/`
-  
-  // Determinar si estamos en la página de scan
   const isScanPage = pathname?.includes('/scan')
-  
-  // Determinar el título del HeaderNav según la ruta (solo para páginas que no son la principal)
-  const getHeaderNavTitle = (): string | null => {
-    if (isMainProductsPage) return null
-    
-    if (pathname?.includes('/cart')) return 'Warenkorb'
-    if (pathname?.includes('/payment')) return 'Bezahlung'
-    if (pathname?.includes('/promotion')) return 'Aktionen'
-    if (pathname?.includes('/search')) return 'Suchen'
-    if (pathname?.includes('/scan')) return 'QR Scanner'
-    
-    return null
-  }
-  
-  const headerNavTitle = getHeaderNavTitle()
-  const shouldShowHeaderNav = !isMainProductsPage && headerNavTitle !== null
-  
-  // Si la tienda está cerrada, ocultar navbar y footer
-  const isStoreClosed = store?.isOpen === false
-  
-  // En la página de scan, mostrar HeaderNav y FooterNavUser (ya no ocultamos)
-  const shouldHideNavigation = false // Mostrar navegación en todas las páginas incluyendo scan
-  const shouldHideFooter = false // Mostrar footer en todas las páginas incluyendo scan
 
-  const containerBgClass = "bg-background-cream"
-  const headerBgClass = "bg-white"
-
-  // Verificar si ya tenemos la tienda correcta cargada
-  // Si el store ya está cargado, nunca mostrar pantalla de carga (navegación entre páginas)
+const isStoreClosed = store?.isOpen === false
   const hasStoreLoaded = !!(store && store.slug === slug)
-  
-  // Mostrar pantalla de carga inicial SOLO si:
-  // - NO tenemos el store cargado (recarga completa de página)
-  // - Y está cargando activamente
-  // NO mostrar si ya tenemos el store cargado (navegación entre páginas)
   const showInitialLoading = !hasStoreLoaded && isStoreLoading
+  const showCategoryChips = isMainProductsPage && store && store.isOpen !== false && storeContext.categoryFilters.length > 0
 
-  // Crear contenedor de modales global (igual que en admin)
   useEffect(() => {
     if (typeof window !== 'undefined' && !document.getElementById('global-modals-container')) {
       const container = document.createElement('div')
       container.id = 'global-modals-container'
-      container.style.position = 'fixed'
-      container.style.top = '0'
-      container.style.left = '0'
-      container.style.width = '100%'
-      container.style.height = '100%'
-      container.style.pointerEvents = 'none'
-      container.style.zIndex = '99999'
-      container.style.overflow = 'hidden'
+      container.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:99999;overflow:hidden;'
       document.body.appendChild(container)
-      setModalContainer(container)
-    } else if (typeof window !== 'undefined') {
-      const existingContainer = document.getElementById('global-modals-container')
-      if (existingContainer) {
-        setModalContainer(existingContainer as HTMLDivElement)
-      }
     }
   }, [])
 
-  // Padding-top del main = altura total del contenedor de headers fijos
-  // HeaderUser: 80px + env(safe-area-inset-top) | StoreInfoHeader: ~65px | SearchBar: ~60px | Filtros: ~60px | HeaderNav: ~60px
-  const fixedHeadersHeight = isScanPage && shouldShowHeaderNav
-    ? 'calc(80px + env(safe-area-inset-top) + 60px)'
-    : isMainProductsPage && store && store.isOpen !== false && storeContext.categoryFilters.length > 0
-    ? 'calc(80px + env(safe-area-inset-top) + 65px + 60px + 60px)'
-    : isMainProductsPage && store && store.isOpen !== false
-    ? 'calc(80px + env(safe-area-inset-top) + 65px + 60px)'
-    : isMainProductsPage && store
-    ? 'calc(80px + env(safe-area-inset-top) + 65px)'
-    : shouldShowHeaderNav
-    ? 'calc(80px + env(safe-area-inset-top) + 60px)'
-    : 'calc(80px + env(safe-area-inset-top))'
-
   return (
     <LoadingProductsModalProvider>
-      {/* Pantalla de carga inicial - solo en recarga completa, no en navegación */}
       {showInitialLoading && (
-        <DashboardLoadingState
-          mode="page"
-          message="Wird geladen..."
-          className="animate-page-enter"
-        />
+        <DashboardLoadingState mode="page" message="Wird geladen..." className="animate-page-enter" />
       )}
-      
-      <div className={`flex flex-col flex-1 min-h-0 h-full w-full ${containerBgClass} relative overflow-hidden`}>
-        {/* Contenedor unificado de todos los headers fijos — bg-background-cream cubre los espacios entre componentes */}
-        {!isStoreClosed && (
-          <div className="fixed top-0 left-0 right-0 z-[100] bg-background-cream flex flex-col">
-            <HeaderUser isDarkMode={false} />
-            {!shouldHideNavigation && store && isMainProductsPage && (
+
+      {/* Scan page — render solo children, sin chrome */}
+      {isScanPage ? (
+        <div className="flex-1 min-h-0" key={pathname}>{children}</div>
+      ) : (
+        <div className="flex flex-col flex-1 min-h-0 h-full w-full bg-background-cream relative">
+          <main
+            ref={mainRef}
+            className="flex-1 overflow-x-hidden overflow-y-auto no-scrollbar ios-scroll-fix ios-scroll-smooth"
+            style={{
+              paddingBottom: isStoreClosed ? 0 : 'calc(140px + env(safe-area-inset-bottom))',
+              paddingLeft: 'env(safe-area-inset-left, 0px)',
+              paddingRight: 'env(safe-area-inset-right, 0px)',
+            }}
+          >
+            {!isStoreClosed && (
               <>
-                <StoreInfoHeader isFixed={false} />
-                {store.isOpen !== false && (
-                  <StoreFixedHeader
-                    searchQuery={storeContext.searchQuery}
-                    onSearch={storeContext.onSearch}
+                <HeaderUser isDarkMode={false} scrollContainer={scrollEl} />
+                {showCategoryChips && (
+                  <CategoryChips
+                    filters={storeContext.categoryFilters}
                     selectedFilters={storeContext.selectedFilters}
                     onFilterChange={storeContext.onFilterChange}
-                    onScanQR={storeContext.onScanQR}
-                    categoryFilters={storeContext.categoryFilters}
-                    isFixed={false}
                   />
                 )}
               </>
             )}
-            {!shouldHideNavigation && shouldShowHeaderNav && headerNavTitle && (
-              <HeaderNav title={headerNavTitle} isFixed={false} noSafeArea={true} />
-            )}
-          </div>
-        )}
+            <div className="w-full max-w-full animate-fade-in" key={pathname}>
+              {children}
+            </div>
+          </main>
 
-        {/* Contenido principal optimizado para PWA iOS y móvil */}
-        <main
-          ref={scrollContainerRef}
-          className={`flex-1 overflow-x-hidden relative no-scrollbar ios-scroll-fix ios-scroll-smooth ${
-            isScanPage ? 'overflow-y-hidden' : 'overflow-y-auto'
-          }`}
-          style={{
-            paddingTop: isStoreClosed ? 0 : fixedHeadersHeight,
-            paddingBottom: isStoreClosed || shouldHideFooter ? 0 : 'calc(100px + env(safe-area-inset-bottom))',
-            paddingLeft: 'env(safe-area-inset-left, 0px)',
-            paddingRight: 'env(safe-area-inset-right, 0px)',
-          }}
-        >
-          <div 
-            className="w-full max-w-full animate-fade-in" 
-            style={isScanPage ? { height: '100%' } : {}}
-            key={pathname}
-          >
-            {children}
-          </div>
-        </main>
-
-        {/* Footer de navegación fijo con safe area - ocultar solo si tienda cerrada */}
-        {!isStoreClosed && !shouldHideFooter && (
-          <div className="fixed bottom-0 left-0 right-0 z-[9999]">
-            <FooterNavUser />
-          </div>
-        )}
-      </div>
+          {!isStoreClosed && (
+            <div className="fixed bottom-0 left-0 right-0 z-[9999]">
+              <FooterNavUser />
+            </div>
+          )}
+        </div>
+      )}
+      <Toaster
+        position="top-center"
+        offset={16}
+        gap={8}
+        visibleToasts={3}
+        style={{
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 'calc(100vw - 32px)',
+          maxWidth: '360px',
+        }}
+        toastOptions={{
+          duration: 2200,
+          classNames: {
+            toast: '!rounded-2xl !border-0 !bg-[#25D076] !text-white !shadow-[0_8px_32px_rgba(37,208,118,0.3),0_2px_8px_rgba(0,0,0,0.08)] !text-[13px] !font-semibold !px-4 !py-3 !w-full',
+            icon: '!shrink-0',
+            title: '!font-semibold !text-[13px] !text-white',
+            description: '!text-[11.5px] !text-white/80 !font-normal',
+            success: '![--toast-icon-color:#ffffff]',
+            error: '!bg-[#EF4444] ![--toast-icon-color:#ffffff]',
+            info: '!bg-[#3B82F6] ![--toast-icon-color:#ffffff]',
+          },
+        }}
+      />
     </LoadingProductsModalProvider>
   )
 }
 
-interface StoreLayoutProps {
-  children: ReactNode
-}
-
-export default function StoreLayout({ children }: StoreLayoutProps) {
+export default function StoreLayout({ children }: { children: ReactNode }) {
   const router = useRouter()
   const { store } = useScannedStoreStore()
 
   const handleScanQR = () => {
-    if (store?.slug) {
-      router.push(`/store/${store.slug}/scan`)
-    }
+    if (store?.slug) router.push(`/store/${store.slug}/scan`)
   }
 
   return (

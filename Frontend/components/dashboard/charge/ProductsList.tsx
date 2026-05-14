@@ -21,16 +21,14 @@ const ProductsList = React.memo(function ProductsList({
   searchQuery = "",
   className = "",
 }: ProductsListProps) {
-  const { getItemStyle } = useStaggerAnimation(products.length, 40);
+  const { getItemStyle } = useStaggerAnimation(products.length, 30);
 
   if (loading) {
     return (
-      <div className={`p-4 pb-32 lg:p-0 lg:pb-0 ${className} animate-fade-in`}>
+      <div className={`px-4 py-6 ${className}`}>
         <div className="text-center py-12">
           <Loader size="md" className="mx-auto" />
-          <p className="mt-4 text-sm text-gray-600 font-medium">
-            Produkte werden geladen...
-          </p>
+          <p className="mt-4 text-sm text-gray-500 font-medium">Produkte werden geladen...</p>
         </div>
       </div>
     );
@@ -38,12 +36,10 @@ const ProductsList = React.memo(function ProductsList({
 
   if (products.length === 0) {
     return (
-      <div className={`p-4 pb-32 lg:p-0 lg:pb-0 ${className} animate-fade-in`}>
+      <div className={`px-4 py-6 ${className}`}>
         <div className="text-center py-12">
-          <p className="text-gray-500 text-base font-medium">
-            {searchQuery
-              ? `Keine Produkte für "${searchQuery}" gefunden`
-              : "Keine Produkte verfügbar"}
+          <p className="text-gray-400 text-base font-medium">
+            {searchQuery ? `Keine Produkte für "${searchQuery}" gefunden` : "Keine Produkte verfügbar"}
           </p>
         </div>
       </div>
@@ -51,35 +47,15 @@ const ProductsList = React.memo(function ProductsList({
   }
 
   return (
-    <div className={`p-4 pb-32 lg:p-0 lg:pb-8 ${className}`}>
-      {/* Mobile: Lista vertical con animaciones escalonadas */}
-      <div className="lg:hidden space-y-2">
+    <div className={`px-4 pb-32 pt-2 ${className}`}>
+      <div className="space-y-2">
         {products.map((product, index) => (
           <div
             key={product.id}
             className="animate-stagger-fade-in"
             style={getItemStyle(index)}
           >
-            <ProductCard
-              product={product}
-              onAddToCart={onAddToCart}
-            />
-          </div>
-        ))}
-      </div>
-
-      {/* Desktop/Tablet: Grid compacto con animaciones escalonadas */}
-      <div className="hidden lg:grid lg:grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-3">
-        {products.map((product, index) => (
-          <div
-            key={product.id}
-            className="animate-stagger-fade-in"
-            style={getItemStyle(index)}
-          >
-            <ProductCard
-              product={product}
-              onAddToCart={onAddToCart}
-            />
+            <ProductCard product={product} onAddToCart={onAddToCart} />
           </div>
         ))}
       </div>

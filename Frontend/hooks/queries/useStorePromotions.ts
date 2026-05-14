@@ -53,7 +53,7 @@ export const useStorePromotions = ({ slug, enabled = true }: UseStorePromotionsO
         price: isNaN(finalPrice) ? 0 : finalPrice,
         originalPrice: originalPrice && !isNaN(originalPrice) ? originalPrice : undefined,
         stock: typeof p.stock === 'string' ? parseInt(p.stock) : (p.stock || 0),
-        categoryId: p.categoryId || p.category?.toLowerCase().replace(/\s+/g, '_'),
+        categoryId: p.categoryId,
         isOnSale: isPromotional,
         isPromotional: isPromotional,
       } as Product;

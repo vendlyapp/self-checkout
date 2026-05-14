@@ -9,48 +9,64 @@ interface UseStoreProductsOptions {
   enabled?: boolean;
 }
 
-/**
- * Hook para obtener productos de una tienda con cache inteligente
- * Los productos se cachean y solo se recargan cuando es necesario
- * 
- * Cache: 10 minutos stale, 30 minutos en memoria
- * Solo se recarga cuando:
- * - Es la primera vez que se carga
- * - Se invalida manualmente el cache (cuando admin agrega producto)
- */
+const CACHE_KEY = (slug: string) => `vnd_products_${slug}`
+const CACHE_TTL = 20 * 60 * 1000 // 20 min — tiempo máximo del cache en localStorage
+
+function readLocalCache(slug: string): Product[] | undefined {
+  if (typeof window === 'undefined') return undefined
+  try {
+    const raw = localStorage.getItem(CACHE_KEY(slug))
+    if (!raw) return undefined
+    const { data, ts } = JSON.parse(raw)
+    if (Date.now() - ts > CACHE_TTL) return undefined
+    return data as Product[]
+  } catch {
+    return undefined
+  }
+}
+
+function writeLocalCache(slug: string, data: Product[]) {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(CACHE_KEY(slug), JSON.stringify({ data, ts: Date.now() }))
+  } catch {
+    // localStorage lleno — ignorar
+  }
+}
+
 export const useStoreProducts = ({ slug, enabled = true }: UseStoreProductsOptions) => {
   return useQuery({
     queryKey: ['storeProducts', slug],
     queryFn: async ({ signal }) => {
-      if (!slug) {
-        return [];
-      }
-
-      const url = buildApiUrl(`/api/store/${slug}/products`);
-      const response = await fetch(url, { signal });
-      const result = await response.json();
-      
+      if (!slug) return []
+      const url = buildApiUrl(`/api/store/${slug}/products`)
+      const response = await fetch(url, { signal })
+      const result = await response.json()
       if (!result.success || !result.data) {
-        throw new Error(result.error || 'Fehler beim Laden der Produkte');
+        throw new Error(result.error || 'Fehler beim Laden der Produkte')
       }
-
-      // Normalizar productos
-      const normalizedProducts = result.data.map((p: unknown) => 
-        normalizeProductData(p as Product)
-      );
-
-      return normalizedProducts;
+      const normalized = result.data.map((p: unknown) => normalizeProductData(p as Product))
+      writeLocalCache(slug, normalized)
+      return normalized as Product[]
+    },
+    initialData: () => readLocalCache(slug),
+    initialDataUpdatedAt: () => {
+      if (typeof window === 'undefined') return 0
+      try {
+        const raw = localStorage.getItem(CACHE_KEY(slug))
+        if (!raw) return 0
+        return JSON.parse(raw).ts ?? 0
+      } catch { return 0 }
     },
     enabled: enabled && !!slug,
-    staleTime: 15 * 60 * 1000, // 15 minutos - los productos no cambian frecuentemente
-    gcTime: 60 * 60 * 1000, // 1 hora en cache (productos cambian raramente)
-    refetchOnWindowFocus: false, // No recargar al cambiar de ventana
-    refetchOnMount: false, // No recargar al montar si hay datos en cache
-    refetchOnReconnect: false, // No recargar al reconectar
-    retry: 2, // Reintentar 2 veces en caso de error
-    // Usar placeholderData para mostrar datos en cache mientras se actualiza
-    placeholderData: (previousData) => previousData,
-  });
+    staleTime: 15 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: 2,
+    placeholderData: (prev) => prev,
+  })
 };
 
 /**
