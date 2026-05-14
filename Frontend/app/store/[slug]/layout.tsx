@@ -10,6 +10,7 @@ import { LoadingProductsModalProvider } from "@/lib/contexts/LoadingProductsModa
 import { useParams, useRouter, usePathname } from "next/navigation"
 import { useStoreData } from "@/hooks/data/useStoreData"
 import { useStoreProducts } from "@/hooks/queries/useStoreProducts"
+import { usePaymentMethods } from "@/hooks/queries/usePaymentMethods"
 import { DashboardLoadingState } from "@/components/ui/DashboardLoadingState"
 import { StoreProvider, useStoreContext } from "./StoreContext"
 import { Toaster } from "sonner"
@@ -27,8 +28,9 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const slug = params.slug as string
   const { isLoading: isStoreLoading } = useStoreData({ slug, autoLoad: true })
-  // Prefetch productos en layout — cuando page.tsx pida datos ya están en cache
+  // Prefetch productos y métodos de pago en layout — listos antes de que el usuario navegue
   useStoreProducts({ slug, enabled: !!slug })
+  usePaymentMethods({ storeId: store?.id ?? '', activeOnly: true })
 
   const storeContext = useStoreContext()
 

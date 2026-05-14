@@ -10,13 +10,14 @@ export default function StorePaymentPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { store, isLoading: storeLoading } = useStoreData({ slug, autoLoad: true });
-  const { isLoading: paymentMethodsLoading } = usePaymentMethods({
+  const { data: paymentMethods = [], isLoading: paymentMethodsLoading } = usePaymentMethods({
     storeId: store?.id || '',
     activeOnly: true,
   });
 
+  // Solo bloquear si no hay datos en absoluto — layout ya prefetcheó, esto es instantáneo en visitas normales
   const shouldShowPageLoader =
-    storeLoading || !store || (!!store?.id && paymentMethodsLoading);
+    (storeLoading && !store) || (!!store?.id && paymentMethodsLoading && paymentMethods.length === 0);
 
   if (shouldShowPageLoader) {
     return (

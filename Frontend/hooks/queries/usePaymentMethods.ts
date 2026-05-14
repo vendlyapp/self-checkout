@@ -1,7 +1,26 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { buildApiUrl, getAuthHeaders } from '@/lib/config/api';
+import { buildApiUrl } from '@/lib/config/api';
+
+const PM_CACHE_KEY = (storeId: string) => `vnd_pm_${storeId}`;
+const PM_CACHE_TTL = 30 * 60 * 1000; // 30 min — métodos de pago cambian muy poco
+
+function readPmCache(storeId: string): PaymentMethod[] | undefined {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const raw = localStorage.getItem(PM_CACHE_KEY(storeId));
+    if (!raw) return undefined;
+    const { data, ts } = JSON.parse(raw);
+    if (Date.now() - ts > PM_CACHE_TTL) return undefined;
+    return data as PaymentMethod[];
+  } catch { return undefined; }
+}
+
+function writePmCache(storeId: string, data: PaymentMethod[]) {
+  if (typeof window === 'undefined') return;
+  try { localStorage.setItem(PM_CACHE_KEY(storeId), JSON.stringify({ data, ts: Date.now() })); } catch { /* noop */ }
+}
 
 export interface PaymentMethod {
   id: string;
@@ -69,7 +88,9 @@ export const usePaymentMethods = (options: UsePaymentMethodsOptions) => {
           throw new Error(result.error || 'Fehler beim Laden der Zahlungsmethoden');
         }
 
-        return result.data as PaymentMethod[];
+        const methods = result.data as PaymentMethod[];
+        writePmCache(storeId, methods);
+        return methods;
       } catch (error) {
         clearTimeout(timeoutId);
         if (error instanceof Error && error.name === 'AbortError') {
@@ -79,10 +100,16 @@ export const usePaymentMethods = (options: UsePaymentMethodsOptions) => {
       }
     },
     enabled: !!storeId,
-    staleTime: 3 * 60 * 1000, // 3 minutos — los métodos de pago no cambian con frecuencia
-    gcTime: 10 * 60 * 1000,
-    retry: 2,
-    retryDelay: 1000,
+    initialData: () => readPmCache(storeId),
+    initialDataUpdatedAt: () => {
+      try {
+        const raw = typeof window !== 'undefined' ? localStorage.getItem(PM_CACHE_KEY(storeId)) : null;
+        return raw ? JSON.parse(raw).ts : 0;
+      } catch { return 0; }
+    },
+    staleTime: 20 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    retry: 1,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,

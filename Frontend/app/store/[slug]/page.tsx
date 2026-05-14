@@ -38,9 +38,9 @@ export default function StoreProductsPage() {
     enabled: !!store?.slug,
   })
 
-  const isCategoriesPending = !authLoading && !!session && (false) // categories already cached
-  const isProductsPending = !!store?.slug && (productsLoading || productsFetching)
-  const shouldShowPageLoader = storeLoading || !store || isProductsPending
+  // Solo bloquear si no hay datos en absoluto (ni cache, ni fetched)
+  const isProductsPending = !!store?.slug && productsLoading && rawProducts.length === 0
+  const shouldShowPageLoader = (storeLoading && !store) || isProductsPending
 
   // Agrupar variantes
   const groupProductsWithVariants = useCallback((products: Product[]): Product[] => {

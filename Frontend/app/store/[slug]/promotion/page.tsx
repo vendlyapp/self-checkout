@@ -27,7 +27,8 @@ export default function StorePromotionPage() {
     addToCart(product, quantity)
   }, [addToCart])
 
-  const loading = isLoading || isFetching
+  // Solo bloquear si no hay datos en absoluto
+  const loading = isLoading && products.length === 0
 
   // Categorías derivadas de productos en promoción
   const categoryFilters = useMemo(() => {
