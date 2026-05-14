@@ -732,7 +732,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       Daten ändern
                     </button>
                     <button
-                      onClick={() => { lightHaptic(); onConfirm?.(); }}
+                      onClick={() => { lightHaptic(); onStepChange?.("completing"); }}
                       className="w-full text-gray-400 text-sm py-2 touch-target"
                     >
                       Ohne Daten fortfahren
@@ -757,7 +757,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       Ja, Daten eingeben
                     </button>
                     <button
-                      onClick={() => { lightHaptic(); onConfirm?.(); }}
+                      onClick={() => { lightHaptic(); onStepChange?.("completing"); }}
                       className="w-full bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-2xl py-4 text-base transition-colors border-2 border-gray-200 active:scale-[0.97] touch-target"
                       style={{ minHeight: '56px' }}
                     >

@@ -148,6 +148,16 @@ export default function SnanerDash() {
     lastAnyRef.current = now;
 
     try {
+      // QR de tienda: URL con /store/[slug] pero sin /product/
+      if (rawCode.includes("/store/") && !rawCode.includes("/product/")) {
+        const m = rawCode.match(/\/store\/([^/?#]+)/i);
+        if (m?.[1]) {
+          controlsRef.current?.stop();
+          router.push(`/store/${m[1]}`);
+          return;
+        }
+      }
+
       let productId = rawCode;
       if (rawCode.includes("/product/")) {
         const m = rawCode.match(/\/product\/([a-f0-9-]+)/i);
@@ -188,6 +198,12 @@ export default function SnanerDash() {
       feedback("hit");
       triggerFlash("ok");
       showCard(product, prevQty);
+
+      // Auto-redirect al carrito tras scan exitoso
+      setTimeout(() => {
+        controlsRef.current?.stop();
+        router.push(`/store/${storeData.slug}/cart`);
+      }, 900);
     } catch (err) {
       devError("scan error", err);
       feedback("miss");
