@@ -732,8 +732,9 @@ function ProductAdditionalInfoMobile({ product }: { product: {
             </button>
           </div>
           <div className="flex flex-col items-center bg-gray-50 rounded-xl p-4">
-            <img 
-              src={product.qrCode} 
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={product.qrCode}
               alt={`QR-Code für ${product.name}`}
               className="w-48 h-48 rounded-lg shadow-sm"
             />
@@ -761,8 +762,9 @@ function ProductAdditionalInfoMobile({ product }: { product: {
             </button>
           </div>
           <div className="flex flex-col items-center bg-gray-50 rounded-xl p-4">
-            <img 
-              src={product.barcodeImage} 
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={product.barcodeImage}
               alt={`Barcode für ${product.name}`}
               className="w-full max-w-md h-auto rounded-lg shadow-sm bg-white p-4"
             />

@@ -32,6 +32,7 @@ function PageHeader({ invoice }: { invoice: Invoice }) {
   return (
     <div className="inv-p-page-header">
       <div className="inv-p-page-header-left">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         {invoice.storeLogo ? (
           <img src={invoice.storeLogo} alt={issuer.name} className="inv-p-logo" />
         ) : (

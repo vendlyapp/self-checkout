@@ -77,10 +77,13 @@ export default function HeaderUser({ isDarkMode = false, scrollContainer: _scrol
           <div className="flex-shrink-0">
             {storeLogo ? (
               <div className="h-10 w-10 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center">
-                <img
+                <Image
                   src={storeLogo}
                   alt={store?.name || 'Store Logo'}
+                  width={40}
+                  height={40}
                   className="max-w-full max-h-full w-auto h-auto object-contain"
+                  unoptimized
                   onError={() => setStoreLogo(null)}
                 />
               </div>

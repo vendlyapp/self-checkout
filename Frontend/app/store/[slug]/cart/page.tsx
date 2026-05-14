@@ -11,9 +11,8 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 
 import { useCartStore } from '@/lib/stores/cartStore'
-import { useScannedStoreStore } from '@/lib/stores/scannedStoreStore'
 import { useStoreProducts } from '@/hooks/queries/useStoreProducts'
-import { formatSwissPriceWithCHF, formatSwissPrice } from '@/lib/utils'
+import { formatSwissPriceWithCHF } from '@/lib/utils'
 import { usePromoLogic } from '@/hooks'
 import { Product, normalizeProductData } from '@/components/dashboard/products_list/data/mockProducts'
 
@@ -94,8 +93,7 @@ export default function StoreCartPage() {
   const params = useParams()
   const router = useRouter()
   const slug = params.slug as string
-  const { cartItems, updateQuantity, removeFromCart, addToCart, getTotalWithDiscount, getSubtotal, promoInfo } = useCartStore()
-  const { store } = useScannedStoreStore()
+  const { cartItems, updateQuantity, removeFromCart, addToCart, getTotalWithDiscount, promoInfo } = useCartStore()
 
   const { data: rawProducts = [] } = useStoreProducts({ slug, enabled: !!slug })
   const allProducts = useMemo(() => rawProducts.map(normalizeProductData), [rawProducts])

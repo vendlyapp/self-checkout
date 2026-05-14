@@ -2,6 +2,10 @@ const { query } = require('../../lib/database');
 const qrCodeGenerator = require('../utils/qrCodeGenerator');
 const paymentMethodService = require('./PaymentMethodService');
 const categoryService = require('./CategoryService');
+const SimpleCache = require('../utils/simpleCache');
+
+// Cache slug→store — 10 min TTL, slug changes are extremely rare
+const slugCache = new SimpleCache(10 * 60 * 1000);
 
 class StoreService {
   /**
@@ -162,20 +166,26 @@ class StoreService {
    */
   async getBySlug(slug) {
     try {
+      const cached = slugCache.get(slug);
+      if (cached) return cached;
+
       const result = await query(
         'SELECT * FROM "Store" WHERE "slug" = $1 AND "isActive" = true',
         [slug]
       );
 
-      if (result.rows.length === 0) {
-        return null;
-      }
+      if (result.rows.length === 0) return null;
 
+      slugCache.set(slug, result.rows[0]);
       return result.rows[0];
     } catch (error) {
       console.error('Error getting store by slug:', error);
       throw error;
     }
+  }
+
+  invalidateSlugCache(slug) {
+    slugCache.del(slug);
   }
 
   /**

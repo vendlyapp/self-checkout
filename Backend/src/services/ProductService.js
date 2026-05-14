@@ -6,8 +6,8 @@ const categoryService = require('./CategoryService');
 const SimpleCache = require('../utils/simpleCache');
 const { normalizeSwissMwStRate } = require('../utils/swissMwSt');
 
-// In-memory cache para catálogo público — TTL 5 minutos
-const publicProductCache = new SimpleCache(5 * 60 * 1000);
+// In-memory cache para catálogo público — TTL 10 minutos
+const publicProductCache = new SimpleCache(10 * 60 * 1000);
 
 // ─── Column sets ─────────────────────────────────────────────────────────────
 // LIST_COLS excludes qrCode and barcodeImage — each can be 5-50 KB of base64.

@@ -73,9 +73,8 @@ function ProductRow({
         <div className="p-4 border-b border-border/60 bg-muted/20">
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-muted ring-1 ring-border/50">
-              {product.image ? (
-                <img src={product.image} alt="" className="w-full h-full object-cover" />
-              ) : (
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {product.image ? <img src={product.image} alt="" className="w-full h-full object-cover" /> : (
                 <div className="w-full h-full flex items-center justify-center">
                   <QrCode className="w-6 h-6 text-muted-foreground/60" />
                 </div>
@@ -150,9 +149,8 @@ function ProductRow({
     <div className={`py-4 px-4 transition-colors duration-150 ${isEven ? 'bg-muted/20' : 'bg-transparent'} hover:bg-muted/40`}>
       <div className="flex items-center gap-3 mb-3">
         <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl overflow-hidden bg-muted/80 ring-1 ring-border/40 flex-shrink-0">
-          {product.image ? (
-            <img src={product.image} alt="" className="w-full h-full object-cover" />
-          ) : (
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {product.image ? <img src={product.image} alt="" className="w-full h-full object-cover" /> : (
             <div className="w-full h-full flex items-center justify-center">
               <QrCode className="w-7 h-7 text-muted-foreground/60" />
             </div>

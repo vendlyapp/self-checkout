@@ -1,6 +1,10 @@
 const storeService = require('../services/StoreService');
 const productService = require('../services/ProductService');
 const { HTTP_STATUS } = require('../types');
+const SimpleCache = require('../utils/simpleCache');
+
+// Cache slug→products — separado del cache ownerId para hit directo sin lookup de store
+const slugProductsCache = new SimpleCache(10 * 60 * 1000);
 
 /**
  * Store controller.
@@ -72,18 +76,28 @@ class StoreController {
   async getStoreProducts(req, res) {
     try {
       const { slug } = req.params;
-      const store = await storeService.getBySlug(slug);
 
-      if (!store) {
-        return res.status(HTTP_STATUS.NOT_FOUND).json({
-          success: false,
-          error: 'Store not found',
-        });
+      // L1: slug-level cache — avoids store lookup + product query entirely
+      const cachedBySlug = slugProductsCache.get(slug);
+      if (cachedBySlug) {
+        res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
+        res.setHeader('X-Cache', 'HIT');
+        return res.status(HTTP_STATUS.OK).json(cachedBySlug);
       }
 
+      // L2: store lookup (cached in StoreService)
+      const store = await storeService.getBySlug(slug);
+      if (!store) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, error: 'Store not found' });
+      }
+
+      // L3: product query (cached by ownerId in ProductService)
       const result = await productService.findByOwnerPublic(store.ownerId, 100);
 
-      res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=30');
+      slugProductsCache.set(slug, result);
+
+      res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
+      res.setHeader('X-Cache', 'MISS');
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
