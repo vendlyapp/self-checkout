@@ -26,7 +26,7 @@ export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProp
     const totalAfterDiscount = promoApplied ? subtotal - (discountAmount || 0) : subtotal;
 
     return (
-      <div className="w-full max-w-[430px] mx-auto border-t border-gray-100 px-3 py-2.5">
+      <div className="w-full border-b border-gray-100 bg-white px-3 py-2.5">
         {promoApplied && (
           <div className="mb-2 space-y-1 text-xs">
             <div className="flex items-center justify-between text-gray-600">
