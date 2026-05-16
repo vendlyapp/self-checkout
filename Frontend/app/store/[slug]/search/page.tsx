@@ -128,7 +128,7 @@ export default function StoreSearchPage() {
               onChange={e => setQ(e.target.value)}
               onBlur={() => persistRecent(q)}
               placeholder="Produkte suchen …"
-              className="w-full bg-transparent text-base font-medium text-gray-900 outline-none placeholder:text-gray-400"
+              className="ios-input-fix w-full bg-transparent text-base font-medium text-gray-900 outline-none placeholder:text-gray-400"
             />
             {q && (
               <button type="button" onClick={() => setQ('')} aria-label="Leeren" className="text-gray-400 flex-shrink-0">

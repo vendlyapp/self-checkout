@@ -176,7 +176,7 @@ export default function StoreProductsPage() {
               placeholder="Produkte suchen …"
               onChange={(e) => storeContext.onSearch(e.target.value)}
               onFocus={() => router.push(`/store/${slug}/search`)}
-              className="w-full bg-transparent text-base font-medium text-gray-900 outline-none placeholder:text-gray-400"
+              className="ios-input-fix w-full bg-transparent text-base font-medium text-gray-900 outline-none placeholder:text-gray-400"
               readOnly
             />
           </label>

@@ -373,11 +373,21 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Prevenir zoom en inputs en Safari iOS */
+  /* Prevenir zoom en inputs en Safari iOS (font-size < 16px provoca auto-zoom) */
   .ios-input-fix {
-    font-size: 16px; /* Previene zoom automático */
+    font-size: 16px;
     -webkit-appearance: none;
     appearance: none;
+  }
+
+  @media (pointer: coarse) {
+    .store-pwa :where(
+      input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="range"]):not([type="file"]),
+      textarea,
+      select
+    ) {
+      font-size: 16px !important;
+    }
   }
 
   /* Área táctil mínima para iPhone */
@@ -2857,4 +2867,17 @@
   0%   { transform: translateY(0); }
   50%  { transform: translateY(280px); }
   100% { transform: translateY(0); }
+}
+
+/* iOS Safari: sin auto-zoom en inputs (fuera de @layer, máxima prioridad) */
+@supports (-webkit-touch-callout: none) {
+  .store-pwa :is(
+      input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="range"]):not([type="file"]),
+      textarea,
+      select
+    ),
+  .ios-input-fix {
+    font-size: 16px !important;
+    -webkit-text-size-adjust: 100%;
+  }
 }

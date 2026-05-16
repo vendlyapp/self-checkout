@@ -149,9 +149,9 @@ const isStoreClosed = store?.isOpen === false
 
       {/* Scan page — render solo children, sin chrome */}
       {isScanPage ? (
-        <div className="flex-1 min-h-0" key={pathname}>{children}</div>
+        <div className="store-pwa flex-1 min-h-0" key={pathname}>{children}</div>
       ) : (
-        <div className="flex flex-col flex-1 min-h-0 h-full w-full bg-background-cream relative">
+        <div className="store-pwa flex flex-col flex-1 min-h-0 h-full w-full bg-background-cream relative">
           <main
             ref={mainRef}
             className="flex-1 overflow-x-hidden overflow-y-auto no-scrollbar ios-scroll-fix ios-scroll-smooth"

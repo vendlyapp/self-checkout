@@ -34,6 +34,7 @@ import { Loader } from "@/components/ui/Loader";
 import { DashboardLoadingState } from "@/components/ui/DashboardLoadingState";
 import { SwissAddressInput } from "@/components/ui/SwissAddressInput";
 import { devError } from "@/lib/utils/logger";
+import { resetIosViewportZoom } from "@/lib/utils/iosInputZoom";
 
 interface PaymentMethodDisplay {
   id: string;
@@ -1740,15 +1741,17 @@ export default function PaymentP() {
                 <input
                   id="promo"
                   type="text"
+                  inputMode="text"
                   autoCapitalize="characters"
                   maxLength={10}
                   value={localPromoCode}
                   onChange={(e) => setLocalPromoCode(e.target.value.toUpperCase())}
+                  onBlur={resetIosViewportZoom}
                   placeholder="z.B. SUNNE10"
-                  className="h-9 flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-bold uppercase tracking-wide outline-none focus:border-brand-500"
+                  className="ios-input-fix h-11 min-h-[44px] flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 text-[16px] font-bold uppercase tracking-wide outline-none focus:border-brand-500"
+                  style={{ fontSize: '16px' }}
                   aria-label="Promo Code"
                   onKeyDown={(e) => { if (e.key === 'Enter') handleApplyPromo() }}
-                  autoFocus
                 />
                 <button
                   onClick={handleApplyPromo}

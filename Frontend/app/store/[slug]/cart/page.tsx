@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import {
   ArrowLeft, ArrowRight, ShoppingBag, ScanLine, Minus, Plus,
   Sparkles, Tag, X, Trash2
@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { useCartStore } from '@/lib/stores/cartStore'
 import { useStoreProducts } from '@/hooks/queries/useStoreProducts'
 import { formatSwissPriceWithCHF } from '@/lib/utils'
+import { resetIosViewportZoom } from '@/lib/utils/iosInputZoom'
 import { usePromoLogic } from '@/hooks'
 import { Product, normalizeProductData } from '@/components/dashboard/products_list/data/mockProducts'
 
@@ -105,6 +106,13 @@ export default function StoreCartPage() {
   } = usePromoLogic()
 
   const [promoOpen, setPromoOpen] = useState(false)
+  const promoInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!promoOpen) return
+    const id = window.setTimeout(() => promoInputRef.current?.focus(), 50)
+    return () => window.clearTimeout(id)
+  }, [promoOpen])
 
   const total = getTotalWithDiscount()
   const itemCount = cartItems.reduce((s, { quantity }) => s + quantity, 0)
@@ -220,16 +228,20 @@ export default function StoreCartPage() {
             <div className="rounded-2xl border border-gray-200 bg-white p-2.5">
               <div className="flex gap-2">
                 <input
+                  ref={promoInputRef}
+                  type="text"
+                  inputMode="text"
                   value={localPromoCode}
                   onChange={e => setLocalPromoCode(e.target.value.toUpperCase().slice(0, 20))}
                   onKeyDown={e => e.key === 'Enter' && handleApplyPromo()}
+                  onBlur={resetIosViewportZoom}
                   placeholder="z.B. SUNNE10"
                   maxLength={20}
                   autoCapitalize="characters"
                   autoCorrect="off"
                   spellCheck={false}
-                  autoFocus
-                  className="h-10 flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-bold uppercase tracking-wide outline-none focus:border-[#25D076]"
+                  className="ios-input-fix h-11 min-h-[44px] flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 text-[16px] font-bold uppercase tracking-wide outline-none focus:border-brand-500"
+                  style={{ fontSize: '16px' }}
                 />
                 <button
                   onClick={handleApplyPromo}
