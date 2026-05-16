@@ -7,20 +7,19 @@ import { Product } from '@/components/dashboard/products_list/data/mockProducts'
 import { useCartStore } from '@/lib/stores/cartStore'
 import { formatSwissPrice } from '@/lib/utils'
 
-// Etiquetas y colores por tipo de promo (mismos tokens que Lovable)
 const kindClass: Record<string, string> = {
-  weekly:    'bg-amber-100 text-amber-800',
-  daily:     'bg-orange-100 text-orange-800',
-  flash:     'bg-red-100 text-red-700',
-  seasonal:  'bg-emerald-100 text-emerald-800',
-  default:   'bg-gray-100 text-gray-700',
+  weekly: 'bg-amber-100 text-amber-800',
+  daily: 'bg-orange-100 text-orange-800',
+  flash: 'bg-red-100 text-red-700',
+  seasonal: 'bg-emerald-100 text-emerald-800',
+  default: 'bg-gray-100 text-gray-700',
 }
 const kindLabel: Record<string, string> = {
-  weekly:   'Wochenangebot',
-  daily:    'Tagesaktion',
-  flash:    'Flash-Deal',
+  weekly: 'Wochenangebot',
+  daily: 'Tagesaktion',
+  flash: 'Flash-Deal',
   seasonal: 'Saisonal',
-  default:  'Aktion',
+  default: 'Aktion',
 }
 
 function getKind(product: Product): string {
@@ -42,7 +41,7 @@ function PromoHeroCard({
   size?: Size
 }) {
   const { addToCart, cartItems } = useCartStore()
-  const qty = cartItems.find(i => i.product.id === product.id)?.quantity ?? 0
+  const qty = cartItems.find((i) => i.product.id === product.id)?.quantity ?? 0
   const kind = getKind(product)
 
   const onSale = !!product.originalPrice && product.originalPrice > product.price
@@ -53,125 +52,121 @@ function PromoHeroCard({
 
   const handleAdd = () => addToCart(product, 1)
 
+  const addLabel =
+    qty > 0 ? `${product.name}, noch eins hinzufügen` : `${product.name} in den Warenkorb`
+
   if (size === 'lg') {
     return (
-      <article className="relative flex w-[92%] shrink-0 snap-center flex-col overflow-hidden rounded-2xl bg-white shadow-card sm:w-[420px]">
-        {/* Imagen */}
-        <div className="relative h-44 w-full bg-gray-100">
+      <article className="relative flex w-[85%] shrink-0 snap-center flex-col overflow-hidden rounded-xl bg-white shadow-card sm:w-[300px]">
+        <div className="relative h-32 w-full bg-gray-100">
           {product.image ? (
-            <Image src={product.image} alt={product.name} fill className="object-cover" sizes="420px" />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <Package className="h-10 w-10 text-gray-300" />
-            </div>
-          )}
-          {/* Badges top-left */}
-          <div className="absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
-            <span className={`rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wide ${kindClass[kind]}`}>
-              {kindLabel[kind]}
-            </span>
-            {(onSale || percent > 0) && (
-              <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white shadow-soft">
-                −{percent}%
-              </span>
-            )}
-          </div>
-          {/* Badge cantidad */}
-          {qty > 0 && (
-            <span className="absolute right-3 top-3 grid h-9 min-w-9 place-items-center rounded-full bg-[#25D076] px-2 text-base font-extrabold text-white shadow-soft ring-2 ring-white">
-              ×{qty}
-            </span>
-          )}
-        </div>
-
-        {/* Info */}
-        <div className="flex flex-col gap-1.5 p-4">
-          <h3 className="line-clamp-2 text-base font-bold leading-tight text-gray-900">{product.name}</h3>
-          <p className="text-sm font-medium text-gray-400">{product.unit}</p>
-          <div className="mt-1 flex items-end justify-between gap-3">
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-extrabold text-red-600 leading-none">
-                CHF {formatSwissPrice(displayPrice)}
-              </span>
-              {onSale && (
-                <span className="text-sm text-gray-400 line-through">
-                  CHF {formatSwissPrice(product.originalPrice)}
-                </span>
-              )}
-            </div>
-            <button
-              onClick={handleAdd}
-              className="flex h-12 items-center gap-1.5 rounded-full bg-[#25D076] px-5 text-base font-bold text-white shadow-soft active:scale-95 transition-transform"
-            >
-              <Plus className="h-5 w-5" strokeWidth={2.5} />
-              {qty > 0 ? 'Noch eins' : 'In Korb'}
-            </button>
-          </div>
-        </div>
-      </article>
-    )
-  }
-
-  // Size "sm" — card horizontal compacta
-  return (
-    <article className="relative flex w-[88%] shrink-0 snap-center items-center gap-3 overflow-hidden rounded-xl bg-white p-3 shadow-card sm:w-[340px]">
-      {/* Imagen */}
-      <div className="relative h-24 w-24 flex-shrink-0">
-        <div className="relative h-full w-full overflow-hidden rounded-lg bg-gray-100">
-          {product.image ? (
-            <Image src={product.image} alt={product.name} fill className="object-cover" sizes="96px" />
+            <Image src={product.image} alt={product.name} fill className="object-cover" sizes="300px" />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
               <Package className="h-8 w-8 text-gray-300" />
             </div>
           )}
+          <div className="absolute left-2 top-2 flex max-w-[calc(100%-3rem)] items-center gap-1">
+            <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${kindClass[kind]}`}>
+              {kindLabel[kind]}
+            </span>
+            {(onSale || percent > 0) && (
+              <span className="shrink-0 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-soft">
+                −{percent}%
+              </span>
+            )}
+          </div>
+          {qty > 0 && (
+            <span className="absolute right-2 top-2 grid h-7 min-w-7 place-items-center rounded-full bg-brand-500 px-1.5 text-xs font-extrabold text-white shadow-soft ring-2 ring-white">
+              ×{qty}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2.5 p-3">
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-sm font-bold text-gray-900">{product.name}</h3>
+            <p className="truncate text-xs text-gray-400">{product.unit}</p>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-base font-extrabold text-red-600 leading-none tabular-nums">
+                CHF {formatSwissPrice(displayPrice)}
+              </span>
+              {onSale && (
+                <span className="text-[11px] text-gray-400 line-through tabular-nums">
+                  CHF {formatSwissPrice(product.originalPrice)}
+                </span>
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-500 text-white shadow-soft active:scale-95 transition-transform"
+            aria-label={addLabel}
+          >
+            <Plus className="h-4 w-4" strokeWidth={2.5} />
+          </button>
+        </div>
+      </article>
+    )
+  }
+
+  return (
+    <article className="relative flex w-[82%] shrink-0 snap-center items-center gap-2.5 overflow-hidden rounded-xl bg-white p-2.5 shadow-card sm:w-[300px]">
+      <div className="relative h-[72px] w-[72px] flex-shrink-0">
+        <div className="relative h-full w-full overflow-hidden rounded-lg bg-gray-100">
+          {product.image ? (
+            <Image src={product.image} alt={product.name} fill className="object-cover" sizes="72px" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <Package className="h-7 w-7 text-gray-300" />
+            </div>
+          )}
         </div>
         {qty > 0 && (
-          <span className="absolute -right-1.5 -top-1.5 grid h-7 min-w-7 place-items-center rounded-full bg-[#25D076] px-1.5 text-xs font-extrabold text-white shadow-soft ring-2 ring-white">
+          <span className="absolute -right-1 -top-1 grid h-6 min-w-6 place-items-center rounded-full bg-brand-500 px-1 text-[10px] font-extrabold text-white shadow-soft ring-2 ring-white">
             ×{qty}
           </span>
         )}
       </div>
 
-      {/* Info */}
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${kindClass[kind]}`}>
+        <div className="flex items-center gap-1 overflow-hidden">
+          <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${kindClass[kind]}`}>
             {kindLabel[kind]}
           </span>
           {(onSale || percent > 0) && (
-            <span className="rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white">
+            <span className="shrink-0 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
               −{percent}%
             </span>
           )}
         </div>
-        <p className="mt-1 line-clamp-2 text-base font-bold leading-tight text-gray-900">{product.name}</p>
-        <p className="text-xs font-medium text-gray-400">{product.unit}</p>
-        <div className="mt-1 flex items-baseline gap-1.5">
-          <span className="text-xl font-extrabold text-red-600 leading-none">
+        <p className="mt-0.5 truncate text-sm font-bold text-gray-900">{product.name}</p>
+        <p className="truncate text-[11px] text-gray-400">{product.unit}</p>
+        <div className="mt-0.5 flex items-baseline gap-1">
+          <span className="text-sm font-extrabold text-red-600 leading-none tabular-nums">
             CHF {formatSwissPrice(displayPrice)}
           </span>
           {onSale && (
-            <span className="text-xs text-gray-400 line-through">
+            <span className="text-[10px] text-gray-400 line-through tabular-nums">
               CHF {formatSwissPrice(product.originalPrice)}
             </span>
           )}
         </div>
       </div>
 
-      {/* Botón + */}
       <button
+        type="button"
         onClick={handleAdd}
-        className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-full bg-[#25D076] text-white shadow-soft active:scale-95 transition-transform"
-        aria-label={`${product.name} hinzufügen`}
+        className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full bg-brand-500 text-white shadow-soft active:scale-95 transition-transform"
+        aria-label={addLabel}
       >
-        <Plus className="h-5 w-5" strokeWidth={2.5} />
+        <Plus className="h-4 w-4" strokeWidth={2.5} />
       </button>
     </article>
   )
 }
 
-// Carousel con autoplay suave — igual que Lovable PromoCarousel
 export function PromoCarousel({
   products,
   size = 'sm',
@@ -194,8 +189,12 @@ export function PromoCarousel({
     if (!el || !loop) return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-    const pause = () => { pausedRef.current = true }
-    const resume = () => { pausedRef.current = false }
+    const pause = () => {
+      pausedRef.current = true
+    }
+    const resume = () => {
+      pausedRef.current = false
+    }
     el.addEventListener('touchstart', pause, { passive: true })
     el.addEventListener('touchend', resume, { passive: true })
     el.addEventListener('mouseenter', pause)
@@ -204,7 +203,7 @@ export function PromoCarousel({
     const onScroll = () => {
       const first = el.firstElementChild as HTMLElement | null
       if (!first) return
-      const cardW = first.offsetWidth + 12
+      const cardW = first.offsetWidth + 10
       const half = el.scrollWidth / 2
       const pos = el.scrollLeft % half
       setActiveIdx(Math.round(pos / cardW) % products.length)
@@ -215,7 +214,7 @@ export function PromoCarousel({
       if (pausedRef.current || document.hidden) return
       const first = el.firstElementChild as HTMLElement | null
       if (!first) return
-      const step = first.offsetWidth + 12
+      const step = first.offsetWidth + 10
       const half = el.scrollWidth / 2
       if (el.scrollLeft + step >= half - 4) {
         el.scrollTo({ left: el.scrollLeft - half, behavior: 'auto' })
@@ -243,7 +242,7 @@ export function PromoCarousel({
     <div>
       <div
         ref={scrollerRef}
-        className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="-mx-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {items.map((product, i) => (
           <PromoHeroCard key={`${product.id}-${i}`} product={product} size={size} />
@@ -254,7 +253,7 @@ export function PromoCarousel({
           {products.map((_, i) => (
             <span
               key={i}
-              className={`h-1.5 rounded-full transition-all duration-300 ${i === activeIdx ? 'w-6 bg-gray-900' : 'w-1.5 bg-gray-300'}`}
+              className={`h-1.5 rounded-full transition-all duration-300 ${i === activeIdx ? 'w-5 bg-gray-900' : 'w-1.5 bg-gray-300'}`}
             />
           ))}
         </div>

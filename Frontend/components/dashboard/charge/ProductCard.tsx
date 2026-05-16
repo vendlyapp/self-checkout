@@ -154,13 +154,13 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
 
   // Diseño horizontal (1 columna) — igual para vista normal y carrito
   return (
-    <article className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-card">
+    <article className="flex items-center gap-2.5 rounded-xl bg-white p-2.5 shadow-card">
       {/* Imagen — tappable al detalle */}
       <div className="relative flex-shrink-0">
         {detailHref ? (
-          <Link href={detailHref} className="block h-20 w-20 overflow-hidden rounded-xl bg-gray-100 active:opacity-80 transition-opacity">
+          <Link href={detailHref} className="block h-[72px] w-[72px] overflow-hidden rounded-lg bg-gray-100 active:opacity-80 transition-opacity">
             {product.image ? (
-              <Image src={product.image} alt={getBaseProductName} width={80} height={80} className="h-full w-full object-cover" />
+              <Image src={product.image} alt={getBaseProductName} width={72} height={72} className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full w-full items-center justify-center">
                 <Package className="h-8 w-8 text-gray-300" />
@@ -168,9 +168,9 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
             )}
           </Link>
         ) : (
-          <div className="h-20 w-20 overflow-hidden rounded-xl bg-gray-100">
+          <div className="h-[72px] w-[72px] overflow-hidden rounded-lg bg-gray-100">
             {product.image ? (
-              <Image src={product.image} alt={getBaseProductName} width={80} height={80} className="h-full w-full object-cover" />
+              <Image src={product.image} alt={getBaseProductName} width={72} height={72} className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full w-full items-center justify-center">
                 <Package className="h-8 w-8 text-gray-300" />
@@ -217,8 +217,8 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
         )}
       </div>
 
-      {/* Precio + controles — columna derecha */}
-      <div className="flex flex-shrink-0 flex-col items-end gap-2">
+      {/* Precio + controles — ancho fijo para evitar salto al agregar */}
+      <div className="flex w-[84px] flex-shrink-0 flex-col items-end justify-between gap-1.5 self-stretch py-0.5">
         {/* Precio */}
         <div className="text-right leading-none">
           {onSale ? (

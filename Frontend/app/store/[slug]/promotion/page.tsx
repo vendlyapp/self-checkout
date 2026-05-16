@@ -60,7 +60,7 @@ export default function StorePromotionPage() {
     <div className="mx-auto max-w-3xl px-4 pt-4 pb-10">
       {/* Header */}
       <div className="flex items-baseline justify-between">
-        <h1 className="text-2xl font-extrabold text-gray-900">Aktionen</h1>
+        <h1 className="text-xl font-extrabold text-gray-900">Aktionen</h1>
         {products.length > 0 && (
           <span className="text-sm font-medium text-gray-400">{products.length} reduziert</span>
         )}
@@ -69,7 +69,7 @@ export default function StorePromotionPage() {
       {/* Carousel hero */}
       {products.length > 0 && (
         <section className="mt-4 -mx-4">
-          <PromoCarousel products={products} size="lg" showDots />
+          <PromoCarousel products={products} size="sm" showDots />
         </section>
       )}
 

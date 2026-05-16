@@ -156,7 +156,7 @@ const isStoreClosed = store?.isOpen === false
             ref={mainRef}
             className="flex-1 overflow-x-hidden overflow-y-auto no-scrollbar ios-scroll-fix ios-scroll-smooth"
             style={{
-              paddingBottom: isStoreClosed ? 0 : 'calc(140px + env(safe-area-inset-bottom))',
+              paddingBottom: isStoreClosed ? 0 : 'calc(118px + env(safe-area-inset-bottom))',
               paddingLeft: 'env(safe-area-inset-left, 0px)',
               paddingRight: 'env(safe-area-inset-right, 0px)',
             }}

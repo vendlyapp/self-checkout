@@ -157,9 +157,7 @@ export default function FooterNav() {
     <div className="bg-white rounded-t-3xl shadow-[0_-8px_24px_rgba(0,0,0,0.10),0_-4px_8px_rgba(0,0,0,0.06)] safe-area-bottom">
       {/* En carrito: resumen ARRIBA del nav */}
       {isCartRoute && hasValidCartItems && (
-        <div className="px-3 pt-3">
-          <UserCartSummaryCart variant="inline" />
-        </div>
+        <UserCartSummaryCart variant="inline" />
       )}
 
       <nav>
@@ -290,7 +288,7 @@ export default function FooterNav() {
       {/* Barra de carrito — debajo del nav, visible solo con artículos */}
       {/* En otras páginas (no carrito, no pago): barra verde DEBAJO del nav */}
       {!isCartRoute && !isPaymentRoute && hasValidCartItems && (
-        <div className="px-4 pt-3 pb-3">
+        <div className="px-3 pt-2 pb-2.5">
           <UserCartSummary variant="inline" />
         </div>
       )}

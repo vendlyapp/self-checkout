@@ -249,7 +249,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         {paymentStep === "confirm" && (
           <>
             {/* Header unificado con diseño consistente */}
-            <div className="flex items-center gap-3 p-5 border-b border-gray-200 bg-white sticky top-0 z-10">
+            <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-200 bg-white sticky top-0 z-10">
               <button
                 onClick={() => {
                   lightHaptic();
@@ -259,12 +259,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     onClose();
                   }
                 }}
-                className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 rounded-full transition-ios-fast active:scale-95 touch-target"
+                className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 rounded-full transition-ios-fast active:scale-95 touch-target-sm"
                 aria-label="Zurück"
               >
-                <ArrowLeft className="w-6 h-6 text-gray-700" />
+                <ArrowLeft className="w-5 h-5 text-gray-700" />
               </button>
-              <h2 className="text-xl font-bold text-gray-900 flex-1">
+              <h2 className="text-base font-bold text-gray-900 flex-1">
                 Zahlung bestätigen
               </h2>
               <button
@@ -272,30 +272,30 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   lightHaptic();
                   onClose();
                 }}
-                className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 rounded-full transition-ios-fast active:scale-95 touch-target"
+                className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 rounded-full transition-ios-fast active:scale-95 touch-target-sm"
                 aria-label="Schliessen"
               >
-                <X className="w-6 h-6 text-gray-700" />
+                <X className="w-5 h-5 text-gray-700" />
               </button>
             </div>
 
             {/* Contenido scrolleable */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-4">
               {/* Card Método de Pago */}
-              <div className="bg-[#F9FAFB] rounded-xl p-4 mb-4 border border-gray-100">
+              <div className="bg-[#F9FAFB] rounded-xl p-3 mb-3 border border-gray-100">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
                     <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-white flex-shrink-0"
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0"
                       style={{ backgroundColor: methodInfo.color }}
                     >
-                      <methodInfo.icon className="w-6 h-6" />
+                      <methodInfo.icon className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-800 text-base truncate">
+                      <p className="font-semibold text-gray-800 text-sm truncate">
                         {methodInfo.name}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-xs text-gray-600">
                         Verbunden
                       </p>
                     </div>
@@ -303,7 +303,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   {onBackToMethods && (
                     <button
                       onClick={onBackToMethods}
-                      className="text-[#25D076] text-sm font-medium hover:underline flex-shrink-0 ml-2"
+                      className="text-brand-500 text-xs font-medium hover:underline flex-shrink-0 ml-2"
                     >
                       Ändern →
                     </button>
@@ -312,11 +312,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               </div>
 
               {/* Resumen de Compra */}
-              <div className="bg-white border border-gray-200 rounded-xl p-5 mb-4">
-                <h3 className="text-base font-semibold text-gray-900 mb-2">
+              <div className="bg-white border border-gray-200 rounded-xl p-3.5 mb-3">
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">
                   Bestellübersicht
                 </h3>
-                <div className="space-y-3 mb-4 max-h-64 overflow-y-auto pr-2">
+                <div className="space-y-2 mb-3 max-h-52 overflow-y-auto pr-1">
                   {cartItems.map((item, index) => (
                     <div key={item.product.id || index} className="flex justify-between items-start text-sm pb-2 border-b border-gray-100 last:border-0 last:pb-0">
                       <span className="text-gray-700 flex-1 pr-4">
@@ -353,14 +353,14 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       )}
                     </>
                   )}
-                  <div className="border-t border-gray-200 pt-3 mt-3">
+                  <div className="border-t border-gray-200 pt-2 mt-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-base font-semibold text-gray-900">Gesamtbetrag</span>
-                      <span className="text-xl font-bold text-[#25D076]">
+                      <span className="text-sm font-semibold text-gray-900">Gesamtbetrag</span>
+                      <span className="text-lg font-bold text-brand-500 tabular-nums">
                         CHF {formatPrice(totalAmount)}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">inkl. MwSt</p>
+                    <p className="text-xs text-gray-500 mt-0.5">inkl. MwSt</p>
                   </div>
                 </div>
               </div>
@@ -368,7 +368,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
               {errorMessage && (
                 <div
-                  className="mb-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
+                  className="mb-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700"
                   role="alert"
                   aria-live="polite"
                 >
@@ -378,11 +378,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             </div>
 
             {/* Main CTA Button - Unified Style */}
-            <div className="p-5 border-t border-gray-200 bg-white sticky bottom-0">
+            <div className="px-4 py-3 border-t border-gray-200 bg-white sticky bottom-0">
               <button
                 onClick={() => {
                   mediumHaptic();
-                  // QR-Rechnung: siempre pedir/confirmar datos antes de crear la orden
                   if (selectedMethod === 'qr-rechnung' && onPreCollectData) {
                     onPreCollectData();
                   } else {
@@ -390,8 +389,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   }
                 }}
                 disabled={isProcessing}
-                className="w-full bg-[#25D076] hover:bg-[#20B865] active:bg-[#1EA55A] text-white font-semibold rounded-2xl py-4 text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#25D076]/25 active:scale-[0.97] active:shadow-md touch-target"
-                style={{ minHeight: '56px' }}
+                className="w-full bg-brand-500 hover:bg-brand-600 active:bg-[#1EA55A] text-white font-semibold rounded-xl py-3 text-sm transition-ios disabled:opacity-50 disabled:cursor-not-allowed shadow-soft active:scale-[0.97] touch-target"
               >
                 {isProcessing ? (
                   <span className="flex items-center justify-center gap-2">
@@ -1706,29 +1704,28 @@ export default function PaymentP() {
   }
 
   return (
-    <div className="flex flex-col gap-4 px-4 pt-4 pb-36 max-w-lg mx-auto">
+    <div className="flex flex-col gap-3 px-4 pt-3 pb-32 max-w-lg mx-auto">
 
       {/* Hero total card */}
-      <div className="relative overflow-hidden rounded-3xl bg-[#25D076] px-6 py-7 text-white shadow-[0_8px_32px_rgba(37,208,118,0.3)]">
-        <p className="text-sm font-semibold opacity-80">{store?.name ?? 'Gastbestellung'}</p>
-        <p className="mt-1 text-5xl font-extrabold leading-none tabular-nums tracking-tight">
+      <div className="relative overflow-hidden rounded-2xl bg-brand-500 px-4 py-4 text-white shadow-soft">
+        <p className="text-xs font-semibold opacity-80 truncate">{store?.name ?? 'Gastbestellung'}</p>
+        <p className="mt-1 text-3xl font-extrabold leading-none tabular-nums tracking-tight">
           {formatSwissPriceWithCHF(payableTotal)}
         </p>
-        <p className="mt-2 text-sm font-medium opacity-75">
+        <p className="mt-1.5 text-xs font-medium opacity-75">
           {totalItems} {totalItems === 1 ? 'Artikel' : 'Artikel'} · inkl. MwSt.
         </p>
         {promoApplied && discountAmount > 0 && (
-          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-bold">
+          <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-[11px] font-bold">
             Du sparst {formatSwissPriceWithCHF(discountAmount)}
           </div>
         )}
-        {/* Decoración */}
-        <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
-        <div className="pointer-events-none absolute -bottom-10 -right-4 h-24 w-24 rounded-full bg-white/10" />
+        <div className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-white/10" />
+        <div className="pointer-events-none absolute -bottom-8 -right-3 h-16 w-16 rounded-full bg-white/10" />
       </div>
 
       {/* Promo code */}
-      <div className="rounded-2xl bg-white px-4 py-3 shadow-sm border border-gray-100">
+      <div className="rounded-xl bg-white px-3 py-2.5 shadow-sm border border-gray-100">
         {!promoApplied ? (
           !showPromoInput ? (
             <button
@@ -1748,7 +1745,7 @@ export default function PaymentP() {
                   value={localPromoCode}
                   onChange={(e) => setLocalPromoCode(e.target.value.toUpperCase())}
                   placeholder="z.B. SUNNE10"
-                  className="h-10 flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 text-sm font-bold uppercase tracking-wide outline-none focus:border-[#25D076]"
+                  className="h-9 flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-bold uppercase tracking-wide outline-none focus:border-brand-500"
                   aria-label="Promo Code"
                   onKeyDown={(e) => { if (e.key === 'Enter') handleApplyPromo() }}
                   autoFocus
@@ -1756,7 +1753,7 @@ export default function PaymentP() {
                 <button
                   onClick={handleApplyPromo}
                   disabled={localPromoCode.trim().length < 3}
-                  className="h-10 rounded-xl bg-[#25D076] px-4 text-sm font-bold text-white disabled:opacity-50 active:scale-95"
+                  className="h-9 rounded-lg bg-brand-500 px-3.5 text-sm font-bold text-white disabled:opacity-50 active:scale-95"
                   aria-label="Promo anwenden"
                 >
                   Einlösen
@@ -1768,7 +1765,7 @@ export default function PaymentP() {
             </div>
           )
         ) : (
-          <div className="flex items-center justify-between gap-2 rounded-xl bg-[#25D076]/10 px-4 py-3">
+          <div className="flex items-center justify-between gap-2 rounded-lg bg-brand-500/10 px-3 py-2">
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-[#25D076]" />
               <div>
@@ -1788,8 +1785,8 @@ export default function PaymentP() {
       </div>
 
       {/* Métodos de pago */}
-      <div className="rounded-2xl bg-white p-4 shadow-sm border border-gray-100">
-        <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">Zahlungsmethode</p>
+      <div className="rounded-xl bg-white p-3 shadow-sm border border-gray-100">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-2">Zahlungsmethode</p>
 
         {paymentMethodsLoading ? (
           <div className="flex items-center justify-center py-8">
@@ -1803,27 +1800,27 @@ export default function PaymentP() {
             <p className="text-sm text-gray-400">Keine Zahlungsmethoden verfügbar</p>
           </div>
         ) : (
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {paymentMethods.map((method) => {
               const isSelected = selectedPaymentMethod === method.id
               return (
                 <button
                   key={method.id}
                   onClick={() => handlePaymentMethodSelect(method.id)}
-                  className={`relative flex w-full items-center gap-3 rounded-2xl px-4 py-4 text-sm font-semibold transition-all active:scale-[0.98] ${isSelected ? 'ring-2 ring-offset-1' : ''}`}
+                  className={`relative flex w-full items-center gap-2.5 rounded-xl px-3 py-3 text-sm font-semibold transition-ios active:scale-[0.98] touch-target-sm ${isSelected ? 'ring-2 ring-offset-1' : ''}`}
                   style={{
                     backgroundColor: method.bgColor,
                     color: method.textColor,
                   }}
                   aria-label={`${method.name} auswählen`}
                 >
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/20">
-                    {React.createElement(method.icon, { className: 'w-5 h-5', color: method.textColor } as React.ComponentProps<typeof method.icon>)}
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/20">
+                    {React.createElement(method.icon, { className: 'w-4 h-4', color: method.textColor } as React.ComponentProps<typeof method.icon>)}
                   </span>
-                  <span className="flex-1 text-left text-base font-bold" style={{ color: method.textColor }}>{method.name}</span>
+                  <span className="flex-1 text-left text-sm font-bold" style={{ color: method.textColor }}>{method.name}</span>
                   {isSelected && (
-                    <span className="grid h-6 w-6 place-items-center rounded-full bg-white/30">
-                      <CheckCircle className="h-4 w-4" style={{ color: method.textColor }} />
+                    <span className="grid h-5 w-5 place-items-center rounded-full bg-white/30">
+                      <CheckCircle className="h-3.5 w-3.5" style={{ color: method.textColor }} />
                     </span>
                   )}
                 </button>

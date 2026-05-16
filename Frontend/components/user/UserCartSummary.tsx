@@ -5,6 +5,7 @@ import CartSummary from '../dashboard/charge/CartSummary';
 import { useRouter, useParams } from 'next/navigation';
 import { useScannedStoreStore } from '@/lib/stores/scannedStoreStore';
 import { ChevronRight } from 'lucide-react';
+import { formatSwissPriceWithCHF } from '@/lib/utils';
 
 interface UserCartSummaryProps {
   variant?: 'inline';
@@ -28,17 +29,19 @@ export default function UserCartSummary({ variant }: UserCartSummaryProps) {
     );
 
     return (
-      <div className="w-full bg-brand-500 rounded-2xl flex items-center justify-between  px-5 h-[54px]">
-        <span className="text-white font-semibold text-sm truncate">
-          {totalItems} Artikel &bull; <span className="font-bold">CHF {totalPrice.toFixed(2)}</span>
+      <div className="flex h-[50px] w-full items-center justify-between gap-3 rounded-xl bg-brand-500 px-3.5 shadow-soft">
+        <span className="min-w-0 truncate text-sm font-semibold text-white">
+          {totalItems} {totalItems === 1 ? 'Artikel' : 'Artikel'}{' '}
+          <span className="font-bold tabular-nums">{formatSwissPriceWithCHF(totalPrice)}</span>
         </span>
         <button
-          className="bg-white text-[#6E7996] font-bold px-2 rounded-lg text-sm shadow-sm tap-highlight-transparent flex-shrink-0 h-[32px] flex items-center justify-center"
+          type="button"
+          className="flex h-8 shrink-0 items-center justify-center gap-1 rounded-lg bg-white px-3 text-sm font-bold text-[#6E7996] shadow-sm tap-highlight-transparent transition-ios active:scale-[0.97] touch-target-sm"
           onClick={() => router.push(slug ? `/store/${slug}/payment` : '/')}
           aria-label="Zur Bezahlung gehen"
         >
-          <span>Bezahlen</span>
-          <ChevronRight className="w-4 h-4" />
+          Bezahlen
+          <ChevronRight className="h-4 w-4" strokeWidth={2.2} />
         </button>
       </div>
     );
@@ -51,4 +54,3 @@ export default function UserCartSummary({ variant }: UserCartSummaryProps) {
     />
   );
 }
-

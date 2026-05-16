@@ -2,7 +2,6 @@
 import { useCartStore } from '@/lib/stores/cartStore';
 import CartSummary from '../dashboard/charge/CartSummary';
 import { useRouter, useParams } from 'next/navigation';
-import { usePathname } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 import { useScannedStoreStore } from '@/lib/stores/scannedStoreStore';
@@ -12,91 +11,63 @@ interface UserCartSummaryCartProps {
 }
 
 export default function UserCartSummaryCart({ variant }: UserCartSummaryCartProps) {
-  const { cartItems, promoApplied, promoCode, discountAmount, promoInfo } = useCartStore();
+  const { cartItems, promoApplied, discountAmount, promoInfo } = useCartStore();
   const router = useRouter();
-  const pathname = usePathname();
   const params = useParams();
   const { store } = useScannedStoreStore();
   const slug = params?.slug as string || store?.slug;
 
-  // Solo productos con cantidad > 0
   const validCartItems = cartItems ? cartItems.filter(item => item.quantity > 0) : [];
   if (!validCartItems || validCartItems.length === 0) return null;
 
-  // Inline: diseño optimizado para móvil con safe areas
   if (variant === 'inline') {
     const totalItems = validCartItems.reduce((sum, item) => sum + item.quantity, 0);
     const subtotal = validCartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
     const totalAfterDiscount = promoApplied ? subtotal - (discountAmount || 0) : subtotal;
 
     return (
-      <div className="w-full max-w-[430px] mx-auto bg-white rounded-lg p-4 mb-1 rounded-t-xl safe-area-bottom overflow-hidden">
-        {/* Subtotal - Solo mostrar si hay descuento aplicado */}
+      <div className="w-full max-w-[430px] mx-auto border-t border-gray-100 px-3 py-2.5">
         {promoApplied && (
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-gray-800 font-semibold text-[16px]">
-              Zwischensumme
+          <div className="mb-2 space-y-1 text-xs">
+            <div className="flex items-center justify-between text-gray-600">
+              <span className="font-medium">Zwischensumme</span>
+              <span className="tabular-nums">{formatSwissPriceWithCHF(subtotal)}</span>
             </div>
-            <div className="text-gray-800 text-[16px]">
-              {formatSwissPriceWithCHF(subtotal)}
+            <div className="flex items-center justify-between font-semibold text-[#3C7E44]">
+              <span className="truncate pr-2">
+                {promoInfo?.discountType === 'percentage'
+                  ? `${Math.round(promoInfo.discountValue)}% Rabatt`
+                  : promoInfo?.description || 'Rabatt'}
+              </span>
+              <span className="shrink-0 tabular-nums">− {formatSwissPriceWithCHF(discountAmount || 0)}</span>
             </div>
           </div>
         )}
 
-        {/* Descuento aplicado */}
-        {promoApplied && (
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-[#3C7E44] font-semibold text-[15px]">
-              {promoInfo?.discountType === 'percentage' 
-                ? `${Math.round(promoInfo.discountValue)}% Rabatt${promoInfo.description ? ` auf ${promoInfo.description}` : ''}`
-                : promoInfo?.description 
-                ? promoInfo.description
-                : 'Rabatt'
-              }
-            </div>
-            <div className="text-[#3C7E44] text-[15px] font-semibold">
-              - {formatSwissPriceWithCHF(discountAmount || 0)}
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold leading-tight text-gray-900">Gesamtbetrag</p>
+            <p className="mt-0.5 text-xs leading-tight text-gray-500">
+              inkl. MwSt · {totalItems} {totalItems === 1 ? 'Artikel' : 'Artikel'}
+            </p>
           </div>
-        )}
-
-        {/* Separador - Solo si hay descuento */}
-        {promoApplied && (
-          <div className="border-t border-gray-200 my-2"></div>
-        )}
-
-        {/* Sección superior con Gesamtbetrag */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex flex-col">
-            <span className="text-lg font-bold text-gray-900 mobile-lg">
-              Gesamtbetrag
-            </span>
-            <span className="text-sm text-gray-500 mobile-sm">
-              inkl. MwSt • {totalItems} Artikel
-            </span>
-          </div>
-          <span className="text-2xl font-bold text-gray-900 mobile-xl">
+          <p className="shrink-0 text-lg font-bold tabular-nums leading-none text-gray-900">
             {formatSwissPriceWithCHF(totalAfterDiscount)}
-          </span>
+          </p>
+          <button
+            type="button"
+            className="flex h-9 shrink-0 items-center justify-center gap-1 rounded-full bg-brand-500 px-3.5 text-sm font-semibold text-white shadow-soft tap-highlight-transparent transition-ios active:scale-[0.97] touch-target-sm"
+            onClick={() => router.push(slug ? `/store/${slug}/payment` : '/')}
+            aria-label="Zur Bezahlung gehen"
+          >
+            Bezahlen
+            <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+          </button>
         </div>
-
-        {/* Botón Zur Bezahlung optimizado para móvil */}
-        <button
-          className="w-[85%] mx-auto bg-[#25D076] text-white py-4 mb-2 px-6 rounded-full font-semibold text-lg 
-                   flex items-center justify-center gap-2 touch-target 
-                   tap-highlight-transparent ios-scroll-fix"
-          onClick={() => router.push(slug ? `/store/${slug}/payment` : "/")}
-          style={{ minHeight: "48px" }}
-          aria-label="Zur Bezahlung gehen"
-        >
-          Zur Bezahlung
-          <ArrowRight className="w-5 h-5" />
-        </button>
       </div>
     );
   }
 
-  // Default: barra flotante fixed
   return (
     <CartSummary
       items={validCartItems}
