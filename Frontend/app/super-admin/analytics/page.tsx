@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { ApexOptions } from "apexcharts";
+import type { ApexOptions } from "apexcharts";
 import {
   Clock3,
   DollarSign,

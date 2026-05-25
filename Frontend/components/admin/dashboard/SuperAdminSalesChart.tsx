@@ -1,5 +1,5 @@
 "use client";
-import { ApexOptions } from "apexcharts";
+import type { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
 import { MoreVertical } from "lucide-react";
 import { DropdownItem } from "@/components/admin/ui/DropdownItem";

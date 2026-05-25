@@ -23,16 +23,48 @@ const withPWA = withPWAInit({
     disableDevLogs: true,
     maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
     runtimeCaching: [
+      // Auth — nunca cachear tokens/sesiones
+      {
+        urlPattern: /^https:\/\/[^/]+\.supabase\.co\/auth\/.*/i,
+        handler: "NetworkOnly",
+        options: { cacheName: "supabase-auth" },
+      },
+      // Storage (imágenes de productos) — CacheFirst, 7 días
+      {
+        urlPattern: /^https:\/\/[^/]+\.supabase\.co\/storage\/.*/i,
+        handler: "CacheFirst",
+        options: {
+          cacheName: "supabase-storage",
+          expiration: { maxEntries: 200, maxAgeSeconds: 7 * 24 * 60 * 60 },
+          cacheableResponse: { statuses: [0, 200] },
+        },
+      },
+      // Resto Supabase API — NetworkOnly
       {
         urlPattern: /^https:\/\/[^/]+\.supabase\.co\/.*/i,
         handler: "NetworkOnly",
         options: { cacheName: "supabase-api" },
       },
+      // Storefront público — StaleWhileRevalidate (buyer ve datos rápido)
       {
-        urlPattern: ({ sameOrigin, url }) =>
+        urlPattern: ({ sameOrigin, url }: { sameOrigin: boolean; url: URL }) =>
+          !sameOrigin && url.pathname.startsWith("/api/storefront/"),
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "storefront-api",
+          expiration: { maxEntries: 50, maxAgeSeconds: 5 * 60 },
+        },
+      },
+      // APIs internas — NetworkFirst con fallback
+      {
+        urlPattern: ({ sameOrigin, url }: { sameOrigin: boolean; url: URL }) =>
           sameOrigin && url.pathname.startsWith("/api/"),
-        handler: "NetworkOnly",
-        options: { cacheName: "apis" },
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "internal-api",
+          networkTimeoutSeconds: 4,
+          expiration: { maxEntries: 100, maxAgeSeconds: 60 },
+        },
       },
     ],
   },
