@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { ChevronRight, List, XCircle, FileText, ShoppingBasket } from "lucide-react";
 import { QuickAccessItem } from "./types";
 
@@ -17,7 +17,6 @@ const QuickAccessGrid: React.FC<QuickAccessGridProps> = ({
   onCartAction,
   loading = false,
 }) => {
-  const [pressedId, setPressedId] = useState<string | null>(null);
 
   const items: QuickAccessItem[] = [
     {
@@ -94,16 +93,9 @@ const QuickAccessGrid: React.FC<QuickAccessGridProps> = ({
             key={item.id}
             onClick={item.action}
             onKeyDown={(e) => handleKeyDown(e, item.action)}
-            className={`group bg-card border border-border/50 rounded-2xl p-5 lg:p-6 text-left hover:shadow-md transition-ios ${
-              pressedId === item.id ? "scale-95" : ""
-            }`}
+            className="group bg-card border border-border/50 rounded-2xl p-5 lg:p-6 text-left hover:shadow-md active:scale-95 transition-transform duration-100"
             aria-label={`${item.title}: ${item.subtitle}`}
             tabIndex={0}
-            onTouchStart={() => setPressedId(item.id)}
-            onTouchEnd={() => setPressedId(null)}
-            onMouseDown={() => setPressedId(item.id)}
-            onMouseUp={() => setPressedId(null)}
-            onMouseLeave={() => setPressedId(null)}
           >
             <div className="flex justify-between items-start mb-3 lg:mb-4">
               {/* Icon Container */}

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import dynamic from "next/dynamic";
 import { SearchInput } from "@/components/ui/search-input";
 import { DashboardContainer, DashboardSection } from "@/components/dashboard/containers";
 
@@ -8,7 +9,6 @@ import { DashboardContainer, DashboardSection } from "@/components/dashboard/con
 import {
   GreetingSection,
   MainActionCards,
-  DailyGoalCard,
   Slider,
   TodayStatsCard,
   RecentSalesSection,
@@ -21,6 +21,9 @@ import { useDashboard } from "@/hooks";
 // Import new widgets
 import SystemStatusWidget from "./SystemStatusWidget";
 import QuickMetricsWidget from "./QuickMetricsWidget";
+
+// Lazy-load chart-heavy components — keeps recharts out of initial bundle
+const DailyGoalCard = dynamic(() => import("./DailyGoalCard"), { ssr: false });
 
 /**
  * HomeDashboard - Componente principal del dashboard de inicio

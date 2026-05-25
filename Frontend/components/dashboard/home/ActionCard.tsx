@@ -8,11 +8,6 @@ interface ExtendedActionCardProps extends Omit<ActionCardProps, 'icon'> {
   icon?: React.ReactNode;
   emoji?: React.ReactNode;
   className?: string;
-  onTouchStart?: React.TouchEventHandler<HTMLButtonElement>;
-  onTouchEnd?: React.TouchEventHandler<HTMLButtonElement>;
-  onMouseDown?: React.MouseEventHandler<HTMLButtonElement>;
-  onMouseUp?: React.MouseEventHandler<HTMLButtonElement>;
-  onMouseLeave?: React.MouseEventHandler<HTMLButtonElement>;
 }
 
 const ActionCard = ({
@@ -23,30 +18,13 @@ const ActionCard = ({
   isPrimary = false,
   onClick,
   className = "",
-  onTouchStart,
-  onTouchEnd,
-  onMouseDown,
-  onMouseUp,
-  onMouseLeave
 }: ExtendedActionCardProps) => {
-  // Renderizar icono o emoji
-  const renderIcon = () => {
-    if (emoji) {
-      // Si es un ReactNode (como img), renderizarlo directamente
-      return emoji;
-    }
-    return icon;
-  };
+  const renderIcon = () => emoji ?? icon;
 
   return (
     <button
       onClick={onClick}
-      className={`group p-4 md:p-4 lg:p-5 text-left transition-all flex-shrink-0 aspect-square md:aspect-[2/1] flex flex-col justify-between card-shadow rounded-2xl w-full h-full ${isPrimary ? 'bg-brand-500 text-white' : 'bg-white text-gray-900'} ${className}`}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-      onMouseDown={onMouseDown}
-      onMouseUp={onMouseUp}
-      onMouseLeave={onMouseLeave}
+      className={`group p-4 md:p-4 lg:p-5 text-left flex-shrink-0 aspect-square md:aspect-[2/1] flex flex-col justify-between card-shadow rounded-2xl w-full h-full ${isPrimary ? 'bg-brand-500 text-white' : 'bg-white text-gray-900'} ${className}`}
     >
       {/* Tablet + Desktop: Layout horizontal */}
       <div className="hidden md:flex items-center gap-3 lg:gap-4 w-full flex-1 min-w-0">
