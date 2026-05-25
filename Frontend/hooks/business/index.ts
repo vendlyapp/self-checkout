@@ -4,4 +4,3 @@
  */
 
 export { usePromoLogic } from './usePromoLogic';
-export { usePromoCode } from './usePromoCode';

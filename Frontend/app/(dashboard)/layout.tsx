@@ -13,31 +13,31 @@ import { Toaster } from "sonner";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <AuthGuard allowedRoles={['ADMIN']}>
-      <UserProvider>
-      <StoreOnboardingGuard>
-        <LoadingProductsModalProvider>
-          <StoreSettingsHeaderProvider>
-            <SessionTimeoutManager />
-            <AdminLayout>
-              <div className="min-w-0">{children}</div>
-            </AdminLayout>
-            <Toaster
-              position="top-center"
-              richColors
-              offset={16}
-              toastOptions={{
-                classNames: {
-                  toast: '!rounded-2xl !shadow-card !border-0 !text-sm !font-medium',
-                  title: '!font-semibold',
-                  description: '!text-xs !opacity-80',
-                },
-              }}
-            />
-          </StoreSettingsHeaderProvider>
-        </LoadingProductsModalProvider>
-      </StoreOnboardingGuard>
-      </UserProvider>
-    </AuthGuard>
+    <UserProvider>
+      <AuthGuard allowedRoles={['ADMIN']}>
+        <StoreOnboardingGuard>
+          <LoadingProductsModalProvider>
+            <StoreSettingsHeaderProvider>
+              <SessionTimeoutManager />
+              <AdminLayout>
+                <div className="min-w-0">{children}</div>
+              </AdminLayout>
+              <Toaster
+                position="top-center"
+                richColors
+                offset={16}
+                toastOptions={{
+                  classNames: {
+                    toast: '!rounded-2xl !shadow-card !border-0 !text-sm !font-medium',
+                    title: '!font-semibold',
+                    description: '!text-xs !opacity-80',
+                  },
+                }}
+              />
+            </StoreSettingsHeaderProvider>
+          </LoadingProductsModalProvider>
+        </StoreOnboardingGuard>
+      </AuthGuard>
+    </UserProvider>
   );
 }

@@ -154,13 +154,13 @@ class PaymentMethodService {
       });
     }
 
-    const result = {
+    const response = {
       success: true,
       data: methods,
       count: methods.length
     };
-    pmCache.set(cacheKey, result);
-    return result;
+    pmCache.set(cacheKey, response);
+    return response;
   }
 
   /**

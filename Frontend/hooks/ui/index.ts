@@ -5,4 +5,3 @@
 
 export { useResponsive } from "./useResponsive";
 export { useScrollReset, useScrollToTop } from "./useScrollReset";
-export { default as useDebouncedValue } from "./useDebouncedValue";

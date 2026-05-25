@@ -8,7 +8,6 @@ export { useProductStats } from './useProductStats';
 export { useProducts } from './useProducts';
 export type { UseProductsOptions } from './useProducts';
 export { useProductById } from './useProductById';
-export { useProductByQR } from './useProductByQR';
 export { useProductsAnalytics } from './useProductsAnalytics';
 
 // Category queries

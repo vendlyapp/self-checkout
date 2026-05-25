@@ -34,7 +34,6 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.75.0",
-    "axios": "^1.12.2",
     "bcrypt": "^6.0.0",
     "bwip-js": "^4.7.0",
     "compression": "^1.8.1",

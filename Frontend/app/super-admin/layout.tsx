@@ -10,6 +10,7 @@ import Backdrop from '@/components/admin/layout/Backdrop';
 import { useSessionTimeout } from '@/hooks/useSessionTimeout';
 import { Loader } from '@/components/ui/Loader';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { UserProvider } from '@/lib/contexts/UserContext';
 
 interface Props {
   children: React.ReactNode;
@@ -40,11 +41,13 @@ export default function SuperAdminLayout({ children }: Props) {
   }
 
   return (
-    <ThemeProvider>
-      <SidebarProvider>
-        <SuperAdminLayoutContent>{children}</SuperAdminLayoutContent>
-      </SidebarProvider>
-    </ThemeProvider>
+    <UserProvider>
+      <ThemeProvider>
+        <SidebarProvider>
+          <SuperAdminLayoutContent>{children}</SuperAdminLayoutContent>
+        </SidebarProvider>
+      </ThemeProvider>
+    </UserProvider>
   );
 }
 
