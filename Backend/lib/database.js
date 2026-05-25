@@ -16,9 +16,7 @@ const isUsingPooler =
 
 const pool = new Pool({
   connectionString: resolvedConnectionString,
-  ssl: process.env.NODE_ENV === 'production'
-    ? { rejectUnauthorized: true }
-    : { rejectUnauthorized: false },
+  ssl: { rejectUnauthorized: false },
   max: process.env.NODE_ENV === 'production' ? 20 : 5,
   idleTimeoutMillis: 20000,
   connectionTimeoutMillis: 30000,
