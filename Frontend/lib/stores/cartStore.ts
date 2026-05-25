@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { Product } from "@/components/dashboard/products_list/data/mockProducts";
+import { type BuyerProduct as Product } from "@/lib/storefront/product";
 import type { OrderItemPayload } from "@/lib/services/orderService";
 
 export type CartItem = {

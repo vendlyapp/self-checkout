@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { UserProvider } from "@/lib/contexts/UserContext";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import { QueryProvider } from "@/lib/providers/QueryProvider";
 
@@ -63,25 +62,23 @@ export default function RootLayout({
       >
         <QueryProvider>
           <AuthProvider>
-            <UserProvider>
-              {/* Un solo flex column bajo body: evita hermanos sueltos y asegura flex-1 */}
-              <div className="flex flex-1 flex-col min-h-0 w-full">
-                {/* Sin overflow-y global: scroll en main (AdminLayout / store) o layouts dedicados */}
-                <div className="flex flex-1 flex-col min-h-0 w-full fixed inset-0 bg-[#25D076] overflow-hidden">
-                  <div
-                    className="flex flex-1 flex-col min-h-0 w-full overflow-hidden bg-[#F2EDE8]"
-                    style={{
-                      paddingTop: "env(safe-area-inset-top, 0px)",
-                      paddingBottom: "env(safe-area-inset-bottom, 0px)",
-                      paddingLeft: "env(safe-area-inset-left, 0px)",
-                      paddingRight: "env(safe-area-inset-right, 0px)",
-                    }}
-                  >
-                    {children}
-                  </div>
+            {/* Un solo flex column bajo body: evita hermanos sueltos y asegura flex-1 */}
+            <div className="flex flex-1 flex-col min-h-0 w-full">
+              {/* Sin overflow-y global: scroll en main (AdminLayout / store) o layouts dedicados */}
+              <div className="flex flex-1 flex-col min-h-0 w-full fixed inset-0 bg-[#25D076] overflow-hidden">
+                <div
+                  className="flex flex-1 flex-col min-h-0 w-full overflow-hidden bg-[#F2EDE8]"
+                  style={{
+                    paddingTop: "env(safe-area-inset-top, 0px)",
+                    paddingBottom: "env(safe-area-inset-bottom, 0px)",
+                    paddingLeft: "env(safe-area-inset-left, 0px)",
+                    paddingRight: "env(safe-area-inset-right, 0px)",
+                  }}
+                >
+                  {children}
                 </div>
               </div>
-            </UserProvider>
+            </div>
           </AuthProvider>
         </QueryProvider>
       </body>

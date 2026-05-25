@@ -19,7 +19,7 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production'
     ? { rejectUnauthorized: true }
     : { rejectUnauthorized: false },
-  max: process.env.NODE_ENV === 'production' ? 10 : 5,
+  max: process.env.NODE_ENV === 'production' ? 20 : 5,
   idleTimeoutMillis: 20000,
   connectionTimeoutMillis: 30000,
   allowExitOnIdle: false,

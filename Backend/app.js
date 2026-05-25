@@ -22,6 +22,7 @@ const discountCodeRoutes = require("./src/routes/discountCodeRoutes");
 const paymentMethodRoutes = require("./src/routes/paymentMethodRoutes");
 const customerRoutes = require("./src/routes/customerRoutes");
 const notificationRoutes = require("./src/routes/notificationRoutes");
+const storefrontRoutes = require("./src/routes/storefrontRoutes");
 
 const app = express();
 
@@ -95,6 +96,7 @@ app.use("/api/discount-codes", discountCodeRoutes);
 app.use("/api/payment-methods", paymentMethodRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api", customerRoutes);
+app.use("/api/storefront", storefrontRoutes);
 
 /**
  * @swagger

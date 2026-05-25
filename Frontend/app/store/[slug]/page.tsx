@@ -2,18 +2,17 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useCallback, useMemo, useEffect, useRef } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { Search, ScanLine, Flame, ShoppingBag, ScanBarcode, Store as StoreIcon } from 'lucide-react'
 import Link from 'next/link'
 
-import { useStoreData } from '@/hooks/data/useStoreData'
 import { useStoreProducts } from '@/hooks/queries/useStoreProducts'
 import { useStorePromotions } from '@/hooks/queries/useStorePromotions'
-import { useAuth } from '@/lib/auth/AuthContext'
 import { useCartStore } from '@/lib/stores/cartStore'
 import { useScannedStoreStore } from '@/lib/stores/scannedStoreStore'
 import { useStoreContext } from './StoreContext'
-import { getIcon } from '@/components/dashboard/products_list/data/iconMap'
-import { Product, normalizeProductData } from '@/components/dashboard/products_list/data/mockProducts'
+import { getIcon } from '@/lib/storefront/iconMap'
+import { type BuyerProduct as Product, normalizeBuyerProduct as normalizeProductData } from '@/lib/storefront/product'
 import ProductCard from '@/components/dashboard/charge/ProductCard'
 import { PromoCarousel } from '@/components/user/PromoHeroCard'
 import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState'
@@ -23,10 +22,11 @@ export default function StoreProductsPage() {
   const router = useRouter()
   const slug = params.slug as string
 
-  const { store, isLoading: storeLoading } = useStoreData({ slug, autoLoad: true })
-  const { loading: authLoading, session } = useAuth()
+  // Read store from Zustand — already populated by the parent layout's useStoreData call
+  const { store } = useScannedStoreStore()
+  const storeLoading = !store || store.slug !== slug
   const { addToCart } = useCartStore()
-  const { store: scannedStore } = useScannedStoreStore()
+  const scannedStore = store
   const storeContext = useStoreContext()
 
   const { data: rawProducts = [], isLoading: productsLoading, isFetching: productsFetching } = useStoreProducts({
@@ -122,6 +122,19 @@ export default function StoreProductsPage() {
   }, [addToCart])
 
   const isMainCategory = storeContext.selectedFilters.includes('all') && !storeContext.searchQuery
+
+  // Virtualized product list — only renders visible cards (10-15 at a time)
+  const listParentRef = useRef<HTMLDivElement>(null)
+  const rowVirtualizer = useVirtualizer({
+    count: products.length,
+    getScrollElement: () => {
+      // Scroll container is the <main> in layout — walk up from listParentRef
+      if (typeof window === 'undefined') return null
+      return listParentRef.current?.closest('main') ?? null
+    },
+    estimateSize: () => 88, // estimated ProductCard height in px (including gap)
+    overscan: 5,
+  })
 
   if (shouldShowPageLoader) {
     return <DashboardLoadingState mode="page" message="Produkte werden geladen..." className="animate-page-enter" />
@@ -231,10 +244,31 @@ export default function StoreProductsPage() {
           </p>
         </div>
       ) : (
-        <div className="px-4 pb-32 space-y-2">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
-          ))}
+        <div ref={listParentRef} className="px-4 pb-32">
+          <div
+            style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => (
+              <div
+                key={virtualRow.key}
+                data-index={virtualRow.index}
+                ref={rowVirtualizer.measureElement}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  transform: `translateY(${virtualRow.start}px)`,
+                  paddingBottom: '8px',
+                }}
+              >
+                <ProductCard
+                  product={products[virtualRow.index]}
+                  onAddToCart={handleAddToCart}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

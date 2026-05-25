@@ -1,4 +1,9 @@
 const { query } = require('../../lib/database');
+const SimpleCache = require('../utils/simpleCache');
+
+// Disabled codes rarely change — cache for 30 minutes
+const globalPmCache = new SimpleCache(30 * 60 * 1000);
+const DISABLED_CODES_KEY = 'disabled_codes';
 
 /**
  * Servicio para gestionar configuraciones globales de métodos de pago
@@ -102,6 +107,9 @@ class GlobalPaymentMethodConfigService {
         reason || null
       ]);
 
+      // Invalidate disabled-codes cache so next read reflects the change
+      globalPmCache.del(DISABLED_CODES_KEY);
+
       return {
         success: true,
         data: result.rows[0]
@@ -145,13 +153,18 @@ class GlobalPaymentMethodConfigService {
    * @returns {Promise<string[]>} Lista de códigos deshabilitados
    */
   async getDisabledCodes() {
+    const cached = globalPmCache.get(DISABLED_CODES_KEY);
+    if (cached) return cached;
+
     try {
       const result = await query(
         'SELECT "code" FROM "GlobalPaymentMethodConfig" WHERE "disabledGlobally" = true'
       );
 
       // Retornar códigos en minúsculas para comparación consistente
-      return result.rows.map(row => row.code?.toLowerCase() || '').filter(code => code);
+      const codes = result.rows.map(row => row.code?.toLowerCase() || '').filter(code => code);
+      globalPmCache.set(DISABLED_CODES_KEY, codes);
+      return codes;
     } catch (error) {
       console.error('[GlobalPaymentMethodConfigService.getDisabledCodes] Error:', error);
       return [];

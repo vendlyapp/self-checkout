@@ -7,6 +7,10 @@ const discountCodeService = require('./DiscountCodeService');
 const AppError = require('../utils/AppError');
 const logger = require('../utils/logger');
 
+const STATS_CACHE_TTL = 5 * 60 * 1000; // 5 min
+let _statsCache = null;
+let _statsCacheAt = 0;
+
 class SuperAdminService {
   /**
    * Get all stores with basic information
@@ -118,6 +122,10 @@ class SuperAdminService {
    * Get platform statistics
    */
   async getPlatformStats() {
+    if (_statsCache && Date.now() - _statsCacheAt < STATS_CACHE_TTL) {
+      return _statsCache;
+    }
+
     const statsQuery = `
       SELECT 
         (SELECT COUNT(*) FROM "User") as "totalUsers",
@@ -133,7 +141,7 @@ class SuperAdminService {
     const result = await query(statsQuery);
     const stats = result.rows[0];
 
-    return {
+    const response = {
       success: true,
       data: {
         users: {
@@ -154,6 +162,10 @@ class SuperAdminService {
         }
       }
     };
+
+    _statsCache = response;
+    _statsCacheAt = Date.now();
+    return response;
   }
 
   /**

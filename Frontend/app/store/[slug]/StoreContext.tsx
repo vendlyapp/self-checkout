@@ -1,8 +1,8 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode, useMemo } from "react";
+import { createContext, useContext, useState, useCallback, ReactNode, useMemo } from "react";
 import { FilterOption } from "@/components/Sliders/SliderFIlter";
-import { Product } from "@/components/dashboard/products_list/data/mockProducts";
+import { type BuyerProduct as Product } from "@/lib/storefront/product";
 
 interface StoreContextType {
   searchQuery: string;
@@ -34,28 +34,23 @@ export const StoreProvider = ({ children, onScanQR }: StoreProviderProps) => {
   const [selectedFilters, setSelectedFilters] = useState<string[]>(['all']);
   const [categoryFilters, setCategoryFilters] = useState<FilterOption[]>([]);
 
-  const handleSearch = (query: string) => {
+  const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
-  };
+  }, []);
 
-  const handleFilterChange = (filters: string[]) => {
-    // Si se pasa un array vacío, establecer "all"
+  const handleFilterChange = useCallback((filters: string[]) => {
     if (filters.length === 0) {
       setSelectedFilters(['all']);
       return;
     }
-    
-    // Si se incluye "all", solo dejar "all"
     if (filters.includes('all')) {
       setSelectedFilters(['all']);
       return;
     }
-    
-    // Si no hay "all", usar los filtros seleccionados
     setSelectedFilters(filters);
-  };
+  }, []);
 
-  const value: StoreContextType = {
+  const value: StoreContextType = useMemo(() => ({
     searchQuery,
     onSearch: handleSearch,
     selectedFilters,
@@ -63,7 +58,7 @@ export const StoreProvider = ({ children, onScanQR }: StoreProviderProps) => {
     onScanQR,
     categoryFilters,
     setCategoryFilters,
-  };
+  }), [searchQuery, handleSearch, selectedFilters, handleFilterChange, onScanQR, categoryFilters]);
 
   return (
     <StoreContext.Provider value={value}>

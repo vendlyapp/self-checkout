@@ -15,7 +15,7 @@ import { useStoreProducts } from '@/hooks/queries/useStoreProducts'
 import { formatSwissPriceWithCHF } from '@/lib/utils'
 import { resetIosViewportZoom } from '@/lib/utils/iosInputZoom'
 import { usePromoLogic } from '@/hooks'
-import { Product, normalizeProductData } from '@/components/dashboard/products_list/data/mockProducts'
+import { type BuyerProduct as Product, normalizeBuyerProduct as normalizeProductData } from '@/lib/storefront/product'
 
 // Línea de carrito individual (estilo Lovable)
 function CartLine({

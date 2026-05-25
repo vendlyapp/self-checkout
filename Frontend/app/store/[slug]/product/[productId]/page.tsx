@@ -6,7 +6,7 @@ import { ArrowLeft, Tag, MapPin, Package, Leaf, Check, ChevronDown, ShoppingBag 
 import Image from 'next/image'
 import { useCartStore } from '@/lib/stores/cartStore'
 import { useStoreProducts } from '@/hooks/queries/useStoreProducts'
-import { normalizeProductData, Product } from '@/components/dashboard/products_list/data/mockProducts'
+import { type BuyerProduct as Product, normalizeBuyerProduct as normalizeProductData } from '@/lib/storefront/product'
 
 const fmt = (n: number | string | undefined | null) => {
   const v = typeof n === 'string' ? parseFloat(n) : (n || 0)
@@ -172,15 +172,6 @@ export default function ProductDetailPage() {
               </span>
               <span className="text-gray-400">Kategorie</span>
               <span className="ml-auto font-semibold">{baseProduct.category}</span>
-            </li>
-          )}
-          {baseProduct.location && (
-            <li className="flex items-center gap-3 py-2.5 text-sm text-gray-700">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#25D076]/10 text-[#25D076]">
-                <MapPin className="h-4 w-4" strokeWidth={2.2} />
-              </span>
-              <span className="text-gray-400">Standort</span>
-              <span className="ml-auto font-semibold">{baseProduct.location}</span>
             </li>
           )}
           <li className="flex items-center gap-3 py-2.5 text-sm">

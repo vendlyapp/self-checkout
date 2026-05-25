@@ -1,7 +1,7 @@
 "use client"
 
 import PromotionSlider from "@/components/user/PromotionSlider";
-import { Product } from "@/components/dashboard/products_list/data/mockProducts";
+import { type BuyerProduct as Product } from "@/lib/storefront/product";
 import { useMemo } from "react";
 import { useCartStore } from "@/lib/stores/cartStore";
 import type React from "react";

@@ -2,6 +2,10 @@ const { query } = require('../../lib/database');
 const globalPaymentMethodConfigService = require('./GlobalPaymentMethodConfigService');
 const AppError = require('../utils/AppError');
 const logger = require('../utils/logger');
+const SimpleCache = require('../utils/simpleCache');
+
+// Per-store payment method cache — 10 min TTL
+const pmCache = new SimpleCache(10 * 60 * 1000);
 
 class PaymentMethodService {
 
@@ -50,6 +54,11 @@ class PaymentMethodService {
     await this.ensureBargeldExistsForStore(storeId);
 
     const { activeOnly = false } = options;
+
+    // Return cached result when available (avoids 3 sequential DB queries)
+    const cacheKey = `pm:${storeId}:${activeOnly}`;
+    const cachedResult = pmCache.get(cacheKey);
+    if (cachedResult) return cachedResult;
     
     let selectQuery = `
       SELECT * FROM "PaymentMethod"
@@ -145,11 +154,13 @@ class PaymentMethodService {
       });
     }
 
-    return {
+    const result = {
       success: true,
       data: methods,
       count: methods.length
     };
+    pmCache.set(cacheKey, result);
+    return result;
   }
 
   /**
@@ -266,6 +277,10 @@ class PaymentMethodService {
     ]);
 
     const method = result.rows[0];
+
+    // Invalidate cache for this store
+    pmCache.del(`pm:${methodData.storeId.trim()}:true`);
+    pmCache.del(`pm:${methodData.storeId.trim()}:false`);
 
     return {
       success: true,
@@ -426,6 +441,11 @@ class PaymentMethodService {
         }
       }
 
+      // Invalidate cache for this store
+      const sid = existingMethod.data.storeId;
+      pmCache.del(`pm:${sid}:true`);
+      pmCache.del(`pm:${sid}:false`);
+
       return {
         success: true,
         data: method,
@@ -452,6 +472,11 @@ class PaymentMethodService {
 
     const deleteQuery = 'DELETE FROM "PaymentMethod" WHERE id = $1';
     await query(deleteQuery, [id]);
+
+    // Invalidate cache for this store
+    const sid = existingMethod.data.storeId;
+    pmCache.del(`pm:${sid}:true`);
+    pmCache.del(`pm:${sid}:false`);
 
     return {
       success: true,

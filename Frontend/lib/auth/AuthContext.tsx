@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
 import { devError, devWarn } from '@/lib/utils/logger';
@@ -35,8 +36,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
+
+  // Buyer storefront routes never need auth — skip the Supabase session check
+  // entirely so anonymous users never wait for network or the 5s timeout.
+  const isBuyerRoute = pathname?.startsWith('/store/') ?? false;
 
   useEffect(() => {
+    if (isBuyerRoute) {
+      setLoading(false);
+      return;
+    }
+
     // Safety timeout — if Supabase is unreachable, unblock the UI after 5s
     const timeoutId = setTimeout(() => {
       setLoading(false);
@@ -76,7 +87,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBuyerRoute]);
 
   const signUp = async (email: string, password: string, name: string, role: string = 'ADMIN') => {
     try {

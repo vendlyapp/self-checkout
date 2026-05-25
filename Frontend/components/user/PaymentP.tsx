@@ -24,11 +24,18 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { formatSwissPriceWithCHF } from "@/lib/utils";
 import { usePromoLogic, usePortraitViewport } from "@/hooks";
-import { useCreateOrder } from "@/hooks/mutations";
 import { createPortal } from "react-dom";
-import { usePaymentMethods } from "@/hooks/queries/usePaymentMethods";
+import {
+  useStorefrontCreateOrder,
+  useStorefrontPaymentOptions,
+} from "@/hooks/storefront";
+import {
+  createStorefrontInvoice,
+  getStorefrontOrderQR,
+  confirmStorefrontPayment,
+  getStorefrontInvoicePdfUrl,
+} from "@/lib/services/storefrontApi";
 import { lightHaptic, mediumHaptic, successHaptic, errorHaptic } from "@/lib/utils/hapticFeedback";
-import { InvoiceService } from "@/lib/services/invoiceService";
 import { toast } from "sonner";
 import { Loader } from "@/components/ui/Loader";
 import { DashboardLoadingState } from "@/components/ui/DashboardLoadingState";
@@ -1031,19 +1038,19 @@ export default function PaymentP() {
 
   const [personalData, setPersonalData] = useState(loadSavedCustomerData());
   const [isPreOrderMode, setIsPreOrderMode] = useState(false);
-  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
+  /** Public order token returned by the storefront API (replaces internal orderId in buyer context) */
+  const [publicOrderToken, setPublicOrderToken] = useState<string | null>(null);
   /** One-time token from backend (QR-Rechnung) so the kiosk can confirm payment without merchant auth */
   const [qrPaymentConfirmToken, setQrPaymentConfirmToken] = useState<string | null>(null);
   const [qrCodeData, setQrCodeData] = useState<{ qrSvg: string; billSvg: string; amount: number; qrrReference: string } | null>(null);
   const [isConfirmingPayment, setIsConfirmingPayment] = useState(false);
-  const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
   const [createdInvoiceShareToken, setCreatedInvoiceShareToken] = useState<string | null>(null);
   const [isOpeningInvoice, setIsOpeningInvoice] = useState(false);
   const [navigatingToInvoice, setNavigatingToInvoice] = useState(false);
   const router = useRouter();
   
-  // Usar mutation de React Query para crear órdenes
-  const createOrderMutation = useCreateOrder();
+  // Use buyer-safe storefront mutation — no prices or storeId sent from client
+  const createOrderMutation = useStorefrontCreateOrder();
   const {
     promoApplied,
     discountAmount,
@@ -1154,60 +1161,43 @@ export default function PaymentP() {
           }
         : undefined;
 
-      // Usar mutation de React Query
+      // Use buyer-safe storefront API — prices and totals are computed server-side.
+      // We only send productId + quantity; no price, no storeId, no client total.
+      const storefrontItems = orderItems.map((item: { productId: string; quantity: number }) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+      }));
+
       const orderResult = await createOrderMutation.mutateAsync({
-        items: orderItems,
+        slug: store!.slug,
+        items: storefrontItems,
         paymentMethod: selectedPaymentMethod,
-        total: payableTotal,
-        storeId: store?.id,
-        storeSlug: store?.slug,
-        customer: customerData, // Send customer data to backend
-        metadata: {
-          storeId: store?.id ?? null,
-          storeSlug: store?.slug ?? null,
-          storeName: store?.name ?? null,
-          promoApplied,
-          promoCode: promoApplied && promoCode ? promoCode : null, // Enviar código de descuento para registrar uso
-          discountAmount: promoApplied ? discountAmount ?? 0 : 0,
-          totalBeforeVAT: Number(subtotal.toFixed(2)),
-          totalWithVAT: Number(payableTotal.toFixed(2)), // En Suiza, los precios ya incluyen IVA, así que totalWithVAT = subtotal - descuento
-          // Include customer data in metadata as well for reference
-          customerData: customerData,
-        },
+        customer: customerData,
+        discountCode: promoApplied && promoCode ? promoCode : undefined,
       });
 
-      // Guardar el ID de la orden (la factura se creará después cuando el usuario decida)
-      if (orderResult?.id) {
-        setCreatedOrderId(orderResult.id);
+      // Store the public token (not an internal UUID) for subsequent requests
+      if (orderResult?.publicOrderToken) {
+        setPublicOrderToken(orderResult.publicOrderToken);
       }
-      const meta = orderResult?.metadata as Record<string, unknown> | undefined;
-      const confirmTok =
-        meta && typeof meta.qrPaymentConfirmToken === 'string'
-          ? meta.qrPaymentConfirmToken
-          : null;
-      setQrPaymentConfirmToken(confirmTok);
-      // NO guardar invoiceId ni invoiceShareToken aquí - se crearán después
+      setQrPaymentConfirmToken(orderResult?.qrPaymentConfirmToken ?? null);
       setIsPreOrderMode(false);
 
       // Feedback háptico de éxito
       successHaptic();
 
-      // QR-Rechnung: 1) crear invoice con campos normalizados → 2) obtener QR del invoice
-      if (selectedPaymentMethod === 'qr-rechnung' && orderResult?.id) {
+      // QR-Rechnung: 1) create invoice via storefront API → 2) fetch QR by publicOrderToken
+      if (selectedPaymentMethod === 'qr-rechnung' && orderResult?.publicOrderToken) {
         try {
-          const { buildApiUrl } = await import('@/lib/config/api');
           const { parseSwissAddress } = await import('@/components/ui/SwissAddressInput');
 
-          // Parsear dirección completa "Strasse Nr., PLZ Ort" en campos separados
           const parsed = customerData?.address
             ? parseSwissAddress(customerData.address)
             : { strasse: '', nr: '', plz: '', ort: '' };
 
           const streetFull = [parsed.strasse, parsed.nr].filter(Boolean).join(' ').trim();
 
-          // Crear invoice con campos normalizados (InvoiceController.getQRCode los usa directamente)
-          const inv = await InvoiceService.createInvoice({
-            orderId: orderResult.id,
+          const inv = await createStorefrontInvoice(orderResult.publicOrderToken, {
             customerName: customerData?.name || undefined,
             customerEmail: customerData?.email || undefined,
             customerAddress: streetFull || undefined,
@@ -1216,23 +1206,21 @@ export default function PaymentP() {
             customerPhone: customerData?.phone || undefined,
           });
 
-          if (inv.success && inv.data) {
-            setCreatedInvoiceId(inv.data.id);
-            if (inv.data.shareToken) setCreatedInvoiceShareToken(inv.data.shareToken);
+          if (inv?.shareToken) {
+            setCreatedInvoiceShareToken(inv.shareToken);
+          }
 
-            // Obtener QR desde el invoice (usa columnas normalizadas → debtor siempre correcto)
-            const qrResponse = await fetch(buildApiUrl(`/api/invoices/${inv.data.id}/qr-code`));
-            const data = await qrResponse.json();
-            if (data.success && data.data?.qrSvg) {
-              setQrCodeData({
-                qrSvg: data.data.qrSvg,
-                billSvg: data.data.billSvg,
-                amount: data.data.amount,
-                qrrReference: data.data.qrrReference,
-              });
-              setPaymentStep("qr-display");
-              return;
-            }
+          // Fetch QR code via storefront endpoint (no internal invoiceId needed)
+          const qrData = await getStorefrontOrderQR(orderResult.publicOrderToken);
+          if (qrData?.qrSvg) {
+            setQrCodeData({
+              qrSvg: qrData.qrSvg,
+              billSvg: qrData.billSvg,
+              amount: qrData.amount,
+              qrrReference: qrData.qrrReference,
+            });
+            setPaymentStep("qr-display");
+            return;
           }
         } catch (qrError) {
           console.error('Error creating invoice/fetching QR:', qrError);
@@ -1269,128 +1257,77 @@ export default function PaymentP() {
     };
     saveDataForFuture?: boolean;
   }) => {
-    if (!createdOrderId) {
-      // Si no hay orderId, ir directamente a preguntar si quiere ver la factura
+    if (!publicOrderToken) {
       setPaymentStep("viewInvoice");
       return;
     }
 
     if (!modalInvoiceData) {
-      // Si no hay datos de factura, ir directamente a preguntar si quiere ver la factura
       setPaymentStep("viewInvoice");
       return;
     }
 
     try {
-      // Obtener datos de factura según la opción seleccionada
-      const invoicePayload: {
-        orderId: string;
+      // Build customer data from the selected invoice option
+      const customerPayload: {
         customerName?: string;
         customerEmail?: string;
         customerAddress?: string;
         customerCity?: string;
         customerPostalCode?: string;
         customerPhone?: string;
-        saveCustomerData?: boolean;
-      } = {
-        orderId: createdOrderId,
-      };
+      } = {};
 
-      // Determinar qué datos usar según la opción seleccionada
       if (modalInvoiceData.option === 'email') {
-        invoicePayload.customerEmail = modalInvoiceData.email || personalData.email || undefined;
-        invoicePayload.customerName = personalData.name || undefined;
-        invoicePayload.customerAddress = personalData.address || undefined;
-        invoicePayload.customerPhone = personalData.phone || undefined;
+        customerPayload.customerEmail = modalInvoiceData.email || personalData.email || undefined;
+        customerPayload.customerName = personalData.name || undefined;
+        customerPayload.customerAddress = personalData.address || undefined;
+        customerPayload.customerPhone = personalData.phone || undefined;
       } else if (modalInvoiceData.option === 'phone') {
-        invoicePayload.customerPhone = modalInvoiceData.phone || personalData.phone || undefined;
-        invoicePayload.customerName = personalData.name || undefined;
-        invoicePayload.customerEmail = personalData.email || undefined;
-        invoicePayload.customerAddress = personalData.address || undefined;
+        customerPayload.customerPhone = modalInvoiceData.phone || personalData.phone || undefined;
+        customerPayload.customerName = personalData.name || undefined;
+        customerPayload.customerEmail = personalData.email || undefined;
+        customerPayload.customerAddress = personalData.address || undefined;
       } else if (modalInvoiceData.option === 'full' && modalInvoiceData.fullData) {
-        invoicePayload.customerName = modalInvoiceData.fullData.name || personalData.name || undefined;
-        invoicePayload.customerEmail = modalInvoiceData.fullData.email || personalData.email || undefined;
-        invoicePayload.customerAddress = modalInvoiceData.fullData.address || personalData.address || undefined;
-        invoicePayload.customerCity = modalInvoiceData.fullData.city || undefined;
-        invoicePayload.customerPostalCode = modalInvoiceData.fullData.postalCode || undefined;
-        invoicePayload.customerPhone = modalInvoiceData.fullData.phone || personalData.phone || undefined;
-        invoicePayload.saveCustomerData = modalInvoiceData.saveDataForFuture;
-      } else if (modalInvoiceData.option === 'print') {
-        // Para imprimir, usar datos básicos si están disponibles
-        invoicePayload.customerName = personalData.name || undefined;
-        invoicePayload.customerEmail = personalData.email || undefined;
-        invoicePayload.customerAddress = personalData.address || undefined;
-        invoicePayload.customerPhone = personalData.phone || undefined;
-      }
-
-      // Si ya existe una factura creada automáticamente, actualizarla
-      // Si no, crear una nueva
-      let result;
-      if (createdInvoiceId) {
-        // Actualizar la factura existente con los datos adicionales
-        result = await InvoiceService.updateInvoice(createdInvoiceId, {
-          customerName: invoicePayload.customerName,
-          customerEmail: invoicePayload.customerEmail,
-          customerAddress: invoicePayload.customerAddress,
-          customerCity: invoicePayload.customerCity,
-          customerPostalCode: invoicePayload.customerPostalCode,
-          customerPhone: invoicePayload.customerPhone,
-          metadata: {
-            saveCustomerData: invoicePayload.saveCustomerData,
-            updatedAt: new Date().toISOString(),
-          },
-        });
-      } else {
-        // Crear una nueva factura si no existe
-        result = await InvoiceService.createInvoice(invoicePayload);
-      }
-
-      if (result.success && result.data) {
-        // Guardar el ID de la factura para poder compartirla después
-        const invoiceId = result.data.id;
-        const invoiceNumber = result.data.invoiceNumber;
-        
-        // Guardar el invoiceId en el estado para mostrar el botón
-        setCreatedInvoiceId(invoiceId);
-        
-        // Mostrar mensaje de éxito
-        toast.success(`Rechnung ${invoiceNumber} wurde erstellt`);
-        
-        // Si el usuario quiere guardar datos para el futuro, guardarlos
-        if (invoicePayload.saveCustomerData && invoicePayload.customerEmail) {
+        customerPayload.customerName = modalInvoiceData.fullData.name || personalData.name || undefined;
+        customerPayload.customerEmail = modalInvoiceData.fullData.email || personalData.email || undefined;
+        customerPayload.customerAddress = modalInvoiceData.fullData.address || personalData.address || undefined;
+        customerPayload.customerCity = modalInvoiceData.fullData.city || undefined;
+        customerPayload.customerPostalCode = modalInvoiceData.fullData.postalCode || undefined;
+        customerPayload.customerPhone = modalInvoiceData.fullData.phone || personalData.phone || undefined;
+        if (modalInvoiceData.saveDataForFuture && customerPayload.customerEmail) {
           saveCustomerDataToLocalStorage({
-            name: invoicePayload.customerName || '',
-            email: invoicePayload.customerEmail || '',
-            address: invoicePayload.customerAddress || '',
-            phone: invoicePayload.customerPhone || '',
+            name: customerPayload.customerName || '',
+            email: customerPayload.customerEmail || '',
+            address: customerPayload.customerAddress || '',
+            phone: customerPayload.customerPhone || '',
           });
         }
+      } else if (modalInvoiceData.option === 'print') {
+        customerPayload.customerName = personalData.name || undefined;
+        customerPayload.customerEmail = personalData.email || undefined;
+        customerPayload.customerAddress = personalData.address || undefined;
+        customerPayload.customerPhone = personalData.phone || undefined;
+      }
 
-        // Si es email o phone, mostrar mensaje adicional
-        if (modalInvoiceData.option === 'email' && invoicePayload.customerEmail) {
-          toast.info(`Rechnung wurde an ${invoicePayload.customerEmail} gesendet`);
-        } else if (modalInvoiceData.option === 'phone' && invoicePayload.customerPhone) {
-          toast.info(`Rechnung wurde an ${invoicePayload.customerPhone} gesendet`);
-        }
+      // Create invoice via storefront API (idempotent — returns existing if already created)
+      const inv = await createStorefrontInvoice(publicOrderToken, customerPayload);
 
-        // Guardar el link de la factura para compartir después si es necesario
-        if (invoiceId) {
-          const invoiceUrl = `${window.location.origin}/invoice/${invoiceId}`;
-          // Opcional: guardar en localStorage para acceso rápido
-          localStorage.setItem('lastInvoiceUrl', invoiceUrl);
+      if (inv?.shareToken) {
+        setCreatedInvoiceShareToken(inv.shareToken);
+        toast.success(`Rechnung ${inv.invoiceNumber || ''} wurde erstellt`.trim());
+
+        if (modalInvoiceData.option === 'email' && customerPayload.customerEmail) {
+          toast.info(`Rechnung wurde an ${customerPayload.customerEmail} gesendet`);
+        } else if (modalInvoiceData.option === 'phone' && customerPayload.customerPhone) {
+          toast.info(`Rechnung wurde an ${customerPayload.customerPhone} gesendet`);
         }
-      } else {
-        // Si falla la creación de la factura, continuar de todas formas
-        devError('Error al crear factura:', result.error);
-        toast.warning('Rechnung konnte nicht erstellt werden, aber die Bestellung wurde erfolgreich abgeschlossen');
       }
     } catch (error) {
-      // Si hay error, continuar de todas formas
       devError('Error al crear factura:', error);
       toast.warning('Rechnung konnte nicht erstellt werden, aber die Bestellung wurde erfolgreich abgeschlossen');
     }
 
-    // Después de actualizar/crear factura, preguntar si quiere verla
     setPaymentStep("viewInvoice");
   };
 
@@ -1399,46 +1336,23 @@ export default function PaymentP() {
     setIsOpeningInvoice(true);
     try {
       let token = createdInvoiceShareToken;
-      let invoiceId = createdInvoiceId;
 
-      if (!invoiceId && createdOrderId) {
-        const createResult = await InvoiceService.createInvoice({
-          orderId: createdOrderId,
-          customerName: personalData.name || undefined,
-          customerEmail: personalData.email || undefined,
-          customerAddress: personalData.address || undefined,
-          customerPhone: personalData.phone || undefined,
-        });
-
-        if (createResult.success && createResult.data) {
-          invoiceId = createResult.data.id;
-          token = createResult.data.shareToken || token;
-          setCreatedInvoiceId(createResult.data.id);
-          if (createResult.data.shareToken) {
-            setCreatedInvoiceShareToken(createResult.data.shareToken);
+      // If we don't have a shareToken yet, create the invoice now via the storefront API
+      if (!token && publicOrderToken) {
+        try {
+          const inv = await createStorefrontInvoice(publicOrderToken, {
+            customerName: personalData.name || undefined,
+            customerEmail: personalData.email || undefined,
+            customerAddress: personalData.address || undefined,
+            customerPhone: personalData.phone || undefined,
+          });
+          if (inv?.shareToken) {
+            token = inv.shareToken;
+            setCreatedInvoiceShareToken(token);
           }
+        } catch (err) {
+          devError('Error creating invoice for view:', err);
         }
-      }
-
-      if (!token && invoiceId) {
-        const fetchToken = async (retries = 2): Promise<string | null> => {
-          for (let attempt = 0; attempt <= retries; attempt++) {
-            if (attempt > 0) {
-              await new Promise((r) => setTimeout(r, 600));
-            }
-            try {
-              const result = await InvoiceService.getInvoiceById(invoiceId);
-              if (result.success && result.data?.shareToken) {
-                return result.data.shareToken;
-              }
-            } catch (err) {
-              if (attempt === retries) devError('Error fetching shareToken:', err);
-            }
-          }
-          return null;
-        };
-        token = await fetchToken();
-        if (token) setCreatedInvoiceShareToken(token);
       }
 
       if (token) {
@@ -1462,43 +1376,23 @@ export default function PaymentP() {
   };
 
   const handleCreateInvoice = async (customerData?: { name: string; email: string; address: string; phone: string }): Promise<void> => {
-    if (!createdOrderId) {
-      devError('No hay orderId para crear la factura');
+    if (!publicOrderToken) {
+      devError('No hay publicOrderToken para crear la factura');
       return;
     }
 
     try {
-      const invoicePayload = {
-        orderId: createdOrderId,
-        customerName: customerData?.name || 'Gast',
+      const inv = await createStorefrontInvoice(publicOrderToken, {
+        customerName: customerData?.name || undefined,
         customerEmail: customerData?.email || undefined,
         customerAddress: customerData?.address || undefined,
         customerPhone: customerData?.phone || undefined,
-        saveCustomerData: !!customerData?.name && !!customerData?.email,
-      };
+      });
 
-      const result = await InvoiceService.createInvoice(invoicePayload);
-
-      if (result.success && result.data) {
-        const { id, shareToken } = result.data;
-        setCreatedInvoiceId(id);
-
-        let token = shareToken ?? null;
-        if (!token) {
-          await new Promise((r) => setTimeout(r, 400));
-          try {
-            const invResult = await InvoiceService.getInvoiceById(id);
-            if (invResult.success && invResult.data?.shareToken) {
-              token = invResult.data.shareToken;
-            }
-          } catch {
-            // Ignorar
-          }
-        }
-        if (token) setCreatedInvoiceShareToken(token);
+      if (inv?.shareToken) {
+        setCreatedInvoiceShareToken(inv.shareToken);
       } else {
-        devError('Error al crear factura:', result.error);
-        throw new Error(result.error || 'Fehler beim Erstellen der Rechnung');
+        throw new Error('Fehler beim Erstellen der Rechnung');
       }
     } catch (error) {
       devError('Error al crear factura:', error);
@@ -1506,51 +1400,17 @@ export default function PaymentP() {
     }
   };
 
-  // Function to update invoice with customer data (if it already exists)
+  // Storefront invoice creation is idempotent; "update" just re-calls create
   const handleUpdateInvoiceWithData = async (data: { name: string; email: string; address: string; phone: string }) => {
-    if (!createdInvoiceId || !createdOrderId) {
-      // Si no existe factura, crearla
-      return handleCreateInvoice(data);
-    }
-
-    try {
-      const result = await InvoiceService.updateInvoice(createdInvoiceId, {
-        customerName: data.name || undefined,
-        customerEmail: data.email || undefined,
-        customerAddress: data.address || undefined,
-        customerPhone: data.phone || undefined,
-        metadata: {
-          saveCustomerData: true,
-          updatedAt: new Date().toISOString(),
-        },
-      });
-
-      if (result.success && result.data) {
-        // Actualizar el shareToken si se actualizó
-        if (result.data.shareToken) {
-          setCreatedInvoiceShareToken(result.data.shareToken);
-        }
-      }
-    } catch (error) {
-      devError('Error al actualizar factura:', error);
-      throw error;
-    }
+    return handleCreateInvoice(data);
   };
 
   const handleConfirmQRPayment = async () => {
-    if (!createdOrderId || isConfirmingPayment) return;
+    if (!publicOrderToken || !qrPaymentConfirmToken || isConfirmingPayment) return;
     setIsConfirmingPayment(true);
     try {
-      const { OrderService } = await import('@/lib/services/orderService');
-      let res;
-      if (qrPaymentConfirmToken) {
-        res = await OrderService.confirmQRPaymentGuest(createdOrderId, qrPaymentConfirmToken);
-      } else {
-        res = await OrderService.confirmQRPayment(createdOrderId);
-      }
-      if (!res.success || !res.data) {
-        throw new Error(res.error || 'Zahlung konnte nicht bestätigt werden');
-      }
+      // Use buyer-safe storefront endpoint — no admin auth needed, uses publicOrderToken
+      await confirmStorefrontPayment(publicOrderToken, qrPaymentConfirmToken);
       setPaymentStep('viewInvoice');
     } catch (error) {
       devError('Error confirming QR payment:', error);
@@ -1579,7 +1439,7 @@ export default function PaymentP() {
     clearCart();
     setSelectedPaymentMethod("");
     setOrderError(null);
-    setCreatedOrderId(null);
+    setPublicOrderToken(null);
     setQrPaymentConfirmToken(null);
     setQrCodeData(null);
 
@@ -1601,11 +1461,10 @@ export default function PaymentP() {
   // isProcessing viene de la mutation
   const isProcessing = createOrderMutation.isPending;
 
-  // Obtener métodos de pago desde la API
-  const { data: paymentMethodsData, isLoading: paymentMethodsLoading } = usePaymentMethods({
-    storeId: store?.id || '',
-    activeOnly: true, // Solo mostrar métodos activos
-  });
+  // Use slug-based storefront endpoint — no internal storeId needed
+  const { data: paymentMethodsData, isLoading: paymentMethodsLoading } = useStorefrontPaymentOptions(
+    store?.slug || null,
+  );
 
   // Mapeo de códigos de métodos de pago a iconos de lucide-react (solo para esta página)
   const getPaymentMethodIconForPaymentPage = (code: string) => {
@@ -1622,26 +1481,26 @@ export default function PaymentP() {
 
   // Mapear métodos de pago de la API al formato esperado por el componente
   const paymentMethods: PaymentMethodDisplay[] = paymentMethodsData?.map((method) => {
-    // Usar iconos de lucide-react en lugar de SVG para esta página
     const IconComponent = getPaymentMethodIconForPaymentPage(method.code);
-    
-    // Usar el color directamente de la base de datos (ya viene como hex)
     const bgColorValue = method.bgColor || '#6E7996';
     const textColorValue = method.textColor || '#FFFFFF';
-    
+
     return {
       id: method.code,
       name: method.displayName,
       icon: IconComponent,
-      isSvg: false, // Siempre false porque usamos iconos de lucide-react
-      iconPath: null, // No usamos SVG aquí
-      bgColor: bgColorValue, // Guardar el valor directo para usar en style
-      textColor: textColorValue, // Guardar el valor directo para usar en style
-        methodData: {
-          ...method,
-          bgColor: method.bgColor ?? undefined,
-          textColor: method.textColor ?? undefined,
-        },
+      isSvg: false,
+      iconPath: null,
+      bgColor: bgColorValue,
+      textColor: textColorValue,
+      methodData: {
+        id: method.code,
+        name: method.displayName,
+        displayName: method.displayName,
+        code: method.code,
+        bgColor: method.bgColor ?? undefined,
+        textColor: method.textColor ?? undefined,
+      },
     };
   }) || [];
 
@@ -1875,9 +1734,9 @@ export default function PaymentP() {
         personalData={personalData}
         setPersonalData={setPersonalData}
         onSaveCustomerData={saveCustomerDataToLocalStorage}
-        createdInvoiceId={createdInvoiceId}
+        createdInvoiceId={null}
         createdInvoiceShareToken={createdInvoiceShareToken}
-        createdOrderId={createdOrderId}
+        createdOrderId={publicOrderToken}
         onViewInvoice={handleViewInvoice}
         onSkipViewInvoice={handleSkipViewInvoice}
         onCreateInvoice={handleCreateInvoice}

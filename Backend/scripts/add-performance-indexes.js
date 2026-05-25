@@ -137,6 +137,17 @@ const indexes = [
     description: 'Order.(storeId, createdAt DESC) — Kunden-heute / Listen nach Tag',
   },
 
+  // ─── Storefront public token lookup ───────────────────────────────────────
+  // Without this, every buyer order/invoice lookup does a full table scan on
+  // the metadata JSONB column as the Order table grows.
+  {
+    name: 'idx_order_public_token',
+    sql: `CREATE INDEX IF NOT EXISTS idx_order_public_token
+          ON "Order" ((metadata->>'publicOrderToken'))
+          WHERE metadata->>'publicOrderToken' IS NOT NULL`,
+    description: "Order.metadata->>'publicOrderToken' — storefront buyer order lookup by token",
+  },
+
   // ─── Additional indexes (T2 optimization) ──────────────────────────────────
   {
     name: 'idx_discountcode_owner_id',

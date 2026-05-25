@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { Plus, Package } from 'lucide-react'
-import { Product } from '@/components/dashboard/products_list/data/mockProducts'
+import { type BuyerProduct as Product } from '@/lib/storefront/product'
 import { useCartStore } from '@/lib/stores/cartStore'
 import { formatSwissPrice } from '@/lib/utils'
 

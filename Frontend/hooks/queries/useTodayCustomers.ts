@@ -25,8 +25,8 @@ export function useTodayCustomers() {
     enabled: !!store?.id && !storeLoading,
     staleTime: 30 * 1000,
     gcTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
     retry: (failureCount, error) => {
       if (error instanceof Error && error.message === 'CANCELLED') return false;
       return failureCount < 2;

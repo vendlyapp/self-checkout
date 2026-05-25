@@ -10,7 +10,7 @@ import { useCartStore } from "@/lib/stores/cartStore";
 import { useScannedStoreStore, type StoreInfo } from "@/lib/stores/scannedStoreStore";
 import { buildApiUrl } from "@/lib/config/api";
 import { devError } from "@/lib/utils/logger";
-import { Product } from "@/components/dashboard/products_list/data/mockProducts";
+import { type BuyerProduct as Product } from "@/lib/storefront/product";
 import { formatSwissPriceWithCHF } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import Image from "next/image";

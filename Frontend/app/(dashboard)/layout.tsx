@@ -4,6 +4,7 @@
 import { ReactNode } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { AuthGuard } from "@/lib/guards/AuthGuard";
+import { UserProvider } from "@/lib/contexts/UserContext";
 import { StoreOnboardingGuard } from "@/lib/guards/StoreOnboardingGuard";
 import { LoadingProductsModalProvider } from "@/lib/contexts/LoadingProductsModalContext";
 import { SessionTimeoutManager } from "@/components/auth/SessionTimeoutManager";
@@ -13,6 +14,7 @@ import { Toaster } from "sonner";
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <AuthGuard allowedRoles={['ADMIN']}>
+      <UserProvider>
       <StoreOnboardingGuard>
         <LoadingProductsModalProvider>
           <StoreSettingsHeaderProvider>
@@ -35,6 +37,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </StoreSettingsHeaderProvider>
         </LoadingProductsModalProvider>
       </StoreOnboardingGuard>
+      </UserProvider>
     </AuthGuard>
   );
 }

@@ -8,10 +8,8 @@ import Link from 'next/link'
 import { useStoreData } from '@/hooks/data/useStoreData'
 import { useStoreProducts } from '@/hooks/queries/useStoreProducts'
 import { useCartStore } from '@/lib/stores/cartStore'
-import { Product, normalizeProductData } from '@/components/dashboard/products_list/data/mockProducts'
+import { type BuyerProduct as Product, normalizeBuyerProduct as normalizeProductData } from '@/lib/storefront/product'
 import ProductCard from '@/components/dashboard/charge/ProductCard'
-import { buildApiUrl } from '@/lib/config/api'
-import { devError } from '@/lib/utils/logger'
 
 const STORAGE_KEY = 'vendly-recent-searches'
 const POPULAR_TERMS = ['Äpfel', 'Brot', 'Milch', 'Käse', 'Tomaten', 'Honig']
@@ -26,54 +24,41 @@ export default function StoreSearchPage() {
   const router = useRouter()
   const slug = params.slug as string
 
-  const { store } = useStoreData({ slug, autoLoad: true })
+  useStoreData({ slug, autoLoad: true })
   const { addToCart } = useCartStore()
+
+  // Reuse the React Query cache already populated by the store layout prefetch.
+  // No extra fetch is made — the layout's useStoreProducts call already loaded and cached this.
+  const { data: rawProducts = [] } = useStoreProducts({ slug, enabled: !!slug })
+
+  const allProducts = useMemo<Product[]>(() => {
+    const normalized = rawProducts.map((p) => normalizeProductData(p as Product))
+    const parentProducts: Product[] = []
+    const variantsMap = new Map<string, Product[]>()
+    normalized.forEach((product: Product) => {
+      if (product.parentId) {
+        if (!variantsMap.has(product.parentId)) variantsMap.set(product.parentId, [])
+        variantsMap.get(product.parentId)!.push(product)
+      } else {
+        parentProducts.push(product)
+      }
+    })
+    return parentProducts.map((parent) => ({
+      ...parent,
+      variants: variantsMap.get(parent.id) || undefined,
+    }))
+  }, [rawProducts])
 
   const [q, setQ] = useState('')
   const [recent, setRecent] = useState<string[]>([])
-  const [allProducts, setAllProducts] = useState<Product[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { setRecent(loadRecent()) }, [])
 
-  // Foco automático al abrir
   useEffect(() => {
-    const t = setTimeout(() => {
-      inputRef.current?.focus()
-    }, 50)
+    const t = setTimeout(() => { inputRef.current?.focus() }, 50)
     return () => clearTimeout(t)
   }, [])
-
-  // Cargar productos de la tienda para buscar
-  useEffect(() => {
-    if (!store?.slug) return
-    const load = async () => {
-      try {
-        const url = buildApiUrl(`/api/store/${store.slug}/products`)
-        const res = await fetch(url)
-        const result = await res.json()
-        if (result.success && result.data) {
-          const normalized = result.data.map((p: unknown) => normalizeProductData(p as Product))
-          // Agrupar variantes
-          const parentProducts: Product[] = []
-          const variantsMap = new Map<string, Product[]>()
-          normalized.forEach((product: Product) => {
-            if (product.parentId) {
-              if (!variantsMap.has(product.parentId)) variantsMap.set(product.parentId, [])
-              variantsMap.get(product.parentId)!.push(product)
-            } else {
-              parentProducts.push(product)
-            }
-          })
-          setAllProducts(parentProducts.map(parent => ({
-            ...parent,
-            variants: variantsMap.get(parent.id) || undefined
-          })))
-        }
-      } catch (e) { devError('search load error', e) }
-    }
-    load()
-  }, [store?.slug])
 
   const persistRecent = (term: string) => {
     const t = term.trim()

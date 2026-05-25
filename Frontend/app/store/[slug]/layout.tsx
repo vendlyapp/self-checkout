@@ -10,12 +10,12 @@ import { LoadingProductsModalProvider } from "@/lib/contexts/LoadingProductsModa
 import { useParams, useRouter, usePathname } from "next/navigation"
 import { useStoreData } from "@/hooks/data/useStoreData"
 import { useStoreProducts } from "@/hooks/queries/useStoreProducts"
-import { usePaymentMethods } from "@/hooks/queries/usePaymentMethods"
+import { useStorefrontPaymentOptions } from "@/hooks/storefront"
 import { DashboardLoadingState } from "@/components/ui/DashboardLoadingState"
 import { StoreProvider, useStoreContext } from "./StoreContext"
 import { Toaster } from "sonner"
 import { useCartStore } from "@/lib/stores/cartStore"
-import { normalizeProductData, Product } from "@/components/dashboard/products_list/data/mockProducts"
+import { type BuyerProduct as Product, normalizeBuyerProduct as normalizeProductData } from "@/lib/storefront/product"
 import { Plus, Minus, ShoppingCart, Check } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
@@ -117,7 +117,8 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
   const { isLoading: isStoreLoading } = useStoreData({ slug, autoLoad: true })
   // Prefetch productos y métodos de pago en layout — listos antes de que el usuario navegue
   useStoreProducts({ slug, enabled: !!slug })
-  usePaymentMethods({ storeId: store?.id ?? '', activeOnly: true })
+  // Use slug-based storefront endpoint — no internal storeId needed in buyer context
+  useStorefrontPaymentOptions(slug)
 
   const storeContext = useStoreContext()
 

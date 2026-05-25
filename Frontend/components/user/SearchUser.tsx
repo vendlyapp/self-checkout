@@ -6,7 +6,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import ProductCard from "@/components/dashboard/charge/ProductCard";
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
-import { Product, normalizeProductData } from "@/components/dashboard/products_list/data/mockProducts";
+import { type BuyerProduct as Product, normalizeBuyerProduct as normalizeProductData } from "@/lib/storefront/product";
 import Image from "next/image";
 import { buildApiUrl } from "@/lib/config/api";
 import { devError } from "@/lib/utils/logger";
