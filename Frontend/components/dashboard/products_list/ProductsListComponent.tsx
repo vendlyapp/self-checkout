@@ -79,9 +79,12 @@ export default function ProductsListComponent({
   const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
   
   // Usar React Query para obtener productos con cache (única fuente de verdad)
-  const { data: productsData, isLoading: productsLoading } = useProducts({
+  const { data: productsData, isLoading: productsLoading, isFetching: productsFetching } = useProducts({
     includeInactive: true,
   });
+  // Solo mostrar loading screen si no hay datos en cache — isFetching silencioso en background
+  const hasProductsCache = productsData !== undefined;
+  const isProductsFirstLoad = productsLoading && !hasProductsCache;
 
   // Función para agrupar productos padre-hijo
   const groupProductsWithVariants = useCallback((products: Product[]): Product[] => {
@@ -307,12 +310,12 @@ export default function ProductsListComponent({
     }
   }, [isStandalone, groupedProducts.length, filteredProducts.length, activeFiltersCount, setTotalProducts, setFilteredProducts, setHasActiveFilters]);
 
-  // Sincronizar isLoading del contexto con React Query
+  // Solo bloquear UI si es primera carga sin cache — refetch silencioso no bloquea
   useEffect(() => {
     if (isStandalone) {
-      setIsLoading(productsLoading || categoriesLoading);
+      setIsLoading(isProductsFirstLoad);
     }
-  }, [productsLoading, categoriesLoading, isStandalone, setIsLoading]);
+  }, [isProductsFirstLoad, isStandalone, setIsLoading]);
 
   const handleOpenFilterModal = () => {
     if (isStandalone && contextOnOpenFilterModal) {

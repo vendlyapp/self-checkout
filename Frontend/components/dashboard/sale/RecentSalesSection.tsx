@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { ChevronRight, ShoppingCart } from 'lucide-react';
 import SaleCard from './SaleCard';
 import type { RecentSalesSectionProps } from '../types';
@@ -8,7 +8,6 @@ import type { RecentSalesSectionProps } from '../types';
 const MAX_VISIBLE_SALES = 4; // Mostrar máximo 4 ventas
 
 const RecentSalesSection = ({ sales }: RecentSalesSectionProps) => {
-  const router = useRouter();
   const hasMoreSales = sales.length > MAX_VISIBLE_SALES;
   const visibleSales = sales.slice(0, MAX_VISIBLE_SALES);
 
@@ -34,13 +33,13 @@ const RecentSalesSection = ({ sales }: RecentSalesSectionProps) => {
       <div className="flex items-center justify-between mb-3 md:mb-4 lg:mb-6">
         <h2 className="text-lg md:text-xl font-semibold text-gray-900">Letzte Verkäufe</h2>
         {hasMoreSales && (
-          <button
-            onClick={() => router.push('/sales/orders')}
+          <Link
+            href="/sales/orders"
             className="hidden md:flex items-center gap-2 text-sm text-[#25D076] hover:text-[#25D076]/80 font-medium transition-colors"
           >
             <span>Alle anzeigen</span>
             <ChevronRight className="w-4 h-4" />
-          </button>
+          </Link>
         )}
       </div>
 
@@ -54,15 +53,15 @@ const RecentSalesSection = ({ sales }: RecentSalesSectionProps) => {
       {/* Show more button when there are more than MAX_VISIBLE_SALES */}
       {hasMoreSales && (
         <div className="mt-4 pt-4 border-t border-gray-100">
-          <button
-            onClick={() => router.push('/sales/orders')}
+          <Link
+            href="/sales/orders"
             className="flex items-center justify-center gap-2 w-full text-sm text-[#25D076] hover:text-[#25D076]/80 font-medium transition-colors py-2.5 rounded-lg hover:bg-[#25D076]/5 touch-target"
           >
             <span>
               {sales.length - MAX_VISIBLE_SALES} weitere Verkäufe anzeigen
             </span>
             <ChevronRight className="w-4 h-4" />
-          </button>
+          </Link>
         </div>
       )}
     </section>

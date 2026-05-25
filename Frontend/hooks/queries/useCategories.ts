@@ -23,7 +23,7 @@ export const useCategories = () => {
     staleTime: 30 * 60 * 1000, // 30 minutos - categorías cambian muy raramente
     gcTime: 60 * 60 * 1000, // 1 hora en cache
     refetchOnWindowFocus: false,
-    refetchOnMount: true,
+    refetchOnMount: false,
     refetchOnReconnect: false,
     retry: (failureCount, error) => {
       if (error instanceof Error && (error.message === 'CANCELLED' || error.name === 'AbortError')) {

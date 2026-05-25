@@ -1,13 +1,11 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { FileText, CheckCircle, Clock, XCircle } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import type { SaleCardProps } from '../types';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 
 const SaleCard = ({ sale }: SaleCardProps) => {
-  const router = useRouter();
 
   // Get status configuration
   const getStatusConfig = (status: string) => {
@@ -49,18 +47,12 @@ const SaleCard = ({ sale }: SaleCardProps) => {
 
   const statusConfig = getStatusConfig(sale.status);
 
-  const handleClick = () => {
-    if (sale.id) {
-      router.push(`/sales/orders/${sale.id}`);
-    }
-  };
-
   return (
-    <Card 
-      className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer active:scale-[0.98] touch-target"
-      onClick={handleClick}
+    <Link
+      href={sale.id ? `/sales/orders/${sale.id}` : '#'}
+      className="block bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-transform duration-100 cursor-pointer active:scale-[0.98] touch-target"
     >
-      <CardContent className="p-3 md:p-4 lg:p-5">
+      <div className="p-3 md:p-4 lg:p-5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 md:gap-3 lg:gap-4 min-w-0 flex-1">
             <div className={`w-9 h-9 md:w-10 md:h-10 lg:w-12 lg:h-12 ${statusConfig.bgColor} rounded-xl flex items-center justify-center flex-shrink-0`}>
@@ -86,8 +78,8 @@ const SaleCard = ({ sale }: SaleCardProps) => {
             <p className="text-xs md:text-sm text-gray-500">{sale.paymentMethod}</p>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </Link>
   );
 };
 
