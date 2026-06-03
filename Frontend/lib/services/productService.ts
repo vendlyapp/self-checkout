@@ -396,11 +396,10 @@ export class ProductService {
    */
   static async getStats(requestOptions?: { signal?: AbortSignal }): Promise<ApiResponse<{
     total: number;
-    active: number;
-    inactive: number;
-    promotional: number;
-    totalStock: number;
-    categories: { [key: string]: number };
+    available: number;
+    lowStock: number;
+    outOfStock: number;
+    unavailable: number;
   }>> {
     return makeRequest(API_CONFIG.ENDPOINTS.PRODUCT_STATS, requestOptions);
   }

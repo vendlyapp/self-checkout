@@ -9,6 +9,8 @@ import { prefetchMyStore } from '@/lib/server/prefetchMyStore';
 import { prefetchProductCatalog } from '@/lib/server/prefetchProductCatalog';
 import { prefetchRecentOrders } from '@/lib/server/prefetchRecentOrders';
 import { prefetchProductStats } from '@/lib/server/prefetchProductStats';
+import { prefetchCategoryStats } from '@/lib/server/prefetchCategoryStats';
+import { buildProductsAnalyticsSnapshot } from '@/lib/server/buildProductsAnalyticsSnapshot';
 import {
   prefetchOverallOrderStats,
   prefetchTodayOrderStats,
@@ -24,6 +26,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   let recentSales: Awaited<ReturnType<typeof prefetchRecentOrders>> = null;
   let ordersList: Awaited<ReturnType<typeof prefetchOrdersList>> = null;
   let productStats: Awaited<ReturnType<typeof prefetchProductStats>> = null;
+  let categoryStats: Awaited<ReturnType<typeof prefetchCategoryStats>> = null;
   let todayStats: Awaited<ReturnType<typeof prefetchTodayOrderStats>> = null;
   let overallStats: Awaited<ReturnType<typeof prefetchOverallOrderStats>> = null;
 
@@ -32,13 +35,14 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     const storeId = storePrefetch?.store.id;
     const ownerId = storePrefetch?.store.ownerId;
 
-    [catalog, recentHome, recentSales, ordersList, productStats, todayStats, overallStats] =
+    [catalog, recentHome, recentSales, ordersList, productStats, categoryStats, todayStats, overallStats] =
       await Promise.all([
         prefetchProductCatalog(),
         storeId ? prefetchRecentOrders(storeId, 10) : Promise.resolve(null),
         storeId ? prefetchRecentOrders(storeId, 100) : Promise.resolve(null),
         storeId ? prefetchOrdersList(storeId, { limit: 100, offset: 0 }) : Promise.resolve(null),
         prefetchProductStats(),
+        prefetchCategoryStats(),
         ownerId ? prefetchTodayOrderStats(ownerId) : Promise.resolve(null),
         ownerId ? prefetchOverallOrderStats(ownerId) : Promise.resolve(null),
       ]);
@@ -71,6 +75,20 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   }
   if (productStats) {
     queryClient.setQueryData(productStats.queryKey, productStats.stats);
+  }
+  if (categoryStats) {
+    queryClient.setQueryData(categoryStats.queryKey, categoryStats.stats);
+  }
+  if (productStats && categoryStats && storePrefetch) {
+    const userId = storePrefetch.store.ownerId;
+    const analytics = buildProductsAnalyticsSnapshot(
+      productStats.stats,
+      categoryStats.stats
+    );
+    queryClient.setQueryData(
+      [...queryKeys.products.analytics(), userId],
+      analytics
+    );
   }
   if (todayStats) {
     queryClient.setQueryData(todayStats.queryKey, todayStats.stats);
