@@ -98,8 +98,8 @@ export const useProductStats = () => {
     },
     throwOnError: false,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
   });
 };
 

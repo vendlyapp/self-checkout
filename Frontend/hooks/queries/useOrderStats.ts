@@ -117,8 +117,8 @@ export const useOrderStats = (date?: string, ownerId?: string) => {
       
       return failureCount < 2;
     },
-    // No lanzar error si el backend no está disponible (ya retornamos datos vacíos)
     throwOnError: false,
+    refetchOnMount: true,
   });
 };
 

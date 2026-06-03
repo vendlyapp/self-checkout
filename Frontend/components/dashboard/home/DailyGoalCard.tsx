@@ -7,6 +7,7 @@ import { PieChart, Pie, ResponsiveContainer, Cell } from "recharts";
 import { formatSwissPriceWithCHF } from "@/lib/utils";
 import { useMyStore } from "@/hooks/queries/useMyStore";
 import { useGoalRevenues } from "@/hooks/queries/useGoalRevenues";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 type GoalPeriod = "day" | "week" | "month";
 
@@ -19,8 +20,13 @@ const PERIOD_LABELS: Record<GoalPeriod, string> = {
 const ROTATION_INTERVAL_MS = 15000;
 
 export default function DailyGoalCard() {
+  const { session, loading: authLoading } = useAuth();
   const { data: store } = useMyStore();
-  const { data: revenues, isLoading } = useGoalRevenues();
+  const ownerId = store?.ownerId ?? session?.user?.id;
+  const { data: revenues, isFetched, isFetching } = useGoalRevenues();
+
+  const showSkeleton =
+    !authLoading && !!ownerId && !isFetched && isFetching;
 
   const [displayPeriod, setDisplayPeriod] = useState<GoalPeriod>("day");
   const [pinned, setPinned] = useState(false);
@@ -118,7 +124,7 @@ export default function DailyGoalCard() {
         ))}
       </div>
 
-      {isLoading ? (
+      {showSkeleton ? (
         <div className="flex items-center gap-4 animate-pulse">
           <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gray-200" />
           <div className="flex-1 space-y-2">

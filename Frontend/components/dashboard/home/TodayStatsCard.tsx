@@ -5,53 +5,36 @@ import StatCard from './StatCard';
 import { useMemo } from 'react';
 import { useOrderStats } from '@/hooks/queries';
 import { useMyStore } from '@/hooks/queries/useMyStore';
+import { useAuth } from '@/lib/auth/AuthContext';
 import { formatSwissPrice, getLocalDateString } from '@/lib/utils';
 
 const TodayStatsCard = () => {
-  // Obtener store del usuario para filtrar estadísticas (ownerId = dueño de la tienda para contar órdenes)
+  const { session, loading: authLoading } = useAuth();
   const { data: store } = useMyStore();
-  const ownerId = store?.ownerId ?? (store as { ownerid?: string } | undefined)?.ownerid ?? store?.id;
+  const ownerId = store?.ownerId ?? session?.user?.id;
 
-  // Obtener fecha de hoy en formato YYYY-MM-DD (local, no UTC)
   const today = useMemo(() => getLocalDateString(), []);
-  
-  // Usar React Query para obtener estadísticas del día (con cache) - filtrado por tienda
-  const { data: orderStats, isLoading: loading } = useOrderStats(today, ownerId);
 
-  // Calcular estadísticas desde los datos
+  const { data: orderStats, isFetched, isFetching } = useOrderStats(today, ownerId);
+
   const stats = useMemo(() => {
-    if (!orderStats) {
-      return {
-        totalSales: 0,
-        totalCustomers: 0,
-        totalTransactions: 0,
-        averagePerSale: 0,
-        revenuePerHour: 0,
-      };
-    }
-
-    const totalSales = orderStats.totalRevenue || 0;
-    const totalTransactions = orderStats.totalOrders || 0;
-    const totalCustomers = orderStats.uniqueCustomers || 0;
-    const averagePerSale = totalTransactions > 0 
-      ? (totalSales / totalTransactions) 
-      : 0;
-    
-    // Calcular ingresos por hora (asumiendo 24 horas de operación)
-    const hoursInDay = 24;
-    const revenuePerHour = totalSales / hoursInDay;
-    
+    const base = {
+      totalSales: orderStats?.totalRevenue ?? 0,
+      totalCustomers: orderStats?.uniqueCustomers ?? 0,
+      totalTransactions: orderStats?.totalOrders ?? 0,
+    };
     return {
-      totalSales,
-      totalCustomers,
-      totalTransactions,
-      averagePerSale,
-      revenuePerHour,
+      ...base,
+      averagePerSale:
+        base.totalTransactions > 0 ? base.totalSales / base.totalTransactions : 0,
+      revenuePerHour: base.totalSales / 24,
     };
   }, [orderStats]);
 
-  // Mostrar loading state
-  if (loading) {
+  const showSkeleton =
+    !authLoading && !!ownerId && !isFetched && isFetching;
+
+  if (showSkeleton) {
     return (
       <div className="w-full">
         <div className="flex items-center justify-between mb-4 md:mb-5 lg:mb-6">
@@ -70,29 +53,27 @@ const TodayStatsCard = () => {
 
   return (
     <div className="w-full">
-      {/* Section Header */}
       <div className="flex items-center justify-between mb-4 md:mb-5 lg:mb-6">
         <h2 className="text-lg md:text-xl font-semibold text-gray-900">Heute</h2>
       </div>
 
-      {/* Solo Verkäufe y Kunden */}
       <div className="grid grid-cols-2 gap-3 md:gap-4">
         <StatCard
           icon={<Banknote className="w-4 h-4" />}
           label="Verkäufe"
           amount={formatSwissPrice(totalSales)}
           count={`${totalTransactions} Transaktionen`}
-          trend={totalTransactions > 0 ? "Heute" : "Keine Verkäufe"}
+          trend={totalTransactions > 0 ? 'Heute' : 'Keine Verkäufe'}
           showCurrency={true}
           showCount={true}
         />
 
         <StatCard
           icon={<Users className="w-4 h-4" />}
-          label={totalCustomers === 1 ? "Kunde" : "Kunden"}
+          label={totalCustomers === 1 ? 'Kunde' : 'Kunden'}
           amount={totalCustomers.toString()}
           count=""
-          trend={totalCustomers > 0 ? "Heute" : "Keine Kunden"}
+          trend={totalCustomers > 0 ? 'Heute' : 'Keine Kunden'}
           isDark={true}
           showCurrency={false}
           showCount={false}

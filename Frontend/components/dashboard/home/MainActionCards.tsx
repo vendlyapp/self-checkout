@@ -6,11 +6,16 @@ import { ArrowRight } from 'lucide-react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProductStats } from '@/hooks/queries/useProductStats';
+import { useProducts, PRODUCT_CATALOG_FILTERS } from '@/hooks/queries/useProducts';
 
 const MainActionCards = () => {
   const router = useRouter();
   const { data: productStats } = useProductStats();
-  const productCount = productStats?.total || 0;
+  const { data: catalogProducts } = useProducts(PRODUCT_CATALOG_FILTERS);
+  const productCount =
+    (productStats?.total ?? 0) > 0
+      ? productStats!.total
+      : (catalogProducts?.length ?? 0);
 
   useEffect(() => {
     router.prefetch('/charge');
