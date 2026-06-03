@@ -369,7 +369,8 @@ export default function ProductsListComponent({
     activeFiltersCount > 0;
 
   const renderProductList = () => {
-    if (isLoading) {
+    const showProductsLoading = isProductsFirstLoad || (isStandalone && isLoading);
+    if (showProductsLoading) {
       return <DashboardLoadingState mode="section" message="Produkte werden geladen..." />;
     }
     if (filteredProducts.length === 0) {

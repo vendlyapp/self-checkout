@@ -23,10 +23,18 @@ export const useProducts = (options?: UseProductsOptions) => {
   const { session } = useAuth();
   const { _refetchOnMount, enabled: enabledOption, ...queryOptions } = options ?? {};
   return useQuery({
-    queryKey: ['products', queryOptions],
-    enabled: enabledOption !== false && !!session,
+    // Incluir user id para refetch al iniciar sesión; no usar enabled:!!session (cookies pueden
+    // estar listas antes que AuthContext — patrón alineado con useMyStore).
+    queryKey: ['products', queryOptions, session?.user?.id ?? 'guest'],
+    enabled: enabledOption !== false,
     queryFn: async ({ signal }) => {
-      // Pasar el signal de React Query al servicio para que pueda cancelar la petición
+      const { supabase } = await import('@/lib/supabase/client');
+      const { data: { session: liveSession } } = await supabase.auth.getSession();
+      if (!liveSession?.access_token) {
+        const err = new Error('NO_SESSION');
+        (err as Error & { noRetry: boolean }).noRetry = true;
+        throw err;
+      }
       const response = await ProductService.getProducts(queryOptions, { signal });
       if (!response.success || !response.data) {
         // Si el error es de cancelación, no lanzar error
@@ -50,7 +58,13 @@ export const useProducts = (options?: UseProductsOptions) => {
       if (error instanceof Error && error.message === 'CANCELLED') {
         return false;
       }
-      // Solo reintentar 2 veces máximo
+      if (
+        error instanceof Error &&
+        (error.message === 'NO_SESSION' ||
+          (error as Error & { noRetry?: boolean }).noRetry)
+      ) {
+        return false;
+      }
       return failureCount < 2;
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000), // Delay exponencial: 1s, 2s, max 3s

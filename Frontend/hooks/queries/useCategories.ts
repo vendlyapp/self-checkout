@@ -12,9 +12,15 @@ import { queryKeys } from '@/lib/queryKeys';
 export const useCategories = () => {
   const { session } = useAuth();
   return useQuery({
-    queryKey: queryKeys.categories.all(),
-    enabled: !!session,
+    queryKey: [...queryKeys.categories.all(), session?.user?.id ?? 'guest'],
     queryFn: async ({ signal }) => {
+      const { supabase } = await import('@/lib/supabase/client');
+      const { data: { session: liveSession } } = await supabase.auth.getSession();
+      if (!liveSession?.access_token) {
+        const err = new Error('NO_SESSION');
+        (err as Error & { noRetry: boolean }).noRetry = true;
+        throw err;
+      }
       const response = await CategoryService.getCategories({ signal });
       if (!response.success) {
         throw new Error(response.error || 'Fehler beim Laden der Kategorien');
@@ -28,6 +34,13 @@ export const useCategories = () => {
     refetchOnReconnect: false,
     retry: (failureCount, error) => {
       if (error instanceof Error && (error.message === 'CANCELLED' || error.name === 'AbortError')) {
+        return false;
+      }
+      if (
+        error instanceof Error &&
+        (error.message === 'NO_SESSION' ||
+          (error as Error & { noRetry?: boolean }).noRetry)
+      ) {
         return false;
       }
       return failureCount < 2;
