@@ -1,71 +1,42 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { InvoiceService, Invoice } from '@/lib/services/invoiceService';
-import { useMyStore } from '@/hooks/queries/useMyStore';
+import { useInvoices } from '@/hooks/queries/useInvoices';
 import { useResponsive } from '@/hooks';
 import { FileText, Search, Calendar, Banknote, User, ChevronRight } from 'lucide-react';
 import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
+import { isInitialQueryLoading } from '@/hooks/queries/useStoreQueryScope';
 import Link from 'next/link';
 
 export default function StoreInvoicesPage() {
   const router = useRouter();
   const { isMobile } = useResponsive();
-  const { data: store, isLoading: storeLoading } = useMyStore();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    const fetchInvoices = async () => {
-      if (!store?.id) {
-        if (!storeLoading) {
-          setError('Keine Geschäft gefunden');
-          setLoading(false);
-        }
-        return;
-      }
+  const {
+    data: invoices = [],
+    isFetched,
+    isFetching,
+    error: queryError,
+  } = useInvoices({ limit: 100, offset: 0 });
 
-      try {
-        setLoading(true);
-        setError(null);
+  const loading = isInitialQueryLoading(isFetched, isFetching);
+  const error =
+    queryError instanceof Error ? queryError.message : queryError ? String(queryError) : null;
 
-        const result = await InvoiceService.getInvoicesByStoreId(store.id, {
-          limit: 100,
-          offset: 0,
-        });
-
-        if (result.success && result.data) {
-          setInvoices(result.data);
-        } else {
-          setError(result.error || 'Fehler beim Laden der Rechnungen');
-        }
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Fehler beim Laden der Rechnungen';
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInvoices();
-  }, [store?.id, storeLoading]);
-
-  // Filtrar facturas por búsqueda
-  const filteredInvoices = invoices.filter((invoice) => {
-    if (!searchQuery) return true;
-    
+  const filteredInvoices = useMemo(() => {
+    if (!searchQuery) return invoices;
     const query = searchQuery.toLowerCase();
-    return (
-      invoice.invoiceNumber?.toLowerCase().includes(query) ||
-      invoice.customerName?.toLowerCase().includes(query) ||
-      invoice.customerEmail?.toLowerCase().includes(query) ||
-      invoice.orderId?.toLowerCase().includes(query)
+    return invoices.filter(
+      (invoice) =>
+        invoice.invoiceNumber?.toLowerCase().includes(query) ||
+        invoice.customerName?.toLowerCase().includes(query) ||
+        invoice.customerEmail?.toLowerCase().includes(query) ||
+        invoice.orderId?.toLowerCase().includes(query)
     );
-  });
+  }, [invoices, searchQuery]);
 
   const formatDate = (dateString: string) => {
     try {
@@ -80,11 +51,11 @@ export default function StoreInvoicesPage() {
     }
   };
 
-  if (storeLoading || loading) {
+  if (loading && invoices.length === 0) {
     return <DashboardLoadingState mode="page" message="Rechnungen werden geladen..." />;
   }
 
-  if (error) {
+  if (error && invoices.length === 0) {
     return (
       <div className="w-full h-full overflow-auto min-w-0">
         {isMobile && (

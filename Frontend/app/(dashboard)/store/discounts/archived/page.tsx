@@ -7,18 +7,21 @@ import { useArchivedDiscountCodes } from '@/hooks/queries/useDiscountCodes'
 import { DiscountCode } from '@/components/dashboard/discounts/types'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { isInitialQueryLoading } from '@/hooks/queries/useStoreQueryScope'
 import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState'
 
 export default function ArchivedDiscountsPage() {
   const { isDesktop } = useResponsive()
   const router = useRouter()
-  const { data: archivedCodes = [], isLoading } = useArchivedDiscountCodes()
+  const { data: archivedCodes = [], isFetched, isFetching } = useArchivedDiscountCodes()
+
+  const loading = isInitialQueryLoading(isFetched, isFetching)
 
   const handleBack = () => {
     router.push('/store/discounts')
   }
 
-  if (isLoading) {
+  if (loading && archivedCodes.length === 0) {
     return <DashboardLoadingState mode="page" message="Archivierte Codes werden geladen..." />
   }
 

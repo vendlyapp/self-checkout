@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useProducts } from '@/hooks/queries/useProducts'
+import { isInitialQueryLoading } from '@/hooks/queries/useStoreQueryScope'
 import { useResponsive } from '@/hooks'
 import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState'
 import { QrCode, Download, Search, Barcode, PackageCheck, AlertCircle } from 'lucide-react'
@@ -219,13 +220,14 @@ export default function QRBarcodesPage() {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<CodeFilter>('all')
 
-  const { data: products, isLoading, error } = useProducts({
+  const { data: products, isFetched, isFetching, error } = useProducts({
     includeCodes: true,
     includeInactive: true,
     limit: 100,
   })
 
   const rawList = products ?? []
+  const loading = isInitialQueryLoading(isFetched, isFetching) && rawList.length === 0
   const list = useMemo(() => groupProductsWithVariants(rawList), [rawList])
   const normalizedQuery = query.trim().toLowerCase()
   const filtered = useMemo(() => {
@@ -258,7 +260,7 @@ export default function QRBarcodesPage() {
   const hasProducts = list.length > 0
   const hasFilteredProducts = filtered.length > 0
 
-  if (isLoading) {
+  if (loading) {
     return <DashboardLoadingState mode="page" message="Wird geladen..." />
   }
 

@@ -108,34 +108,30 @@ const makeRequest = async <T>(
     const url = buildApiUrl(endpoint);
     const authHeaders = getAuthHeaders(token);
 
-    // Si ya hay un signal en options, usar ese (React Query lo proporciona)
-    const controller = options.signal ? null : new AbortController();
-    const timeoutId = controller ? setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT) : null;
-
-    // Nunca dejar que ...options sobrescriba Authorization (p. ej. headers: {} en RequestInit)
+    const { createRequestSignal } = await import('@/lib/http/fetchWithTimeout');
     const { headers: _optionHeaders, signal: optionsSignal, ...restOptions } = options;
-    const signal = optionsSignal || controller?.signal;
+    const { signal, cleanup } = createRequestSignal(optionsSignal ?? undefined);
     const mergedHeaders: Record<string, string> = { ...authHeaders };
     if (_optionHeaders && typeof _optionHeaders === 'object' && !(_optionHeaders instanceof Headers)) {
       Object.assign(mergedHeaders, _optionHeaders as Record<string, string>);
     }
 
-    const response = await fetch(url, {
-      ...restOptions,
-      signal,
-      headers: mergedHeaders,
-    });
-    
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
+    try {
+      const response = await fetch(url, {
+        ...restOptions,
+        signal,
+        headers: mergedHeaders,
+      });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-    const data = await response.json();
-    return data;
+      const data = await response.json();
+      return data;
+    } finally {
+      cleanup();
+    }
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
       // Si el error no tiene mensaje, probablemente es una cancelación de React Query

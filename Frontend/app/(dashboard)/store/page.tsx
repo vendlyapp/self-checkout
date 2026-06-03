@@ -2,12 +2,14 @@
 
 import StoreDashboard from '@/components/dashboard/store/StoreDashboard'
 import { useMyStore } from '@/hooks/queries/useMyStore'
+import { useMyStoreInitialLoading } from '@/hooks/queries/useStoreQueryScope'
 import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState'
 
 export default function StorePage() {
-  const { isLoading } = useMyStore()
+  const { data: store, isFetched, isFetching } = useMyStore()
+  const loading = useMyStoreInitialLoading(store, isFetched, isFetching)
 
-  if (isLoading) {
+  if (loading) {
     return <DashboardLoadingState mode="page" message="Dashboard wird geladen..." className="animate-page-enter" />
   }
 

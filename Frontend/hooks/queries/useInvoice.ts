@@ -2,60 +2,48 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { InvoiceService, Invoice } from '@/lib/services/invoiceService';
+import { queryKeys } from '@/lib/queryKeys';
+import { useAuth } from '@/lib/auth/AuthContext';
 
-/**
- * Hook para obtener un invoice por ID usando React Query
- * Los datos se cachean para evitar peticiones innecesarias
- * 
- * @param invoiceId - ID o número de factura
- * @returns Datos del invoice, estados de carga y error
- * 
- * @example
- * ```tsx
- * const { data: invoice, isLoading, error } = useInvoice('invoice-id');
- * ```
- */
 export const useInvoice = (invoiceId: string | null | undefined) => {
+  const { session, loading: authLoading } = useAuth();
+
   return useQuery({
-    queryKey: ['invoice', invoiceId],
+    queryKey: queryKeys.invoices.detail(invoiceId ?? ''),
+    enabled: !authLoading && !!session?.access_token && !!invoiceId,
     queryFn: async ({ signal }) => {
       if (!invoiceId) {
         throw new Error('Keine Rechnungs-ID angegeben');
       }
 
-      // Intentar obtener por ID primero
       let result = await InvoiceService.getInvoiceById(invoiceId, { signal });
-      
-      // Si no se encuentra por ID, intentar por número de factura
+
       if (!result.success && !result.data) {
         result = await InvoiceService.getInvoiceByNumber(invoiceId, { signal });
       }
 
       if (!result.success || !result.data) {
-        // No lanzar error si la factura simplemente no existe
-        // Dejar que el componente maneje el estado de "no encontrado"
+        if (result.error === 'cancelled' || result.error === 'Request cancelled' || signal?.aborted) {
+          throw new Error('CANCELLED');
+        }
         throw new Error(result.error || 'Rechnung nicht gefunden');
       }
 
       return result.data as Invoice;
     },
-    enabled: !!invoiceId, // Solo ejecutar si tenemos invoiceId
-    throwOnError: false, // No lanzar error automáticamente, dejar que el componente lo maneje
-    staleTime: 10 * 60 * 1000, // 10 minutos - los invoices no cambian frecuentemente (aumentado de 5 a 10)
-    gcTime: 30 * 60 * 1000, // 30 minutos - mantener en cache más tiempo
-    refetchOnWindowFocus: false, // No refetch automático en window focus
-    refetchOnMount: false, // No refetch en mount si los datos están frescos
-    refetchOnReconnect: false, // No refetch en reconnect
-    // Usar placeholderData para evitar peticiones redundantes durante el montaje
+    throwOnError: false,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnReconnect: false,
     placeholderData: (previousData) => previousData,
     retry: (failureCount, error) => {
       if (error instanceof Error && error.message === 'CANCELLED') {
         return false;
       }
-      // Solo reintentar 2 veces máximo
       return failureCount < 2;
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000), // Delay exponencial: 1s, 2s, max 3s
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
   });
 };
-

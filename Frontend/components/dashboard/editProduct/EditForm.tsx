@@ -12,6 +12,7 @@ import { useUpdateProduct, useCreateProduct, useDeleteProduct } from "@/hooks/mu
 import { useProductById } from "@/hooks/queries";
 import { useCategories } from "@/hooks/queries/useCategories";
 import { useProducts } from "@/hooks/queries/useProducts";
+import { isInitialQueryLoading } from "@/hooks/queries/useStoreQueryScope";
 import { normalizeProductData } from "@/components/dashboard/products_list/data/mockProducts";
 import type { UpdateProductRequest, Product, CreateProductRequest } from "@/lib/services/productService";
 import { Loader } from "@/components/ui/Loader";
@@ -36,13 +37,20 @@ export default function EditForm({ productId, isDesktop = false }: EditFormProps
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   
   // Obtener producto existente
-  const { data: existingProduct, isLoading: loadingProduct } = useProductById(productId);
+  const { data: existingProduct, isFetched: productFetched, isFetching: productFetching } = useProductById(productId);
   
   // Obtener categorías reales del backend
   const { data: backendCategories = [], isLoading: categoriesLoading } = useCategories();
   
-  // Obtener todos los productos para buscar variantes (incluye inactivos, siempre refresca al montar)
-  const { data: allProducts = [], isLoading: productsLoading } = useProducts({ includeInactive: true, _refetchOnMount: true });
+  // Variantes: cargar catálogo solo cuando el producto base ya está disponible
+  const { data: allProducts = [], isLoading: productsLoading } = useProducts({
+    includeInactive: true,
+    _refetchOnMount: true,
+    enabled: !!existingProduct,
+  });
+
+  const loadingProduct =
+    isInitialQueryLoading(productFetched, productFetching) && !existingProduct;
   
   // Form state - Campos básicos
   const [productName, setProductName] = useState("");

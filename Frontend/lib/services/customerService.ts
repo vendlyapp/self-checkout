@@ -54,31 +54,30 @@ const makeRequest = async <T>(
     const token = session?.access_token;
     const headers = getAuthHeaders(token);
     
-    const controller = options.signal ? null : new AbortController();
-    const timeoutId = controller ? setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT) : null;
-    
-    const signal = options.signal || controller?.signal;
-    
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...headers,
-        ...(options.headers || {}),
-      },
-      signal,
-    });
-    
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
+    const { createRequestSignal } = await import('@/lib/http/fetchWithTimeout');
+    const { signal: optionsSignal, ...restOptions } = options;
+    const { signal, cleanup } = createRequestSignal(optionsSignal ?? undefined);
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-    }
+    try {
+      const response = await fetch(url, {
+        ...restOptions,
+        headers: {
+          ...headers,
+          ...(restOptions.headers || {}),
+        },
+        signal,
+      });
 
-    const data = await response.json();
-    return data;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } finally {
+      cleanup();
+    }
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
       throw error;

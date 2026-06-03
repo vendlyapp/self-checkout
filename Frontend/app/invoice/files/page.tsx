@@ -7,6 +7,7 @@ import { useInvoice } from '@/hooks/queries/useInvoice';
 import { AlertCircle, ShoppingCart, ArrowRight, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { Loader } from '@/components/ui/Loader';
+import { isInitialQueryLoading } from '@/hooks/queries/useStoreQueryScope';
 import { useEffect } from 'react';
 import Link from 'next/link';
 
@@ -18,9 +19,9 @@ export default function SalesInvoiceDetailPage() {
 
   const {
     data: invoice,
-    isLoading,
-    error: queryError,
+    isFetched,
     isFetching,
+    error: queryError,
   } = useInvoice(invoiceId);
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export default function SalesInvoiceDetailPage() {
     }
   }, [queryError]);
 
-  const loading = isLoading || isFetching;
+  const loading = isInitialQueryLoading(isFetched, isFetching);
   const error =
     queryError instanceof Error
       ? queryError.message

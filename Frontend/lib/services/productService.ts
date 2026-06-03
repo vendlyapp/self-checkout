@@ -154,11 +154,10 @@ const makeRequest = async <T>(
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token;
     
-    // Crear AbortController para timeout
-    // Si ya hay un signal en options, usar ese (React Query lo proporciona)
-    const controller = options.signal ? null : new AbortController();
-    const timeoutId = controller ? setTimeout(() => controller.abort(), 10000) : null;
-    
+    const { createRequestSignal } = await import('@/lib/http/fetchWithTimeout');
+    const { signal: optionsSignal, ...restOptions } = options;
+    const { signal, cleanup } = createRequestSignal(optionsSignal ?? undefined);
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -173,21 +172,15 @@ const makeRequest = async <T>(
       Object.assign(headers, options.headers);
     }
     
-    // Usar el signal de options si existe (React Query), sino usar el del controller
-    const signal = options.signal || controller?.signal;
-    
+    try {
     const response = await fetch(url, {
-      ...options,
-      headers: { ...headers, ...(options.headers as Record<string, string> | undefined) },
+      ...restOptions,
+      headers: { ...headers, ...(restOptions.headers as Record<string, string> | undefined) },
       signal,
       mode: 'cors',
       credentials: 'omit',
-      cache: (options.cache as RequestCache) ?? 'no-store',
+      cache: (restOptions.cache as RequestCache) ?? 'no-store',
     });
-    
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
 
     if (!response.ok) {
       let backendError = `HTTP error! status: ${response.status}`;
@@ -272,6 +265,9 @@ const makeRequest = async <T>(
     }
     
     return data;
+    } finally {
+      cleanup();
+    }
   } catch (error) {
     // Manejar error de timeout específicamente
     if (error instanceof Error && error.name === 'AbortError') {

@@ -1,135 +1,33 @@
-'use client';
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from '@tanstack/react-query';
+import { prefetchInvoiceDetail } from '@/lib/server/prefetchInvoiceDetail';
+import SalesInvoiceDetailClient from './SalesInvoiceDetailClient';
 
-import { useParams, useRouter } from 'next/navigation';
-import InvoiceTemplate from '@/components/invoice/InvoiceTemplate';
-import { useResponsive } from '@/hooks';
-import { useInvoice } from '@/hooks/queries/useInvoice';
-import { AlertCircle, ArrowLeft } from 'lucide-react';
-import { toast } from 'sonner';
-import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState';
-import { useEffect } from 'react';
-import { lightFeedback } from '@/lib/utils/safeFeedback';
-import { devError } from '@/lib/utils/logger';
-import { InvoiceService } from '@/lib/services/invoiceService';
-import { isInitialQueryLoading } from '@/hooks/queries/useStoreQueryScope';
-export default function SalesInvoiceDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const { isMobile } = useResponsive();
-  const invoiceId = params.id as string;
+export const dynamic = 'force-dynamic';
 
-  const {
-    data: invoice,
-    isFetched,
-    isFetching,
-    error: queryError,
-  } = useInvoice(invoiceId);
+export default async function SalesInvoiceDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id: invoiceId } = await params;
+  const queryClient = new QueryClient();
 
-  useEffect(() => {
-    if (queryError) {
-      const msg =
-        queryError instanceof Error
-          ? queryError.message
-          : 'Rechnung nicht gefunden';
-      toast.error(msg);
+  try {
+    const prefetch = await prefetchInvoiceDetail(invoiceId);
+    if (prefetch) {
+      queryClient.setQueryData(prefetch.queryKey, prefetch.invoice);
     }
-  }, [queryError]);
-
-  const loading = isInitialQueryLoading(isFetched, isFetching);
-  const error =
-    queryError instanceof Error
-      ? queryError.message
-      : queryError
-      ? String(queryError)
-      : null;
-
-  // ─── Loading State ─────────────────────────────────────────────────────────
-
-  if (loading && !invoice) {
-    return <DashboardLoadingState mode="page" message="Rechnung wird geladen…" />;
+  } catch {
+    // SSR darf die Seite nicht blockieren
   }
-
-  // ─── Error State ───────────────────────────────────────────────────────────
-
-  if (error && !invoice) {
-    return (
-      <div className={`w-full ${isMobile ? 'p-4' : 'p-6 max-w-4xl mx-auto'}`}>
-          <div
-            className={`
-              flex items-center justify-center
-              ${isMobile ? 'min-h-[60vh]' : 'min-h-[40vh]'}
-            `}
-          >
-            <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center">
-              {/* Error icon */}
-              <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-5 ring-1 ring-red-100">
-                <AlertCircle className="w-6 h-6 text-red-500" />
-              </div>
-
-              <h2
-                className="text-xl font-semibold text-gray-900 mb-2"
-                style={{ letterSpacing: '-0.02em' }}
-              >
-                Rechnung nicht gefunden
-              </h2>
-              <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-                {error || 'Die angeforderte Rechnung konnte nicht gefunden werden.'}
-              </p>
-
-              <button
-                onClick={() => router.push('/sales/invoices')}
-                className="
-                  inline-flex items-center justify-center gap-2
-                  w-full bg-gray-900 hover:bg-gray-800
-                  text-white text-sm font-semibold
-                  rounded-xl py-3 px-6
-                  transition-colors active:scale-[0.98]
-                "
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Zurück zu Belegen
-              </button>
-            </div>
-          </div>
-        </div>
-    );
-  }
-
-  if (!invoice) return null;
-
-  // ─── Print and Download Handlers ────────────────────────────────────────────
-
-  const handlePrint = () => {
-    lightFeedback();
-    window.print();
-  };
-
-  const handleDownload = async () => {
-    lightFeedback();
-    try {
-      const filename = invoice.invoiceNumber
-        ? `Rechnung-${invoice.invoiceNumber}`
-        : `Rechnung-${invoice.id.slice(0, 8)}`;
-      await InvoiceService.downloadPDF(invoice.id, filename);
-    } catch (error) {
-      devError('Error downloading PDF:', error);
-      toast.error('Fehler beim Herunterladen der Rechnung');
-    }
-  };
-
-  // ─── Invoice View ──────────────────────────────────────────────────────────
 
   return (
-    <div className="invoice-print-container w-full h-full">
-      <div className={isMobile ? 'px-4 py-4' : 'px-6 py-6 max-w-4xl mx-auto'}>
-        <InvoiceTemplate
-          invoice={invoice}
-          showActions={!isMobile}
-          isMobile={isMobile}
-          onPrint={handlePrint}
-          onDownload={handleDownload}
-        />
-      </div>
-    </div>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <SalesInvoiceDetailClient invoiceId={invoiceId} />
+    </HydrationBoundary>
   );
 }

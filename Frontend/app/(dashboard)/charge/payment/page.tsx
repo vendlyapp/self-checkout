@@ -8,6 +8,7 @@ import HeaderNav from '@/components/navigation/HeaderNav';
 import PaymentModal from '@/components/dashboard/charge/PaymentModal';
 import { useMyStore } from '@/hooks/queries/useMyStore';
 import { usePaymentMethods } from '@/hooks/queries/usePaymentMethods';
+import { useMyStoreInitialLoading, isInitialQueryLoading } from '@/hooks/queries/useStoreQueryScope';
 import { Loader } from '@/components/ui/Loader';
 import { ChargePageShell } from '@/components/dashboard/charge/ChargePageShell';
 import ChargePaymentTotal from '@/components/dashboard/charge/ChargePaymentTotal';
@@ -39,12 +40,19 @@ export default function PaymentPage() {
   const router = useRouter();
   const mountedRef = useRef(false);
 
-  const { data: store, isLoading: storeLoading } = useMyStore();
-  const { data: paymentMethodsData, isLoading: paymentMethodsLoading } =
-    usePaymentMethods({
-      storeId: store?.id || '',
-      activeOnly: true,
-    });
+  const { data: store, isFetched: storeFetched, isFetching: storeFetching } = useMyStore();
+  const storeLoading = useMyStoreInitialLoading(store, storeFetched, storeFetching);
+  const {
+    data: paymentMethodsData,
+    isFetched: methodsFetched,
+    isFetching: methodsFetching,
+  } = usePaymentMethods({
+    storeId: store?.id || '',
+    activeOnly: true,
+  });
+  const paymentMethodsLoading =
+    isInitialQueryLoading(methodsFetched, methodsFetching) &&
+    !(paymentMethodsData?.length);
 
   useEffect(() => {
     if (!mountedRef.current) {
@@ -76,7 +84,7 @@ export default function PaymentPage() {
     router.push('/charge');
   };
 
-  if (!mounted || storeLoading || paymentMethodsLoading) {
+  if (!mounted || ((storeLoading && !store) || paymentMethodsLoading)) {
     return (
       <div className="flex min-h-[50vh] w-full items-center justify-center animate-fade-in">
         <div className="text-center">

@@ -92,35 +92,30 @@ const makeRequest = async <T>(
       };
     }
     
-    // Si ya hay un signal en options, usar ese (React Query lo proporciona)
-    const controller = options.signal ? null : new AbortController();
-    const timeoutId = controller
-      ? setTimeout(() => controller.abort(new DOMException('Request timeout', 'AbortError')), API_CONFIG.TIMEOUT)
-      : null;
+    const { createRequestSignal } = await import('@/lib/http/fetchWithTimeout');
+    const { signal: optionsSignal, ...restOptions } = options;
+    const { signal, cleanup } = createRequestSignal(optionsSignal ?? undefined);
 
-    // Usar el signal de options si existe (React Query), sino usar el del controller
-    const signal = options.signal || controller?.signal;
+    try {
+      const response = await fetch(url, {
+        ...restOptions,
+        headers: {
+          ...headers,
+          ...(options.headers || {}),
+        },
+        signal,
+      });
 
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...headers,
-        ...(options.headers || {}),
-      },
-      signal,
-    });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
 
-    if (timeoutId) {
-      clearTimeout(timeoutId);
+      const data = await response.json();
+      return data;
+    } finally {
+      cleanup();
     }
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
   } catch (error) {
     // AbortError: request cancelado por timeout o por desmontaje del componente (React Query / StrictMode).
     // No re-lanzar — retornar error silencioso para evitar ruido en consola.

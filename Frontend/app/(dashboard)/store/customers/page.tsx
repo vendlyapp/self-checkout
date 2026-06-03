@@ -6,6 +6,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useResponsive } from '@/hooks'
 import { useMyStore } from '@/hooks/queries/useMyStore'
 import { CustomerService, type Customer } from '@/lib/services/customerService'
+import { isInitialQueryLoading, useMyStoreInitialLoading } from '@/hooks/queries/useStoreQueryScope'
+import { queryKeys } from '@/lib/queryKeys'
 import { Users, Search, Mail, Phone, MapPin, ShoppingBag, TrendingUp, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatCHF } from '@/lib/invoice-utils'
@@ -14,11 +16,12 @@ import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState'
 export default function CustomersPage() {
   const { isMobile } = useResponsive()
   const router = useRouter()
-  const { data: store, isLoading: storeLoading } = useMyStore()
+  const { data: store, isFetched: storeFetched, isFetching: storeFetching } = useMyStore()
+  const storeLoading = useMyStoreInitialLoading(store, storeFetched, storeFetching)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const { data: customers = [], isLoading: customersLoading } = useQuery<Customer[]>({
-    queryKey: ['customers', store?.id],
+  const { data: customers = [], isFetched, isFetching } = useQuery<Customer[]>({
+    queryKey: queryKeys.customers.list(store?.id),
     queryFn: async () => {
       const result = await CustomerService.getCustomersByStore(store!.id)
       if (!result.success) throw new Error(result.error || 'Fehler beim Laden der Kunden')
@@ -48,7 +51,10 @@ export default function CustomersPage() {
     router.push(`/store/customers/${customerId}`)
   }
 
-  const isLoading = storeLoading || customersLoading
+  const customersLoading =
+    isInitialQueryLoading(isFetched, isFetching) && customers.length === 0
+
+  const isLoading = (storeLoading && !store) || customersLoading
 
   if (isLoading) {
     return <DashboardLoadingState mode="page" message="Wird geladen..." />

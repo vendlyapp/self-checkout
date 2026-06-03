@@ -59,6 +59,9 @@ export const queryKeys = {
   },
   customers: {
     list: (storeId: string | undefined) => ['customers', storeId] as const,
+    detail: (customerId: string) => ['customer', customerId] as const,
+    invoices: (customerId: string, storeId: string | undefined) =>
+      ['customerInvoices', customerId, storeId] as const,
   },
   discountCodes: {
     all: () => ['discountCodes'] as const,

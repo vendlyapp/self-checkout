@@ -3,13 +3,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { InvoiceService, Invoice } from '@/lib/services/invoiceService';
 import { queryKeys } from '@/lib/queryKeys';
+import { useAuth } from '@/lib/auth/AuthContext';
 
-/**
- * Hook para obtener facturas por orderId usando React Query
- */
 export const useInvoicesByOrderId = (orderId: string | null | undefined) => {
+  const { session, loading: authLoading } = useAuth();
+
   return useQuery({
     queryKey: queryKeys.invoices.byOrder(orderId ?? ''),
+    enabled: !authLoading && !!session?.access_token && !!orderId,
     queryFn: async ({ signal }) => {
       if (!orderId) {
         throw new Error('Keine Bestellungs-ID angegeben');
@@ -26,11 +27,10 @@ export const useInvoicesByOrderId = (orderId: string | null | undefined) => {
 
       return result.data as Invoice[];
     },
-    enabled: !!orderId,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: true,
     refetchOnReconnect: false,
     placeholderData: (previousData) => previousData,
     retry: (failureCount, error) => {

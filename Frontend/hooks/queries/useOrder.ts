@@ -1,23 +1,40 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { OrderService, RecentOrder } from '@/lib/services/orderService';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { queryKeys } from '@/lib/queryKeys';
 
-/**
- * Hook para obtener una orden por ID usando React Query
- * Los datos se cachean para evitar peticiones innecesarias
- * 
- * @param orderId - ID de la orden
- * @returns Datos de la orden, estados de carga y error
- * 
- * @example
- * ```tsx
- * const { data: order, isLoading, error } = useOrder('order-id');
- * ```
- */
+function findOrderInCache(
+  queryClient: ReturnType<typeof useQueryClient>,
+  orderId: string
+): RecentOrder | undefined {
+  for (const [, orders] of queryClient.getQueriesData<RecentOrder[]>({
+    queryKey: ['orders'],
+  })) {
+    const found = orders?.find((o) => o.id === orderId);
+    if (found) return found;
+  }
+  for (const [, orders] of queryClient.getQueriesData<RecentOrder[]>({
+    queryKey: ['recentOrders'],
+  })) {
+    const found = orders?.find((o) => o.id === orderId);
+    if (found) return found;
+  }
+  return undefined;
+}
+
 export const useOrder = (orderId: string | null | undefined) => {
+  const { session, loading: authLoading } = useAuth();
+  const queryClient = useQueryClient();
+
   return useQuery({
-    queryKey: ['order', orderId],
+    queryKey: queryKeys.orders.detail(orderId ?? ''),
+    enabled: !authLoading && !!session?.access_token && !!orderId,
+    initialData: () => {
+      if (!orderId) return undefined;
+      return findOrderInCache(queryClient, orderId);
+    },
     queryFn: async ({ signal }) => {
       if (!orderId) {
         throw new Error('Keine Bestellungs-ID angegeben');
@@ -34,11 +51,10 @@ export const useOrder = (orderId: string | null | undefined) => {
 
       return result.data as RecentOrder;
     },
-    enabled: !!orderId,
-    staleTime: 5 * 60 * 1000, // 5 minutos - datos frescos por más tiempo
-    gcTime: 30 * 60 * 1000, // 30 minutos en cache
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
-    refetchOnMount: false, // No refetch en mount si los datos están frescos
+    refetchOnMount: true,
     refetchOnReconnect: false,
     placeholderData: (previousData) => previousData,
     retry: (failureCount, error) => {
@@ -50,4 +66,3 @@ export const useOrder = (orderId: string | null | undefined) => {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
   });
 };
-

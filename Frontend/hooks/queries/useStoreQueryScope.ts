@@ -26,3 +26,13 @@ export function isInitialQueryLoading(
 ): boolean {
   return !isFetched && isFetching;
 }
+
+/** Loading de myStore: skeleton solo sin datos cacheados en la primera carga. */
+export function useMyStoreInitialLoading(
+  data: unknown,
+  isFetched: boolean,
+  isFetching: boolean
+): boolean {
+  if (data) return false;
+  return isInitialQueryLoading(isFetched, isFetching);
+}

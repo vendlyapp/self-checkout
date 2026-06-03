@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import PaymentMethodCard from './PaymentMethodCard'
 import ConfigurePaymentMethodModal from './ConfigurePaymentMethodModal'
 import { useMyStore } from '@/hooks/queries/useMyStore'
+import { useMyStoreInitialLoading, isInitialQueryLoading } from '@/hooks/queries/useStoreQueryScope'
 import { usePaymentMethods, PaymentMethod as ApiPaymentMethod } from '@/hooks/queries/usePaymentMethods'
 import { useUpdatePaymentMethod, useCreatePaymentMethod } from '@/hooks/mutations/usePaymentMethodMutations'
 import { Loader } from '@/components/ui/Loader'
@@ -26,13 +27,20 @@ export interface PaymentMethod {
 
 const PaymentMethodsPage = () => {
   // Obtener la tienda del usuario
-  const { data: store, isLoading: storeLoading } = useMyStore()
+  const { data: store, isFetched: storeFetched, isFetching: storeFetching } = useMyStore()
+  const storeLoading = useMyStoreInitialLoading(store, storeFetched, storeFetching)
   
-  // Obtener métodos de pago de la API (todos, no solo activos)
-  const { data: paymentMethodsData, isLoading: methodsLoading, refetch } = usePaymentMethods({
+  const {
+    data: paymentMethodsData,
+    isFetched: methodsFetched,
+    isFetching: methodsFetching,
+    refetch,
+  } = usePaymentMethods({
     storeId: store?.id || '',
-    activeOnly: false, // Obtener todos, activos e inactivos
+    activeOnly: false,
   })
+  const methodsLoading =
+    isInitialQueryLoading(methodsFetched, methodsFetching) && !paymentMethodsData?.length
 
   const updatePaymentMethod = useUpdatePaymentMethod()
   const createPaymentMethod = useCreatePaymentMethod()
@@ -329,7 +337,7 @@ const PaymentMethodsPage = () => {
     return selectedMethod.availableMethod || null
   }
 
-  if (storeLoading || methodsLoading) {
+  if ((storeLoading && !store) || methodsLoading) {
     return <DashboardLoadingState mode="page" message="Wird geladen..." />
   }
 

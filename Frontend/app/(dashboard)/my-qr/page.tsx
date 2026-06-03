@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react'
 import { QrCode, Download, Edit2, Save, X, Copy, Share2, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { useMyStore } from '@/hooks/queries'
+import { useMyStoreInitialLoading } from '@/hooks/queries/useStoreQueryScope'
 import { useUpdateStore, useRegenerateQR } from '@/hooks/mutations'
 import { Loader } from '@/components/ui/Loader'
 import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState'
 
 export default function MyQRPage() {
-  const { data: store, isLoading: loading, error } = useMyStore()
+  const { data: store, isFetched, isFetching, error } = useMyStore()
+  const loading = useMyStoreInitialLoading(store, isFetched, isFetching)
   const updateStoreMutation = useUpdateStore()
   const regenerateQRMutation = useRegenerateQR()
   
