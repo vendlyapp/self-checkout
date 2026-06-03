@@ -47,6 +47,12 @@ export const useProductsAnalyticsStore = create<ProductsAnalyticsState>()(
         data: state.data,
         lastFetched: state.lastFetched,
       }),
+      onRehydrateStorage: () => (state) => {
+        // No reutilizar analytics con total 0 tras un fallo anterior en prod
+        if (state?.data && (state.data.products?.total ?? 0) === 0) {
+          state.clearData();
+        }
+      },
     }
   )
 );

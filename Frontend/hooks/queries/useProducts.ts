@@ -35,7 +35,8 @@ export const useProducts = (options?: UseProductsOptions) => {
 
   return useQuery({
     queryKey: [...queryKeys.products.list(listOpts), session?.user?.id ?? 'none'],
-    enabled: enabledOption !== false && !authLoading,
+    enabled:
+      enabledOption !== false && !authLoading && !!session?.access_token,
     queryFn: async ({ signal }) => {
       const { supabase } = await import('@/lib/supabase/client');
       const { data: { session: liveSession } } = await supabase.auth.getSession();

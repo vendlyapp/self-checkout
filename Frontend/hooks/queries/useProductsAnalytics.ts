@@ -1,39 +1,46 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { ProductService } from '@/lib/services/productService';
 import { API_CONFIG, buildApiUrl, getAuthHeaders } from '@/lib/config/api';
+import { fetchProductList } from '@/lib/api/productsApi';
 import type { ProductsAnalyticsData, ProductData, CategoryData } from '@/components/dashboard/products/types';
-import { mockProductsAnalyticsData } from '@/components/dashboard/products/data';
 import { useProductsAnalyticsStore } from '@/lib/stores/productsAnalyticsStore';
 import { devError } from '@/lib/utils/logger';
 import { buildProductsAnalyticsFromCache } from './buildProductsAnalytics';
 import { queryKeys } from '@/lib/queryKeys';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 /**
  * Hook para obtener analytics de productos usando React Query
  * Guarda los datos en el store para reutilización en otras rutas
  */
 export const useProductsAnalytics = () => {
+  const { session, loading: authLoading } = useAuth();
   const { data: cachedData, lastFetched, setData, isStale } = useProductsAnalyticsStore();
-  
-  // Verificar si hay datos válidos en el store antes de hacer la query
-  const hasValidCache = cachedData && lastFetched && !isStale();
-  
+
+  const hasValidCache =
+    cachedData &&
+    lastFetched &&
+    !isStale() &&
+    (cachedData.products?.total ?? 0) > 0;
+
   return useQuery({
-    queryKey: queryKeys.products.analytics(),
+    queryKey: [...queryKeys.products.analytics(), session?.user?.id ?? 'none'],
+    enabled: !authLoading && !!session?.access_token,
     queryFn: async ({ signal }) => {
       const cachedAnalytics = buildProductsAnalyticsFromCache();
-      if (cachedAnalytics) {
+      if (cachedAnalytics && (cachedAnalytics.products?.total ?? 0) > 0) {
         setData(cachedAnalytics);
         return cachedAnalytics;
       }
 
       try {
-        // Obtener token de Supabase
         const { supabase } = await import('@/lib/supabase/client');
-        const { data: { session } } = await supabase.auth.getSession();
-        const token = session?.access_token;
+        const { data: { session: liveSession } } = await supabase.auth.getSession();
+        const token = liveSession?.access_token;
+        if (!token) {
+          throw new Error('NO_SESSION');
+        }
 
         // Crear AbortController con timeout para evitar que se quede colgado
         const timeoutController = new AbortController();
@@ -64,8 +71,10 @@ export const useProductsAnalytics = () => {
             return res.json();
           }).catch(() => ({ success: false, data: null })),
           
-          // Get all products
-          ProductService.getProducts({ limit: 1000 }, { signal: combinedSignal }).catch(() => ({ success: false, data: [] })),
+          // Lista ligera para analytics (mismo endpoint que Kasse, con auth)
+          fetchProductList(token, { includeInactive: true, catalog: true, limit: 200 }, combinedSignal).then(
+            (r) => (r.ok ? { success: true, data: r.data } : { success: false, data: [] })
+          ).catch(() => ({ success: false, data: [] })),
           
           // Get all categories
           fetch(buildApiUrl(API_CONFIG.ENDPOINTS.CATEGORIES), {
@@ -230,8 +239,14 @@ export const useProductsAnalytics = () => {
           const token = session?.access_token;
 
           // Intentar obtener al menos los productos y categorías
+          const { data: { session: fbSession } } = await supabase.auth.getSession();
+          const fbToken = fbSession?.access_token;
           const [productsResponse, categoriesResponse] = await Promise.allSettled([
-            ProductService.getProducts({ limit: 1000 }),
+            fbToken
+              ? fetchProductList(fbToken, { includeInactive: true, catalog: true, limit: 200 }).then(
+                  (r) => (r.ok ? { success: true, data: r.data } : { success: false, data: [] })
+                )
+              : Promise.resolve({ success: false, data: [] }),
             fetch(buildApiUrl(API_CONFIG.ENDPOINTS.CATEGORIES), {
               headers: getAuthHeaders(token, true),
               cache: 'no-store' as RequestCache,
@@ -294,9 +309,7 @@ export const useProductsAnalytics = () => {
             lastUpdated: new Date().toISOString(),
           };
           
-          // Guardar en el store incluso si es error (para evitar múltiples peticiones)
-          setData(errorResult);
-          
+          // No persistir ceros tras error — dejar que el próximo mount reintente
           return errorResult;
         }
       }
@@ -304,10 +317,8 @@ export const useProductsAnalytics = () => {
     staleTime: 5 * 60 * 1000, // 5 minutos
     gcTime: 10 * 60 * 1000, // 10 minutos
     refetchOnWindowFocus: false,
-    // Usar datos del store como initialData si están disponibles y no están viejos
-    // Esto permite mostrar datos inmediatamente mientras se hace la petición
+    refetchOnMount: true,
     initialData: hasValidCache ? cachedData : undefined,
-    // Si hay datos válidos, la query puede usar el cache pero aún hacer refetch en background
     placeholderData: hasValidCache ? cachedData : undefined,
     retry: (failureCount, error) => {
       // No reintentar si fue cancelado o si ya intentamos 2 veces

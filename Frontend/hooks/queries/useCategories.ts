@@ -13,7 +13,7 @@ export const useCategories = () => {
   const { session, loading: authLoading } = useAuth();
   return useQuery({
     queryKey: [...queryKeys.categories.all(), session?.user?.id ?? 'none'],
-    enabled: !authLoading,
+    enabled: !authLoading && !!session?.access_token,
     queryFn: async ({ signal }) => {
       const { supabase } = await import('@/lib/supabase/client');
       const { data: { session: liveSession } } = await supabase.auth.getSession();

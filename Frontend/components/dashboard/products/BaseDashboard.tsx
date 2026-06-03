@@ -43,7 +43,12 @@ export default function ProductsDashboard() {
   const showThreeCardsInRow = screenWidth >= 1280;
   
   // Si hay datos en el store y no están viejos, usarlos mientras carga
-  const immediateData = storeData && !isStale() ? storeData : null;
+  const immediateData =
+    storeData &&
+    !isStale() &&
+    ((storeData.products?.total ?? 0) > 0 || (storeData.categories?.total ?? 0) > 0)
+      ? storeData
+      : null;
 
   // Intentar refrescar una vez si no hay datos
   useEffect(() => {

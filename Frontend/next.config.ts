@@ -23,6 +23,14 @@ const withPWA = withPWAInit({
     disableDevLogs: true,
     maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
     runtimeCaching: [
+      // Backend API (Fly / api.self-checkout.ch) — NUNCA cachear; evita listas vacías en prod
+      {
+        urlPattern: ({ url }: { url: URL }) =>
+          url.hostname === "api.self-checkout.ch" ||
+          url.hostname.endsWith(".fly.dev"),
+        handler: "NetworkOnly",
+        options: { cacheName: "vendly-backend-api" },
+      },
       // Auth — nunca cachear tokens/sesiones
       {
         urlPattern: /^https:\/\/[^/]+\.supabase\.co\/auth\/.*/i,

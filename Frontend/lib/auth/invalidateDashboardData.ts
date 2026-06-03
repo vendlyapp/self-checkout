@@ -11,4 +11,15 @@ export function invalidateDashboardData(): void {
   qc.invalidateQueries({ queryKey: ['recentOrders'] });
   qc.invalidateQueries({ queryKey: ['orderStats'] });
   qc.invalidateQueries({ queryKey: queryKeys.products.analytics() });
+  qc.invalidateQueries({ queryKey: queryKeys.products.stats() });
+  qc.invalidateQueries({ queryKey: queryKeys.categories.stats() });
+
+  // Evitar mostrar analytics con total 0 guardado tras un fallo anterior
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem('products-analytics-storage');
+    } catch {
+      /* noop */
+    }
+  }
 }

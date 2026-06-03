@@ -2,6 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { ProductService } from '@/lib/services/productService';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { queryKeys } from '@/lib/queryKeys';
 
 const emptyStats = {
   total: 0,
@@ -12,8 +14,10 @@ const emptyStats = {
 };
 
 export const useProductStats = () => {
+  const { session, loading: authLoading } = useAuth();
   return useQuery({
-    queryKey: ['productStats'],
+    queryKey: [...queryKeys.products.stats(), session?.user?.id ?? 'none'],
+    enabled: !authLoading && !!session?.access_token,
     queryFn: async ({ signal }) => {
       try {
         const response = await ProductService.getStats({ signal });

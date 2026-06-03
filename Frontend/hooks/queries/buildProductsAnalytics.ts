@@ -47,9 +47,14 @@ export function buildProductsAnalyticsFromCache(): ProductsAnalyticsData | null 
     | Array<{ isNew?: boolean; createdAt?: string }>
     | undefined;
 
-  const hasProducts = (cachedProducts?.length ?? 0) > 0 || productStats != null;
-  const hasCategories = categories.length > 0 || categoryStats != null;
+  const hasProducts =
+    (cachedProducts?.length ?? 0) > 0 ||
+    (productStats != null && (productStats.total ?? 0) > 0);
+  const hasCategories =
+    categories.length > 0 ||
+    (categoryStats != null && (categoryStats.total ?? 0) > 0);
 
+  // No devolver cache vacío (evita bloquear fetch real en producción)
   if (!hasProducts && !hasCategories) return null;
 
   const allProducts = cachedProducts ?? [];
