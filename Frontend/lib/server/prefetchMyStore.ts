@@ -1,14 +1,20 @@
 import { createClient } from '@/lib/supabase/server';
 import { buildApiUrl } from '@/lib/config/api';
+import { queryKeys } from '@/lib/queryKeys';
 import type { StoreData } from '@/hooks/queries/useMyStore';
 
-export async function prefetchMyStore(): Promise<StoreData | null> {
+export type PrefetchMyStoreResult = {
+  store: StoreData;
+  queryKey: readonly unknown[];
+};
+
+export async function prefetchMyStore(): Promise<PrefetchMyStoreResult | null> {
   const supabase = await createClient();
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
-  if (!session?.access_token) return null;
+  if (!session?.access_token || !session.user?.id) return null;
 
   try {
     const res = await fetch(buildApiUrl('/api/store/my-store'), {
@@ -21,7 +27,13 @@ export async function prefetchMyStore(): Promise<StoreData | null> {
     });
     if (!res.ok) return null;
     const json = await res.json();
-    return json?.data ?? null;
+    const store = json?.data as StoreData | undefined;
+    if (!store?.id) return null;
+
+    return {
+      store,
+      queryKey: [...queryKeys.myStore.all(), session.user.id],
+    };
   } catch {
     return null;
   }

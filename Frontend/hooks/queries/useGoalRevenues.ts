@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { OrderService } from '@/lib/services/orderService';
 import { useMyStore } from '@/hooks/queries/useMyStore';
+import { useAuth } from '@/lib/auth/AuthContext';
 import { getLocalDateString } from '@/lib/utils';
 import { queryKeys } from '@/lib/queryKeys';
 
@@ -36,6 +37,7 @@ const emptyRevenues: GoalRevenues = {
 };
 
 export function useGoalRevenues() {
+  const { session, loading: authLoading } = useAuth();
   const { data: store } = useMyStore();
   const ownerId = store?.ownerId ?? (store as { ownerid?: string } | undefined)?.ownerid ?? undefined;
   const queryClient = useQueryClient();
@@ -92,7 +94,7 @@ export function useGoalRevenues() {
         revenueMonth: monthRes.success && monthRes.data ? (monthRes.data.totalRevenue ?? 0) : 0,
       };
     },
-    enabled: !!ownerId,
+    enabled: !authLoading && !!session?.access_token && !!ownerId,
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
     throwOnError: false,

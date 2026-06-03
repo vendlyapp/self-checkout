@@ -13,6 +13,7 @@ import {
 import { useMyStore } from "@/hooks/queries/useMyStore";
 import { useRecentOrders } from "@/hooks/queries";
 import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 import { devError } from "@/lib/utils/logger";
 import type { SearchResult } from "@/types";
 
@@ -51,9 +52,8 @@ const HomeDashboard: React.FC = () => {
 
   const refreshData = useCallback(async () => {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["orderStats"] }),
-      queryClient.invalidateQueries({ queryKey: ["recentOrders"] }),
-      queryClient.invalidateQueries({ queryKey: ["myStore"] }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all() }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.myStore.all() }),
       queryClient.invalidateQueries({ queryKey: ["topProducts"] }),
     ]);
   }, [queryClient]);

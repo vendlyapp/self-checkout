@@ -3,18 +3,27 @@
 import { useQuery } from '@tanstack/react-query';
 import { OrderService } from '@/lib/services/orderService';
 import { useMyStore } from './useMyStore';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { queryKeys } from '@/lib/queryKeys';
 
 export const useRecentOrders = (limit: number = 10) => {
-  const { data: store, isLoading: storeLoading } = useMyStore();
+  const { session, loading: authLoading } = useAuth();
+  const { data: store } = useMyStore();
+  const storeId = store?.id;
 
   return useQuery({
-    queryKey: ['recentOrders', store?.id, limit],
+    queryKey: queryKeys.orders.recent(storeId, limit),
+    enabled: !authLoading && !!session?.access_token && !!storeId,
     queryFn: async ({ signal }) => {
-      if (!store?.id) {
-        throw new Error('Keine Geschäft gefunden');
+      const { supabase } = await import('@/lib/supabase/client');
+      const { data: { session: liveSession } } = await supabase.auth.getSession();
+      if (!liveSession?.access_token) {
+        const err = new Error('NO_SESSION');
+        (err as Error & { noRetry: boolean }).noRetry = true;
+        throw err;
       }
 
-      const response = await OrderService.getRecentOrders(limit, store.id, { signal });
+      const response = await OrderService.getRecentOrders(limit, storeId, { signal });
       if (!response.success || !response.data) {
         if (response.error === 'Request cancelled' || signal?.aborted) {
           throw new Error('CANCELLED');
@@ -23,18 +32,24 @@ export const useRecentOrders = (limit: number = 10) => {
       }
       return response.data;
     },
-    enabled: !!store?.id && !storeLoading, // Solo ejecutar si tenemos storeId y no está cargando
-    staleTime: 60 * 1000, // 1 minuto - para que Verkauf muestre ventas recientes al abrir
-    gcTime: 15 * 60 * 1000, // 15 minutos en cache
-    refetchOnWindowFocus: true, // Actualizar al volver a la pestaña (p. ej. tras una venta en otra pestaña)
-    refetchOnMount: true, // Refetch al montar para ver ventas recientes
-    refetchOnReconnect: false,
+    staleTime: 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
     retry: (failureCount, error) => {
       if (error instanceof Error && error.message === 'CANCELLED') {
         return false;
       }
+      if (
+        error instanceof Error &&
+        (error.message === 'NO_SESSION' ||
+          (error as Error & { noRetry?: boolean }).noRetry)
+      ) {
+        return false;
+      }
       return failureCount < 2;
     },
+    throwOnError: false,
   });
 };
-

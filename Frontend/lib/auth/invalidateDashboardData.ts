@@ -9,6 +9,7 @@ export function invalidateDashboardData(): void {
   qc.invalidateQueries({ queryKey: queryKeys.categories.all() });
   qc.invalidateQueries({ queryKey: queryKeys.myStore.all() });
   qc.invalidateQueries({ queryKey: ['recentOrders'] });
+  qc.invalidateQueries({ queryKey: queryKeys.orders.all() });
   qc.invalidateQueries({ queryKey: ['orderStats'] });
   qc.invalidateQueries({ queryKey: queryKeys.products.analytics() });
   qc.invalidateQueries({ queryKey: queryKeys.products.stats() });

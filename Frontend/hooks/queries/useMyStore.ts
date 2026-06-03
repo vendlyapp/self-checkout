@@ -38,7 +38,8 @@ export const useMyStore = () => {
   const { session, loading: authLoading } = useAuth()
   return useQuery({
     queryKey: [...queryKeys.myStore.all(), session?.user?.id ?? 'none'],
-    enabled: !authLoading,
+    enabled: !authLoading && !!session?.access_token,
+    refetchOnMount: true,
     queryFn: async ({ signal }) => {
       // La sesión se verifica directamente en la queryFn — sin useEffect ni estado extra.
       // Esto elimina el waterfall: render → effect → setState → re-render → query start.
