@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
-import { User, Session, AuthError } from '@supabase/supabase-js';
+import { User, Session, AuthError, type AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
 import { devError, devWarn } from '@/lib/utils/logger';
 
@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     // Subscribe to auth state changes (sign-in, sign-out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (event: AuthChangeEvent, session: Session | null) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);

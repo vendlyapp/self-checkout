@@ -1,9 +1,14 @@
 "use client";
 
-import { SearchInput } from "@/components/ui/search-input";
+import { Search, SlidersHorizontal } from "lucide-react";
 import { TOP_FILTER_SEARCH_BAR_PX, TOP_FILTER_SLIDER_BAR_PX } from "@/lib/constants/layoutHeights";
-import { SlidersHorizontal } from "lucide-react";
-import { FilterSlider, FilterOption } from "@/components/Sliders/SliderFIlter";
+import { CategoryChips } from "@/components/user/CategoryChips";
+
+export interface CatalogFilterChip {
+  id: string;
+  label: string;
+  count?: number;
+}
 
 interface FilterBusquedaProps {
   searchQuery: string;
@@ -12,10 +17,11 @@ interface FilterBusquedaProps {
   onFilterChange: (filters: string[]) => void;
   onOpenFilterModal: () => void;
   activeFiltersCount: number;
-  productsListFilters: FilterOption[];
+  productsListFilters: CatalogFilterChip[];
   isFixed?: boolean;
 }
 
+/** Suche + Kategorie-Chips — gleiches Muster wie Storefront (/store/[slug]) */
 export default function Filter_Busqueda({
   searchQuery,
   onSearch,
@@ -26,53 +32,65 @@ export default function Filter_Busqueda({
   productsListFilters,
   isFixed = false,
 }: FilterBusquedaProps) {
+  const chipFilters = productsListFilters.map((f) => ({
+    id: f.id,
+    label: f.label,
+    count: f.count,
+  }));
+
+  const chipSelected =
+    selectedFilters.length === 0 || selectedFilters.includes('all')
+      ? ['all']
+      : selectedFilters;
+
   return (
     <>
-      {/* Barra de búsqueda y filtros - FIJOS (posición alineada con layoutHeights) */}
       <div
-        className={`${isFixed ? "fixed" : ""} left-0 right-0 p-4 flex flex-row gap-3 items-center bg-background-cream ${isFixed ? "z-40" : ""} animate-slide-down`}
+        className={`${isFixed ? "fixed left-0 right-0 z-40" : ""} bg-background-cream px-4 py-3`}
         style={isFixed ? { top: `${TOP_FILTER_SEARCH_BAR_PX}px` } : undefined}
       >
-        <div className="animate-stagger-1 flex-1 min-w-0">
-          <SearchInput
-            placeholder="Produkte durchsuchen…"
-            className="w-full h-[54px] transition-interactive"
-            value={searchQuery}
-            onChange={onSearch}
-          />
-        </div>
-        <div className="animate-stagger-2 flex-shrink-0">
+        <div className="mx-auto flex max-w-3xl items-center gap-2 rounded-2xl bg-white p-2 shadow-card focus-within:ring-2 focus-within:ring-[#25D076] transition-shadow">
+          <label className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-2 py-2">
+            <Search className="h-5 w-5 shrink-0 text-gray-400" strokeWidth={2.2} />
+            <input
+              type="search"
+              inputMode="search"
+              value={searchQuery}
+              placeholder="Produkte suchen …"
+              onChange={(e) => onSearch(e.target.value)}
+              className="ios-input-fix w-full bg-transparent text-base font-medium text-gray-900 outline-none placeholder:text-gray-400"
+            />
+          </label>
           <button
+            type="button"
             onClick={onOpenFilterModal}
-            className="relative flex cursor-pointer items-center gap-2 rounded-lg bg-white px-4 py-4 font-semibold text-black transition-interactive hover:scale-105 hover:bg-brand-600 hover:text-white active:scale-95"
-            aria-label="Filter öffnen"
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-gray-700 active:scale-95 transition-transform"
+            aria-label="Erweiterte Filter"
           >
-            <SlidersHorizontal className="w-6 h-6 transition-interactive" />
-
-            {/* Indicador de filtros aplicados */}
+            <SlidersHorizontal className="h-5 w-5" strokeWidth={2.2} />
             {activeFiltersCount > 0 && (
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-sm
-                            animate-bounce-in transition-interactive">
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#25D076] px-1 text-[10px] font-bold text-white shadow-soft">
                 {activeFiltersCount > 9 ? "9+" : activeFiltersCount}
-              </div>
+              </span>
             )}
           </button>
         </div>
       </div>
 
-      {/* Filtros de categorías - FIJOS (posición alineada con layoutHeights) */}
-      <div
-        className={`${isFixed ? "fixed" : ""} left-0 right-0 bg-background-cream ${isFixed ? "z-40" : ""} animate-slide-down`}
-        style={isFixed ? { top: `${TOP_FILTER_SLIDER_BAR_PX}px`, animationDelay: "0.1s", animationFillMode: "both" } : { animationDelay: "0.1s", animationFillMode: "both" }}
-      >
-        <FilterSlider
-          filters={productsListFilters}
-          selectedFilters={selectedFilters}
-          onFilterChange={onFilterChange}
-          showCount={true}
-          multiSelect={false}
-        />
-      </div>
+      {chipFilters.length > 0 && (
+        <div
+          className={`${isFixed ? "fixed left-0 right-0 z-40" : ""} bg-background-cream`}
+          style={isFixed ? { top: `${TOP_FILTER_SLIDER_BAR_PX}px` } : undefined}
+        >
+          <div className="mx-auto max-w-3xl">
+            <CategoryChips
+              filters={chipFilters}
+              selectedFilters={chipSelected}
+              onFilterChange={onFilterChange}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -3,6 +3,7 @@ const globalPaymentMethodConfigService = require('../services/GlobalPaymentMetho
 const { HTTP_STATUS } = require('../types');
 const AppError = require('../utils/AppError');
 const logger = require('../utils/logger');
+const { superAdminStoreDto, superAdminProductDto, mapResponse } = require('../dtos');
 
 /**
  * Super Admin Controller
@@ -50,7 +51,7 @@ class SuperAdminController {
       if (search) options.search = search;
 
       const result = await superAdminService.getAllStores(options);
-      res.status(HTTP_STATUS.OK).json(result);
+      res.status(HTTP_STATUS.OK).json(mapResponse(superAdminStoreDto, result));
     } catch (error) {
       return this.handleError(res, error);
     }
@@ -139,7 +140,7 @@ class SuperAdminController {
       if (storeId) options.storeId = storeId;
 
       const result = await superAdminService.getAllProducts(options);
-      res.status(HTTP_STATUS.OK).json(result);
+      res.status(HTTP_STATUS.OK).json(mapResponse(superAdminProductDto, result));
     } catch (error) {
       return this.handleError(res, error);
     }

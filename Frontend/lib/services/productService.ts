@@ -113,6 +113,8 @@ export interface ProductFilters {
   isActive?: boolean;
   includeInactive?: boolean;
   includeCodes?: boolean;
+  /** Kasse: respuesta ligera (sin base64 en image) */
+  catalog?: boolean;
   isPromotional?: boolean;
   search?: string;
   limit?: number;
@@ -320,6 +322,7 @@ export class ProductService {
     if (filters?.category) params.append('category', filters.category);
     if (filters?.isActive !== undefined) params.append('isActive', filters.isActive.toString());
     if (filters?.includeInactive === true) params.append('includeInactive', 'true');
+    if (filters?.catalog === true) params.append('catalog', 'true');
     if (filters?.includeCodes === true) params.append('includeCodes', 'true');
     if (filters?.isPromotional !== undefined) params.append('isPromotional', filters.isPromotional.toString());
     if (filters?.search) params.append('search', filters.search);

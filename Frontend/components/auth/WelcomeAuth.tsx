@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LogIn, Store, ScanBarcode, Loader2 } from 'lucide-react';
 import { getCopyrightText } from '@/lib/config/brand';
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
 
 const WelcomeAuth: React.FC = () => {
@@ -23,7 +24,7 @@ const WelcomeAuth: React.FC = () => {
     };
 
     // También escuchar SIGNED_IN en caso de que Supabase procese el token aquí
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
       if (event === 'SIGNED_IN' && session) {
         router.replace('/dashboard');
       }

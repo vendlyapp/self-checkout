@@ -1,6 +1,7 @@
-import React from "react";
-import { formatSwissPriceWithCHF } from "@/lib/utils";
-import { useCartStore } from "@/lib/stores/cartStore";
+'use client';
+
+import { formatSwissPriceWithCHF } from '@/lib/utils';
+import { useCartStore } from '@/lib/stores/cartStore';
 
 type FooterContinueProps = {
   subtotal: number;
@@ -8,75 +9,62 @@ type FooterContinueProps = {
   discountAmount: number;
   totalItems: number;
   total: number;
-  promoCode?: string;
   onContinue?: () => void;
 };
 
-const FooterContinue: React.FC<FooterContinueProps> = ({
+export default function FooterContinue({
   subtotal,
   promoApplied,
   discountAmount,
   totalItems,
   total,
-  promoCode,
   onContinue,
-}) => {
+}: FooterContinueProps) {
   const { promoInfo } = useCartStore();
-  
+
+  const discountLabel =
+    promoInfo?.discountType === 'percentage'
+      ? `${Math.round(promoInfo.discountValue)}% Rabatt`
+      : promoInfo?.description || 'Rabatt';
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
-      <div className="mb-2">
+    <div
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-100 bg-white/95 backdrop-blur-xl"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    >
+      <div className="mx-auto max-w-3xl px-4 py-3">
         {promoApplied && (
-          <>
-            <div className="flex items-center justify-between">
-              <div className="text-gray-800 font-semibold text-[16px]">
-                Zwischensumme
-              </div>
-              <div className="text-gray-800 text-[16px]">
-                {formatSwissPriceWithCHF(subtotal)}
-              </div>
+          <div className="mb-2 space-y-1 text-sm">
+            <div className="flex justify-between text-gray-600">
+              <span>Zwischensumme</span>
+              <span className="tabular-nums">{formatSwissPriceWithCHF(subtotal)}</span>
             </div>
-            <div className="flex items-center justify-between mt-1">
-              <div className="text-[#3C7E44] font-semibold text-[15px]">
-                {promoInfo?.discountType === 'percentage' 
-                  ? `${Math.round(promoInfo.discountValue)}% Rabatt${promoInfo.description ? ` auf ${promoInfo.description}` : ''}`
-                  : promoInfo?.description 
-                  ? promoInfo.description
-                  : 'Rabatt'
-                }
-              </div>
-              <div className="text-[#3C7E44] text-[15px] font-semibold">
-                - {formatSwissPriceWithCHF(discountAmount)}
-              </div>
+            <div className="flex justify-between font-medium text-[#3C7E44]">
+              <span>{discountLabel}</span>
+              <span className="tabular-nums">−{formatSwissPriceWithCHF(discountAmount)}</span>
             </div>
-            {/* Separador */}
-            <div className="border-t border-gray-200 my-2"></div>
-          </>
+          </div>
         )}
-      </div>
-      <div className="flex items-center justify-between pt-2">
-        <div>
-          <div className="text-gray-800 font-bold text-[18px]">
-            Gesamtbetrag
-          </div>
-          <div className="text-gray-400 text-[14px]">
-            inkl. MwSt • {totalItems} Artikel
+        <div className="flex items-end justify-between gap-3 border-t border-gray-100 pt-2">
+          <div>
+            <p className="text-xs text-gray-500">Gesamtbetrag · inkl. MwSt.</p>
+            <p className="text-2xl font-extrabold tabular-nums text-gray-900">
+              {formatSwissPriceWithCHF(total)}
+            </p>
+            <p className="text-xs text-gray-400">
+              {totalItems} {totalItems === 1 ? 'Artikel' : 'Artikel'}
+            </p>
           </div>
         </div>
-        <div className="text-black font-bold text-[24px]">
-          {formatSwissPriceWithCHF(total)}
-        </div>
+        <button
+          type="button"
+          onClick={onContinue}
+          className="mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#25D076] text-base font-bold text-white shadow-[0_4px_16px_rgba(37,208,118,0.35)] active:scale-[0.98]"
+          aria-label="Zur Bezahlung"
+        >
+          Zur Bezahlung
+        </button>
       </div>
-      <button
-        className="w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-full py-3 text-[18px] flex items-center justify-center gap-2 mt-4 transition-colors"
-        aria-label="Zur Bezahlung"
-        onClick={onContinue}
-      >
-        Zur Bezahlung
-        <span className="ml-1">&rarr;</span>
-      </button>
     </div>
   );
-};
-
-export default FooterContinue;
+}

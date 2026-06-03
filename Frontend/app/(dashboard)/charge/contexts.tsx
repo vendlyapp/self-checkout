@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import { FilterOption } from "@/components/Sliders/SliderFIlter";
+import type { Product } from "@/components/dashboard/products_list/data/mockProducts";
+import type { CatalogFilterChip } from "@/components/dashboard/products_list/Filter_Busqueda";
 
 // Contexto para el modal de filtros
 interface FilterModalContextType {
@@ -31,7 +32,10 @@ interface ChargeContextType {
   onFilterChange: (filters: string[]) => void;
   onOpenFilterModal: () => void;
   activeFiltersCount: number;
-  chargeFilters: FilterOption[];
+  chargeFilters: CatalogFilterChip[];
+  /** Aktive Produkte (normalisiert, flach) — eine API-Quelle für Layout + Seite */
+  catalogProducts: Product[];
+  isProductsInitialLoad: boolean;
 }
 
 const ChargeContext = createContext<ChargeContextType | undefined>(undefined);

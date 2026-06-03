@@ -40,7 +40,8 @@ export default function Slider() {
             <Link
               key={item.route + item.text}
               href={item.route}
-              className="snap-start flex-shrink-0 bg-white rounded-2xl p-3 transition-transform active:scale-95 cursor-pointer touch-manipulation w-[87px] h-[112px]"
+              prefetch
+              className="dashboard-tap-target snap-start flex-shrink-0 bg-white rounded-2xl p-3 transition-transform active:scale-95 w-[87px] h-[112px] relative z-[1]"
               aria-label={`Navigiere zu ${item.text}`}
             >
               <div className="flex flex-col items-center space-y-2">
@@ -63,7 +64,8 @@ export default function Slider() {
             <Link
               key={item.route + item.text}
               href={item.route}
-              className="group bg-white rounded-xl p-3 md:p-4 cursor-pointer hover:shadow-md hover:scale-[1.02] active:scale-95 border border-gray-100 hover:border-gray-200 transition-transform duration-100"
+              prefetch
+              className="dashboard-tap-target group bg-white rounded-xl p-3 md:p-4 hover:shadow-md hover:scale-[1.02] active:scale-95 border border-gray-100 hover:border-gray-200 transition-transform duration-100 relative z-[1]"
               aria-label={`Navigiere zu ${item.text}`}
             >
               <div className="flex items-start gap-3">

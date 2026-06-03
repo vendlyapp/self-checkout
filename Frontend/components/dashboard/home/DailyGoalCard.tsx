@@ -73,7 +73,8 @@ export default function DailyGoalCard() {
   return (
     <Link
       href="/sales/goals"
-      className="block w-full bg-white rounded-2xl p-4 md:p-6 lg:p-6 shadow-sm border border-gray-200/50 hover:shadow-md hover:border-gray-300/60 active:scale-[0.99] transition-all cursor-pointer"
+      prefetch
+      className="dashboard-tap-target block w-full bg-white rounded-2xl p-4 md:p-6 lg:p-6 shadow-sm border border-gray-200/50 hover:shadow-md hover:border-gray-300/60 active:scale-[0.99] transition-all relative z-[1]"
       aria-label={`${periodLabel} konfigurieren`}
     >
       {/* Header: título + selector de periodo */}

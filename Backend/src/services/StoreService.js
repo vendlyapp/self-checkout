@@ -6,6 +6,7 @@ const SimpleCache = require('../utils/simpleCache');
 
 // Cache slug→store — 10 min TTL, slug changes are extremely rare
 const slugCache = new SimpleCache(10 * 60 * 1000);
+const storeByIdCache = new SimpleCache(60 * 1000);
 
 class StoreService {
   /**
@@ -193,6 +194,10 @@ class StoreService {
    */
   async getById(storeId) {
     try {
+      const cacheKey = `store:id:${storeId}`;
+      const cached = storeByIdCache.get(cacheKey);
+      if (cached) return cached;
+
       const result = await query(
         'SELECT * FROM "Store" WHERE "id" = $1',
         [storeId]
@@ -202,6 +207,7 @@ class StoreService {
         return null;
       }
 
+      storeByIdCache.set(cacheKey, result.rows[0]);
       return result.rows[0];
     } catch (error) {
       console.error('Error getting store by id:', error);
@@ -411,6 +417,11 @@ class StoreService {
       }
 
       let updatedStore = result.rows[0];
+
+      if (updatedStore.slug !== currentStore.slug) {
+        slugCache.del(currentStore.slug);
+        slugCache.del(updatedStore.slug);
+      }
 
       // Marcar configuración completada la primera vez que guardan (onboarding)
       try {

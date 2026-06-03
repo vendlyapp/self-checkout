@@ -3,8 +3,7 @@
 import React from "react";
 import ProductCard from "./ProductCard";
 import { Product } from "../products_list/data/mockProducts";
-import { useStaggerAnimation } from "@/lib/utils/iosAnimations";
-import { Loader } from "@/components/ui/Loader";
+import { DashboardLoadingState } from "@/components/ui/DashboardLoadingState";
 
 interface ProductsListProps {
   products: Product[];
@@ -12,6 +11,8 @@ interface ProductsListProps {
   loading?: boolean;
   searchQuery?: string;
   className?: string;
+  hasActiveFilters?: boolean;
+  onClearFilters?: () => void;
 }
 
 const ProductsList = React.memo(function ProductsList({
@@ -20,49 +21,51 @@ const ProductsList = React.memo(function ProductsList({
   loading = false,
   searchQuery = "",
   className = "",
+  hasActiveFilters = false,
+  onClearFilters,
 }: ProductsListProps) {
-  const { getItemStyle } = useStaggerAnimation(products.length, 30);
-
   if (loading) {
     return (
       <div className={`px-4 py-6 ${className}`}>
-        <div className="text-center py-12">
-          <Loader size="md" className="mx-auto" />
-          <p className="mt-4 text-sm text-gray-500 font-medium">Produkte werden geladen...</p>
-        </div>
+        <DashboardLoadingState mode="section" message="Produkte werden geladen..." />
       </div>
     );
   }
 
   if (products.length === 0) {
     return (
-      <div className={`px-4 py-6 ${className}`}>
-        <div className="text-center py-12">
-          <p className="text-gray-400 text-base font-medium">
-            {searchQuery ? `Keine Produkte für "${searchQuery}" gefunden` : "Keine Produkte verfügbar"}
+      <div className={`px-4 py-12 ${className}`}>
+        <div className="text-center">
+          <p className="text-gray-500 font-medium">
+            {searchQuery
+              ? `Keine Produkte für "${searchQuery}"`
+              : "Keine aktiven Produkte verfügbar"}
           </p>
+          {hasActiveFilters && onClearFilters && (
+            <button
+              type="button"
+              onClick={onClearFilters}
+              className="mt-4 rounded-full bg-white px-4 py-2 text-sm font-bold text-gray-700 shadow-soft active:scale-95"
+            >
+              Alle anzeigen
+            </button>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`px-4 pb-32 pt-2 ${className}`}>
+    <div className={`px-4 pb-32 ${className}`}>
       <div className="space-y-2">
-        {products.map((product, index) => (
-          <div
-            key={product.id}
-            className="animate-stagger-fade-in"
-            style={getItemStyle(index)}
-          >
-            <ProductCard product={product} onAddToCart={onAddToCart} />
-          </div>
+        {products.map((product) => (
+          <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
         ))}
       </div>
     </div>
   );
 });
 
-ProductsList.displayName = 'ProductsList';
+ProductsList.displayName = "ProductsList";
 
 export default ProductsList;

@@ -7,6 +7,8 @@ import type { ProductsAnalyticsData, ProductData, CategoryData } from '@/compone
 import { mockProductsAnalyticsData } from '@/components/dashboard/products/data';
 import { useProductsAnalyticsStore } from '@/lib/stores/productsAnalyticsStore';
 import { devError } from '@/lib/utils/logger';
+import { buildProductsAnalyticsFromCache } from './buildProductsAnalytics';
+import { queryKeys } from '@/lib/queryKeys';
 
 /**
  * Hook para obtener analytics de productos usando React Query
@@ -19,10 +21,14 @@ export const useProductsAnalytics = () => {
   const hasValidCache = cachedData && lastFetched && !isStale();
   
   return useQuery({
-    queryKey: ['productsAnalytics'],
+    queryKey: queryKeys.products.analytics(),
     queryFn: async ({ signal }) => {
-      // Si hay datos en cache y no están viejos, retornarlos inmediatamente
-      // pero aún así hacer la petición en background para actualizar
+      const cachedAnalytics = buildProductsAnalyticsFromCache();
+      if (cachedAnalytics) {
+        setData(cachedAnalytics);
+        return cachedAnalytics;
+      }
+
       try {
         // Obtener token de Supabase
         const { supabase } = await import('@/lib/supabase/client');

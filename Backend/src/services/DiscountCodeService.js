@@ -498,7 +498,7 @@ class DiscountCodeService {
    * @param {string} code - Código de descuento
    * @returns {Promise<Object>}
    */
-  async incrementRedemptions(code) {
+  async incrementRedemptions(code, dbClient = null) {
     const updateQuery = `
       UPDATE "DiscountCode"
       SET current_redemptions = current_redemptions + 1,
@@ -507,7 +507,8 @@ class DiscountCodeService {
       RETURNING *
     `;
 
-    const result = await query(updateQuery, [code.toUpperCase()]);
+    const runQuery = dbClient ? dbClient.query.bind(dbClient) : query;
+    const result = await runQuery(updateQuery, [code.toUpperCase()]);
 
     if (result.rows.length === 0) {
       throw new Error('Código de descuento no encontrado');

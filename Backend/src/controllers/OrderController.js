@@ -2,6 +2,14 @@ const crypto = require('crypto');
 const { randomUUID } = crypto;
 const { query: dbQuery } = require('../../lib/database');
 const orderService = require('../services/OrderService');
+const SimpleCache = require('../utils/simpleCache');
+
+const orderStatsCache = new SimpleCache(60 * 1000);
+
+function orderStatsCacheKey(ownerId, options) {
+  const { date = '', dateFrom = '', dateTo = '' } = options;
+  return `orderStats:${ownerId || 'all'}:${date}:${dateFrom}:${dateTo}`;
+}
 const storeService = require('../services/StoreService');
 const userService = require('../services/UserService');
 const analyticsService = require('../services/AnalyticsService');
@@ -757,7 +765,18 @@ class OrderController {
         }
       }
 
+      const cacheKey = orderStatsCacheKey(options.ownerId, options);
+      const cached = orderStatsCache.get(cacheKey);
+      if (cached) {
+        res.setHeader('X-Cache', 'HIT');
+        return res.status(HTTP_STATUS.OK).json(cached);
+      }
+
       const result = await orderService.getStats(options);
+      if (result?.success) {
+        orderStatsCache.set(cacheKey, result);
+      }
+      res.setHeader('X-Cache', 'MISS');
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
@@ -784,11 +803,13 @@ class OrderController {
       const { limit, status, storeId: storeIdQuery } = req.query;
 
       let effectiveStoreId = null;
+      let ownerIdOverride = null;
       if (role === 'SUPER_ADMIN') {
         effectiveStoreId = storeIdQuery || null;
       } else if (role === 'ADMIN') {
+        ownerIdOverride = req.user.userId || null;
         effectiveStoreId = req.user.storeId || null;
-        if (!effectiveStoreId) {
+        if (!ownerIdOverride) {
           return res.status(HTTP_STATUS.OK).json({
             success: true,
             data: [],
@@ -805,7 +826,8 @@ class OrderController {
       const result = await orderService.getRecentOrders(
         parseInt(limit, 10) || 10,
         status || null,
-        effectiveStoreId
+        effectiveStoreId,
+        ownerIdOverride
       );
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {

@@ -23,7 +23,6 @@ import InvoiceActionsFooter from '@/components/dashboard/invoice/InvoiceActionsF
 import LoadingProductsModal from '@/components/dashboard/home/LoadingProductsModal';
 import { useLoadingProductsModal } from '@/lib/contexts/LoadingProductsModalContext';
 import { useStoreSettingsHeader } from '@/lib/contexts/StoreSettingsHeaderContext';
-import { useChargeContext } from '@/app/charge/contexts';
 import { useProductsList } from '@/components/dashboard/products_list/ProductsListContext';
 import { useAdminLayoutState } from '@/hooks/useAdminLayoutState';
 import {
@@ -50,7 +49,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const storeSettingsHeader = useStoreSettingsHeader();
   const { isOpen: isProductsLoadingModalOpen, closeModal } = useLoadingProductsModal();
-  const chargeContext = useChargeContext();
   const productsListContext = useProductsList();
 
   const {
@@ -65,7 +63,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   const {
     cartItems, getTotalItems, getSubtotal, getTotalWithDiscount,
-    promoApplied, discountAmount, promoCode,
+    promoApplied, discountAmount,
   } = useCartStore();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -108,7 +106,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const shouldShowStoreSalesHeaderNav = isMobile && headerNavTitle !== null;
 
   // Padding-top calculation
-  const needsFilterBarsPt   = isChargeMainPage || isProductsListMainPage || isOrdersListMainPage;
+  const needsFilterBarsPt   = isProductsListMainPage || isOrdersListMainPage;
   const needsHeaderNavOnlyPt = isInvoiceDetailRoute || isOrderDetailRoute || isProductsListAddProductPage || isProductsListViewProductRoute || headerNavTitle !== null;
   const isStoreSectionRoute  = (pathname.startsWith('/store/') || isInvoicesListRoute || isVerkaufeListRoute) && headerNavTitle !== null;
   const mainPtPx = needsFilterBarsPt
@@ -142,20 +140,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           />
 
           {/* Charge + ProductsList — HeaderNav + filtros fijos */}
-          {isMobile && (isChargeMainPage || isProductsListMainPage) && (
+          {isMobile && isProductsListMainPage && (
             <div className="fixed left-0 right-0 z-40 bg-background-cream flex flex-col"
               style={{ top: `calc(${TOP_HEADER_NAV_PX}px + env(safe-area-inset-top))` }}>
-              {isChargeMainPage && chargeContext && (
-                <>
-                  <HeaderNav title="Verkauf starten" showAddButton={false} isFixed={false} noSafeArea={true} />
-                  <Filter_Busqueda
-                    searchQuery={chargeContext.searchQuery} onSearch={chargeContext.onSearch}
-                    selectedFilters={chargeContext.selectedFilters} onFilterChange={chargeContext.onFilterChange}
-                    onOpenFilterModal={chargeContext.onOpenFilterModal} activeFiltersCount={chargeContext.activeFiltersCount}
-                    productsListFilters={chargeContext.chargeFilters} isFixed={false}
-                  />
-                </>
-              )}
               {isProductsListMainPage && productsListContext && (
                 <>
                   <HeaderNav title="Produkte" showAddButton={true} isFixed={false} noSafeArea={true} />
@@ -276,7 +263,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           {isMobile && pathname === '/charge/cart' && cartItems.length > 0 && (
             <FooterContinue
               subtotal={subtotal} promoApplied={promoApplied} discountAmount={discountAmount}
-              totalItems={totalItems} total={total} onContinue={handleChargeContinue} promoCode={promoCode}
+              totalItems={totalItems} total={total} onContinue={handleChargeContinue}
             />
           )}
 

@@ -1,6 +1,7 @@
 const customerService = require('../services/CustomerService');
 const { HTTP_STATUS } = require('../types');
 const logger = require('../utils/logger');
+const { assertStoreAccess, forbidden, notFound } = require('../utils/ownership');
 
 /**
  * Customer controller.
@@ -43,6 +44,11 @@ class CustomerController {
 
       if (!result.success) {
         return res.status(HTTP_STATUS.NOT_FOUND).json(result);
+      }
+
+      const { role, storeId: userStoreId } = req.user;
+      if (role !== 'SUPER_ADMIN' && result.data?.storeId !== userStoreId) {
+        return notFound(res, 'Customer not found');
       }
 
       res.status(HTTP_STATUS.OK).json(result);
@@ -162,6 +168,13 @@ class CustomerController {
   async updateCustomerStats(req, res) {
     try {
       const { id } = req.params;
+      const existing = await customerService.getById(id);
+      if (!existing.success) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json(existing);
+      }
+      if (!assertStoreAccess(req.user, existing.data.storeId)) {
+        return forbidden(res);
+      }
       const result = await customerService.updateStats(id);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
@@ -177,6 +190,13 @@ class CustomerController {
   async deleteCustomer(req, res) {
     try {
       const { id } = req.params;
+      const existing = await customerService.getById(id);
+      if (!existing.success) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json(existing);
+      }
+      if (!assertStoreAccess(req.user, existing.data.storeId)) {
+        return forbidden(res);
+      }
       const result = await customerService.delete(id);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {

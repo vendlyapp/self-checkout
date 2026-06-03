@@ -3,11 +3,19 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useProductStats } from '@/hooks/queries/useProductStats';
 
 const MainActionCards = () => {
+  const router = useRouter();
   const { data: productStats } = useProductStats();
   const productCount = productStats?.total || 0;
+
+  useEffect(() => {
+    router.prefetch('/charge');
+    router.prefetch('/products_list');
+  }, [router]);
 
   return (
     <div className="w-full">
@@ -15,7 +23,8 @@ const MainActionCards = () => {
         {/* Kassieren */}
         <Link
           href="/charge"
-          className="group p-4 lg:p-5 text-left flex-shrink-0 aspect-square md:aspect-[2/1] flex flex-col justify-between card-shadow rounded-2xl w-full h-full bg-brand-500 text-white active:scale-95 transition-transform duration-100 md:min-h-[160px] lg:min-h-[180px] cursor-pointer"
+          prefetch
+          className="dashboard-tap-target group p-4 lg:p-5 text-left flex-shrink-0 aspect-square md:aspect-[2/1] flex flex-col justify-between card-shadow rounded-2xl w-full h-full bg-brand-500 text-white active:scale-95 transition-transform duration-100 md:min-h-[160px] lg:min-h-[180px] relative z-[1]"
         >
           <div className="hidden md:flex items-center gap-3 lg:gap-4 w-full flex-1 min-w-0">
             <div className="rounded-xl flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 flex-shrink-0">
@@ -44,7 +53,8 @@ const MainActionCards = () => {
         {/* Produkte */}
         <Link
           href="/products_list"
-          className="group p-4 lg:p-5 text-left flex-shrink-0 aspect-square md:aspect-[2/1] flex flex-col justify-between card-shadow rounded-2xl w-full h-full bg-white text-gray-900 active:scale-95 transition-transform duration-100 md:min-h-[160px] lg:min-h-[180px] cursor-pointer"
+          prefetch
+          className="dashboard-tap-target group p-4 lg:p-5 text-left flex-shrink-0 aspect-square md:aspect-[2/1] flex flex-col justify-between card-shadow rounded-2xl w-full h-full bg-white text-gray-900 active:scale-95 transition-transform duration-100 md:min-h-[160px] lg:min-h-[180px] relative z-[1]"
         >
           <div className="hidden md:flex items-center gap-3 lg:gap-4 w-full flex-1 min-w-0">
             <div className="rounded-xl flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 flex-shrink-0">

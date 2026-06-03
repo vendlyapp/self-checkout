@@ -1,13 +1,17 @@
+'use client';
+
 import React, { useState, useCallback, useEffect, useMemo } from "react";
+import dynamic from "next/dynamic";
 
 import { useAnalytics, useQuickAccess } from "@/hooks";
 import { useTodayCustomers } from "@/hooks/queries/useTodayCustomers";
 import ActiveCustomers from "./ActiveCustomers";
 import type { Customer } from "./types";
-import SalesChart from "./SalesChart";
 import QuickAccessGrid from "./QuickAccessGrid";
 import PaymentMethods from "./PaymentMethods";
-import CartGauge from "./CartGauge";
+
+const SalesChart = dynamic(() => import("./SalesChart"), { ssr: false });
+const CartGauge = dynamic(() => import("./CartGauge"), { ssr: false });
 import GoalsCard from "./GoalsCard";
 import { SearchInput } from "@/components/ui/search-input";
 import { devError } from "@/lib/utils/logger";

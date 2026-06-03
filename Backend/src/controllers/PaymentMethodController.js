@@ -3,6 +3,9 @@ const QRBillService = require('../services/QRBillService');
 const { HTTP_STATUS } = require('../types');
 const AppError = require('../utils/AppError');
 const logger = require('../utils/logger');
+const SimpleCache = require('../utils/simpleCache');
+
+const paymentMethodsByStoreCache = new SimpleCache(5 * 60 * 1000);
 
 /**
  * Controlador de métodos de pago
@@ -50,8 +53,17 @@ class PaymentMethodController {
       const options = {
         activeOnly: activeOnly === 'true'
       };
-      
+
+      const cacheKey = `pm:${storeId}:${options.activeOnly ? '1' : '0'}`;
+      const cached = paymentMethodsByStoreCache.get(cacheKey);
+      if (cached) {
+        res.setHeader('X-Cache', 'HIT');
+        return res.status(HTTP_STATUS.OK).json(cached);
+      }
+
       const result = await paymentMethodService.findByStoreId(storeId, options);
+      paymentMethodsByStoreCache.set(cacheKey, result);
+      res.setHeader('X-Cache', 'MISS');
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       return this.handleError(res, error);

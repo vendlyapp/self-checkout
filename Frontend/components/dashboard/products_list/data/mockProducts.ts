@@ -730,12 +730,23 @@ export const normalizeProductData = (product: ApiProduct): Product => {
     sku: product.sku || product.barcode || `SKU-${product.id}`,
     // Asegurar que tags es un array
     tags: Array.isArray(product.tags) ? product.tags : [],
-    // Asegurar que images es un array y filtrar URLs vacías
-    images: Array.isArray(product.images) 
-      ? product.images.filter((img: string) => img && img.trim() !== '') 
-      : (product.image && product.image.trim() !== '' ? [product.image] : []),
-    // Asegurar que image no sea una cadena vacía
-    image: product.image && product.image.trim() !== '' ? product.image : undefined,
+    images: (() => {
+      const raw = Array.isArray(product.images)
+        ? product.images
+        : product.image
+          ? [product.image]
+          : [];
+      return raw.filter(
+        (img: string) =>
+          img?.trim() &&
+          (img.startsWith('http://') || img.startsWith('https://'))
+      );
+    })(),
+    image: (() => {
+      const img = product.image?.trim();
+      if (img && (img.startsWith('http://') || img.startsWith('https://'))) return img;
+      return undefined;
+    })(),
   };
 };
 

@@ -180,7 +180,7 @@ export const useCancelOrder = () => {
         });
         // También invalidar invoices específicas de esta orden
         queryClient.invalidateQueries({ 
-          queryKey: ['invoicesByOrderId', data.id],
+          queryKey: ['invoices', 'order', data.id],
           refetchType: 'active',
         });
       }
@@ -274,7 +274,7 @@ export const useUpdateOrderStatus = () => {
           },
         });
         queryClient.invalidateQueries({ 
-          queryKey: ['invoicesByOrderId', variables.orderId],
+          queryKey: ['invoices', 'order', variables.orderId],
         });
       }
       
@@ -319,7 +319,7 @@ export const useConfirmQRPayment = () => {
       }
       queryClient.invalidateQueries({ queryKey: ['orderStats'] });
       queryClient.invalidateQueries({ queryKey: ['order', orderId] });
-      queryClient.invalidateQueries({ queryKey: ['invoicesByOrderId', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['invoices', 'order', orderId] });
       toast.success('Zahlung bestätigt');
     },
     onError: (error: Error) => {

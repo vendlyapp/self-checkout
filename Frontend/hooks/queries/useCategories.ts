@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { CategoryService } from '@/lib/services/categoryService';
 import type { Category } from '@/lib/services/categoryService';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { queryKeys } from '@/lib/queryKeys';
 
 /**
  * Hook para obtener todas las categorías
@@ -11,7 +12,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 export const useCategories = () => {
   const { session } = useAuth();
   return useQuery({
-    queryKey: ['categories'],
+    queryKey: queryKeys.categories.all(),
     enabled: !!session,
     queryFn: async ({ signal }) => {
       const response = await CategoryService.getCategories({ signal });

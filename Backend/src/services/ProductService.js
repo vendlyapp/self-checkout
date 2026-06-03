@@ -5,6 +5,10 @@ const storeService = require('./StoreService');
 const categoryService = require('./CategoryService');
 const SimpleCache = require('../utils/simpleCache');
 const { normalizeSwissMwStRate } = require('../utils/swissMwSt');
+const {
+  IMAGE_URL_SQL_EXPR,
+  sanitizeProductImagesForDb,
+} = require('../utils/productImageUrl');
 
 // In-memory cache para catálogo público — TTL 10 minutos
 const publicProductCache = new SimpleCache(10 * 60 * 1000);
@@ -14,17 +18,27 @@ const publicProductCache = new SimpleCache(10 * 60 * 1000);
 // For list/search views those fields are never rendered; omitting them reduces
 // response size by 80-95% on a typical product catalogue.
 // DETAIL_COLS (SELECT *) is kept only for single-product fetches (edit/detail).
+// List views: omit images[] (often large base64 blobs), qrCode, barcodeImage, notes, dimensions.
 const PRODUCT_LIST_COLS = `
   id, "ownerId", name, description, price, "originalPrice",
   category, "categoryId", stock, "initialStock", barcode, sku,
   tags, "isNew", "isPopular", "isOnSale", "isActive",
-  rating, reviews, weight, "hasWeight", dimensions, "discountPercentage",
-  image, images, currency,
+  rating, reviews, weight, "hasWeight", "discountPercentage",
+  ${IMAGE_URL_SQL_EXPR}, currency,
   "promotionTitle", "promotionType", "promotionStartAt", "promotionEndAt",
   "promotionBadge", "promotionActionLabel", "promotionPriority",
   supplier, "costPrice", margin, "taxRate",
-  "expiryDate", location, notes, "parentId",
+  "expiryDate", location, "parentId",
   "createdAt", "updatedAt"
+`;
+
+/** Kasse /charge — solo URL de imagen (sin images[], description ni blobs QR) */
+const PRODUCT_CATALOG_COLS = `
+  id, "ownerId", name, price, "originalPrice",
+  category, "categoryId", stock, sku,
+  ${IMAGE_URL_SQL_EXPR},
+  "isNew", "isPopular", "isOnSale", "isActive",
+  "discountPercentage", "parentId"
 `;
 
 class ProductService {
@@ -109,10 +123,8 @@ class ProductService {
       ? productData.tags.filter(tag => tag && typeof tag === 'string').map(tag => tag.trim())
       : (productData.tags && typeof productData.tags === 'string' ? [productData.tags.trim()] : []);
     
-    // images es text[] - pasar como array de JavaScript (pg maneja arrays nativamente)
-    const imagesArray = Array.isArray(productData.images)
-      ? productData.images.filter(img => img && typeof img === 'string').map(img => img.trim())
-      : (productData.images && typeof productData.images === 'string' ? [productData.images.trim()] : []);
+    const { image: safeImage, images: safeImages } = sanitizeProductImagesForDb(productData);
+    const imagesArray = safeImages;
     
     // dimensions es jsonb - convertir a JSON string
     const dimensionsObj = productData.dimensions && typeof productData.dimensions === 'object' ? productData.dimensions : null;
@@ -149,7 +161,7 @@ class ProductService {
       Boolean(productData.hasWeight), // $21
       dimensionsObj ? JSON.stringify(dimensionsObj) : null, // $22 - jsonb - convertir objeto a JSON
       discountPercentage, // $23
-      productData.image?.trim() || null, // $24
+      safeImage, // $24
       imagesArray, // $25 - text[] - pasar array directamente (pg lo maneja)
       productData.currency || 'CHF', // $26
       productData.promotionTitle?.trim() || null, // $27
@@ -211,7 +223,9 @@ class ProductService {
       order = 'ASC',
       ownerId = null, // NUEVO: Filtrar por dueño
       includeInactive = false, // Si true, incluir productos inactivos (para lista del admin)
-      includeCodes = false // Si true, incluir qrCode y barcodeImage (SELECT *)
+      includeCodes = false, // Si true, incluir qrCode y barcodeImage (SELECT *)
+      skipCount = false, // Admin list: skip COUNT(*) for faster response
+      catalog = false, // Kasse: columnas mínimas, sin image/base64
     } = options;
 
     let whereClause = includeInactive ? 'WHERE 1=1' : 'WHERE "isActive" = true';
@@ -248,7 +262,7 @@ class ProductService {
       'default': 'ORDER BY "name" ASC'
     };
     const orderByClause = orderByMap[sortBy] || orderByMap.default;
-    const selectCols = includeCodes ? '*' : PRODUCT_LIST_COLS;
+    const selectCols = includeCodes ? '*' : (catalog ? PRODUCT_CATALOG_COLS : PRODUCT_LIST_COLS);
     const selectQuery = `
       SELECT ${selectCols} FROM "Product"
       ${whereClause}
@@ -257,16 +271,22 @@ class ProductService {
     `;
     params.push(limit, offset);
 
-    const [productsResult, countResult] = await Promise.all([
-      query(selectQuery, params),
-      query(`SELECT COUNT(*) FROM "Product" ${whereClause}`, params.slice(0, -2))
-    ]);
+    const productsResult = await query(selectQuery, params);
+
+    let total = productsResult.rows.length;
+    if (!skipCount) {
+      const countResult = await query(
+        `SELECT COUNT(*)::int AS count FROM "Product" ${whereClause}`,
+        params.slice(0, -2)
+      );
+      total = Number(countResult.rows[0]?.count ?? total);
+    }
 
     return {
       success: true,
       data: productsResult.rows,
       count: productsResult.rows.length,
-      total: parseInt(countResult.rows[0].count)
+      total,
     };
   }
 
@@ -346,6 +366,15 @@ class ProductService {
       throw new Error('Producto no encontrado');
     }
 
+    if (productData.image !== undefined || productData.images !== undefined) {
+      const sanitized = sanitizeProductImagesForDb({
+        image: productData.image,
+        images: productData.images,
+      });
+      productData.image = sanitized.image;
+      productData.images = sanitized.images;
+    }
+
     const updateFields = [];
     const values = [];
     let paramCount = 0;
@@ -385,6 +414,12 @@ class ProductService {
 
         values.push(value);
       }
+    }
+
+    if (productData.images !== undefined) {
+      paramCount++;
+      updateFields.push(`"images" = $${paramCount}::text[]`);
+      values.push(productData.images);
     }
 
     if (updateFields.length === 0) {

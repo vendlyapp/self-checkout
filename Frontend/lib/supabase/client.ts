@@ -1,4 +1,5 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 const SESSION_DURATION_MS = 15 * 60 * 1000;
 
@@ -13,24 +14,12 @@ function getSupabase(): SupabaseClient {
       'Missing Supabase env: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set (copy Frontend/.env.example to .env.local and fill in your project keys)'
     );
   }
-  _client = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      storageKey: 'vendly-auth-token',
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    },
-    global: {
-      headers: {
-        'x-client-info': 'vendly-checkout',
-      },
-    },
-  });
+  // Cookie-based session so Next.js middleware can read auth on server navigations
+  _client = createBrowserClient(supabaseUrl, supabaseAnonKey);
   return _client;
 }
 
-/** Supabase client; throws when first used if env vars are missing. Lazy init so build can run without env. */
+/** Supabase browser client (cookies + SSR-compatible). */
 export const supabase = new Proxy({} as SupabaseClient, {
   get(_, prop) {
     return (getSupabase() as unknown as Record<string, unknown>)[prop as string];

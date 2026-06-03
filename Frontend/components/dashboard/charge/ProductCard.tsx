@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, Minus, ChevronDown, Package } from 'lucide-react'
+import { Plus, Minus, ChevronDown, ChevronRight, Package } from 'lucide-react'
 import { Product } from '../products_list/data/mockProducts'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -12,11 +12,29 @@ import { toast } from 'sonner'
 
 interface ProductCardProps {
   product: Product
-  onAddToCart: (product: Product, quantity: number) => void
+  onAddToCart?: (product: Product, quantity: number) => void
   isCartView?: boolean
+  /** Admin Produktliste — gleiches Layout wie Storefront, Tap öffnet Bearbeitung */
+  adminMode?: boolean
 }
 
-const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCartView = false }: ProductCardProps) {
+function ProductThumb({ src, alt }: { src: string; alt: string }) {
+  const className = 'h-full w-full object-cover'
+  if (src.startsWith('data:')) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={src} alt={alt} width={72} height={72} className={className} />
+    )
+  }
+  return <Image src={src} alt={alt} width={72} height={72} className={className} />
+}
+
+const ProductCard = React.memo(function ProductCard({
+  product,
+  onAddToCart,
+  isCartView = false,
+  adminMode = false,
+}: ProductCardProps) {
   const { cartItems } = useCartStore()
   const params = useParams()
   const slug = params?.slug as string | undefined
@@ -95,7 +113,7 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
   }
 
   const handleQuantityChange = (newQuantity: number) => {
-    if (newQuantity < 0 || newQuantity > currentProduct.stock) return
+    if (!onAddToCart || newQuantity < 0 || newQuantity > currentProduct.stock) return
     const prev = currentQuantity
     onAddToCart(currentProduct, newQuantity)
     if (newQuantity === 1 && prev === 0) {
@@ -150,17 +168,24 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
 
   const onSale = !!currentProduct.originalPrice && currentProduct.originalPrice > currentProduct.price
 
-  const detailHref = slug ? `/store/${slug}/product/${product.id}` : null
+  const detailHref = adminMode
+    ? `/products_list/view/${product.id}`
+    : slug
+      ? `/store/${slug}/product/${product.id}`
+      : null
 
-  // Diseño horizontal (1 columna) — igual para vista normal y carrito
+  const isInactive = adminMode && product.isActive === false
+
   return (
-    <article className="flex items-center gap-2.5 rounded-xl bg-white p-2.5 shadow-card">
+    <article
+      className={`flex items-center gap-2.5 rounded-xl bg-white p-2.5 shadow-card ${isInactive ? 'opacity-80' : ''}`}
+    >
       {/* Imagen — tappable al detalle */}
       <div className="relative flex-shrink-0">
         {detailHref ? (
           <Link href={detailHref} className="block h-[72px] w-[72px] overflow-hidden rounded-lg bg-gray-100 active:opacity-80 transition-opacity">
             {product.image ? (
-              <Image src={product.image} alt={getBaseProductName} width={72} height={72} className="h-full w-full object-cover" />
+              <ProductThumb src={product.image} alt={getBaseProductName} />
             ) : (
               <div className="flex h-full w-full items-center justify-center">
                 <Package className="h-8 w-8 text-gray-300" />
@@ -170,7 +195,7 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
         ) : (
           <div className="h-[72px] w-[72px] overflow-hidden rounded-lg bg-gray-100">
             {product.image ? (
-              <Image src={product.image} alt={getBaseProductName} width={72} height={72} className="h-full w-full object-cover" />
+              <ProductThumb src={product.image} alt={getBaseProductName} />
             ) : (
               <div className="flex h-full w-full items-center justify-center">
                 <Package className="h-8 w-8 text-gray-300" />
@@ -184,8 +209,13 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
             <span className="text-[10px] font-bold">%</span>
           </span>
         )}
+        {isInactive && (
+          <span className="absolute -right-1.5 -bottom-1.5 rounded-full bg-gray-200 px-1.5 py-0.5 text-[9px] font-semibold text-gray-600 ring-2 ring-white">
+            Inaktiv
+          </span>
+        )}
         {/* Badge cantidad */}
-        {currentQuantity > 0 && (
+        {!adminMode && currentQuantity > 0 && (
           <span className="absolute -right-1.5 -top-1.5 grid h-7 min-w-7 place-items-center rounded-full bg-[#25D076] px-1.5 text-xs font-extrabold text-white shadow-soft ring-2 ring-white">
             ×{currentQuantity}
           </span>
@@ -231,35 +261,46 @@ const ProductCard = React.memo(function ProductCard({ product, onAddToCart, isCa
           )}
         </div>
 
-        {/* Controles */}
-        {currentQuantity === 0 ? (
-          <button
-            onClick={() => handleQuantityChange(1)}
-            disabled={currentProduct.stock <= 0}
-            className="grid h-9 w-9 place-items-center rounded-full bg-[#25D076] text-white shadow-soft disabled:opacity-40 disabled:cursor-not-allowed active:scale-90 transition-transform"
-            aria-label={`${getBaseProductName} hinzufügen`}
+        {adminMode && detailHref ? (
+          <Link
+            href={detailHref}
+            className="grid h-9 w-9 place-items-center rounded-full border border-gray-200 bg-gray-50 text-gray-500 active:scale-90 transition-transform"
+            aria-label={`${getBaseProductName} bearbeiten`}
           >
-            <Plus className="h-4 w-4" strokeWidth={2.5} />
-          </button>
+            <ChevronRight className="h-5 w-5" strokeWidth={2.2} />
+          </Link>
         ) : (
-          <div className="flex h-9 items-center gap-0.5 rounded-full border border-gray-200 bg-gray-50 px-1">
-            <button
-              onClick={() => handleQuantityChange(currentQuantity - 1)}
-              className="grid h-7 w-7 place-items-center rounded-full bg-white text-gray-700 shadow-soft active:scale-95"
-              aria-label="Weniger"
-            >
-              <Minus className="h-3.5 w-3.5" strokeWidth={2.5} />
-            </button>
-            <span className="min-w-6 text-center text-sm font-extrabold text-gray-900">{currentQuantity}</span>
-            <button
-              onClick={() => handleQuantityChange(currentQuantity + 1)}
-              disabled={currentQuantity >= currentProduct.stock}
-              className="grid h-7 w-7 place-items-center rounded-full bg-[#25D076] text-white disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
-              aria-label="Mehr"
-            >
-              <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-            </button>
-          </div>
+          <>
+            {currentQuantity === 0 ? (
+              <button
+                onClick={() => handleQuantityChange(1)}
+                disabled={currentProduct.stock <= 0}
+                className="grid h-9 w-9 place-items-center rounded-full bg-[#25D076] text-white shadow-soft disabled:opacity-40 disabled:cursor-not-allowed active:scale-90 transition-transform"
+                aria-label={`${getBaseProductName} hinzufügen`}
+              >
+                <Plus className="h-4 w-4" strokeWidth={2.5} />
+              </button>
+            ) : (
+              <div className="flex h-9 items-center gap-0.5 rounded-full border border-gray-200 bg-gray-50 px-1">
+                <button
+                  onClick={() => handleQuantityChange(currentQuantity - 1)}
+                  className="grid h-7 w-7 place-items-center rounded-full bg-white text-gray-700 shadow-soft active:scale-95"
+                  aria-label="Weniger"
+                >
+                  <Minus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                </button>
+                <span className="min-w-6 text-center text-sm font-extrabold text-gray-900">{currentQuantity}</span>
+                <button
+                  onClick={() => handleQuantityChange(currentQuantity + 1)}
+                  disabled={currentQuantity >= currentProduct.stock}
+                  className="grid h-7 w-7 place-items-center rounded-full bg-[#25D076] text-white disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+                  aria-label="Mehr"
+                >
+                  <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 

@@ -95,7 +95,7 @@ export const ProductsListProvider: React.FC<ProductsListProviderProps> = ({
 
   // Obtener categorías y productos reales de la API
   const { data: categoriesData = [] } = useCategories();
-  const { data: productsData = [] } = useProducts({ includeInactive: true });
+  const { data: productsData = [] } = useProducts({ includeInactive: true, catalog: true });
 
   // Calcular filtros de productos con contadores dinámicos
   const productsListFilters: FilterOption[] = useMemo(() => {

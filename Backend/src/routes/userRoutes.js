@@ -46,6 +46,14 @@ router.get('/', authMiddleware, requireRole('SUPER_ADMIN'), userController.getAl
 
 /**
  * @swagger
+ * /api/users/stats:
+ *   get:
+ *     summary: Obtener estadísticas de usuarios
+ */
+router.get('/stats', authMiddleware, requireRole('SUPER_ADMIN'), userController.getStats);
+
+/**
+ * @swagger
  * /api/users/{id}:
  *   get:
  *     summary: Obtener usuario por ID
@@ -256,46 +264,5 @@ router.put('/:id', authMiddleware, requireRole('SUPER_ADMIN', 'ADMIN'), validate
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.delete('/:id', authMiddleware, requireRole('SUPER_ADMIN'), validateUUID('id'), userController.deleteUser);
-
-/**
- * @swagger
- * /api/users/stats:
- *   get:
- *     summary: Obtener estadísticas de usuarios
- *     description: Retorna estadísticas generales de usuarios
- *     tags: [Users]
- *     responses:
- *       200:
- *         description: Estadísticas obtenidas exitosamente
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/ApiResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       type: object
- *                       properties:
- *                         total:
- *                           type: integer
- *                           description: Total de usuarios
- *                         withOrders:
- *                           type: integer
- *                           description: Usuarios con órdenes
- *                         recent:
- *                           type: integer
- *                           description: Usuarios recientes (30 días)
- *                         withoutOrders:
- *                           type: integer
- *                           description: Usuarios sin órdenes
- *       500:
- *         description: Error interno del servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- */
-router.get('/stats', authMiddleware, requireRole('SUPER_ADMIN'), userController.getStats);
 
 module.exports = router;

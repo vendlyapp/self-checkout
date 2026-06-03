@@ -50,6 +50,7 @@ export interface StorefrontCategory {
   id: string;
   name: string;
   isActive: boolean;
+  icon?: string | null;
 }
 
 export interface StorefrontPaymentOption {

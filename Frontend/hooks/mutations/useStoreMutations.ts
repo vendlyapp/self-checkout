@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { buildApiUrl, getAuthHeaders } from '@/lib/config/api'
 import { toast } from 'sonner'
+import { queryKeys } from '@/lib/queryKeys'
 
 interface UpdateStoreData {
   name?: string
@@ -61,7 +62,7 @@ export const useUpdateStore = () => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myStore'] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.myStore.all() })
       toast.success('Geschäft erfolgreich aktualisiert')
     },
     onError: (error) => {
@@ -117,7 +118,7 @@ export const useRegenerateQR = () => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myStore'] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.myStore.all() })
       toast.success('QR-Code erfolgreich regeneriert')
     },
     onError: (error) => {

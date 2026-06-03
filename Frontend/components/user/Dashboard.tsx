@@ -4,7 +4,7 @@ import { Product } from "../dashboard/products_list/data/mockProducts";
 import { useCartStore } from "@/lib/stores/cartStore";
 import { useScannedStoreStore } from "@/lib/stores/scannedStoreStore";
 import { Store as StoreIcon, ShoppingBag, ScanBarcode } from "lucide-react";
-import { useCategories } from "@/hooks/queries/useCategories";
+import { useStorefrontCategories } from "@/hooks/storefront/useStorefrontCategories";
 import { useStoreProducts } from "@/hooks/queries/useStoreProducts";
 import { getIcon } from "../dashboard/products_list/data/iconMap";
 import { FilterOption } from "@/components/Sliders/SliderFIlter";
@@ -20,7 +20,7 @@ const DashboardUser = React.memo(({ onLoadingChange }: DashboardUserProps = {}) 
   const { searchQuery, selectedFilters, setCategoryFilters, onScanQR, onSearch, onFilterChange } = useStoreContext();
 
   // Obtener categorías reales de la API
-  const { data: categoriesData = [] } = useCategories();
+  const { data: categoriesData = [] } = useStorefrontCategories(store?.slug || '', !!store?.slug);
 
   // Obtener productos de la tienda con cache inteligente
   const { 

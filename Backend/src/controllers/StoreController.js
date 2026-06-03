@@ -2,9 +2,17 @@ const storeService = require('../services/StoreService');
 const productService = require('../services/ProductService');
 const { HTTP_STATUS } = require('../types');
 const SimpleCache = require('../utils/simpleCache');
+const {
+  publicStoreDto,
+  publicProductDto,
+  adminStoreDto,
+  mapList,
+  mapResponse,
+} = require('../dtos');
 
 // Cache slug→products — separado del cache ownerId para hit directo sin lookup de store
 const slugProductsCache = new SimpleCache(10 * 60 * 1000);
+const myStoreCache = new SimpleCache(30 * 1000);
 
 /**
  * Store controller.
@@ -26,6 +34,13 @@ class StoreController {
         });
       }
 
+      const cacheKey = `my-store:${ownerId}`;
+      const cached = myStoreCache.get(cacheKey);
+      if (cached) {
+        res.setHeader('X-Cache', 'HIT');
+        return res.status(HTTP_STATUS.OK).json(cached);
+      }
+
       const store = await storeService.getByOwnerId(ownerId);
 
       if (!store) {
@@ -35,7 +50,10 @@ class StoreController {
         });
       }
 
-      res.status(HTTP_STATUS.OK).json({ success: true, data: store });
+      const payload = { success: true, data: adminStoreDto(store) };
+      myStoreCache.set(cacheKey, payload);
+      res.setHeader('X-Cache', 'MISS');
+      res.status(HTTP_STATUS.OK).json(payload);
     } catch (error) {
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
@@ -60,7 +78,7 @@ class StoreController {
         });
       }
 
-      res.status(HTTP_STATUS.OK).json({ success: true, data: store });
+      res.status(HTTP_STATUS.OK).json({ success: true, data: publicStoreDto(store) });
     } catch (error) {
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
@@ -93,12 +111,13 @@ class StoreController {
 
       // L3: product query (cached by ownerId in ProductService)
       const result = await productService.findByOwnerPublic(store.ownerId, 100);
+      const dtoResult = mapResponse(publicProductDto, result);
 
-      slugProductsCache.set(slug, result);
+      slugProductsCache.set(slug, dtoResult);
 
       res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
       res.setHeader('X-Cache', 'MISS');
-      res.status(HTTP_STATUS.OK).json(result);
+      res.status(HTTP_STATUS.OK).json(dtoResult);
     } catch (error) {
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
@@ -122,6 +141,7 @@ class StoreController {
         });
       }
 
+      myStoreCache.del(`my-store:${ownerId}`);
       const result = await storeService.update(ownerId, req.body);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
@@ -154,6 +174,7 @@ class StoreController {
         });
       }
 
+      myStoreCache.del(`my-store:${ownerId}`);
       const result = await storeService.updateStoreStatus(ownerId, isOpen);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
@@ -177,6 +198,7 @@ class StoreController {
           error: 'User not authenticated',
         });
       }
+      myStoreCache.del(`my-store:${ownerId}`);
       const result = await storeService.completeOnboarding(ownerId);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
@@ -202,6 +224,7 @@ class StoreController {
         });
       }
 
+      myStoreCache.del(`my-store:${ownerId}`);
       const result = await storeService.regenerateQRCode(ownerId);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {

@@ -1,9 +1,7 @@
-import ProductsDashboard from "@/components/dashboard/products/BaseDashboard";
+import ProductsPageClient from './ProductsPageClient';
 
-export default function Products() {
-  return (
-    <div className="w-full min-w-0 animate-page-enter">
-      <ProductsDashboard />
-    </div>
-  );
+export const dynamic = 'force-dynamic';
+
+export default function ProductsPage() {
+  return <ProductsPageClient />;
 }

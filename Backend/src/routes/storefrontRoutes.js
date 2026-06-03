@@ -9,6 +9,9 @@ const router = Router();
 // ─── Store info ───────────────────────────────────────────────────────────────
 // All read-only store endpoints are public and unauthenticated.
 
+/** GET /api/storefront/active-slugs — ISR / generateStaticParams */
+router.get('/active-slugs', ctrl.getActiveSlugs.bind(ctrl));
+
 /** GET /api/storefront/stores/:slug */
 router.get('/stores/:slug', ctrl.getStore.bind(ctrl));
 

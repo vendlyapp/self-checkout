@@ -4,26 +4,32 @@ const format = require('pg-format');
 require('dotenv').config();
 const logger = require('../src/utils/logger');
 
-// Use direct connection in development if available, otherwise use pooler
-const resolvedConnectionString =
-  process.env.NODE_ENV === 'development' && process.env.DIRECT_URL
-    ? process.env.DIRECT_URL
-    : process.env.DATABASE_URL;
+// Runtime always uses DATABASE_URL (transaction pooler :6543 in production).
+// DIRECT_URL (db.*.supabase.co:5432) is for migrations/scripts only — see run_supabase_migrations.js
+const resolvedConnectionString = process.env.DATABASE_URL;
 
 const isUsingPooler =
   resolvedConnectionString?.includes(':6543') ||
   resolvedConnectionString?.includes('pooler.supabase.com');
 
+const poolMax = process.env.NODE_ENV === 'production' ? 20 : 12;
+const poolMin = process.env.NODE_ENV === 'production' ? 2 : 4;
+
 const pool = new Pool({
   connectionString: resolvedConnectionString,
   ssl: { rejectUnauthorized: false },
-  max: process.env.NODE_ENV === 'production' ? 20 : 5,
-  idleTimeoutMillis: 20000,
+  max: poolMax,
+  min: poolMin,
+  idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 30000,
   allowExitOnIdle: false,
   keepAlive: true,
   keepAliveInitialDelayMillis: 10000,
 });
+
+// Log slow queries in development to pinpoint connection-wait vs execution time.
+const SLOW_QUERY_MS = 800;
+const logSlow = process.env.NODE_ENV !== 'production';
 
 // Attach safe error handler to each checked-out pg Client.
 // Without this, a connection drop can emit an unhandled "error" event
@@ -116,6 +122,30 @@ async function testConnection(maxRetries = 3, retryDelay = 2000) {
 }
 
 /**
+ * Pre-open pool connections so the first dashboard burst does not pay ~1s TCP+SSL each.
+ */
+async function warmPool(count = poolMin) {
+  const n = Math.min(count, poolMax);
+  const clients = [];
+  try {
+    for (let i = 0; i < n; i++) {
+      clients.push(await pool.connect());
+    }
+    logger.info('Database pool warmed', { connections: clients.length, max: poolMax });
+  } catch (err) {
+    logger.warn('Pool warm-up partial failure', { error: err.message });
+  } finally {
+    for (const client of clients) {
+      try {
+        client.release();
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+}
+
+/**
  * Execute a SQL query with automatic retry on connection errors.
  *
  * When using Supabase Transaction Pooler (port 6543), prepared statements are
@@ -133,9 +163,12 @@ async function query(text, params = [], retries = 1) {
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
+      const connStart = logSlow ? Date.now() : 0;
       client = await pool.connect();
+      const connMs = logSlow ? Date.now() - connStart : 0;
       detachClientErrorHandler = attachClientErrorHandler(client, 'query');
 
+      const execStart = logSlow ? Date.now() : 0;
       let result;
       if (isUsingPooler && params.length > 0) {
         // Transaction Pooler does NOT support PREPARE statements.
@@ -201,6 +234,23 @@ async function query(text, params = [], retries = 1) {
 
       if (detachClientErrorHandler) detachClientErrorHandler();
       client.release();
+
+      if (logSlow) {
+        const execMs = Date.now() - execStart;
+        const totalMs = connMs + execMs;
+        if (totalMs >= SLOW_QUERY_MS) {
+          logger.warn('[db] slow query', {
+            totalMs,
+            connectionWaitMs: connMs,
+            executionMs: execMs,
+            waiting: pool.waitingCount,
+            idle: pool.idleCount,
+            total: pool.totalCount,
+            queryPrefix: text.replace(/\s+/g, ' ').trim().substring(0, 80),
+          });
+        }
+      }
+
       return result;
     } catch (error) {
       lastError = error;
@@ -299,5 +349,6 @@ module.exports = {
   query,
   transaction,
   testConnection,
+  warmPool,
   closePool,
 };

@@ -10,19 +10,21 @@ export interface UseProductsOptions {
   isActive?: boolean;
   includeInactive?: boolean;
   includeCodes?: boolean;
+  catalog?: boolean;
   isPromotional?: boolean;
   search?: string;
   limit?: number;
   offset?: number;
+  enabled?: boolean;
   _refetchOnMount?: boolean | 'always';
 }
 
 export const useProducts = (options?: UseProductsOptions) => {
   const { session } = useAuth();
-  const { _refetchOnMount, ...queryOptions } = options ?? {};
+  const { _refetchOnMount, enabled: enabledOption, ...queryOptions } = options ?? {};
   return useQuery({
     queryKey: ['products', queryOptions],
-    enabled: !!session,
+    enabled: enabledOption !== false && !!session,
     queryFn: async ({ signal }) => {
       // Pasar el signal de React Query al servicio para que pueda cancelar la petición
       const response = await ProductService.getProducts(queryOptions, { signal });
@@ -35,7 +37,7 @@ export const useProducts = (options?: UseProductsOptions) => {
       }
       return response.data as Product[];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos - los productos no cambian tan frecuentemente
+    staleTime: queryOptions.catalog ? 10 * 60 * 1000 : 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000, // 10 minutos
     // No refetch automático en window focus para productos
     refetchOnWindowFocus: false,

@@ -10,6 +10,8 @@ export interface UseNotificationsOptions {
   limit?: number;
   offset?: number;
   unreadOnly?: boolean;
+  /** Background polling — only on the notifications page */
+  poll?: boolean;
 }
 
 export function useNotifications(options: UseNotificationsOptions = {}) {
@@ -27,9 +29,13 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
       return { data: result.data, unreadCount: result.unreadCount, total: result.total ?? 0 };
     },
     enabled: !!storeId,
-    staleTime: 30 * 1000, // 30 seconds
-    refetchOnWindowFocus: true,
-    refetchInterval: 60 * 1000, // poll every 60s
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: options.poll ?? false,
+    refetchInterval: (query) => {
+      if (!options.poll) return false;
+      if (typeof document !== 'undefined' && document.hidden) return false;
+      return 120 * 1000;
+    },
   });
 
   const markAsReadMutation = useMutation({

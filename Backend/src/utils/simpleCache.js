@@ -48,6 +48,15 @@ class SimpleCache {
     this.store.delete(key);
   }
 
+  /** Remove all keys starting with prefix (e.g. `products:ownerId:`). */
+  delByPrefix(prefix) {
+    for (const key of this.store.keys()) {
+      if (key.startsWith(prefix)) {
+        this.store.delete(key);
+      }
+    }
+  }
+
   clear() {
     this.store.clear();
   }

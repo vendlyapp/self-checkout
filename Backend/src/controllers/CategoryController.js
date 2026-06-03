@@ -1,5 +1,15 @@
 const categoryService = require('../services/CategoryService');
 const { HTTP_STATUS } = require('../types');
+const SimpleCache = require('../utils/simpleCache');
+
+const categoriesCache = new SimpleCache(2 * 60 * 1000);
+
+function invalidateCategoriesListCache(storeId) {
+  categoriesCache.del(`categories:${storeId || 'all'}`);
+  if (storeId) {
+    categoriesCache.del('categories:all');
+  }
+}
 
 /**
  * Category controller.
@@ -13,7 +23,15 @@ class CategoryController {
   async getAllCategories(req, res) {
     try {
       const storeId = req.user?.storeId || req.query.storeId || null;
+      const cacheKey = `categories:${storeId || 'all'}`;
+      const cached = categoriesCache.get(cacheKey);
+      if (cached) {
+        res.setHeader('X-Cache', 'HIT');
+        return res.status(HTTP_STATUS.OK).json(cached);
+      }
       const result = await categoryService.findAll(storeId);
+      categoriesCache.set(cacheKey, result);
+      res.setHeader('X-Cache', 'MISS');
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
@@ -53,6 +71,7 @@ class CategoryController {
         });
       }
       const result = await categoryService.create(storeId, req.body);
+      invalidateCategoriesListCache(storeId);
       res.status(HTTP_STATUS.CREATED).json(result);
     } catch (error) {
       const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
@@ -69,6 +88,7 @@ class CategoryController {
       const { id } = req.params;
       const storeId = req.user?.storeId || null;
       const result = await categoryService.update(id, req.body, storeId);
+      invalidateCategoriesListCache(storeId);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
@@ -86,6 +106,7 @@ class CategoryController {
       const storeId = req.user?.storeId || null;
       const moveProductsToCategoryId = req.body?.moveProductsToCategoryId || null;
       const result = await categoryService.delete(id, storeId, { moveProductsToCategoryId });
+      invalidateCategoriesListCache(storeId);
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;

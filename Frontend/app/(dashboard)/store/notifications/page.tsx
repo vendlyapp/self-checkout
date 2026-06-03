@@ -43,7 +43,7 @@ export default function NotificationsPage() {
     markAllAsRead,
     markAllAsReadPending,
     hasStore,
-  } = useNotifications({ limit: 50 })
+  } = useNotifications({ limit: 50, poll: true })
 
   const handleNotificationClick = async (notification: { id: string; read: boolean; payload?: { orderId?: string } }) => {
     if (!notification.read) {

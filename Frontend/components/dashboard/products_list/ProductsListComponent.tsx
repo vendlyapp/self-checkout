@@ -7,7 +7,8 @@ import {
 } from "./data/mockProducts";
 import { useProducts, useCategories } from "@/hooks/queries";
 import { getIcon } from "./data/iconMap";
-import ProductCardList from "./ProductCardList";
+import ProductCard from "../charge/ProductCard";
+import { DashboardLoadingState } from "@/components/ui/DashboardLoadingState";
 import FilterModal, { FilterState } from "./FilterModal";
 import { useProductsList } from "./ProductsListContext";
 import FixedHeaderContainer from "./FixedHeaderContainer";
@@ -81,6 +82,7 @@ export default function ProductsListComponent({
   // Usar React Query para obtener productos con cache (única fuente de verdad)
   const { data: productsData, isLoading: productsLoading, isFetching: productsFetching } = useProducts({
     includeInactive: true,
+    catalog: true,
   });
   // Solo mostrar loading screen si no hay datos en cache — isFetching silencioso en background
   const hasProductsCache = productsData !== undefined;
@@ -357,64 +359,70 @@ export default function ProductsListComponent({
     // filteredProducts y contexto se actualizan vía useMemo y el efecto único
   }, [defaultFilters, setFilterState, setSelectedFilters, setSearchQuery]);
 
-  const handleProductClick = (product: Product) => {
-    if (onProductClick) {
-      onProductClick(product);
-    }
-  };
-
   // Los productos se cargan automáticamente con React Query
   // No necesitamos un useEffect separado
 
   // Si es standalone, usar el contenedor fijo (igual que charge)
+  const hasActiveCategoryOrSearch =
+    (selectedFilters.length > 0 && !selectedFilters.includes("all")) ||
+    !!searchQuery.trim() ||
+    activeFiltersCount > 0;
+
+  const renderProductList = () => {
+    if (isLoading) {
+      return <DashboardLoadingState mode="section" message="Produkte werden geladen..." />;
+    }
+    if (filteredProducts.length === 0) {
+      return (
+        <div className="flex flex-col items-center py-16 px-6 text-center">
+          <p className="text-gray-500 font-medium">
+            {searchQuery
+              ? `Keine Produkte für "${searchQuery}"`
+              : activeFiltersCount > 0
+                ? "Keine Produkte entsprechen den Filtern"
+                : "Keine Produkte verfügbar"}
+          </p>
+          {(activeFiltersCount > 0 || searchQuery) && (
+            <button
+              type="button"
+              onClick={handleClearFilters}
+              className="mt-4 rounded-full bg-white px-4 py-2 text-sm font-bold text-gray-700 shadow-soft active:scale-95"
+            >
+              Alle anzeigen
+            </button>
+          )}
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-2">
+        {filteredProducts.map((product) => (
+          <ProductCard key={product.id} product={product} adminMode />
+        ))}
+      </div>
+    );
+  };
+
   if (isStandalone) {
     return (
       <FixedHeaderContainer>
-        <div className={`p-4 pb-32 lg:p-0 lg:pb-8 mt-6 ${className}`}>
-          {isLoading ? (
-            <div className="text-center py-12">
-              <Loader size="lg" className="mx-auto" />
-              <p className="mt-4 text-base text-gray-500 font-medium">
-                Produkte werden geladen...
-              </p>
-            </div>
-          ) : filteredProducts.length > 0 ? (
-            <div className="space-y-3 animate-fade-in-scale">
-              {filteredProducts.map((product, index) => (
-                <div
-                  key={product.id}
-                  className="animate-slide-up-fade gpu-accelerated"
-                  style={{
-                    animationDelay: `${index * 0.05}s`,
-                    animationFillMode: 'both'
-                  }}
-                >
-                  <ProductCardList
-                    product={product}
-                    onClick={onProductClick ? () => handleProductClick(product) : undefined}
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-base font-medium">
-                {searchQuery
-                  ? `Keine Produkte für "${searchQuery}" gefunden`
-                  : activeFiltersCount > 0
-                  ? "Keine Produkte entsprechen den ausgewählten Filtern"
-                  : "Keine Produkte verfügbar"}
-              </p>
-              {activeFiltersCount > 0 && (
-                <button
-                  onClick={handleClearFilters}
-                  className="mt-4 px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors text-sm font-medium"
-                >
-                  Filter zurücksetzen
-                </button>
-              )}
-            </div>
-          )}
+        <div className={`mx-auto max-w-3xl min-w-0 ${className}`}>
+          <div className="flex items-center justify-between px-4 mb-2 mt-1">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-gray-500">
+              {filteredProducts.length}{" "}
+              {filteredProducts.length === 1 ? "Produkt" : "Produkte"}
+            </h2>
+            {hasActiveCategoryOrSearch && (
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="rounded-full bg-white px-3 py-1.5 text-sm font-bold text-gray-700 shadow-soft active:scale-95"
+              >
+                Alle anzeigen
+              </button>
+            )}
+          </div>
+          <div className="px-4 pb-32">{renderProductList()}</div>
         </div>
 
         {/* Modal de filtros */}
@@ -448,21 +456,9 @@ export default function ProductsListComponent({
               </p>
             </div>
           ) : filteredProducts.length > 0 ? (
-            <div className="space-y-3 animate-fade-in-scale">
-              {filteredProducts.map((product, index) => (
-                <div
-                  key={product.id}
-                  className="animate-slide-up-fade gpu-accelerated"
-                  style={{
-                    animationDelay: `${index * 0.05}s`,
-                    animationFillMode: 'both'
-                  }}
-                >
-                  <ProductCardList
-                    product={product}
-                    onClick={onProductClick ? () => handleProductClick(product) : undefined}
-                  />
-                </div>
+            <div className="space-y-2">
+              {filteredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} adminMode />
               ))}
             </div>
           ) : (

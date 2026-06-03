@@ -55,13 +55,20 @@ class AuthController {
    */
   async getProfile(req, res) {
     try {
-      const result = await authService.getProfile(req.user.userId);
-
-      if (req.user?.storeId && result.data?.user) {
-        result.data.user.storeId = req.user.storeId;
-      }
-
-      res.status(HTTP_STATUS.OK).json(result);
+      // authMiddleware already resolved user + storeId (cached 60s) — skip extra DB round-trip
+      const u = req.user;
+      res.status(HTTP_STATUS.OK).json({
+        success: true,
+        data: {
+          user: {
+            id: u.userId,
+            email: u.email,
+            name: u.name,
+            role: u.role,
+            storeId: u.storeId ?? undefined,
+          },
+        },
+      });
     } catch (error) {
       const status = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
       res.status(status).json({ success: false, error: error.message });

@@ -33,9 +33,9 @@ export default function ProductsList() {
         </Suspense>
       </div>
 
-      {/* Desktop Layout - Diseño limpio */}
+      {/* Desktop — gleiche max-width wie Storefront */}
       <div className="hidden lg:block min-h-dvh">
-        <div className="max-w-[1600px] mx-auto px-8 py-8 space-y-6">
+        <div className="mx-auto max-w-3xl px-6 py-8 space-y-6">
           {/* Header Section */}
           <div className="flex items-center justify-between gap-6 animate-stagger-1">
             <div>

@@ -1,0 +1,16 @@
+# Vendly Checkout — Supabase local config
+# Run: supabase link && supabase db push
+
+project_id = "vendly-checkout"
+
+[api]
+enabled = true
+port = 54321
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323

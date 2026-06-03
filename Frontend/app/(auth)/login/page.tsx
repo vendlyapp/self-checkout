@@ -9,11 +9,12 @@ import { toast } from 'sonner';
 import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
 import { Loader } from '@/components/ui/Loader';
 import { getLoginSubtitle } from '@/lib/config/brand';
+import { completeLoginNavigation, getPostLoginPath } from '@/lib/auth/postLogin';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnUrl = searchParams.get('returnUrl') || '/dashboard';
+  const returnUrl = getPostLoginPath(searchParams);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
 
@@ -35,11 +36,9 @@ function LoginForm() {
 
           if (!isExpired) {
             const role = session.user?.user_metadata?.role || 'ADMIN';
-            if (role === 'SUPER_ADMIN') {
-              router.push('/super-admin/dashboard');
-            } else {
-              router.push(returnUrl);
-            }
+            const dest =
+              role === 'SUPER_ADMIN' ? '/super-admin/dashboard' : returnUrl;
+            await completeLoginNavigation(dest);
             return;
           }
 
@@ -131,15 +130,12 @@ function LoginForm() {
         
         setUserRole(detectedRole);
 
-        await new Promise(resolve => setTimeout(resolve, 800));
-
-        if (detectedRole === 'SUPER_ADMIN') {
-          toast.success('Willkommen Super Admin!');
-          router.push('/super-admin/dashboard');
-        } else {
-          toast.success('Willkommen zurück!');
-          router.push(returnUrl);
-        }
+        const dest =
+          detectedRole === 'SUPER_ADMIN' ? '/super-admin/dashboard' : returnUrl;
+        toast.success(
+          detectedRole === 'SUPER_ADMIN' ? 'Willkommen Super Admin!' : 'Willkommen zurück!'
+        );
+        await completeLoginNavigation(dest);
       } else {
         setError('Fehler beim Anmelden');
         toast.error('Fehler beim Anmelden');
@@ -149,6 +145,7 @@ function LoginForm() {
       toast.error('Unerwarteter Fehler');
     } finally {
       setLoading(false);
+      setCheckingRole(false);
     }
   };
 

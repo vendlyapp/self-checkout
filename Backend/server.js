@@ -2,7 +2,7 @@ require("dotenv").config();
 require("./src/config/validateEnv")();
 const app = require("./app");
 const http = require("http");
-const { testConnection, closePool } = require("./lib/database");
+const { testConnection, warmPool, closePool } = require("./lib/database");
 const logger = require("./src/utils/logger");
 
 const port = process.env.PORT || 3000;
@@ -14,6 +14,9 @@ async function startServer() {
     logger.info('Checking database connection...');
 
     const dbConnected = await testConnection(5, 2000);
+    if (dbConnected) {
+      await warmPool();
+    }
     if (!dbConnected) {
       logger.error("Failed to connect to database after multiple attempts");
       logger.error("Server will not start. Please verify:");

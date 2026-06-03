@@ -8,6 +8,8 @@ const { generateInvoicePDF } = require('../services/InvoicePDFService');
 const { HTTP_STATUS } = require('../types');
 const logger = require('../utils/logger');
 const { normalizeSwissMwStRate } = require('../utils/swissMwSt');
+const { assertStoreAccess, forbidden, notFound } = require('../utils/ownership');
+const { adminInvoiceDto, mapList } = require('../dtos');
 
 /**
  * MwSt für eine Rechnungszeile beim Erstellen der Rechnung:
@@ -51,6 +53,12 @@ function resolveInvoiceLineMwStRate(orderItem, taxRateByProduct, taxRateBySku) {
 }
 
 class InvoiceController {
+  _canAccessInvoice(user, invoice) {
+    if (!invoice) return false;
+    if (user?.role === 'SUPER_ADMIN') return true;
+    return assertStoreAccess(user, invoice.storeId);
+  }
+
   /**
    * Crea una nueva factura a partir de una orden
    * @route POST /api/invoices
@@ -284,6 +292,10 @@ class InvoiceController {
         return res.status(HTTP_STATUS.NOT_FOUND).json(result);
       }
 
+      if (req.user && !this._canAccessInvoice(req.user, result.data)) {
+        return notFound(res, 'Invoice not found');
+      }
+
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       logger.error('[InvoiceController.getInvoiceById] Failed to fetch invoice', { error: error.message });
@@ -307,6 +319,10 @@ class InvoiceController {
         return res.status(HTTP_STATUS.NOT_FOUND).json(result);
       }
 
+      if (req.user && !this._canAccessInvoice(req.user, result.data)) {
+        return notFound(res, 'Invoice not found');
+      }
+
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       logger.error('[InvoiceController.getInvoiceByNumber] Failed to fetch invoice', { error: error.message });
@@ -325,6 +341,14 @@ class InvoiceController {
     try {
       const { orderId } = req.params;
       const result = await invoiceService.findByOrderId(orderId);
+
+      if (req.user && result.success && Array.isArray(result.data)) {
+        const allowed = result.data.filter((inv) => this._canAccessInvoice(req.user, inv));
+        if (allowed.length === 0 && result.data.length > 0) {
+          return notFound(res, 'Invoices not found');
+        }
+        return res.status(HTTP_STATUS.OK).json({ ...result, data: allowed, count: allowed.length });
+      }
 
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
@@ -349,6 +373,11 @@ class InvoiceController {
         limit: Math.min(parseInt(limit) || 50, 200),
         offset: parseInt(offset) || 0,
       });
+
+      if (req.user && req.user.role !== 'SUPER_ADMIN' && result.success && Array.isArray(result.data)) {
+        const allowed = result.data.filter((inv) => this._canAccessInvoice(req.user, inv));
+        return res.status(HTTP_STATUS.OK).json({ ...result, data: allowed, count: allowed.length });
+      }
 
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
@@ -400,10 +429,21 @@ class InvoiceController {
       const { storeId } = req.params;
       const { limit = 100, offset = 0 } = req.query;
 
+      if (req.user && !assertStoreAccess(req.user, storeId)) {
+        return forbidden(res);
+      }
+
       const result = await invoiceService.findByStoreId(storeId, {
         limit: Math.min(parseInt(limit) || 100, 500),
         offset: parseInt(offset) || 0,
       });
+
+      if (result.success && Array.isArray(result.data)) {
+        return res.status(HTTP_STATUS.OK).json({
+          ...result,
+          data: mapList(adminInvoiceDto, result.data),
+        });
+      }
 
       res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
@@ -428,6 +468,10 @@ class InvoiceController {
 
       if (!result.success) {
         return res.status(HTTP_STATUS.NOT_FOUND).json(result);
+      }
+
+      if (req.user && !this._canAccessInvoice(req.user, result.data)) {
+        return notFound(res, 'Invoice not found');
       }
 
       const hasCustomerData = updateData.customerName?.trim() || updateData.customerEmail?.trim() ||
@@ -476,6 +520,10 @@ class InvoiceController {
       }
 
       const invoice = invoiceResult.data;
+
+      if (req.user && !this._canAccessInvoice(req.user, invoice)) {
+        return notFound(res, 'Invoice not found');
+      }
 
       if (invoice.paymentMethod !== 'qr-rechnung') {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, error: 'This invoice is not a QR-Rechnung invoice' });
@@ -572,6 +620,10 @@ class InvoiceController {
       }
 
       const inv = invoiceResult.data;
+
+      if (req.user && !this._canAccessInvoice(req.user, inv)) {
+        return notFound(res, 'Invoice not found');
+      }
 
       // Build the invoice shape expected by InvoicePDFService
       const isQR = inv.paymentMethod === 'qr-rechnung';

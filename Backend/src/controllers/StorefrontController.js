@@ -13,6 +13,11 @@ const { generateInvoicePDF } = require('../services/InvoicePDFService');
 const logger = require('../utils/logger');
 const { normalizeSwissMwStRate } = require('../utils/swissMwSt');
 const SimpleCache = require('../utils/simpleCache');
+const {
+  publicStoreDto: storeDto,
+  publicProductDto: productDto,
+  publicCategoryDto: categoryDto,
+} = require('../dtos');
 
 // Cache for storefront catalog — 10 min TTL, keyed by storeId + query params
 const catalogCache = new SimpleCache(10 * 60 * 1000);
@@ -28,56 +33,6 @@ const STOREFRONT_PRODUCT_COLS = `
   "promotionTitle", "promotionBadge", "promotionActionLabel", "promotionPriority",
   "hasWeight", "parentId", "createdAt"
 `;
-
-// ─── DTOs ────────────────────────────────────────────────────────────────────
-
-function storeDto(s) {
-  return {
-    slug: s.slug,
-    name: s.name,
-    description: s.description || null,
-    logo: s.logo || null,
-    isOpen: s.isOpen ?? true,
-    address: s.address || null,
-    phone: s.phone || null,
-    email: s.email || null,
-  };
-}
-
-function productDto(p) {
-  return {
-    id: p.id,
-    name: p.name,
-    description: p.description || null,
-    price: Number(p.price),
-    originalPrice: p.originalPrice != null ? Number(p.originalPrice) : null,
-    category: p.category || null,
-    categoryId: p.categoryId || null,
-    image: p.image || null,
-    images: Array.isArray(p.images) ? p.images : [],
-    isNew: p.isNew ?? false,
-    isPopular: p.isPopular ?? false,
-    isOnSale: p.isOnSale ?? false,
-    tags: Array.isArray(p.tags) ? p.tags : [],
-    barcode: p.barcode || null,
-    sku: p.sku || null,
-    discountPercentage: p.discountPercentage != null ? Number(p.discountPercentage) : null,
-    promotionTitle: p.promotionTitle || null,
-    promotionBadge: p.promotionBadge || null,
-    promotionActionLabel: p.promotionActionLabel || null,
-    hasWeight: p.hasWeight ?? false,
-    parentId: p.parentId || null,
-    inStock: Number(p.stock ?? 0) > 0,
-  };
-}
-
-function categoryDto(c) {
-  return {
-    id: c.id,
-    name: c.name,
-    isActive: c.isActive ?? true,
-  };
-}
 
 function paymentOptionDto(pm) {
   return {
@@ -185,6 +140,24 @@ async function resolveGuestUserId({ storeSlug, storeId, customer }) {
 class StorefrontController {
 
   // ── GET /api/storefront/stores/:slug ─────────────────────────────────────
+  /**
+   * Active store slugs for Next.js generateStaticParams (public, cached).
+   * @route GET /api/storefront/active-slugs
+   */
+  async getActiveSlugs(req, res) {
+    try {
+      const result = await query(
+        `SELECT slug FROM "Store" WHERE "isActive" = true AND slug IS NOT NULL ORDER BY slug LIMIT 500`
+      );
+      const slugs = result.rows.map((r) => r.slug).filter(Boolean);
+      res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
+      res.json({ success: true, data: slugs, count: slugs.length });
+    } catch (error) {
+      logger.error('[StorefrontController.getActiveSlugs]', { error: error.message });
+      res.status(500).json({ success: false, error: 'Failed to load store slugs' });
+    }
+  }
+
   async getStore(req, res) {
     try {
       const store = await resolveStore(req.params.slug, res);

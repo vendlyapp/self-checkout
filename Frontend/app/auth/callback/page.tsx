@@ -2,9 +2,11 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase/client'
 import { Loader2 } from 'lucide-react'
 import { devError } from '@/lib/utils/logger'
+import { completeLoginNavigation } from '@/lib/auth/postLogin'
 
 export default function AuthCallback() {
   const router = useRouter()
@@ -12,10 +14,10 @@ export default function AuthCallback() {
   useEffect(() => {
     let redirected = false
 
-    const redirectToDashboard = () => {
+    const redirectToDashboard = async () => {
       if (!redirected) {
         redirected = true
-        router.replace('/dashboard')
+        await completeLoginNavigation('/dashboard')
       }
     }
 
@@ -27,7 +29,7 @@ export default function AuthCallback() {
     }
 
     // 1. Escuchar SIGNED_IN — funciona para PKCE y flujo implícito
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
       if (event === 'SIGNED_IN' && session) {
         redirectToDashboard()
       } else if (event === 'SIGNED_OUT') {

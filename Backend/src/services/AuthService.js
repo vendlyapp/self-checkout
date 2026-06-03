@@ -7,7 +7,15 @@ const logger = require('../utils/logger');
 class AuthService {
   /** Register a new user via Supabase Auth */
   async register(userData) {
-    const { email, password, name, role = 'ADMIN' } = userData;
+    let { email, password, name, role = 'ADMIN' } = userData;
+
+    // Prevent privilege escalation via registration body
+    if (role === 'SUPER_ADMIN') {
+      role = 'ADMIN';
+    }
+    if (!['ADMIN', 'CUSTOMER'].includes(role)) {
+      role = 'ADMIN';
+    }
 
     if (!email || !password || !name) {
       throw new AppError('Email, password and name are required', 400, 'MISSING_FIELDS');

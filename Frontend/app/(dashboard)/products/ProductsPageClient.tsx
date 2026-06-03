@@ -1,0 +1,11 @@
+'use client';
+
+import ProductsDashboard from '@/components/dashboard/products/BaseDashboard';
+
+export default function ProductsPageClient() {
+  return (
+    <div className="w-full min-w-0 animate-page-enter">
+      <ProductsDashboard />
+    </div>
+  );
+}

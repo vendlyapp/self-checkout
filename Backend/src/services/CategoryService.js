@@ -264,21 +264,60 @@ class CategoryService {
   }
 
   async updateCounts(storeId = null) {
-    const categories = await this.findAll(storeId);
-
-    // Actualizar contadores
-    for (const category of categories.data) {
-      const countResult = await query(
-        'SELECT COUNT(*) FROM "Product" WHERE "categoryId" = $1',
-        [category.id]
-      );
-
-      const count = parseInt(countResult.rows[0].count);
-
+    if (storeId) {
       await query(
-        'UPDATE "ProductCategory" SET count = $1, "updatedAt" = CURRENT_TIMESTAMP WHERE id = $2',
-        [count, category.id]
+        `UPDATE "ProductCategory" pc
+         SET count = COALESCE(sub.cnt, 0),
+             "updatedAt" = CURRENT_TIMESTAMP
+         FROM (
+           SELECT p."categoryId", COUNT(*)::int AS cnt
+           FROM "Product" p
+           WHERE p."categoryId" IS NOT NULL
+             AND p."isActive" = true
+           GROUP BY p."categoryId"
+         ) sub
+         WHERE pc.id = sub."categoryId"
+           AND pc."storeId" = $1`,
+        [storeId]
       );
+      await query(
+        `UPDATE "ProductCategory" pc
+         SET count = 0,
+             "updatedAt" = CURRENT_TIMESTAMP
+         WHERE pc."storeId" = $1
+           AND NOT EXISTS (
+             SELECT 1 FROM "Product" p
+             WHERE p."categoryId" = pc.id AND p."isActive" = true
+           )`,
+        [storeId]
+      );
+    } else {
+      await query(
+        `UPDATE "ProductCategory" pc
+         SET count = COALESCE(sub.cnt, 0),
+             "updatedAt" = CURRENT_TIMESTAMP
+         FROM (
+           SELECT p."categoryId", COUNT(*)::int AS cnt
+           FROM "Product" p
+           WHERE p."categoryId" IS NOT NULL
+             AND p."isActive" = true
+           GROUP BY p."categoryId"
+         ) sub
+         WHERE pc.id = sub."categoryId"`
+      );
+      await query(
+        `UPDATE "ProductCategory" pc
+         SET count = 0,
+             "updatedAt" = CURRENT_TIMESTAMP
+         WHERE NOT EXISTS (
+           SELECT 1 FROM "Product" p
+           WHERE p."categoryId" = pc.id AND p."isActive" = true
+         )`
+      );
+    }
+
+    if (storeId) {
+      categoryCache.del(`categories:${storeId}`);
     }
 
     return {

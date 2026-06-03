@@ -224,7 +224,7 @@ class OrderService {
       if (orderPayload.metadata && orderPayload.metadata.promoCode) {
         try {
           const promoCode = orderPayload.metadata.promoCode.trim().toUpperCase();
-          const incrementResult = await discountCodeService.incrementRedemptions(promoCode);
+          const incrementResult = await discountCodeService.incrementRedemptions(promoCode, client);
           discountCodeUpdated = incrementResult.data;
           
           // Si el código alcanzó el límite, desactivarlo automáticamente
@@ -873,15 +873,14 @@ class OrderService {
     };
   }
 
-  async getRecentOrders(limit = 10, status = null, storeId = null) {
-    let ownerId = null;
+  async getRecentOrders(limit = 10, status = null, storeId = null, ownerIdOverride = null) {
+    let ownerId = ownerIdOverride || null;
 
-    // Si se proporciona storeId, obtener el ownerId de la tienda
-    if (storeId) {
+    // Si no hay ownerId directo, resolver vía storeId (p. ej. super-admin)
+    if (!ownerId && storeId) {
       const storeService = require('./StoreService');
       const store = await storeService.getById(storeId);
       if (!store) {
-        // Si la tienda no existe, retornar lista vacía
         return {
           success: true,
           data: [],
@@ -891,7 +890,6 @@ class OrderService {
       if (store.ownerId) {
         ownerId = store.ownerId;
       } else {
-        // Si la tienda no tiene ownerId, retornar lista vacía
         return {
           success: true,
           data: [],
@@ -1198,7 +1196,7 @@ class OrderService {
       if (orderData.metadata && orderData.metadata.promoCode) {
         try {
           const promoCode = orderData.metadata.promoCode.trim().toUpperCase();
-          const incrementResult = await discountCodeService.incrementRedemptions(promoCode);
+          const incrementResult = await discountCodeService.incrementRedemptions(promoCode, client);
           discountCodeUpdated = incrementResult.data;
           
           // Si el código alcanzó el límite, desactivarlo automáticamente

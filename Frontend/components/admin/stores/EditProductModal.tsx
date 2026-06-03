@@ -17,6 +17,8 @@ import { useProducts } from '@/hooks/queries/useProducts';
 import { normalizeProductData } from '@/components/dashboard/products_list/data/mockProducts';
 import type { UpdateProductRequest, Product, CreateProductRequest } from '@/lib/services/productService';
 import { devError } from '@/lib/utils/logger';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { uploadProductImage } from '@/lib/services/imageUploadService';
 
 interface EditProductModalProps {
   product: ProductType | null;
@@ -26,6 +28,7 @@ interface EditProductModalProps {
 }
 
 export default function EditProductModal({ product, isOpen, onClose, onSuccess }: EditProductModalProps) {
+  const { user } = useAuth();
   const updateProductMutation = useUpdateProduct();
   const createProductMutation = useCreateProduct();
   const deleteProductMutation = useDeleteProduct();
@@ -223,29 +226,44 @@ export default function EditProductModal({ product, isOpen, onClose, onSuccess }
     }
   }, [variants]);
 
-  // Handle image upload
-  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
+  const [uploadingImages, setUploadingImages] = useState(false);
 
-    const newImages: string[] = [];
-    const maxImages = 3;
-    const remainingSlots = maxImages - productImages.length;
+  const handleImageUpload = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files?.length) return;
 
-    Array.from(files).slice(0, remainingSlots).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        if (result) {
-          newImages.push(result);
-          if (newImages.length === Math.min(files.length, remainingSlots)) {
-            setProductImages([...productImages, ...newImages]);
-          }
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-  }, [productImages]);
+      const maxImages = 3;
+      const remainingSlots = maxImages - productImages.length;
+      const filesToProcess = Array.from(files).slice(0, remainingSlots);
+
+      const invalid = filesToProcess.find((f) => !f.type.startsWith('image/'));
+      if (invalid) {
+        alert(`${invalid.name} ist kein gültiges Bild`);
+        e.target.value = '';
+        return;
+      }
+      if (!user?.id) {
+        alert('Keine aktive Sitzung. Bitte neu anmelden.');
+        e.target.value = '';
+        return;
+      }
+
+      setUploadingImages(true);
+      try {
+        const urls = await Promise.all(
+          filesToProcess.map((file) => uploadProductImage(file, user.id))
+        );
+        setProductImages((prev) => [...prev, ...urls]);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'Fehler beim Hochladen der Bilder');
+      } finally {
+        setUploadingImages(false);
+        e.target.value = '';
+      }
+    },
+    [productImages.length, user?.id]
+  );
 
   const handleRemoveImage = useCallback((index: number) => {
     setProductImages(productImages.filter((_, i) => i !== index));

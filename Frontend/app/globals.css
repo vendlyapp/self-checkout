@@ -356,21 +356,20 @@
   /* Optimizaciones específicas para Safari iOS - PWA Native Feel */
   .ios-scroll-fix {
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: none; /* Elimina bounce/refresh completamente */
-    scroll-behavior: auto; /* Scroll instantáneo como apps nativas */
+    overscroll-behavior: none;
+    scroll-behavior: auto;
     -webkit-scroll-behavior: auto;
-    /* Mejoras para PWA iOS */
     scroll-snap-type: none;
-    -webkit-transform: translate3d(0,0,0);
-    transform: translate3d(0,0,0);
-    will-change: scroll-position;
-    /* Prevenir problemas de touch en iOS */
-    touch-action: pan-y; /* Solo scroll vertical */
-    -webkit-touch-callout: none;
-    /* Mejorar rendimiento en scroll */
-    contain: layout style paint;
-    /* Eliminar delay de tap en iOS */
+    /* pan-y on the scroll parent made iOS treat the first tap as scroll intent — links needed 3–4 taps */
+    touch-action: auto;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Tappable targets inside ios-scroll-fix (dashboard cards, slider, etc.) */
+  .dashboard-tap-target {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
   }
 
   /* Prevenir zoom en inputs en Safari iOS (font-size < 16px provoca auto-zoom) */

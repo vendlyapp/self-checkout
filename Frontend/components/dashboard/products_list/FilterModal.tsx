@@ -50,7 +50,11 @@ export default function FilterModal({
   const { data: categoriesData = [] } = useCategories();
   
   // Obtener productos para calcular contadores
-  const { data: productsData = [] } = useProducts({ includeInactive: true });
+  const { data: productsData = [] } = useProducts({
+    includeInactive: true,
+    catalog: true,
+    enabled: isOpen,
+  });
 
   // Calcular categorías con contadores dinámicos
   const categories = useMemo(() => {

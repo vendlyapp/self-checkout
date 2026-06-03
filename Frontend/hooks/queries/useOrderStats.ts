@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { OrderService } from '@/lib/services/orderService';
+import { queryKeys } from '@/lib/queryKeys';
 
 // Datos vacíos por defecto para cuando el backend no está disponible
 const emptyStats = {
@@ -13,7 +14,8 @@ const emptyStats = {
 
 export const useOrderStats = (date?: string, ownerId?: string) => {
   return useQuery({
-    queryKey: ['orderStats', date, ownerId],
+    queryKey: queryKeys.orders.stats(date, ownerId),
+    enabled: !!ownerId,
     queryFn: async ({ signal }) => {
       try {
         const response = await OrderService.getStats(date, ownerId, { signal });

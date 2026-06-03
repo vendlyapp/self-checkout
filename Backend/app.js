@@ -70,6 +70,19 @@ app.use(cors({
     callback(new Error(`Origin ${origin} not allowed by CORS`));
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'Accept',
+    'X-Requested-With',
+    'Cache-Control',
+    'Pragma',
+    'Expires',
+  ],
+  // Cache preflight (OPTIONS) so the browser doesn't re-send it on every request.
+  // 7200s is the max Chromium honors; Firefox caps at 86400s.
+  maxAge: 7200,
 }));
 
 app.use(express.json({ limit: "100kb" }));

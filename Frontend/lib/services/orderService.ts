@@ -193,6 +193,13 @@ export interface OrderStats {
   uniqueCustomers: number;
 }
 
+type StatsOpts = { date?: string; dateFrom?: string; dateTo?: string; ownerId?: string };
+const statsInflight = new Map<string, Promise<ApiResponse<OrderStats>>>();
+
+function statsInflightKey(opts: StatsOpts): string {
+  return `${opts.ownerId ?? ''}|${opts.date ?? ''}|${opts.dateFrom ?? ''}|${opts.dateTo ?? ''}`;
+}
+
 export interface RecentOrder {
   id: string;
   userId: string;
@@ -293,7 +300,16 @@ export const OrderService = {
     if (opts.ownerId) params.append('ownerId', opts.ownerId);
     const queryString = params.toString();
     const endpoint = queryString ? `${API_CONFIG.ENDPOINTS.ORDER_STATS}?${queryString}` : API_CONFIG.ENDPOINTS.ORDER_STATS;
-    return makeRequest<OrderStats>(endpoint, reqOpts);
+
+    const inflightKey = statsInflightKey(opts);
+    const existing = statsInflight.get(inflightKey);
+    if (existing) return existing;
+
+    const request = makeRequest<OrderStats>(endpoint, reqOpts).finally(() => {
+      statsInflight.delete(inflightKey);
+    });
+    statsInflight.set(inflightKey, request);
+    return request;
   },
 
   /**

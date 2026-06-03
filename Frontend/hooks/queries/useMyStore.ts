@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { buildApiUrl, getAuthHeaders } from '@/lib/config/api'
+import { queryKeys } from '@/lib/queryKeys'
 
 export interface StoreData {
   id: string
@@ -34,7 +35,7 @@ export interface StoreData {
 
 export const useMyStore = () => {
   return useQuery({
-    queryKey: ['myStore'],
+    queryKey: queryKeys.myStore.all(),
     queryFn: async ({ signal }) => {
       // La sesión se verifica directamente en la queryFn — sin useEffect ni estado extra.
       // Esto elimina el waterfall: render → effect → setState → re-render → query start.

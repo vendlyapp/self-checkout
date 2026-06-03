@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { InvoiceService, Invoice, CreateInvoicePayload } from '@/lib/services/invoiceService';
 import { useMyStore } from '@/hooks/queries/useMyStore';
+import { queryKeys } from '@/lib/queryKeys';
 
 /**
  * Hook para crear invoice (mutation)
@@ -34,24 +35,21 @@ export const useCreateInvoice = () => {
     onSuccess: (data) => {
       // Invalidar solo las queries de invoices relevantes para este store
       if (store?.id) {
-        queryClient.invalidateQueries({ 
-          queryKey: ['invoices', store.id],
-          exact: false, // Invalida todas las variantes (con diferentes options)
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.invoices.list(store.id),
+          exact: false,
         });
       } else {
-        // Fallback: invalidar todas si no hay store (raro pero seguro)
-        queryClient.invalidateQueries({ queryKey: ['invoices'] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all() });
       }
-      
-      // Actualizar optimísticamente la invoice individual si existe en cache
+
       if (data?.id) {
-        queryClient.setQueryData(['invoice', data.id], data);
+        queryClient.setQueryData(queryKeys.invoices.detail(data.id), data);
       }
-      
-      // Si hay orderId, invalidar invoices de esa orden
+
       if (data.orderId) {
-        queryClient.invalidateQueries({ 
-          queryKey: ['invoicesByOrderId', data.orderId],
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.invoices.byOrder(data.orderId),
         });
       }
     },

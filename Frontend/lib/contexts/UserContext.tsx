@@ -1,7 +1,7 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User } from '@supabase/supabase-js';
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
+import { User, type AuthChangeEvent, type Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
 import { devError, devWarn } from '@/lib/utils/logger';
 
@@ -45,7 +45,21 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Dedup: si ya hay un fetch de perfil en vuelo, reutilizarlo en vez de disparar otro.
+  const inFlightProfile = useRef<Promise<void> | null>(null);
+
   const fetchUserProfile = async (): Promise<void> => {
+    if (inFlightProfile.current) {
+      return inFlightProfile.current;
+    }
+    const run = doFetchUserProfile().finally(() => {
+      inFlightProfile.current = null;
+    });
+    inFlightProfile.current = run;
+    return run;
+  };
+
+  const doFetchUserProfile = async (): Promise<void> => {
     try {
       const session = await supabase.auth.getSession();
       
@@ -144,24 +158,26 @@ export const UserProvider = ({ children }: UserProviderProps) => {
 
     initializeUser();
 
-    return () => {
-      clearTimeout(timeoutId);
-    };
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user) {
-          setUser(session.user);
-          await fetchUserProfile();
-        } else {
+      async (event: AuthChangeEvent, session: Session | null) => {
+        if (event === 'SIGNED_OUT') {
           setUser(null);
           setProfile(null);
+          setLoading(false);
+          return;
         }
-        setLoading(false);
+        if (session?.user) {
+          setUser(session.user);
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+            await fetchUserProfile();
+          }
+          setLoading(false);
+        }
       }
     );
 
     return () => {
+      clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);
