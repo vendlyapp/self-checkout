@@ -18,10 +18,17 @@ Para que el login con Google funcione en producción, configura las URLs de redi
 En Vercel → Settings → Environment Variables, define (valores reales solo en el panel, no en el repo):
 
 ```env
+NEXT_PUBLIC_API_URL=https://self-checkout-9a4fzg.fly.dev
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-NEXT_PUBLIC_API_URL=https://your-backend-url.example
+NEXT_PUBLIC_SITE_URL=https://tu-dominio.vercel.app
 ```
+
+**Importante:** `NEXT_PUBLIC_*` se fijan en el **build**. Tras cambiar variables en Vercel → **Deployments → Redeploy** (idealmente sin caché de build). No uses `http://localhost:5000` en Production.
+
+**Fly.io (backend):** `CORS_ORIGIN` debe incluir la URL exacta del front (ej. `https://tu-app.vercel.app`), sin barra final.
+
+Plantilla local: `Frontend/.env.example` → copiar a `.env.local`.
 
 ## Backend (Fly.io)
 

@@ -75,6 +75,7 @@ export async function resolveUserRole(
     const res = await fetch(`${apiUrl}/api/auth/profile`, {
       headers: { Authorization: `Bearer ${accessToken}` },
       cache: 'no-store',
+      signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) return null;
     const json = await res.json();

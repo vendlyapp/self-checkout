@@ -17,6 +17,7 @@ export async function prefetchMyStore(): Promise<StoreData | null> {
         Accept: 'application/json',
       },
       cache: 'no-store',
+      signal: AbortSignal.timeout(12_000),
     });
     if (!res.ok) return null;
     const json = await res.json();

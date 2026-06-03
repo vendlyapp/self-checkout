@@ -10,9 +10,11 @@ function getSupabase(): SupabaseClient {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error(
-      'Missing Supabase env: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set (copy Frontend/.env.example to .env.local and fill in your project keys)'
-    );
+    const hint =
+      process.env.NODE_ENV === 'production'
+        ? 'In Vercel → Environment Variables: NEXT_PUBLIC_SUPABASE_URL und NEXT_PUBLIC_SUPABASE_ANON_KEY setzen, dann Redeploy.'
+        : 'Kopiere Frontend/.env.example nach .env.local und trage die Supabase-Keys ein.';
+    throw new Error(`Supabase-Konfiguration fehlt. ${hint}`);
   }
   // Cookie-based session so Next.js middleware can read auth on server navigations
   _client = createBrowserClient(supabaseUrl, supabaseAnonKey);

@@ -4,9 +4,20 @@
  */
 
 function getBaseUrl(): string {
-  const url = process.env.NEXT_PUBLIC_API_URL;
+  const url = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/$/, '');
   if (process.env.NODE_ENV === 'production' && !url) {
-    throw new Error('NEXT_PUBLIC_API_URL must be set in production');
+    throw new Error(
+      'NEXT_PUBLIC_API_URL fehlt. In Vercel → Environment Variables setzen (z. B. https://self-checkout-9a4fzg.fly.dev) und Redeploy ohne Build-Cache.'
+    );
+  }
+  if (
+    process.env.NODE_ENV === 'production' &&
+    url &&
+    (url.includes('localhost') || url.includes('127.0.0.1'))
+  ) {
+    throw new Error(
+      'NEXT_PUBLIC_API_URL zeigt auf localhost — in Vercel die Fly.io-URL setzen und neu deployen.'
+    );
   }
   return url || 'http://localhost:5000';
 }
