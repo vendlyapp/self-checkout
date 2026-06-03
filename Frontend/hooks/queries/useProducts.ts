@@ -20,13 +20,12 @@ export interface UseProductsOptions {
 }
 
 export const useProducts = (options?: UseProductsOptions) => {
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const { _refetchOnMount, enabled: enabledOption, ...queryOptions } = options ?? {};
   return useQuery({
-    // Incluir user id para refetch al iniciar sesión; no usar enabled:!!session (cookies pueden
-    // estar listas antes que AuthContext — patrón alineado con useMyStore).
-    queryKey: ['products', queryOptions, session?.user?.id ?? 'guest'],
-    enabled: enabledOption !== false,
+    // Esperar fin de AuthProvider antes del primer fetch (evita NO_SESSION fantasma en prod).
+    queryKey: ['products', queryOptions, session?.user?.id ?? 'none'],
+    enabled: enabledOption !== false && !authLoading,
     queryFn: async ({ signal }) => {
       const { supabase } = await import('@/lib/supabase/client');
       const { data: { session: liveSession } } = await supabase.auth.getSession();
@@ -50,7 +49,7 @@ export const useProducts = (options?: UseProductsOptions) => {
     // No refetch automático en window focus para productos
     refetchOnWindowFocus: false,
     // Refetch en mount solo si los datos están stale (evitar múltiples peticiones)
-    refetchOnMount: _refetchOnMount ?? false,
+    refetchOnMount: _refetchOnMount ?? true,
     // No refetch en reconnect
     refetchOnReconnect: false,
     // Retry con delay exponencial para evitar saturar el servidor

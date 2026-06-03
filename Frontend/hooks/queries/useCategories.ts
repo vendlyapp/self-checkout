@@ -10,9 +10,10 @@ import { queryKeys } from '@/lib/queryKeys';
  * Hook para obtener todas las categorías
  */
 export const useCategories = () => {
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   return useQuery({
-    queryKey: [...queryKeys.categories.all(), session?.user?.id ?? 'guest'],
+    queryKey: [...queryKeys.categories.all(), session?.user?.id ?? 'none'],
+    enabled: !authLoading,
     queryFn: async ({ signal }) => {
       const { supabase } = await import('@/lib/supabase/client');
       const { data: { session: liveSession } } = await supabase.auth.getSession();
