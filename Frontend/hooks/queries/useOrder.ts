@@ -56,7 +56,15 @@ export const useOrder = (orderId: string | null | undefined) => {
     refetchOnWindowFocus: false,
     refetchOnMount: true,
     refetchOnReconnect: false,
-    placeholderData: (previousData) => previousData,
+    placeholderData: (previousData) => {
+      if (previousData) return previousData;
+      if (!orderId) return undefined;
+      const hydrated = queryClient.getQueryData<RecentOrder>(
+        queryKeys.orders.detail(orderId)
+      );
+      if (hydrated) return hydrated;
+      return findOrderInCache(queryClient, orderId);
+    },
     retry: (failureCount, error) => {
       if (error instanceof Error && error.message === 'CANCELLED') {
         return false;

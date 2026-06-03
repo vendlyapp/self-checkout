@@ -45,11 +45,10 @@ export interface DiscountCodeStats {
 
 const getAuthHeaders = async () => {
   try {
-    // Obtener token de Supabase
     const { supabase } = await import('@/lib/supabase/client');
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token;
-    
+
     return {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
@@ -61,38 +60,49 @@ const getAuthHeaders = async () => {
   }
 };
 
+async function fetchWithAuth(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  const headers = await getAuthHeaders();
+  const { createRequestSignal } = await import('@/lib/http/fetchWithTimeout');
+  const { signal: optionsSignal, ...restOptions } = options;
+  const { signal, cleanup } = createRequestSignal(optionsSignal ?? undefined);
+
+  try {
+    return await fetch(buildApiUrl(endpoint), {
+      ...restOptions,
+      headers: {
+        ...headers,
+        ...(restOptions.headers as Record<string, string> | undefined),
+      },
+      signal,
+    });
+  } finally {
+    cleanup();
+  }
+}
+
 export const discountCodeService = {
-  /**
-   * Obtiene todos los códigos de descuento del usuario
-   */
-  async getAll(): Promise<DiscountCode[]> {
-    try {
-      const headers = await getAuthHeaders();
-      const response = await fetch(buildApiUrl('/api/discount-codes'), {
-        method: 'GET',
-        headers,
-      });
+  async getAll(requestOptions?: { signal?: AbortSignal }): Promise<DiscountCode[]> {
+    const response = await fetchWithAuth('/api/discount-codes', {
+      method: 'GET',
+      signal: requestOptions?.signal,
+    });
 
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || `Fehler beim Laden der Rabattcodes: ${response.status}`);
-      }
-
-      const result = await response.json();
-      return result.data || [];
-    } catch (error) {
-      throw error;
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || `Fehler beim Laden der Rabattcodes: ${response.status}`);
     }
+
+    const result = await response.json();
+    return result.data || [];
   },
 
-  /**
-   * Obtiene un código de descuento por ID
-   */
-  async getById(id: string): Promise<DiscountCode> {
-    const headers = await getAuthHeaders();
-    const response = await fetch(buildApiUrl(`/api/discount-codes/${id}`), {
+  async getById(id: string, requestOptions?: { signal?: AbortSignal }): Promise<DiscountCode> {
+    const response = await fetchWithAuth(`/api/discount-codes/${id}`, {
       method: 'GET',
-      headers,
+      signal: requestOptions?.signal,
     });
 
     if (!response.ok) {
@@ -104,35 +114,31 @@ export const discountCodeService = {
     return result.data;
   },
 
-  /**
-   * Valida un código de descuento
-   * Este endpoint puede ser usado sin autenticación para que usuarios puedan validar códigos
-   * @param code - Código de descuento a validar
-   * @param storeId - ID de la tienda (opcional, para validar que el código pertenezca a esa tienda)
-   */
   async validateCode(code: string, storeId?: string): Promise<DiscountCode> {
+    let headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
     try {
-      // Intentar obtener headers con auth, pero no es crítico si falla
-      let headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-      
-      try {
-        const authHeaders = await getAuthHeaders();
-        headers = authHeaders;
-      } catch {
-        // Si no hay auth, continuar sin token (endpoint puede ser público)
-      }
+      const authHeaders = await getAuthHeaders();
+      headers = authHeaders as Record<string, string>;
+    } catch {
+      // endpoint puede ser público
+    }
 
-      // Construir URL con query parameter storeId si se proporciona
-      let url = `/api/discount-codes/validate/${encodeURIComponent(code)}`;
-      if (storeId) {
-        url += `?storeId=${encodeURIComponent(storeId)}`;
-      }
+    let url = `/api/discount-codes/validate/${encodeURIComponent(code)}`;
+    if (storeId) {
+      url += `?storeId=${encodeURIComponent(storeId)}`;
+    }
 
+    const { createRequestSignal } = await import('@/lib/http/fetchWithTimeout');
+    const { signal, cleanup } = createRequestSignal(undefined);
+
+    try {
       const response = await fetch(buildApiUrl(url), {
         method: 'GET',
         headers,
+        signal,
       });
 
       if (!response.ok) {
@@ -145,22 +151,14 @@ export const discountCodeService = {
         throw new Error(result.error || 'Ungültiger Rabattcode');
       }
       return result.data;
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Unbekannter Fehler beim Validieren des Rabattcodes');
+    } finally {
+      cleanup();
     }
   },
 
-  /**
-   * Crea un nuevo código de descuento
-   */
   async create(data: CreateDiscountCodeRequest): Promise<DiscountCode> {
-    const headers = await getAuthHeaders();
-    const response = await fetch(buildApiUrl('/api/discount-codes'), {
+    const response = await fetchWithAuth('/api/discount-codes', {
       method: 'POST',
-      headers,
       body: JSON.stringify(data),
     });
 
@@ -173,14 +171,9 @@ export const discountCodeService = {
     return result.data;
   },
 
-  /**
-   * Actualiza un código de descuento
-   */
   async update(id: string, data: UpdateDiscountCodeRequest): Promise<DiscountCode> {
-    const headers = await getAuthHeaders();
-    const response = await fetch(buildApiUrl(`/api/discount-codes/${id}`), {
+    const response = await fetchWithAuth(`/api/discount-codes/${id}`, {
       method: 'PUT',
-      headers,
       body: JSON.stringify(data),
     });
 
@@ -193,14 +186,9 @@ export const discountCodeService = {
     return result.data;
   },
 
-  /**
-   * Archiva un código de descuento (en lugar de eliminarlo)
-   */
   async archive(id: string): Promise<DiscountCode> {
-    const headers = await getAuthHeaders();
-    const response = await fetch(buildApiUrl(`/api/discount-codes/${id}`), {
+    const response = await fetchWithAuth(`/api/discount-codes/${id}`, {
       method: 'DELETE',
-      headers,
     });
 
     if (!response.ok) {
@@ -212,14 +200,9 @@ export const discountCodeService = {
     return result.data;
   },
 
-  /**
-   * Elimina un código de descuento (solo para casos especiales)
-   */
   async delete(id: string): Promise<void> {
-    const headers = await getAuthHeaders();
-    const response = await fetch(buildApiUrl(`/api/discount-codes/${id}`), {
+    const response = await fetchWithAuth(`/api/discount-codes/${id}`, {
       method: 'DELETE',
-      headers,
     });
 
     if (!response.ok) {
@@ -228,37 +211,25 @@ export const discountCodeService = {
     }
   },
 
-  /**
-   * Obtiene todos los códigos archivados
-   */
-  async getArchived(): Promise<DiscountCode[]> {
-    try {
-      const headers = await getAuthHeaders();
-      const response = await fetch(buildApiUrl('/api/discount-codes/archived'), {
-        method: 'GET',
-        headers,
-      });
+  async getArchived(requestOptions?: { signal?: AbortSignal }): Promise<DiscountCode[]> {
+    const response = await fetchWithAuth('/api/discount-codes/archived', {
+      method: 'GET',
+      signal: requestOptions?.signal,
+    });
 
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || `Fehler beim Laden der archivierten Codes: ${response.status}`);
-      }
-
-      const result = await response.json();
-      return result.data || [];
-    } catch (error) {
-      throw error;
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || `Fehler beim Laden der archivierten Codes: ${response.status}`);
     }
+
+    const result = await response.json();
+    return result.data || [];
   },
 
-  /**
-   * Obtiene estadísticas de códigos de descuento
-   */
-  async getStats(): Promise<DiscountCodeStats> {
-    const headers = await getAuthHeaders();
-    const response = await fetch(buildApiUrl('/api/discount-codes/stats'), {
+  async getStats(requestOptions?: { signal?: AbortSignal }): Promise<DiscountCodeStats> {
+    const response = await fetchWithAuth('/api/discount-codes/stats', {
       method: 'GET',
-      headers,
+      signal: requestOptions?.signal,
     });
 
     if (!response.ok) {
@@ -270,4 +241,3 @@ export const discountCodeService = {
     return result.data;
   },
 };
-

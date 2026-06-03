@@ -1,45 +1,55 @@
+'use client';
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { discountCodeService, type DiscountCode, type CreateDiscountCodeRequest, type UpdateDiscountCodeRequest } from '@/lib/services/discountCodeService';
+import { discountCodeService, type CreateDiscountCodeRequest, type UpdateDiscountCodeRequest } from '@/lib/services/discountCodeService';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { queryKeys } from '@/lib/queryKeys';
 import { toast } from 'sonner';
 
 export const useDiscountCodes = () => {
+  const { session, loading: authLoading } = useAuth();
+
   return useQuery({
-    queryKey: ['discountCodes'],
-    queryFn: async () => {
-      const codes = await discountCodeService.getAll();
-      return codes;
-    },
-    staleTime: 2 * 60 * 1000, // 2 min — mutations (create/update/archive) invalidate the cache
+    queryKey: queryKeys.discountCodes.all(),
+    enabled: !authLoading && !!session?.access_token,
+    queryFn: async ({ signal }) => discountCodeService.getAll({ signal }),
+    staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: true,
+    throwOnError: false,
   });
 };
 
 export const useDiscountCode = (id: string | null) => {
+  const { session, loading: authLoading } = useAuth();
+
   return useQuery({
-    queryKey: ['discountCode', id],
-    queryFn: async () => {
+    queryKey: queryKeys.discountCodes.detail(id ?? ''),
+    enabled: !authLoading && !!session?.access_token && !!id,
+    queryFn: async ({ signal }) => {
       if (!id) return null;
-      return await discountCodeService.getById(id);
+      return await discountCodeService.getById(id, { signal });
     },
-    enabled: !!id,
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: true,
   });
 };
 
 export const useDiscountCodeStats = () => {
+  const { session, loading: authLoading } = useAuth();
+
   return useQuery({
-    queryKey: ['discountCodeStats'],
-    queryFn: async () => {
-      return await discountCodeService.getStats();
-    },
-    staleTime: 2 * 60 * 1000, // 2 min — invalidated by mutations
+    queryKey: queryKeys.discountCodes.stats(),
+    enabled: !authLoading && !!session?.access_token,
+    queryFn: async ({ signal }) => discountCodeService.getStats({ signal }),
+    staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: true,
+    throwOnError: false,
   });
 };
 
@@ -49,8 +59,8 @@ export const useCreateDiscountCode = () => {
   return useMutation({
     mutationFn: (data: CreateDiscountCodeRequest) => discountCodeService.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['discountCodes'] });
-      queryClient.invalidateQueries({ queryKey: ['discountCodeStats'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.discountCodes.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.discountCodes.stats() });
       toast.success('Rabattcode erfolgreich erstellt');
     },
     onError: (error: Error) => {
@@ -66,9 +76,9 @@ export const useUpdateDiscountCode = () => {
     mutationFn: ({ id, data }: { id: string; data: UpdateDiscountCodeRequest }) =>
       discountCodeService.update(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['discountCodes'] });
-      queryClient.invalidateQueries({ queryKey: ['discountCode', variables.id] });
-      queryClient.invalidateQueries({ queryKey: ['discountCodeStats'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.discountCodes.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.discountCodes.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.discountCodes.stats() });
       toast.success('Rabattcode erfolgreich aktualisiert');
     },
     onError: (error: Error) => {
@@ -83,9 +93,9 @@ export const useArchiveDiscountCode = () => {
   return useMutation({
     mutationFn: (id: string) => discountCodeService.archive(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['discountCodes'] });
-      queryClient.invalidateQueries({ queryKey: ['archivedDiscountCodes'] });
-      queryClient.invalidateQueries({ queryKey: ['discountCodeStats'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.discountCodes.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.discountCodes.archived() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.discountCodes.stats() });
       toast.success('Rabattcode erfolgreich archiviert');
     },
     onError: (error: Error) => {
@@ -94,20 +104,20 @@ export const useArchiveDiscountCode = () => {
   });
 };
 
-// Mantener useDeleteDiscountCode para compatibilidad (pero ahora archiva)
 export const useDeleteDiscountCode = useArchiveDiscountCode;
 
 export const useArchivedDiscountCodes = () => {
+  const { session, loading: authLoading } = useAuth();
+
   return useQuery({
-    queryKey: ['archivedDiscountCodes'],
-    queryFn: async () => {
-      const codes = await discountCodeService.getArchived();
-      return codes;
-    },
+    queryKey: queryKeys.discountCodes.archived(),
+    enabled: !authLoading && !!session?.access_token,
+    queryFn: async ({ signal }) => discountCodeService.getArchived({ signal }),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: true,
+    throwOnError: false,
   });
 };
 
@@ -119,4 +129,3 @@ export const useValidateDiscountCode = () => {
     },
   });
 };
-

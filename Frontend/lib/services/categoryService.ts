@@ -45,32 +45,40 @@ const makeRequest = async <T>(
 ): Promise<ApiResponse<T>> => {
   try {
     const url = buildApiUrl(endpoint);
-    
-    // Obtener token de Supabase
+
     const { supabase } = await import('@/lib/supabase/client');
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token;
-    
+
+    const { createRequestSignal } = await import('@/lib/http/fetchWithTimeout');
+    const { signal: optionsSignal, ...restOptions } = options;
+    const { signal, cleanup } = createRequestSignal(optionsSignal ?? undefined);
+
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
+      ...restOptions.headers,
     };
 
-    const response = await fetch(url, {
-      ...options,
-      headers,
-      mode: 'cors',
-      credentials: 'omit',
-    });
+    try {
+      const response = await fetch(url, {
+        ...restOptions,
+        headers,
+        signal,
+        mode: 'cors',
+        credentials: 'omit',
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP ${response.status}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } finally {
+      cleanup();
     }
-
-    const data = await response.json();
-    return data;
   } catch (error) {
     return {
       success: false,

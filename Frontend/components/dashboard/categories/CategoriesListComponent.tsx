@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useDeleteCategory, useUpdateCategory } from "@/hooks/mutations";
 import { useCategories } from "@/hooks/queries/useCategories";
+import { isInitialQueryLoading } from "@/hooks/queries/useStoreQueryScope";
 import type { Category } from "@/lib/services/categoryService";
 import DeleteCategoryModal from "./DeleteCategoryModal";
 import ToggleCategoryModal from "./ToggleCategoryModal";
@@ -34,7 +35,9 @@ export default function CategoriesListComponent({
   const updateCategoryMutation = useUpdateCategory();
 
   // Obtener todas las categorías
-  const { data: categories = [], isLoading, error } = useCategories();
+  const { data: categories = [], isFetched, isFetching, error } = useCategories();
+  const categoriesLoading =
+    isInitialQueryLoading(isFetched, isFetching) && categories.length === 0;
 
   // Separar la categoría default del resto
   const defaultCategory = useMemo(
@@ -238,7 +241,7 @@ export default function CategoriesListComponent({
         {/* Lista — los sticky headers ya ocupan espacio, no necesita padding especial */}
         <div className="pb-32">
           <div className={`px-4 pt-4 md:px-6 ${className}`}>
-            {isLoading ? (
+            {categoriesLoading ? (
               <div className="text-center py-12">
                 <Loader size="md" className="mx-auto" />
                 <p className="mt-4 text-base text-gray-500 font-medium">
@@ -350,7 +353,7 @@ export default function CategoriesListComponent({
         style={!isStandalone && maxHeight !== "none" ? { maxHeight } : {}}
       >
         <div className="p-4">
-          {isLoading ? (
+          {categoriesLoading ? (
             <div className="text-center py-8">
               <Loader size="sm" className="mx-auto" />
               <p className="mt-2 text-sm text-muted-foreground">

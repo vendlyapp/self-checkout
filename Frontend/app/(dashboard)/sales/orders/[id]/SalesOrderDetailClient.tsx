@@ -15,6 +15,7 @@ import { useCancelOrder, useConfirmQRPayment } from '@/hooks/mutations/useOrderM
 import { useEffect, useState } from 'react';
 import CancelOrderModal from '@/components/orders/CancelOrderModal';
 import { isInitialQueryLoading } from '@/hooks/queries/useStoreQueryScope';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 interface SalesOrderDetailClientProps {
   orderId: string;
@@ -27,6 +28,8 @@ export default function SalesOrderDetailClient({ orderId }: SalesOrderDetailClie
   const confirmQrPayment = useConfirmQRPayment();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   
+  const { loading: authLoading } = useAuth();
+
   // Usar React Query hooks para obtener orden e invoices con cache
   const { data: order, isFetched: orderFetched, isFetching: orderFetching, error: orderError } = useOrder(orderId);
   const {
@@ -45,7 +48,8 @@ export default function SalesOrderDetailClient({ orderId }: SalesOrderDetailClie
     }
   }, [orderError]);
 
-  const loading = isInitialQueryLoading(orderFetched, orderFetching);
+  const orderLoading = isInitialQueryLoading(orderFetched, orderFetching);
+  const showOrderSkeleton = (authLoading || orderLoading) && !order;
   const error = orderError instanceof Error ? orderError.message : orderError ? String(orderError) : null;
 
   /** Muestra el método de pago con formato correcto (ej. qr-rechnung → QR-Rechnung) */
@@ -150,7 +154,7 @@ export default function SalesOrderDetailClient({ orderId }: SalesOrderDetailClie
     }
   };
 
-  if (loading && !order) {
+  if (showOrderSkeleton) {
     return <DashboardLoadingState mode="page" message="Bestellung wird geladen..." />;
   }
 
@@ -195,10 +199,6 @@ export default function SalesOrderDetailClient({ orderId }: SalesOrderDetailClie
         )}
       </div>
     );
-  }
-
-  if (!order && !loading && !error) {
-    return <DashboardLoadingState mode="page" message="Bestellung wird geladen..." />;
   }
 
   if (!order) return null;

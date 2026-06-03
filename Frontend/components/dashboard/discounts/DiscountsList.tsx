@@ -9,6 +9,7 @@ import { DiscountCode } from './types'
 import DeleteDiscountCodeModal from './DeleteDiscountCodeModal'
 import CreateDiscountModal, { DiscountFormData } from './CreateDiscountModal'
 import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState'
+import { isInitialQueryLoading } from '@/hooks/queries/useStoreQueryScope'
 
 export interface DiscountsListProps {
   /** Contenido fijo arriba (ej. botón crear). Cuando se pasa, el header es sticky y solo la lista hace scroll. */
@@ -18,8 +19,16 @@ export interface DiscountsListProps {
 }
 
 export default function DiscountsList({ stickyPrefix, scrollAreaClassName = '' }: DiscountsListProps = {}) {
-  const { data: discountCodes = [], isLoading } = useDiscountCodes()
-  const { data: archivedCodes = [], isLoading: isLoadingArchived } = useArchivedDiscountCodes()
+  const {
+    data: discountCodes = [],
+    isFetched: codesFetched,
+    isFetching: codesFetching,
+  } = useDiscountCodes()
+  const {
+    data: archivedCodes = [],
+    isFetched: archFetched,
+    isFetching: archFetching,
+  } = useArchivedDiscountCodes()
   const { data: stats } = useDiscountCodeStats()
   const archiveMutation = useArchiveDiscountCode()
   const updateMutation = useUpdateDiscountCode()
@@ -126,7 +135,12 @@ export default function DiscountsList({ stickyPrefix, scrollAreaClassName = '' }
   }, [discountCodes, archivedCodes, activeFilter])
 
 
-  if (isLoading || isLoadingArchived) {
+  const codesLoading =
+    isInitialQueryLoading(codesFetched, codesFetching) && discountCodes.length === 0
+  const archivedLoading =
+    isInitialQueryLoading(archFetched, archFetching) && archivedCodes.length === 0
+
+  if (codesLoading) {
     return (
       <DashboardLoadingState mode="page" message="Wird geladen..." />
     )
@@ -171,7 +185,9 @@ export default function DiscountsList({ stickyPrefix, scrollAreaClassName = '' }
 
   const listBlock = (
     <>
-      {filteredCodes.length === 0 ? (
+      {activeFilter === 'archived' && archivedLoading ? (
+        <DashboardLoadingState mode="section" message="Archivierte Codes werden geladen..." />
+      ) : filteredCodes.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500">
             {activeFilter === 'archived'
