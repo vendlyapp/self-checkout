@@ -60,6 +60,8 @@ const makeRequest = async <T>(
     const response = await fetch(url, {
       ...options,
       headers,
+      mode: 'cors',
+      credentials: 'omit',
     });
 
     if (!response.ok) {

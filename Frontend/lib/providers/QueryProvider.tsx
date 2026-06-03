@@ -8,10 +8,8 @@ interface QueryProviderProps {
   children: ReactNode;
 }
 
-export const QueryProvider = ({ children }: QueryProviderProps) => {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
+function createAppQueryClient() {
+  const client = new QueryClient({
         defaultOptions: {
           queries: {
             // Cache por 10 minutos por defecto (las queries específicas pueden sobrescribir)
@@ -24,7 +22,8 @@ export const QueryProvider = ({ children }: QueryProviderProps) => {
               if (error instanceof Error && (
                 error.name === 'AbortError' || 
                 error.message === 'CANCELLED' ||
-                error.message === 'Request cancelled'
+                error.message === 'Request cancelled' ||
+                error.message === 'NO_SESSION'
               )) {
                 return false;
               }
@@ -34,8 +33,8 @@ export const QueryProvider = ({ children }: QueryProviderProps) => {
             refetchOnWindowFocus: false,
             // No refetch automático en reconexión (evitar recargas innecesarias)
             refetchOnReconnect: false,
-            // No refetch en mount si hay datos frescos en cache
-            refetchOnMount: false,
+            // Refetch al montar si datos stale o query falló (crítico en prod tras login)
+            refetchOnMount: true,
             // No loggear errores de cancelación
             throwOnError: (error) => {
               // No lanzar errores de cancelación
@@ -63,13 +62,17 @@ export const QueryProvider = ({ children }: QueryProviderProps) => {
             },
           },
         },
-      })
-  );
+  });
+  setAppQueryClient(client);
+  return client;
+}
+
+export const QueryProvider = ({ children }: QueryProviderProps) => {
+  const [queryClient] = useState(createAppQueryClient);
 
   useEffect(() => {
-    setAppQueryClient(queryClient);
     return () => setAppQueryClient(null);
-  }, [queryClient]);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

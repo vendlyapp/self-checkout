@@ -177,8 +177,11 @@ const makeRequest = async <T>(
     const signal = options.signal || controller?.signal;
     
     const response = await fetch(url, {
+      method: options.method ?? 'GET',
       headers,
       signal,
+      mode: 'cors',
+      credentials: 'omit',
       ...options,
     });
     

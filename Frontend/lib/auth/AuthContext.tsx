@@ -5,18 +5,7 @@ import { usePathname } from 'next/navigation';
 import { User, Session, AuthError, type AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
 import { devError, devWarn } from '@/lib/utils/logger';
-import { getAppQueryClient } from '@/lib/queryClient';
-import { queryKeys } from '@/lib/queryKeys';
-
-function invalidateDashboardData() {
-  const qc = getAppQueryClient();
-  if (!qc) return;
-  qc.invalidateQueries({ queryKey: ['products'] });
-  qc.invalidateQueries({ queryKey: queryKeys.categories.all() });
-  qc.invalidateQueries({ queryKey: queryKeys.myStore.all() });
-  qc.invalidateQueries({ queryKey: ['recentOrders'] });
-  qc.invalidateQueries({ queryKey: ['orderStats'] });
-}
+import { invalidateDashboardData } from '@/lib/auth/invalidateDashboardData';
 
 interface AuthContextType {
   user: User | null;
@@ -74,7 +63,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setSession(initialSession);
         setUser(initialSession?.user ?? null);
         if (initialSession?.user) {
-          invalidateDashboardData();
+          // QueryClient puede registrarse después del primer paint del hijo
+          queueMicrotask(() => invalidateDashboardData());
         }
       } catch (error) {
         devError('[AuthProvider] initializeAuth threw:', error);
@@ -97,7 +87,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           session &&
           (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION')
         ) {
-          invalidateDashboardData();
+          queueMicrotask(() => invalidateDashboardData());
         }
 
         // El redirect al login lo maneja useSessionTimeout, que tiene contexto
