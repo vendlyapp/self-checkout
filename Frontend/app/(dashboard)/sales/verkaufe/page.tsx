@@ -7,13 +7,14 @@ import { useOrders } from '@/hooks/queries/useOrders';
 import { ShoppingCart, Search, Calendar, Banknote, User, ChevronRight } from 'lucide-react';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 import Link from 'next/link';
+import { isInitialQueryLoading } from '@/hooks/queries/useStoreQueryScope';
 import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState';
 
 export default function SalesVerkaufePage() {
   const router = useRouter();
   const { isMobile } = useResponsive();
 
-  const { data: orders = [], isLoading, isFetching, error: queryError } = useOrders({
+  const { data: orders = [], isFetched, isFetching, error: queryError } = useOrders({
     limit: 100,
     offset: 0,
     // Sin filtro de status: mostrar completadas y canceladas
@@ -47,7 +48,7 @@ export default function SalesVerkaufePage() {
     }
   };
 
-  const loading = isLoading || isFetching;
+  const loading = isInitialQueryLoading(isFetched, isFetching);
   const error = queryError instanceof Error ? queryError.message : queryError ? String(queryError) : null;
 
   if (loading && orders.length === 0) {

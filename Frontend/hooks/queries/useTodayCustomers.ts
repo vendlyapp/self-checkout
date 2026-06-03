@@ -2,18 +2,20 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { OrderService, type TodayCustomersData } from '@/lib/services/orderService';
-import { useMyStore } from './useMyStore';
+import { queryKeys } from '@/lib/queryKeys';
+import { useStoreQueryScope } from './useStoreQueryScope';
 
 export function useTodayCustomers() {
-  const { data: store, isLoading: storeLoading } = useMyStore();
+  const { storeId, enabled } = useStoreQueryScope();
 
   return useQuery<TodayCustomersData>({
-    queryKey: ['todayCustomers', store?.id],
+    queryKey: queryKeys.orders.todayCustomers(storeId),
+    enabled,
     queryFn: async ({ signal }) => {
-      if (!store?.id) {
+      if (!storeId) {
         throw new Error('Keine Geschäft gefunden');
       }
-      const response = await OrderService.getTodayCustomers(store.id, { signal });
+      const response = await OrderService.getTodayCustomers(storeId, { signal });
       if (!response.success || !response.data) {
         if (response.error === 'Request cancelled' || signal?.aborted) {
           throw new Error('CANCELLED');
@@ -22,14 +24,14 @@ export function useTodayCustomers() {
       }
       return response.data;
     },
-    enabled: !!store?.id && !storeLoading,
     staleTime: 30 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: true,
     retry: (failureCount, error) => {
       if (error instanceof Error && error.message === 'CANCELLED') return false;
       return failureCount < 2;
     },
+    throwOnError: false,
   });
 }

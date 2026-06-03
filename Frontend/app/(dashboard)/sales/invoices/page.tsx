@@ -16,13 +16,14 @@ import {
 } from 'lucide-react';
 import { formatSwissPriceWithCHF } from '@/lib/utils';
 import Link from 'next/link';
+import { isInitialQueryLoading } from '@/hooks/queries/useStoreQueryScope';
 import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState';
 
 export default function SalesInvoicesPage() {
   const router = useRouter();
   const { isMobile } = useResponsive();
 
-  const { data: invoices = [], isLoading, isFetching, error: queryError } = useInvoices({
+  const { data: invoices = [], isFetched, isFetching, error: queryError } = useInvoices({
     limit: 100,
     offset: 0,
   });
@@ -64,7 +65,7 @@ export default function SalesInvoicesPage() {
     }
   };
 
-  const loading = isLoading || isFetching;
+  const loading = isInitialQueryLoading(isFetched, isFetching);
   const error = queryError instanceof Error ? queryError.message : queryError ? String(queryError) : null;
 
   if (loading && invoices.length === 0) {

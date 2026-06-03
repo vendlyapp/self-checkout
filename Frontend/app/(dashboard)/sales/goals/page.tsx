@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useQueryClient } from '@tanstack/react-query';
+import { isInitialQueryLoading } from '@/hooks/queries/useStoreQueryScope';
 import { useMyStore } from '@/hooks/queries/useMyStore';
 import { buildApiUrl, getAuthHeaders } from '@/lib/config/api';
 import { toast } from 'sonner';
@@ -30,7 +31,7 @@ const GOAL_CONFIG: { key: GoalField; label: string; placeholder: string; icon: t
 export default function SalesGoalsPage() {
   const queryClient = useQueryClient();
   const { isMobile } = useResponsive();
-  const { data: store, isLoading: storeLoading } = useMyStore();
+  const { data: store, isFetched, isFetching } = useMyStore();
   const [goalDaily, setGoalDaily] = useState('');
   const [goalWeekly, setGoalWeekly] = useState('');
   const [goalMonthly, setGoalMonthly] = useState('');
@@ -114,10 +115,20 @@ export default function SalesGoalsPage() {
     }
   };
 
-  if (storeLoading || !store) {
+  const storeLoading = isInitialQueryLoading(isFetched, isFetching);
+
+  if (storeLoading) {
     return (
       <div className="min-h-[40vh] flex items-center justify-center p-4">
         <Loader size="lg" />
+      </div>
+    );
+  }
+
+  if (!store) {
+    return (
+      <div className="min-h-[40vh] flex items-center justify-center p-4 text-center text-gray-600">
+        <p>Geschäft konnte nicht geladen werden.</p>
       </div>
     );
   }

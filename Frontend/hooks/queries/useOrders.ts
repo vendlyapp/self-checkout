@@ -2,7 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { OrderService, RecentOrder } from '@/lib/services/orderService';
-import { useMyStore } from './useMyStore';
+import { queryKeys } from '@/lib/queryKeys';
+import { useStoreQueryScope } from './useStoreQueryScope';
 
 export interface UseOrdersOptions {
   limit?: number;
@@ -10,34 +11,28 @@ export interface UseOrdersOptions {
   status?: 'pending' | 'processing' | 'completed' | 'cancelled';
 }
 
-/**
- * Hook para obtener todas las órdenes usando React Query
- * Los datos se cachean para evitar peticiones innecesarias
- * 
- * @param options - Opciones para la consulta (limit, offset, status)
- * @returns Datos de órdenes, estados de carga y error
- * 
- * @example
- * ```tsx
- * const { data: orders = [], isLoading, error } = useOrders({ limit: 50, status: 'completed' });
- * ```
- */
 export const useOrders = (options?: UseOrdersOptions) => {
-  const { data: store, isLoading: storeLoading } = useMyStore();
+  const { storeId, enabled } = useStoreQueryScope();
+  const listOpts = {
+    limit: options?.limit ?? 100,
+    offset: options?.offset ?? 0,
+    status: options?.status,
+  };
 
   return useQuery({
-    queryKey: ['orders', store?.id, options],
+    queryKey: queryKeys.orders.list(storeId, listOpts),
+    enabled,
     queryFn: async ({ signal }) => {
-      if (!store?.id) {
+      if (!storeId) {
         throw new Error('Keine Geschäft gefunden');
       }
 
       const result = await OrderService.getAllOrders(
         {
-          limit: options?.limit || 100,
-          offset: options?.offset || 0,
-          status: options?.status,
-          storeId: store.id, // Siempre pasar storeId para filtrar por tienda
+          limit: listOpts.limit,
+          offset: listOpts.offset,
+          status: listOpts.status,
+          storeId,
         },
         { signal }
       );
@@ -51,12 +46,11 @@ export const useOrders = (options?: UseOrdersOptions) => {
 
       return result.data as RecentOrder[];
     },
-    enabled: !!store?.id && !storeLoading, // Solo ejecutar si tenemos storeId y no está cargando
-    staleTime: 5 * 60 * 1000, // 5 minutos - los datos se consideran frescos por más tiempo
-    gcTime: 30 * 60 * 1000, // 30 minutos en cache - mantener datos en memoria más tiempo
-    refetchOnWindowFocus: false, // No refetch al cambiar de ventana
-    refetchOnMount: false, // No refetch en mount si los datos están frescos (staleTime)
-    refetchOnReconnect: false, // No refetch al reconectar
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
     retry: (failureCount, error) => {
       if (error instanceof Error && error.message === 'CANCELLED') {
         return false;
@@ -64,6 +58,6 @@ export const useOrders = (options?: UseOrdersOptions) => {
       return failureCount < 2;
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
+    throwOnError: false,
   });
 };
-

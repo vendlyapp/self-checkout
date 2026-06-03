@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { useCancelOrder, useConfirmQRPayment } from '@/hooks/mutations/useOrderMutations';
 import { useEffect, useState } from 'react';
 import CancelOrderModal from '@/components/orders/CancelOrderModal';
+import { isInitialQueryLoading } from '@/hooks/queries/useStoreQueryScope';
 
 export default function SalesOrderDetailPage() {
   const params = useParams();
@@ -25,7 +26,7 @@ export default function SalesOrderDetailPage() {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   
   // Usar React Query hooks para obtener orden e invoices con cache
-  const { data: order, isLoading: orderLoading, error: orderError, isFetching: orderFetching } = useOrder(orderId);
+  const { data: order, isFetched: orderFetched, isFetching: orderFetching, error: orderError } = useOrder(orderId);
   const { data: invoices = [], isLoading: invoicesLoading } = useInvoicesByOrderId(orderId);
 
   // Mostrar toast de error si hay error
@@ -36,7 +37,7 @@ export default function SalesOrderDetailPage() {
     }
   }, [orderError]);
 
-  const loading = orderLoading || orderFetching;
+  const loading = isInitialQueryLoading(orderFetched, orderFetching);
   const error = orderError instanceof Error ? orderError.message : orderError ? String(orderError) : null;
 
   /** Muestra el método de pago con formato correcto (ej. qr-rechnung → QR-Rechnung) */

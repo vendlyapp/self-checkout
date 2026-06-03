@@ -2,6 +2,7 @@
 
 import { Trophy, Package } from 'lucide-react';
 import { useTopProducts } from '@/hooks/queries/useTopProducts';
+import { isInitialQueryLoading } from '@/hooks/queries/useStoreQueryScope';
 import { Loader } from '@/components/ui/Loader';
 import type { TopProduct } from '@/lib/services/orderService';
 
@@ -43,12 +44,13 @@ function Top5List({ products }: { products: TopProduct[] }) {
 }
 
 export default function BestsellerPage() {
-  const { data: products = [], isLoading, error } = useTopProducts({ limit: 5, metric: 'units' });
-  const isEmpty = !isLoading && !error && products.length === 0;
+  const { data: products = [], isFetched, isFetching, error } = useTopProducts({ limit: 5, metric: 'units' });
+  const loading = isInitialQueryLoading(isFetched, isFetching);
+  const isEmpty = !loading && !error && products.length === 0;
 
   return (
     <div className="w-full min-w-0">
-      {isLoading ? (
+      {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
           <Loader size="md" />
           <p className="text-sm text-muted-foreground">Wird geladen…</p>

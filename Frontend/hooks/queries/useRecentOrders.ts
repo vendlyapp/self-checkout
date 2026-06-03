@@ -2,18 +2,15 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { OrderService } from '@/lib/services/orderService';
-import { useMyStore } from './useMyStore';
-import { useAuth } from '@/lib/auth/AuthContext';
 import { queryKeys } from '@/lib/queryKeys';
+import { useStoreQueryScope } from './useStoreQueryScope';
 
 export const useRecentOrders = (limit: number = 10) => {
-  const { session, loading: authLoading } = useAuth();
-  const { data: store } = useMyStore();
-  const storeId = store?.id;
+  const { storeId, enabled } = useStoreQueryScope();
 
   return useQuery({
     queryKey: queryKeys.orders.recent(storeId, limit),
-    enabled: !authLoading && !!session?.access_token && !!storeId,
+    enabled,
     queryFn: async ({ signal }) => {
       const { supabase } = await import('@/lib/supabase/client');
       const { data: { session: liveSession } } = await supabase.auth.getSession();

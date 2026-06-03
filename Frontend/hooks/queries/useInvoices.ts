@@ -2,46 +2,36 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { InvoiceService, Invoice } from '@/lib/services/invoiceService';
-import { useMyStore } from './useMyStore';
+import { queryKeys } from '@/lib/queryKeys';
+import { useStoreQueryScope } from './useStoreQueryScope';
 
 export interface UseInvoicesOptions {
   limit?: number;
   offset?: number;
 }
 
-/**
- * Hook para obtener invoices de la tienda actual usando React Query
- * Los datos se cachean para evitar peticiones innecesarias
- * 
- * @param options - Opciones para la consulta (limit, offset)
- * @returns Datos de invoices, estados de carga y error
- * 
- * @example
- * ```tsx
- * const { data: invoices = [], isLoading, error } = useInvoices({ limit: 100 });
- * ```
- */
 export const useInvoices = (options?: UseInvoicesOptions) => {
-  const { data: store, isLoading: storeLoading } = useMyStore();
+  const { storeId, enabled } = useStoreQueryScope();
+  const listOpts = {
+    limit: options?.limit ?? 100,
+    offset: options?.offset ?? 0,
+  };
 
   return useQuery({
-    queryKey: ['invoices', store?.id, options],
+    queryKey: queryKeys.invoices.list(storeId, listOpts),
+    enabled,
     queryFn: async ({ signal }) => {
-      if (!store?.id) {
+      if (!storeId) {
         throw new Error('Keine Geschäft gefunden');
       }
 
       const result = await InvoiceService.getInvoicesByStoreId(
-        store.id,
-        {
-          limit: options?.limit || 100,
-          offset: options?.offset || 0,
-        },
+        storeId,
+        listOpts,
         { signal }
       );
 
       if (!result.success || !result.data) {
-        // Si el error es de cancelación, no lanzar error
         if (result.error === 'Request cancelled' || signal?.aborted) {
           throw new Error('CANCELLED');
         }
@@ -50,20 +40,18 @@ export const useInvoices = (options?: UseInvoicesOptions) => {
 
       return result.data as Invoice[];
     },
-    enabled: !!store?.id && !storeLoading, // Solo ejecutar si tenemos storeId y no está cargando
-    staleTime: 10 * 60 * 1000, // 10 minutos - los invoices no cambian tan frecuentemente
-    gcTime: 60 * 60 * 1000, // 1 hora en cache - mantener datos en memoria más tiempo
-    refetchOnWindowFocus: false, // No refetch automático en window focus
-    refetchOnMount: false, // No refetch en mount si los datos están frescos (staleTime)
-    refetchOnReconnect: false, // No refetch en reconnect
+    staleTime: 10 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
     retry: (failureCount, error) => {
       if (error instanceof Error && error.message === 'CANCELLED') {
         return false;
       }
-      // Solo reintentar 2 veces máximo
       return failureCount < 2;
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000), // Delay exponencial: 1s, 2s, max 3s
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
+    throwOnError: false,
   });
 };
-

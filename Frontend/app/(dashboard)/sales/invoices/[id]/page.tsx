@@ -11,6 +11,7 @@ import { useEffect } from 'react';
 import { lightFeedback } from '@/lib/utils/safeFeedback';
 import { devError } from '@/lib/utils/logger';
 import { InvoiceService } from '@/lib/services/invoiceService';
+import { isInitialQueryLoading } from '@/hooks/queries/useStoreQueryScope';
 export default function SalesInvoiceDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -19,9 +20,9 @@ export default function SalesInvoiceDetailPage() {
 
   const {
     data: invoice,
-    isLoading,
-    error: queryError,
+    isFetched,
     isFetching,
+    error: queryError,
   } = useInvoice(invoiceId);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function SalesInvoiceDetailPage() {
     }
   }, [queryError]);
 
-  const loading = isLoading || isFetching;
+  const loading = isInitialQueryLoading(isFetched, isFetching);
   const error =
     queryError instanceof Error
       ? queryError.message

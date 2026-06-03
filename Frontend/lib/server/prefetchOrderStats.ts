@@ -19,6 +19,20 @@ export type PrefetchOrderStatsResult = {
 export async function prefetchTodayOrderStats(
   ownerId: string
 ): Promise<PrefetchOrderStatsResult | null> {
+  return prefetchOrderStatsByKey(ownerId, getLocalDateString());
+}
+
+/** Stats globales (sin fecha) — página /sales analytics. */
+export async function prefetchOverallOrderStats(
+  ownerId: string
+): Promise<PrefetchOrderStatsResult | null> {
+  return prefetchOrderStatsByKey(ownerId);
+}
+
+async function prefetchOrderStatsByKey(
+  ownerId: string,
+  date?: string
+): Promise<PrefetchOrderStatsResult | null> {
   const supabase = await createClient();
   const {
     data: { session },
@@ -27,14 +41,13 @@ export async function prefetchTodayOrderStats(
   const token = session?.access_token;
   if (!token || !ownerId) return null;
 
-  const today = getLocalDateString();
-
   try {
-    const params = new URLSearchParams({ date: today, ownerId });
+    const params = new URLSearchParams({ ownerId });
+    if (date) params.set('date', date);
     const res = await fetch(buildApiUrl(`/api/orders/stats?${params}`), {
       headers: getAuthHeaders(token),
       cache: 'no-store',
-      signal: AbortSignal.timeout(12_000),
+      signal: AbortSignal.timeout(15_000),
     });
     if (!res.ok) return null;
     const json = await res.json();
@@ -42,7 +55,7 @@ export async function prefetchTodayOrderStats(
 
     return {
       stats: json.data as OrderStatsData,
-      queryKey: queryKeys.orders.stats(today, ownerId),
+      queryKey: queryKeys.orders.stats(date, ownerId),
     };
   } catch {
     return null;

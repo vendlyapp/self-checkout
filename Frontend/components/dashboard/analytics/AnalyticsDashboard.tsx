@@ -163,8 +163,8 @@ const AnalyticsDashboard: React.FC = () => {
     );
   }
 
-  // Loading state - mostrar skeleton mientras carga
-  if (loading || !data) {
+  // Loading state — solo primera carga (datos vacíos también se muestran)
+  if (loading) {
     return <AnalyticsDashboardSkeletonLoader />;
   }
 

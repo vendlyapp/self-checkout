@@ -7,6 +7,8 @@ import {
 } from '@/components/dashboard/analytics/data/mockData';
 import { useOrderStats, useRecentOrders } from '@/hooks/queries';
 import { useMyStore } from '@/hooks/queries/useMyStore';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { isInitialQueryLoading } from '@/hooks/queries/useStoreQueryScope';
 import type { SalesData, PaymentMethod, ShopActivity, CartData, Customer } from '@/components/dashboard/analytics/types';
 import { RecentOrder } from '@/lib/services/orderService';
 import { useCartStore } from '@/lib/stores/cartStore';
@@ -451,15 +453,24 @@ export const useAnalytics = (): UseAnalyticsReturn => {
   const setPaymentPeriod = setAnalyticsPeriod;
   const setCartPeriod = setAnalyticsPeriod;
 
-  // Obtener store del usuario para filtrar órdenes (ownerId = dueño de la tienda)
+  // Obtener store del usuario para filtrar órdenes
+  const { session, loading: authLoading } = useAuth();
   const { data: store } = useMyStore();
-  const ownerId = store?.ownerId ?? (store as { ownerid?: string } | undefined)?.ownerid ?? store?.id;
+  const ownerId = store?.ownerId ?? session?.user?.id;
 
-  // Obtener estadísticas de órdenes
-  const { data: orderStats, isLoading: statsLoading, error: statsError } = useOrderStats(undefined, ownerId);
-  
-  // Órdenes recientes para gráficos (límite razonable; analytics completos deberían hacerse en backend)
-  const { data: recentOrders = [], isLoading: ordersLoading, error: ordersError } = useRecentOrders(100);
+  const {
+    data: orderStats,
+    isFetched: statsFetched,
+    isFetching: statsFetching,
+    error: statsError,
+  } = useOrderStats(undefined, ownerId);
+
+  const {
+    data: recentOrders = [],
+    isFetched: ordersFetched,
+    isFetching: ordersFetching,
+    error: ordersError,
+  } = useRecentOrders(100);
 
   // Contamos todas las órdenes que NO están canceladas (pending, processing, completed = venta/ganancia).
   // Solo las canceladas se excluyen y no cuentan en gráficos ni estadísticas.
@@ -531,8 +542,12 @@ export const useAnalytics = (): UseAnalyticsReturn => {
     return data ? calculateSalesGrowth(data.salesData) : 0;
   }, [data]);
 
-  // Loading and error states
-  const loading = statsLoading || ordersLoading;
+  // Loading: solo primera carga, no refetch en background
+  const loading =
+    !authLoading &&
+    !!ownerId &&
+    (isInitialQueryLoading(statsFetched, statsFetching) ||
+      isInitialQueryLoading(ordersFetched, ordersFetching));
   const error = statsError || ordersError 
     ? (statsError?.message || ordersError?.message || 'Fehler beim Laden der Analytics-Daten')
     : null;
