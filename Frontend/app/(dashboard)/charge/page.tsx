@@ -31,6 +31,8 @@ export default function Charge() {
     onOpenFilterModal,
     activeFiltersCount,
     chargeFilters,
+    productsLoadError,
+    onRetryProducts,
   } = chargeContext;
 
   const handleCloseFilterModal = () => setIsFilterModalOpen(false);
@@ -83,12 +85,27 @@ export default function Charge() {
           productsListFilters={chargeFilters}
           isFixed={false}
         />
-        <FixedHeaderContainer>
-          <DashBoardCharge
-            searchQuery={searchQuery}
-            selectedFilters={selectedFilters}
-          />
-        </FixedHeaderContainer>
+        {productsLoadError ? (
+          <div className="px-4 py-12 text-center">
+            <p className="text-gray-600 font-medium mb-4">
+              Produkte konnten nicht geladen werden.
+            </p>
+            <button
+              type="button"
+              onClick={() => onRetryProducts()}
+              className="rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-white"
+            >
+              Erneut laden
+            </button>
+          </div>
+        ) : (
+          <FixedHeaderContainer>
+            <DashBoardCharge
+              searchQuery={searchQuery}
+              selectedFilters={selectedFilters}
+            />
+          </FixedHeaderContainer>
+        )}
       </div>
 
       {/* Desktop */}

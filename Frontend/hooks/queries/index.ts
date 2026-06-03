@@ -5,7 +5,7 @@
 
 // Product queries
 export { useProductStats } from './useProductStats';
-export { useProducts } from './useProducts';
+export { useProducts, PRODUCT_CATALOG_FILTERS } from './useProducts';
 export type { UseProductsOptions } from './useProducts';
 export { useProductById } from './useProductById';
 export { useProductsAnalytics } from './useProductsAnalytics';

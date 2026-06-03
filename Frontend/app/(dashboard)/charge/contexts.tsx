@@ -36,6 +36,8 @@ interface ChargeContextType {
   /** Aktive Produkte (normalisiert, flach) — eine API-Quelle für Layout + Seite */
   catalogProducts: Product[];
   isProductsInitialLoad: boolean;
+  productsLoadError: boolean;
+  onRetryProducts: () => void;
 }
 
 const ChargeContext = createContext<ChargeContextType | undefined>(undefined);

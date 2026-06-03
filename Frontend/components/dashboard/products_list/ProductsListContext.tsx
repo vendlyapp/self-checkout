@@ -5,7 +5,7 @@ import { FilterState } from "./FilterModal";
 import { FilterOption } from "@/components/Sliders/SliderFIlter";
 import { getIcon } from "./data/iconMap";
 import { useCategories } from "@/hooks/queries/useCategories";
-import { useProducts } from "@/hooks/queries";
+import { useProducts, PRODUCT_CATALOG_FILTERS } from "@/hooks/queries/useProducts";
 import { normalizeProductData } from "./data/mockProducts";
 
 interface ProductsListContextType {
@@ -95,7 +95,7 @@ export const ProductsListProvider: React.FC<ProductsListProviderProps> = ({
 
   // Obtener categorías y productos reales de la API
   const { data: categoriesData = [] } = useCategories();
-  const { data: productsData = [] } = useProducts({ includeInactive: true, catalog: true });
+  const { data: productsData = [] } = useProducts(PRODUCT_CATALOG_FILTERS);
 
   // Calcular filtros de productos con contadores dinámicos
   const productsListFilters: FilterOption[] = useMemo(() => {

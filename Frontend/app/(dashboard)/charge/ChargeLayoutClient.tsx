@@ -5,7 +5,7 @@ import { useScrollReset } from "@/hooks";
 import { FilterModalProvider, ChargeProvider } from "./contexts";
 import { LoadingProductsModalProvider } from "@/lib/contexts/LoadingProductsModalContext";
 import { useCategories } from "@/hooks/queries/useCategories";
-import { useProducts } from "@/hooks/queries";
+import { useProducts, PRODUCT_CATALOG_FILTERS } from "@/hooks/queries/useProducts";
 import { normalizeProductData } from "@/components/dashboard/products_list/data/mockProducts";
 import { buildChargeFilterChips, filterActiveProducts } from "@/lib/catalog/chargeFilters";
 
@@ -18,10 +18,12 @@ export default function ChargeLayoutClient({ children }: { children: ReactNode }
 
   const { data: categoriesData = [] } = useCategories();
   // Gleicher Query-Key wie /products_list → kein zweiter API-Call beim Wechsel
-  const { data: catalogRaw = [], isLoading: productsLoading } = useProducts({
-    includeInactive: true,
-    catalog: true,
-  });
+  const {
+    data: catalogRaw = [],
+    isLoading: productsLoading,
+    isError: productsError,
+    refetch: refetchProducts,
+  } = useProducts(PRODUCT_CATALOG_FILTERS);
 
   const catalogProducts = useMemo(() => {
     if (!catalogRaw.length) return [];
@@ -50,6 +52,8 @@ export default function ChargeLayoutClient({ children }: { children: ReactNode }
     chargeFilters,
     catalogProducts,
     isProductsInitialLoad,
+    productsLoadError: productsError,
+    onRetryProducts: () => refetchProducts(),
   };
 
   return (

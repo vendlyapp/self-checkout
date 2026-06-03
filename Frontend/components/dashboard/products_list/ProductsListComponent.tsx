@@ -5,7 +5,8 @@ import {
   Product,
   normalizeProductData,
 } from "./data/mockProducts";
-import { useProducts, useCategories } from "@/hooks/queries";
+import { useCategories } from "@/hooks/queries";
+import { useProducts, PRODUCT_CATALOG_FILTERS } from "@/hooks/queries/useProducts";
 import { getIcon } from "./data/iconMap";
 import ProductCard from "../charge/ProductCard";
 import { DashboardLoadingState } from "@/components/ui/DashboardLoadingState";
@@ -79,11 +80,13 @@ export default function ProductsListComponent({
   // Obtener categorías reales de la API
   const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
   
-  // Usar React Query para obtener productos con cache (única fuente de verdad)
-  const { data: productsData, isLoading: productsLoading, isFetching: productsFetching } = useProducts({
-    includeInactive: true,
-    catalog: true,
-  });
+  const {
+    data: productsData,
+    isLoading: productsLoading,
+    isError: productsError,
+    error: productsErrorDetail,
+    refetch: refetchProducts,
+  } = useProducts(PRODUCT_CATALOG_FILTERS);
   // Solo mostrar loading screen si no hay datos en cache — isFetching silencioso en background
   const hasProductsCache = productsData !== undefined;
   const isProductsFirstLoad = productsLoading && !hasProductsCache;
@@ -372,6 +375,24 @@ export default function ProductsListComponent({
     const showProductsLoading = isProductsFirstLoad || (isStandalone && isLoading);
     if (showProductsLoading) {
       return <DashboardLoadingState mode="section" message="Produkte werden geladen..." />;
+    }
+    if (productsError) {
+      const message =
+        productsErrorDetail instanceof Error
+          ? productsErrorDetail.message
+          : 'Produkte konnten nicht geladen werden';
+      return (
+        <div className="flex flex-col items-center py-16 px-6 text-center gap-4">
+          <p className="text-gray-600 font-medium">{message}</p>
+          <button
+            type="button"
+            onClick={() => refetchProducts()}
+            className="rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-white shadow-soft active:scale-95"
+          >
+            Erneut laden
+          </button>
+        </div>
+      );
     }
     if (filteredProducts.length === 0) {
       return (
