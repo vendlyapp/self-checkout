@@ -102,7 +102,7 @@ export default function SalesVerkaufePage() {
             </p>
           </div>
         ) : (
-          <div className="px-4 pb-24 space-y-3">
+          <div className="px-4 pb-6 space-y-3">
             {filteredOrders.map((order) => (
               <Link
                 key={order.id}

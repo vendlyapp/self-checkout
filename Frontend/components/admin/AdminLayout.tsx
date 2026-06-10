@@ -218,7 +218,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <div className={clsx(
               'w-full',
               isMobile && 'max-w-[430px] mx-auto bg-background-cream',
-              isMobile && !isGoalsRoute && !isBestsellerRoute && 'min-h-full mobile-content-padding',
+              isMobile && !isGoalsRoute && !isBestsellerRoute && headerNavTitle === null && 'min-h-full mobile-content-padding',
+              isMobile && headerNavTitle !== null && !isGoalsRoute && !isBestsellerRoute && 'min-h-full pb-6',
               isMobile && (isGoalsRoute || isBestsellerRoute) && 'pb-[120px]',
               !isMobile && 'bg-background-cream px-4 md:px-6 lg:px-8',
             )}>
@@ -227,7 +228,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </main>
 
           {/* Footer nav */}
-          {isMobile && !isProductsListRoute && !isChargeRoute && !isCategoriesRoute && !isAddCategoryPage && !isStoreSubRoute && (
+          {isMobile && !isProductsListRoute && !isChargeRoute && !isCategoriesRoute && !isAddCategoryPage && !isStoreSubRoute && headerNavTitle === null && (
             <ResponsiveFooterNav />
           )}
 

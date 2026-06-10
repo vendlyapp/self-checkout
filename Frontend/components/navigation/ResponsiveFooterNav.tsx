@@ -60,8 +60,8 @@ export default function ResponsiveFooterNav() {
   };
 
   return (
-    <nav className="nav-container safe-area-bottom">
-      <div className="flex items-center justify-around h-full px-4 max-w-[430px] mx-auto pb-[env(safe-area-inset-bottom)]">
+    <nav className="nav-container">
+      <div className="flex items-center justify-around min-h-[64px] px-4 max-w-[430px] mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isItemActive(item);
