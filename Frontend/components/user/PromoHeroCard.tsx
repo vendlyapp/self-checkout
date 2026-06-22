@@ -43,10 +43,42 @@ function getKind(product: Product): string {
 
 type Size = 'sm' | 'lg'
 
-const cardWidth: Record<Size, string> = {
-  sm: 'w-[158px]',
-  lg: 'w-[200px] sm:w-[220px]',
-}
+const sizeConfig = {
+  sm: {
+    width: 'w-[152px]',
+    imageSizes: '152px',
+    content: 'px-2.5 pb-2.5 pt-2',
+    title: 'text-[12px] leading-[1.12]',
+    unit: 'text-[10px]',
+    subtitle: 'text-[9px]',
+    chf: 'text-[9px]',
+    price: 'text-[16px]',
+    originalPrice: 'text-[9px]',
+    badge: 'px-2 py-0.5 text-[8px]',
+    button: 'h-[36px] w-[72px] px-2',
+    buttonText: 'text-[10px]',
+    plus: 'h-4 w-4',
+    qty: 'h-6 min-w-6 text-[10px]',
+    carouselGap: 12,
+  },
+  lg: {
+    width: 'w-[248px]',
+    imageSizes: '248px',
+    content: 'px-4 pb-4 pt-3',
+    title: 'text-[15px] leading-[1.15]',
+    unit: 'text-[12px]',
+    subtitle: 'text-[11px]',
+    chf: 'text-[11px]',
+    price: 'text-[22px]',
+    originalPrice: 'text-[11px]',
+    badge: 'px-2.5 py-1 text-[9px]',
+    button: 'h-[44px] w-[92px] px-3',
+    buttonText: 'text-[11px]',
+    plus: 'h-5 w-5',
+    qty: 'h-7 min-w-7 text-[11px]',
+    carouselGap: 16,
+  },
+} as const
 
 function PromoHeroCard({
   product,
@@ -57,6 +89,7 @@ function PromoHeroCard({
 }) {
   const { addToCart, cartItems } = useCartStore()
   const qty = cartItems.find((i) => i.product.id === product.id)?.quantity ?? 0
+  const cfg = sizeConfig[size]
   const kind = getKind(product)
 
   const onSale = !!product.originalPrice && product.originalPrice > product.price
@@ -88,7 +121,7 @@ function PromoHeroCard({
 
   return (
     <article
-      className={`relative flex ${cardWidth[size]} shrink-0 snap-center flex-col overflow-hidden rounded-2xl border border-gray-100/90 bg-white shadow-card aspect-square`}
+      className={`relative flex ${cfg.width} shrink-0 snap-center flex-col overflow-hidden rounded-2xl border border-gray-100/90 bg-white shadow-card aspect-square ${size === 'lg' ? 'shadow-[0_8px_24px_rgba(17,24,39,0.08)]' : ''}`}
     >
       {/* Bild oben */}
       <div className="relative min-h-0 flex-[1.12] w-full bg-gray-100">
@@ -98,7 +131,7 @@ function PromoHeroCard({
             alt={product.name}
             fill
             className="object-cover"
-            sizes={size === 'sm' ? '158px' : '220px'}
+            sizes={cfg.imageSizes}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
@@ -108,59 +141,61 @@ function PromoHeroCard({
 
         <div className="absolute left-2 top-2 flex max-w-[calc(100%-0.5rem)] items-center gap-1">
           <span
-            className={`shrink-0 rounded-full px-2 py-0.5 text-[8px] font-extrabold uppercase tracking-wide text-white ${kindBadgeClass[kind]}`}
+            className={`max-w-[72%] shrink-0 truncate rounded-full font-extrabold uppercase tracking-wide text-white ${cfg.badge} ${kindBadgeClass[kind]}`}
           >
             {badgeLabel}
           </span>
           {(onSale || percent > 0) && (
-            <span className="shrink-0 rounded-full bg-[#EF4444] px-2 py-0.5 text-[8px] font-extrabold text-white">
+            <span className={`shrink-0 rounded-full bg-[#EF4444] font-extrabold text-white ${cfg.badge}`}>
               −{percent}%
             </span>
           )}
         </div>
 
         {qty > 0 && (
-          <span className="absolute right-2 top-2 grid h-6 min-w-6 place-items-center rounded-full bg-brand-500 px-1.5 text-[10px] font-extrabold text-white shadow-soft ring-2 ring-white">
+          <span className={`absolute right-2 top-2 grid place-items-center rounded-full bg-brand-500 px-1.5 font-extrabold text-white shadow-soft ring-2 ring-white ${cfg.qty}`}>
             ×{qty}
           </span>
         )}
       </div>
 
       {/* Inhalt unten */}
-      <div className="flex min-h-0 flex-1 flex-col justify-between px-3 pb-3 pt-2">
+      <div className={`flex min-h-0 flex-1 flex-col justify-between ${cfg.content}`}>
         <div className="min-w-0">
-          <h3 className="truncate text-[13px] font-extrabold leading-tight text-gray-900">
+          <h3 className={`truncate font-extrabold text-gray-900 ${cfg.title}`}>
             {product.name}
           </h3>
           {product.unit && (
-            <p className="mt-0.5 truncate text-[11px] font-medium text-gray-500">{product.unit}</p>
+            <p className={`mt-0.5 truncate font-medium text-gray-500 ${cfg.unit}`}>{product.unit}</p>
           )}
-          <p className="mt-0.5 truncate text-[10px] text-gray-400">{subtitle}</p>
+          <p className={`mt-0.5 truncate text-gray-400 ${cfg.subtitle}`}>{subtitle}</p>
         </div>
 
-        <div className="mt-1.5 flex items-end justify-between gap-1">
-          <div className="flex min-w-0 items-end gap-1">
-            <div className="flex flex-col leading-none">
-              <span className="text-[9px] font-bold text-[#EF4444]">CHF</span>
-              <span className="text-[17px] font-extrabold leading-none tabular-nums text-[#EF4444]">
-                {formatSwissPrice(displayPrice)}
-              </span>
+        <div className="mt-1.5 grid grid-cols-[1fr_auto] items-end gap-2">
+          <div className="min-w-0">
+            <div className="flex items-end gap-2">
+              <div className="flex flex-col leading-none">
+                <span className={`font-bold text-[#EF4444] ${cfg.chf}`}>CHF</span>
+                <span className={`font-extrabold leading-none tabular-nums text-[#EF4444] ${cfg.price}`}>
+                  {formatSwissPrice(displayPrice)}
+                </span>
+              </div>
+              {onSale && (
+                <span className={`pb-0.5 tabular-nums text-gray-400 line-through whitespace-nowrap ${cfg.originalPrice}`}>
+                  CHF {formatSwissPrice(product.originalPrice)}
+                </span>
+              )}
             </div>
-            {onSale && (
-              <span className="pb-0.5 text-[10px] tabular-nums text-gray-400 line-through whitespace-nowrap">
-                CHF {formatSwissPrice(product.originalPrice)}
-              </span>
-            )}
           </div>
 
           <button
             type="button"
             onClick={handleAdd}
-            className="flex h-[38px] shrink-0 items-center gap-0.5 rounded-full bg-brand-500 pl-2 pr-2.5 text-white shadow-[0_4px_14px_rgba(37,208,118,0.38)] transition-transform active:scale-95"
+            className={`flex shrink-0 items-center justify-center gap-1 rounded-full bg-brand-500 text-white shadow-[0_4px_14px_rgba(37,208,118,0.38)] transition-transform active:scale-95 ${cfg.button}`}
             aria-label={addLabel}
           >
-            <Plus className="h-4 w-4 shrink-0" strokeWidth={2.5} />
-            <span className="text-left text-[10px] font-extrabold leading-[1.05]">
+            <Plus className={`${cfg.plus} shrink-0`} strokeWidth={2.5} />
+            <span className={`text-center font-extrabold leading-[1.02] ${cfg.buttonText}`}>
               {actionBottom ? (
                 <>
                   {actionTop}
@@ -194,6 +229,7 @@ export function PromoCarousel({
   const [activeIdx, setActiveIdx] = useState(0)
   const loop = products.length > 1
   const items = loop ? [...products, ...products] : products
+  const gap = sizeConfig[size].carouselGap
 
   useEffect(() => {
     const el = scrollerRef.current
@@ -214,7 +250,7 @@ export function PromoCarousel({
     const onScroll = () => {
       const first = el.firstElementChild as HTMLElement | null
       if (!first) return
-      const cardW = first.offsetWidth + 12
+      const cardW = first.offsetWidth + gap
       const half = el.scrollWidth / 2
       const pos = el.scrollLeft % half
       setActiveIdx(Math.round(pos / cardW) % products.length)
@@ -225,7 +261,7 @@ export function PromoCarousel({
       if (pausedRef.current || document.hidden) return
       const first = el.firstElementChild as HTMLElement | null
       if (!first) return
-      const step = first.offsetWidth + 12
+      const step = first.offsetWidth + gap
       const half = el.scrollWidth / 2
       if (el.scrollLeft + step >= half - 4) {
         el.scrollTo({ left: el.scrollLeft - half, behavior: 'auto' })
@@ -245,7 +281,7 @@ export function PromoCarousel({
       el.removeEventListener('mouseleave', resume)
       el.removeEventListener('scroll', onScroll)
     }
-  }, [loop, autoPlayMs, products.length])
+  }, [loop, autoPlayMs, products.length, gap])
 
   if (products.length === 0) return null
 
@@ -253,7 +289,7 @@ export function PromoCarousel({
     <div>
       <div
         ref={scrollerRef}
-        className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className={`-mx-4 flex snap-x snap-mandatory overflow-x-auto px-4 pb-2 scrollbar-none ${size === 'lg' ? 'gap-4 pt-1' : 'gap-3'}`}
       >
         {items.map((product, i) => (
           <PromoHeroCard key={`${product.id}-${i}`} product={product} size={size} />

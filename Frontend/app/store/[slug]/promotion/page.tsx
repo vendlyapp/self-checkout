@@ -68,8 +68,8 @@ export default function StorePromotionPage() {
 
       {/* Carousel hero */}
       {products.length > 0 && (
-        <section className="mt-4 -mx-4">
-          <PromoCarousel products={products} size="sm" showDots />
+        <section className="mt-5 -mx-4">
+          <PromoCarousel products={products} size="lg" showDots />
         </section>
       )}
 
