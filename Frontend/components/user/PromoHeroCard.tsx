@@ -104,8 +104,7 @@ function PromoPrice({
 
 /** Home — horizontal, Bild links, + mittig rechts */
 function PromoHeroCardSm({ product }: { product: Product }) {
-  const { addToCart, cartItems } = useCartStore()
-  const qty = cartItems.find((i) => i.product.id === product.id)?.quantity ?? 0
+  const { addToCart } = useCartStore()
   const kind = getKind(product)
 
   const onSale = !!product.originalPrice && product.originalPrice > product.price
@@ -124,8 +123,7 @@ function PromoHeroCardSm({ product }: { product: Product }) {
     })
   }
 
-  const addLabel =
-    qty > 0 ? `${product.name}, noch eins hinzufügen` : `${product.name} in den Warenkorb`
+  const addLabel = `${product.name} in den Warenkorb`
 
   return (
     <article
@@ -183,15 +181,10 @@ function PromoHeroCardSm({ product }: { product: Product }) {
       <button
         type="button"
         onClick={handleAdd}
-        className={`relative grid h-11 w-11 shrink-0 place-items-center shadow-[0_6px_18px_rgba(37,208,118,0.42)] ${addBtnBase}`}
+        className={`grid h-11 w-11 shrink-0 place-items-center shadow-[0_6px_18px_rgba(37,208,118,0.42)] ${addBtnBase}`}
         aria-label={addLabel}
       >
         <Plus className="h-5 w-5 shrink-0" strokeWidth={2.75} />
-        {qty > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-warm-800 px-1 text-[9px] font-extrabold text-white ring-2 ring-white">
-            {qty}
-          </span>
-        )}
       </button>
     </article>
   )
@@ -199,8 +192,7 @@ function PromoHeroCardSm({ product }: { product: Product }) {
 
 /** Aktionen-Seite — vertikal, quadratisch, grösser */
 function PromoHeroCardLg({ product }: { product: Product }) {
-  const { addToCart, cartItems } = useCartStore()
-  const qty = cartItems.find((i) => i.product.id === product.id)?.quantity ?? 0
+  const { addToCart } = useCartStore()
   const kind = getKind(product)
 
   const onSale = !!product.originalPrice && product.originalPrice > product.price
@@ -222,8 +214,7 @@ function PromoHeroCardLg({ product }: { product: Product }) {
     })
   }
 
-  const addLabel =
-    qty > 0 ? `${product.name}, noch eins hinzufügen` : `${product.name} in den Warenkorb`
+  const addLabel = `${product.name} in den Warenkorb`
 
   return (
     <article
@@ -261,12 +252,6 @@ function PromoHeroCardLg({ product }: { product: Product }) {
             </span>
           )}
         </div>
-
-        {qty > 0 && (
-          <span className="absolute right-2.5 top-2.5 grid h-7 min-w-7 place-items-center rounded-full bg-brand-500 px-1.5 text-[11px] font-extrabold text-white shadow-md ring-2 ring-white">
-            ×{qty}
-          </span>
-        )}
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col justify-between border-t border-warm-300/70 bg-[#FAF8F6] px-4 pb-4 pt-3.5">
