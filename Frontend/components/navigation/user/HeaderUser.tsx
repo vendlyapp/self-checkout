@@ -112,15 +112,15 @@ export default function HeaderUser({ isDarkMode = false, scrollContainer: _scrol
           <span className="text-xs font-bold">Info</span>
         </button>
 
-        {/* Logo Vendly */}
+        {/* Markenlogo */}
         <div className="flex-shrink-0">
           <Image
-            src="/self-checkout-logo.svg"
+            src="/logo.svg"
             alt="Self-Checkout"
-            width={92}
+            width={136}
             height={20}
             priority
-            className="h-5 w-auto"
+            className="h-5 w-auto shrink-0"
           />
         </div>
       </div>

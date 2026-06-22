@@ -55,8 +55,7 @@ const sizeConfig = {
     price: 'text-[16px]',
     originalPrice: 'text-[9px]',
     badge: 'px-2 py-0.5 text-[8px]',
-    button: 'h-[36px] w-[72px] px-2',
-    buttonText: 'text-[10px]',
+    button: 'h-9 w-9',
     plus: 'h-4 w-4',
     qty: 'h-6 min-w-6 text-[10px]',
     carouselGap: 12,
@@ -72,9 +71,9 @@ const sizeConfig = {
     price: 'text-[22px]',
     originalPrice: 'text-[11px]',
     badge: 'px-2.5 py-1 text-[9px]',
-    button: 'h-[44px] w-[92px] px-3',
+    button: 'h-10 px-3',
     buttonText: 'text-[11px]',
-    plus: 'h-5 w-5',
+    plus: 'h-4 w-4',
     qty: 'h-7 min-w-7 text-[11px]',
     carouselGap: 16,
   },
@@ -102,10 +101,6 @@ function PromoHeroCard({
   const subtitle =
     product.promotionTitle?.trim() ||
     `${kindSubtitle[kind]} · direkt vom Hof`
-  const actionLabel = product.promotionActionLabel?.trim() || 'In Korb'
-  const [actionTop, actionBottom] = actionLabel.includes(' ')
-    ? actionLabel.split(' ', 2)
-    : [actionLabel, '']
 
   const handleAdd = () => {
     addToCart(product, 1)
@@ -191,21 +186,19 @@ function PromoHeroCard({
           <button
             type="button"
             onClick={handleAdd}
-            className={`flex shrink-0 items-center justify-center gap-1 rounded-full bg-brand-500 text-white shadow-[0_4px_14px_rgba(37,208,118,0.38)] transition-transform active:scale-95 ${cfg.button}`}
+            className={`shrink-0 rounded-full bg-brand-500 text-white shadow-[0_4px_14px_rgba(37,208,118,0.38)] transition-transform active:scale-95 ${
+              size === 'lg'
+                ? `flex items-center justify-center gap-1 ${cfg.button}`
+                : `grid place-items-center ${cfg.button}`
+            }`}
             aria-label={addLabel}
           >
             <Plus className={`${cfg.plus} shrink-0`} strokeWidth={2.5} />
-            <span className={`text-center font-extrabold leading-[1.02] ${cfg.buttonText}`}>
-              {actionBottom ? (
-                <>
-                  {actionTop}
-                  <br />
-                  {actionBottom}
-                </>
-              ) : (
-                actionTop
-              )}
-            </span>
+            {size === 'lg' && (
+              <span className={`whitespace-nowrap font-extrabold leading-none ${sizeConfig.lg.buttonText}`}>
+                In Korb
+              </span>
+            )}
           </button>
         </div>
       </div>
