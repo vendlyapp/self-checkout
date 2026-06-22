@@ -44,7 +44,10 @@ function ProductAddBar({ slug, productId }: { slug: string; productId: string })
   const handleAdd = () => {
     if (qty >= product.stock) return
     addToCart(product, qty + 1)
-    if (qty === 0) toast.success('Zum Warenkorb hinzugefügt', { description: product.name })
+    toast.success('Zum Warenkorb hinzugefügt', {
+      id: `cart-add-${product.id}-${Date.now()}`,
+      description: product.name,
+    })
   }
   const handleRemove = () => {
     if (qty === 0) return

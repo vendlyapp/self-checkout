@@ -314,7 +314,11 @@ export default function StoreCartPage() {
                       <button
                         onClick={() => {
                           addToCart(p, 1)
-                          toast.success('Zum Warenkorb hinzugefügt', { description: p.name, duration: 2200 })
+                          toast.success('Zum Warenkorb hinzugefügt', {
+                            id: `cart-add-${p.id}-${Date.now()}`,
+                            description: p.name,
+                            duration: 2200,
+                          })
                         }}
                         className="grid h-7 w-7 place-items-center rounded-full bg-[#25D076] text-white shadow-soft active:scale-95"
                         aria-label={`${p.name} hinzufügen`}

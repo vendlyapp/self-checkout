@@ -116,13 +116,15 @@ const ProductCard = React.memo(function ProductCard({
     if (!onAddToCart || newQuantity < 0 || newQuantity > currentProduct.stock) return
     const prev = currentQuantity
     onAddToCart(currentProduct, newQuantity)
-    if (newQuantity === 1 && prev === 0) {
+    if (newQuantity > prev) {
       toast.success(`Zum Warenkorb hinzugefügt`, {
+        id: `cart-add-${currentProduct.id}-${Date.now()}`,
         description: getBaseProductName,
         duration: 2200,
       })
-    } else if (newQuantity === 0) {
+    } else if (newQuantity === 0 && prev > 0) {
       toast(`Entfernt`, {
+        id: `cart-remove-${currentProduct.id}-${Date.now()}`,
         description: getBaseProductName,
         duration: 1800,
       })
