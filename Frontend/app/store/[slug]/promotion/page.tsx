@@ -8,6 +8,7 @@ import { useStorePromotions } from '@/hooks/queries/useStorePromotions'
 import { useCartStore } from '@/lib/stores/cartStore'
 import { type BuyerProduct as Product } from '@/lib/storefront/product'
 import ProductCard from '@/components/dashboard/charge/ProductCard'
+import { CategoryChips } from '@/components/user/CategoryChips'
 import { PromoCarousel } from '@/components/user/PromoHeroCard'
 import { DashboardLoadingState } from '@/components/ui/DashboardLoadingState'
 import { Loader } from '@/components/ui/Loader'
@@ -21,7 +22,7 @@ export default function StorePromotionPage() {
     enabled: !!store?.slug,
   })
   const { addToCart } = useCartStore()
-  const [activeFilter, setActiveFilter] = useState<string>('all')
+  const [selectedFilters, setSelectedFilters] = useState<string[]>(['all'])
 
   const handleAddToCart = useCallback((product: Product, quantity: number) => {
     addToCart(product, quantity)
@@ -46,6 +47,10 @@ export default function StorePromotionPage() {
       ...Array.from(seen.entries()).map(([id, { name, count }]) => ({ id, label: name, count })),
     ]
   }, [products])
+
+  const activeFilter = selectedFilters.includes('all')
+    ? 'all'
+    : selectedFilters.find((id) => id !== 'all') ?? 'all'
 
   const filteredProducts = useMemo(() => {
     if (activeFilter === 'all') return products
@@ -81,28 +86,15 @@ export default function StorePromotionPage() {
             <span className="text-xs font-medium text-gray-400">{filteredProducts.length} Artikel</span>
           </div>
 
-          {/* Chips filtro categoría */}
           {categoryFilters.length > 0 && (
-            <div className="-mx-4 mt-2 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {categoryFilters.map(({ id, label, count }) => {
-                const active = activeFilter === id
-                return (
-                  <button
-                    key={id}
-                    onClick={() => setActiveFilter(active && id !== 'all' ? 'all' : id)}
-                    className={`flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold transition-all active:scale-95 ${
-                      active
-                        ? 'bg-gray-900 text-white'
-                        : 'bg-white border border-gray-200 text-gray-700'
-                    }`}
-                  >
-                    {label}
-                    <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${active ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>
-                      {count}
-                    </span>
-                  </button>
-                )
-              })}
+            <div className="-mx-4 mt-2">
+              <CategoryChips
+                filters={categoryFilters}
+                selectedFilters={selectedFilters}
+                onFilterChange={setSelectedFilters}
+                singleSelect
+                embedded
+              />
             </div>
           )}
         </>
@@ -125,8 +117,8 @@ export default function StorePromotionPage() {
         <div className="mt-8 flex flex-col items-center gap-3 text-center">
           <p className="text-sm text-gray-500">Keine Aktionen in dieser Kategorie.</p>
           <button
-            onClick={() => setActiveFilter('all')}
-            className="rounded-full bg-gray-900 px-4 py-2 text-sm font-bold text-white"
+            onClick={() => setSelectedFilters(['all'])}
+            className="rounded-full bg-warm-800 px-4 py-2 text-sm font-bold text-white shadow-soft active:scale-95 transition-transform"
           >
             Alle Aktionen zeigen
           </button>

@@ -45,70 +45,168 @@ function getKind(product: Product): string {
 
 type Size = 'sm' | 'lg'
 
-const sizeConfig = {
-  sm: {
-    width: 'w-[156px]',
-    imageSizes: '156px',
-    imageFlex: 'flex-[1.18]',
-    content: 'px-3 pb-3 pt-2.5',
-    title: 'text-[12px] leading-[1.15] tracking-tight',
-    unit: 'text-[10px]',
-    subtitle: 'text-[9px] leading-snug',
-    chf: 'text-[8px] tracking-wide',
-    price: 'text-[15px]',
-    originalPrice: 'text-[9px]',
-    badge: 'px-2 py-[3px] text-[7.5px] tracking-[0.06em]',
-    fab: 'h-10 w-10',
-    plus: 'h-[18px] w-[18px]',
-    carouselGap: 12,
-  },
-  lg: {
-    width: 'w-[252px]',
-    imageSizes: '252px',
-    imageFlex: 'flex-[1.2]',
-    content: 'px-4 pb-4 pt-3.5',
-    title: 'text-[15px] leading-[1.18] tracking-tight',
-    unit: 'text-[12px]',
-    subtitle: 'text-[11px] leading-snug',
-    chf: 'text-[10px] tracking-wide',
-    price: 'text-[22px]',
-    originalPrice: 'text-[11px]',
-    badge: 'px-2.5 py-1 text-[9px] tracking-[0.05em]',
-    button: 'h-10 px-3.5',
-    buttonText: 'text-[11px]',
-    plus: 'h-4 w-4',
-    qty: 'h-7 min-w-7 text-[11px]',
-    carouselGap: 16,
-  },
-} as const
-
-const cardShell =
-  'relative flex shrink-0 snap-center flex-col overflow-hidden rounded-[18px] bg-white aspect-square ' +
-  'shadow-[0_2px_10px_rgba(118,107,106,0.07),0_0_0_1px_rgba(118,107,106,0.05)] ' +
-  'transition-[box-shadow,transform] duration-300 ease-out'
-
 const addBtnBase =
   'rounded-full bg-brand-500 text-white transition-[transform,background-color,box-shadow] duration-200 ' +
   'hover:bg-brand-600 active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 focus-visible:ring-offset-2'
 
-function PromoHeroCard({
-  product,
-  size = 'sm',
+const cardShadow =
+  'shadow-[0_2px_10px_rgba(118,107,106,0.07),0_0_0_1px_rgba(118,107,106,0.05)]'
+
+function PromoPrice({
+  displayPrice,
+  originalPrice,
+  onSale,
+  size,
 }: {
-  product: Product
-  size?: Size
+  displayPrice: number
+  originalPrice?: number
+  onSale: boolean
+  size: Size
 }) {
+  const isLg = size === 'lg'
+
+  if (isLg) {
+    return (
+      <div className="flex items-end gap-2">
+        <div className="flex flex-col leading-none">
+          <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: PROMO_RED }}>
+            CHF
+          </span>
+          <span
+            className="text-[22px] font-extrabold leading-none tabular-nums tracking-tight"
+            style={{ color: PROMO_RED }}
+          >
+            {formatSwissPrice(displayPrice)}
+          </span>
+        </div>
+        {onSale && (
+          <span className="pb-0.5 text-[11px] tabular-nums text-warm-600/55 line-through decoration-warm-600/40 whitespace-nowrap">
+            CHF {formatSwissPrice(originalPrice)}
+          </span>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-baseline gap-1.5">
+      <span className="text-[14px] font-extrabold tabular-nums leading-none" style={{ color: PROMO_RED }}>
+        CHF {formatSwissPrice(displayPrice)}
+      </span>
+      {onSale && (
+        <span className="text-[10px] tabular-nums text-warm-600/55 line-through decoration-warm-600/40 whitespace-nowrap">
+          CHF {formatSwissPrice(originalPrice)}
+        </span>
+      )}
+    </div>
+  )
+}
+
+/** Home — horizontal, Bild links, + mittig rechts */
+function PromoHeroCardSm({ product }: { product: Product }) {
   const { addToCart, cartItems } = useCartStore()
   const qty = cartItems.find((i) => i.product.id === product.id)?.quantity ?? 0
-  const cfg = sizeConfig[size]
-  const isLg = size === 'lg'
   const kind = getKind(product)
 
   const onSale = !!product.originalPrice && product.originalPrice > product.price
   const percent = onSale
     ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)
     : product.discountPercentage ?? 0
-  const displayPrice = product.price
+
+  const badgeLabel = product.promotionBadge?.trim() || kindBadgeLabel[kind]
+
+  const handleAdd = () => {
+    addToCart(product, 1)
+    toast.success('Zum Warenkorb hinzugefügt', {
+      id: `promo-add-${product.id}-${Date.now()}`,
+      description: product.name,
+      duration: 2200,
+    })
+  }
+
+  const addLabel =
+    qty > 0 ? `${product.name}, noch eins hinzufügen` : `${product.name} in den Warenkorb`
+
+  return (
+    <article
+      className={`flex w-[min(300px,88vw)] shrink-0 snap-center items-center gap-2.5 overflow-hidden rounded-2xl bg-white p-2.5 ${cardShadow}`}
+    >
+      {/* Bild links */}
+      <div className="relative h-[76px] w-[76px] shrink-0 overflow-hidden rounded-xl bg-warm-300/40">
+        {product.image ? (
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            className="object-cover"
+            sizes="76px"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <Package className="h-7 w-7 text-warm-500/60" strokeWidth={1.5} />
+          </div>
+        )}
+      </div>
+
+      {/* Info Mitte */}
+      <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 py-0.5">
+        <div className="flex flex-col items-start gap-0.5">
+          <span
+            className={`max-w-full truncate rounded-full px-2 py-[3px] text-[7.5px] font-extrabold uppercase tracking-[0.06em] text-white shadow-sm ${kindBadgeClass[kind]}`}
+          >
+            {badgeLabel}
+          </span>
+          {(onSale || percent > 0) && (
+            <span className="rounded-full bg-[#EF4444] px-2 py-[3px] text-[7.5px] font-extrabold text-white shadow-sm">
+              −{percent}%
+            </span>
+          )}
+        </div>
+
+        <h3 className="truncate text-[13px] font-extrabold leading-tight tracking-tight text-warm-900">
+          {product.name}
+        </h3>
+
+        {product.unit && (
+          <p className="truncate text-[10px] font-medium text-warm-600/75">{product.unit}</p>
+        )}
+
+        <PromoPrice
+          displayPrice={product.price}
+          originalPrice={product.originalPrice}
+          onSale={onSale}
+          size="sm"
+        />
+      </div>
+
+      {/* + mittig rechts — per flex zentriert */}
+      <button
+        type="button"
+        onClick={handleAdd}
+        className={`relative grid h-11 w-11 shrink-0 place-items-center shadow-[0_6px_18px_rgba(37,208,118,0.42)] ${addBtnBase}`}
+        aria-label={addLabel}
+      >
+        <Plus className="h-5 w-5 shrink-0" strokeWidth={2.75} />
+        {qty > 0 && (
+          <span className="absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-warm-800 px-1 text-[9px] font-extrabold text-white ring-2 ring-white">
+            {qty}
+          </span>
+        )}
+      </button>
+    </article>
+  )
+}
+
+/** Aktionen-Seite — vertikal, quadratisch, grösser */
+function PromoHeroCardLg({ product }: { product: Product }) {
+  const { addToCart, cartItems } = useCartStore()
+  const qty = cartItems.find((i) => i.product.id === product.id)?.quantity ?? 0
+  const kind = getKind(product)
+
+  const onSale = !!product.originalPrice && product.originalPrice > product.price
+  const percent = onSale
+    ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)
+    : product.discountPercentage ?? 0
 
   const badgeLabel = product.promotionBadge?.trim() || kindBadgeLabel[kind]
   const subtitle =
@@ -129,17 +227,16 @@ function PromoHeroCard({
 
   return (
     <article
-      className={`${cardShell} ${cfg.width} ${isLg ? 'shadow-[0_10px_32px_rgba(118,107,106,0.1),0_0_0_1px_rgba(118,107,106,0.06)]' : ''}`}
+      className={`relative flex w-[252px] shrink-0 snap-center flex-col overflow-hidden rounded-[18px] bg-white aspect-square shadow-[0_10px_32px_rgba(118,107,106,0.1),0_0_0_1px_rgba(118,107,106,0.06)]`}
     >
-      {/* Bild */}
-      <div className={`relative min-h-0 ${cfg.imageFlex} w-full bg-warm-300/40`}>
+      <div className="relative min-h-0 flex-[1.2] w-full bg-warm-300/40">
         {product.image ? (
           <Image
             src={product.image}
             alt={product.name}
             fill
             className="object-cover"
-            sizes={cfg.imageSizes}
+            sizes="252px"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-warm-300/30">
@@ -147,7 +244,6 @@ function PromoHeroCard({
           </div>
         )}
 
-        {/* Tiefe + Lesbarkeit der Badges */}
         <div
           className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/10"
           aria-hidden
@@ -155,104 +251,72 @@ function PromoHeroCard({
 
         <div className="absolute left-2.5 top-2.5 flex max-w-[calc(100%-1rem)] items-center gap-1">
           <span
-            className={`max-w-[68%] shrink-0 truncate rounded-full font-extrabold uppercase text-white shadow-sm ${cfg.badge} ${kindBadgeClass[kind]}`}
+            className={`max-w-[68%] shrink-0 truncate rounded-full px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[0.05em] text-white shadow-sm ${kindBadgeClass[kind]}`}
           >
             {badgeLabel}
           </span>
           {(onSale || percent > 0) && (
-            <span
-              className={`shrink-0 rounded-full bg-[#EF4444] font-extrabold text-white shadow-sm ${cfg.badge}`}
-            >
+            <span className="shrink-0 rounded-full bg-[#EF4444] px-2.5 py-1 text-[9px] font-extrabold text-white shadow-sm">
               −{percent}%
             </span>
           )}
         </div>
 
-        {qty > 0 && isLg && (
-          <span
-            className={`absolute right-2.5 top-2.5 grid place-items-center rounded-full bg-brand-500 px-1.5 font-extrabold text-white shadow-md ring-2 ring-white ${'qty' in cfg ? cfg.qty : ''}`}
-          >
+        {qty > 0 && (
+          <span className="absolute right-2.5 top-2.5 grid h-7 min-w-7 place-items-center rounded-full bg-brand-500 px-1.5 text-[11px] font-extrabold text-white shadow-md ring-2 ring-white">
             ×{qty}
           </span>
         )}
       </div>
 
-      {/* sm: FAB auf der Naht Bild/Inhalt — mittig rechts */}
-      {!isLg && (
-        <button
-          type="button"
-          onClick={handleAdd}
-          className={`absolute right-2.5 top-[52%] z-20 grid -translate-y-1/2 place-items-center shadow-[0_6px_18px_rgba(37,208,118,0.42)] ring-[3px] ring-white ${addBtnBase} ${'fab' in cfg ? cfg.fab : ''}`}
-          aria-label={addLabel}
-        >
-          <Plus className={`${cfg.plus} shrink-0`} strokeWidth={2.75} />
-          {qty > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-warm-800 px-1 text-[9px] font-extrabold text-white ring-2 ring-white">
-              {qty}
-            </span>
-          )}
-        </button>
-      )}
-
-      {/* Inhalt */}
-      <div
-        className={`flex min-h-0 flex-1 flex-col justify-between border-t border-warm-300/70 bg-[#FAF8F6] ${cfg.content} ${!isLg ? 'pr-12' : ''}`}
-      >
+      <div className="flex min-h-0 flex-1 flex-col justify-between border-t border-warm-300/70 bg-[#FAF8F6] px-4 pb-4 pt-3.5">
         <div className="min-w-0 space-y-0.5">
-          <h3 className={`line-clamp-2 font-extrabold text-warm-900 ${cfg.title}`}>
+          <h3 className="line-clamp-2 text-[15px] font-extrabold leading-[1.18] tracking-tight text-warm-900">
             {product.name}
           </h3>
           {product.unit && (
-            <p className={`truncate font-semibold text-warm-700/80 ${cfg.unit}`}>{product.unit}</p>
+            <p className="truncate text-[12px] font-semibold text-warm-700/80">{product.unit}</p>
           )}
-          <p className={`truncate text-warm-600/70 ${cfg.subtitle}`}>{subtitle}</p>
+          <p className="truncate text-[11px] leading-snug text-warm-600/70">{subtitle}</p>
         </div>
 
-        <div className={isLg ? 'mt-2 grid grid-cols-[1fr_auto] items-end gap-2.5' : 'mt-2'}>
-          <div className="min-w-0">
-            <div className="flex items-end gap-2">
-              <div className="flex flex-col leading-none">
-                <span
-                  className={`font-bold uppercase ${cfg.chf}`}
-                  style={{ color: PROMO_RED }}
-                >
-                  CHF
-                </span>
-                <span
-                  className={`font-extrabold leading-none tabular-nums tracking-tight ${cfg.price}`}
-                  style={{ color: PROMO_RED }}
-                >
-                  {formatSwissPrice(displayPrice)}
-                </span>
-              </div>
-              {onSale && (
-                <span
-                  className={`pb-0.5 tabular-nums text-warm-600/55 line-through decoration-warm-600/40 whitespace-nowrap ${cfg.originalPrice}`}
-                >
-                  CHF {formatSwissPrice(product.originalPrice)}
-                </span>
-              )}
-            </div>
-          </div>
+        <div className="mt-2 grid grid-cols-[1fr_auto] items-end gap-2.5">
+          <PromoPrice
+            displayPrice={product.price}
+            originalPrice={product.originalPrice}
+            onSale={onSale}
+            size="lg"
+          />
 
-          {isLg && (
-            <button
-              type="button"
-              onClick={handleAdd}
-              className={`flex shrink-0 items-center justify-center gap-1.5 shadow-[0_6px_18px_rgba(37,208,118,0.38)] ${addBtnBase} ${'button' in cfg ? cfg.button : ''}`}
-              aria-label={addLabel}
-            >
-              <Plus className={`${cfg.plus} shrink-0`} strokeWidth={2.75} />
-              <span className={`whitespace-nowrap font-extrabold leading-none tracking-tight ${sizeConfig.lg.buttonText}`}>
-                In Korb
-              </span>
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleAdd}
+            className={`flex h-10 shrink-0 items-center justify-center gap-1.5 px-3.5 shadow-[0_6px_18px_rgba(37,208,118,0.38)] ${addBtnBase}`}
+            aria-label={addLabel}
+          >
+            <Plus className="h-4 w-4 shrink-0" strokeWidth={2.75} />
+            <span className="whitespace-nowrap text-[11px] font-extrabold leading-none tracking-tight">
+              In Korb
+            </span>
+          </button>
         </div>
       </div>
     </article>
   )
 }
+
+function PromoHeroCard({
+  product,
+  size = 'sm',
+}: {
+  product: Product
+  size?: Size
+}) {
+  if (size === 'lg') return <PromoHeroCardLg product={product} />
+  return <PromoHeroCardSm product={product} />
+}
+
+const carouselGap: Record<Size, number> = { sm: 12, lg: 16 }
 
 export function PromoCarousel({
   products,
@@ -270,7 +334,7 @@ export function PromoCarousel({
   const [activeIdx, setActiveIdx] = useState(0)
   const loop = products.length > 1
   const items = loop ? [...products, ...products] : products
-  const gap = sizeConfig[size].carouselGap
+  const gap = carouselGap[size]
   const isLg = size === 'lg'
 
   useEffect(() => {
@@ -357,9 +421,7 @@ export function PromoCarousel({
             <span
               key={i}
               className={`h-1.5 rounded-full transition-all duration-300 ease-out ${
-                i === activeIdx
-                  ? 'w-6 bg-brand-500'
-                  : 'w-1.5 bg-warm-500/35'
+                i === activeIdx ? 'w-6 bg-brand-500' : 'w-1.5 bg-warm-500/35'
               }`}
             />
           ))}

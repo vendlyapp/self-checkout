@@ -15,12 +15,33 @@ interface CategoryChipsProps {
   selectedFilters: string[]
   onFilterChange: (filters: string[]) => void
   showCount?: boolean
+  /** Nur ein Filter gleichzeitig (z. B. Aktionen-Seite) */
+  singleSelect?: boolean
+  /** Ohne Wrapper-Hintergrund (z. B. eingebettet in Unterseite) */
+  embedded?: boolean
 }
 
-export function CategoryChips({ filters, selectedFilters, onFilterChange, showCount = true }: CategoryChipsProps) {
+export function CategoryChips({
+  filters,
+  selectedFilters,
+  onFilterChange,
+  showCount = true,
+  singleSelect = false,
+  embedded = false,
+}: CategoryChipsProps) {
   const ref = useRef<HTMLDivElement>(null)
 
   const handleClick = (filterId: string) => {
+    if (singleSelect) {
+      if (filterId === 'all') {
+        onFilterChange(['all'])
+        return
+      }
+      const isSelected = selectedFilters.includes(filterId)
+      onFilterChange(isSelected ? ['all'] : [filterId])
+      return
+    }
+
     if (filterId === 'all') {
       onFilterChange(['all'])
       return
@@ -35,8 +56,11 @@ export function CategoryChips({ filters, selectedFilters, onFilterChange, showCo
   }
 
   return (
-    <div ref={ref} className="border-b border-white/60 bg-background-cream">
-      <div className="-mx-0 overflow-x-auto px-4 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div
+      ref={ref}
+      className={cn(embedded ? '' : 'border-b border-white/60 bg-background-cream')}
+    >
+      <div className="-mx-0 overflow-x-auto px-4 py-2 scrollbar-none">
         <div className="flex gap-2 pb-0.5">
           {filters.map((filter) => {
             const active = selectedFilters.includes(filter.id)
